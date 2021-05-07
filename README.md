@@ -1,2 +1,2 @@
 # Shasha
-Shasha Discord Bot of The Life server
+Shasha Discord Bot of The Life Discord Server
