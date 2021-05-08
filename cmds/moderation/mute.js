@@ -55,7 +55,7 @@ module.exports = class mute extends commando.Command {
                     const durationRegExp = /\d+(?![^ymwdhs])[ymwdhs]?o?/gi;
                     const durationArg = args[1].match(durationRegExp);
                     for (const value of durationArg) {
-                        console.log(value);
+                        //console.log(value);
                         if (value.endsWith("h") || value.endsWith("ho")) {
                             duration = muteDurationMultiplier(duration, value, 60 * 60 * 1000);
                         }
