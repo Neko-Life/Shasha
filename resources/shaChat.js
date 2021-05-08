@@ -41,7 +41,7 @@ async function shaChat(client, index, question) {
 		}
 		try {
 			const page = await page1;
-			console.log("New chat query: "+query);
+			//console.log("New chat query: "+query);
 			await page.waitForSelector("input[id=\"question\"]");
 			await page.type("input[id=\"question\"]", query);
 			await page.keyboard.press("Enter");
@@ -80,8 +80,8 @@ let chatIndex = 3;
      * @returns 
      */
      async function chatAnswer(client, message) {
-        console.log(message.content);
-        console.log(chatIndex);
+        //console.log(message.content);
+        //console.log(chatIndex);
         if (message.content.trim().length === 0) {
             return
         } else {
