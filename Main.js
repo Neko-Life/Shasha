@@ -39,7 +39,7 @@ client.registry.findCommands
 client.on('ready', async () => {
     //shaGuild = client.guilds.cache.map(g => g);
     //console.log(`Member in ${shaGuild.length} guilds.`);
-    //console.log(client.user.tag+' logged in!');
+    console.log(client.user.tag+' logged in!');
 });
 
 client.on("message", async msg => {
