@@ -171,17 +171,19 @@ async function ranLog(msg, cmd, addition) {
  * @param {GuildMember[]} arr - Test array
  * @param {String} key - Keyword
  * @param {Number} max - Max length
- * @returns {Promise<String>}
+ * @param {Boolean} withID - Include user_ID
+ * @returns {String}
  */
-async function multipleMembersFound(client, msg, arr, key, max) {
-  if (!max) {
-    max = 5;
-  }
+function multipleMembersFound(client, msg, arr, key, max = 5, withID) {
   if (arr.length > 1) {
     try {
       let multipleFound = [];
       for(const one of arr) {
-        multipleFound.push((await (client.users.fetch(one.id))).tag);
+        let mes = one.user.tag;
+        if (withID) {
+          mes = mes + ` (${one.user.id})`;
+        }
+        multipleFound.push(mes);
       }
       let multi = [];
       for(const mu of multipleFound) {
@@ -323,7 +325,27 @@ async function defaultImageEmbed(client, msg, image, author, title, footerText) 
   return emb;
 }
 
+/**
+ * Return clean ID of provided key
+ * @param {String} key - Mention | Channel Name | Username | Rolename
+ * @returns {String} Clean ID
+ */
+function cleanMentionID(key) {
+  let uID = key.trim();
+  if (uID.startsWith('<@') || uID.startsWith('<#')) {
+    uID = uID.slice(2);
+  }
+  if (uID.endsWith('>')) {
+    uID = uID.slice(0,-1)
+  }
+  if (uID.startsWith('!') || uID.startsWith("@") || uID.startsWith("#") || uID.startsWith('&')) {
+    uID = uID.slice(1);
+  }
+  return uID;
+}
+
 module.exports = {
+  cleanMentionID,
   multipleMembersFound,
   findMemberRegEx, getUser,
   getChannelMessage, errLog,

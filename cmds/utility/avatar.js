@@ -2,7 +2,7 @@
 
 const commando = require("@iceprod/discord.js-commando");
 const { MessageEmbed } = require("discord.js");
-const { ranLog, errLog, trySend, findMemberRegEx, multipleMembersFound } = require("../../resources/functions");
+const { ranLog, errLog, trySend, findMemberRegEx, multipleMembersFound, cleanMentionID } = require("../../resources/functions");
 const { database } = require("../../database/mongo");
 const { randomColors } = require("../../config.json");
 
@@ -16,11 +16,6 @@ module.exports = class avatar extends commando.Command {
       description: "Avatar showcase."
     });
   }
-  /**
-   * 
-   * @param {commando.CommandoMessage} msg 
-   * @param {*} arg 
-   */
   async run(msg, arg) {
     const doc = msg.guild?.id ?? msg.author.id;
     const config = database.collection(msg.guild ? "Guild" : "User");
@@ -29,7 +24,8 @@ module.exports = class avatar extends commando.Command {
         errLog(docErr, msg, this.client);
       }
       const footerQuote = r?.["settings"]?.defaultEmbed?.footerQuote;
-      const withPerm = arg.trim().split(/,/);
+      const withPerm = arg.trim().split(/,+/);
+      console.log(withPerm);
       const option = arg.trim().split(/(\-\-)+/);
       let user, avatar, member, show;
       let [allEmb, multipleMemMes, dupliCheck] = [[], [], []];
@@ -55,22 +51,11 @@ module.exports = class avatar extends commando.Command {
           }
         }
       }
-      if (arg) {
+      if (args.length !== 0) {
         for(const theAvThis of args) {
           const avThis = theAvThis.replace(/\-\-show *\d*/i, "");        
           let uID = avThis.trim();
-          if (uID.startsWith('<@')) {
-            uID = uID.slice(2);
-          }
-          if (uID.startsWith('!')) {
-            uID = uID.slice(1);
-          }
-          if (uID.endsWith('>')) {
-            uID = uID.slice(0,-1)
-          }
-          if (uID.startsWith("@")) {
-            uID = uID.slice(1);
-          }
+          uID = cleanMentionID(uID);
           if (uID.length === 1) {
             return trySend(this.client, msg, "One character for searching member isn't allowed <:catstareLife:794930503076675584>");
           } else {
@@ -103,7 +88,7 @@ module.exports = class avatar extends commando.Command {
                 } else {
                   dupliCheck.push(ree[0].id);
                   user = ree[0].user ?? ree[0];
-                  multipleMemMes.push(await multipleMembersFound(this.client, msg, ree, uID, show));
+                  multipleMemMes.push(multipleMembersFound(this.client, msg, ree, uID, show));
                 }
               }
               if (user) {
