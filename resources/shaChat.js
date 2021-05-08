@@ -22,7 +22,7 @@ const URL = [
 	'https://rebot.me/lea-7062078', 'https://rebot.me/bunny-exe',//21
 	'https://rebot.me/just-monika-56'
 ];
-const browser = puppeteer.launch({headless:false});
+const browser = puppeteer.launch();
 const page1 = browser.then(r => r.newPage());
 page1.then(r => r.goto(URL[10]).catch(console.error));
 
@@ -46,7 +46,7 @@ async function shaChat(client, index, question) {
 			await page.type("input[id=\"question\"]", query);
 			await page.keyboard.press("Enter");
 			await page.waitForSelector(`#answer > div:nth-child(${index})`, {timeout:5000}).catch(() => {});
-			return getAnswerIndex(page, index);
+			return fetchAnswer(page, index);
 		} catch (error) {
 			throw error;
 		}
@@ -58,7 +58,7 @@ async function shaChat(client, index, question) {
  * @param {Number} index
  * @returns {String}
  */
-async function getAnswerIndex(page, index) {
+async function fetchAnswer(page, index) {
 	try {
 		const result = await page.evaluate((index) => {
 			const res = document.querySelector(`#answer > div:nth-child(${index})`).childNodes[4].textContent;
@@ -111,4 +111,4 @@ let chatIndex = 3;
         }
     }
 
-	module.exports = { shaChat, chatAnswer }
+	module.exports = { chatAnswer }
