@@ -1,7 +1,7 @@
 'use strict';
 
 const fs = require('fs-extra');
-const { MessageEmbed, Message, GuildMember, User, Channel, Client } = require('discord.js');
+const { MessageEmbed, Message, GuildMember, User, Channel, Client, GuildChannel, Role, GuildMemberRoleManager } = require('discord.js');
 const { defaultErrorLogChannel } = require("../config.json");
 const { database } = require("../database/mongo");
 
@@ -208,9 +208,9 @@ function multipleMembersFound(client, msg, arr, key, max = 5, withID) {
  * Get member object with RegExp
  * @param {Message} msg
  * @param {String} name
- * @returns {Promise<GuildMember[]>} Member object found
+ * @returns {GuildMember[]} Member object found
  */
-async function findMemberRegEx(msg, name) {
+function findMemberRegEx(msg, name) {
   let found = [];
   const re = new RegExp(name, "i");
   const list = msg.guild?.members.cache.array();
@@ -346,10 +346,131 @@ function cleanMentionID(key) {
   return uID;
 }
 
+/**
+ * Get channel object wit RegExp
+ * @param {Message} msg 
+ * @param {String} name 
+ * @returns {GuildChannel[]} Channels object found
+ */
+function findChannelRegEx(msg, name) {
+  let found = [];
+  const re = new RegExp(name, "i");
+  const list = msg.guild?.channels.cache.array();
+  if (list) {
+    for(const mem of list) {
+      if (re.test(mem.name)) {
+        found.push(mem);
+      }
+    }
+    return found;
+  }
+}
+
+/**
+ * Get role object with RegExp
+ * @param {Message} msg 
+ * @param {String} name 
+ * @returns {Role[]} Roles object found
+ */
+function findRoleRegEx(msg, name) {
+  let found = [];
+  const re = new RegExp(name, "i");
+  const list = msg.guild?.roles.cache.array();
+  if (list) {
+    for(const mem of list) {
+      if (re.test(mem.name)) {
+        found.push(mem);
+      }
+    }
+    return found;
+  }
+}
+
+/**
+ * Notify when more than one channel found when looking in the channel list
+ * @param {Client} client - (this.client)
+ * @param {Message} msg - Message object
+ * @param {GuildChannel[]} arr - Test array
+ * @param {String} key - Keyword
+ * @param {Number} max - Max length
+ * @param {Boolean} withID - Include channel_ID
+ * @returns {String}
+ */
+function multipleChannelsFound(client, msg, arr, key, max = 5, withID) {
+  if (arr.length > 1) {
+    try {
+      let multipleFound = [];
+      for(const one of arr) {
+        let mes = one.name;
+        if (withID) {
+          mes = mes + ` (${one.id})`;
+        }
+        multipleFound.push(mes);
+      }
+      let multi = [];
+      for(const mu of multipleFound) {
+        if (multipleFound.indexOf(mu) < max) {
+          multi.push(mu);
+        }
+      }
+      let mes = multi.join(", ");
+      if (multipleFound.length > max) {
+        mes = mes+` and ${multipleFound.length - max} more...`;
+      }
+      return `Multiple channels found for: **${key}**\`\`\`md\n# ${mes}\`\`\``;
+    } catch (e) {
+      errLog(e, msg, client);
+    }
+  } else {
+    return '';
+  }
+}
+
+/**
+ * Notify when more than one role found when looking in the role list
+ * @param {Client} client - (this.client)
+ * @param {Message} msg - Message object
+ * @param {Role[]} arr - Test array
+ * @param {String} key - Keyword
+ * @param {Number} max - Max length
+ * @param {Boolean} withID - Include role_ID
+ * @returns {String}
+ */
+ function multipleRolesFound(client, msg, arr, key, max = 5, withID) {
+  if (arr.length > 1) {
+    try {
+      let multipleFound = [];
+      for(const one of arr) {
+        let mes = one.name;
+        if (withID) {
+          mes = mes + ` (${one.id})`;
+        }
+        multipleFound.push(mes);
+      }
+      let multi = [];
+      for(const mu of multipleFound) {
+        if (multipleFound.indexOf(mu) < max) {
+          multi.push(mu);
+        }
+      }
+      let mes = multi.join(", ");
+      if (multipleFound.length > max) {
+        mes = mes+` and ${multipleFound.length - max} more...`;
+      }
+      return `Multiple roles found for: **${key}**\`\`\`md\n# ${mes}\`\`\``;
+    } catch (e) {
+      errLog(e, msg, client);
+    }
+  } else {
+    return '';
+  }
+}
+
 module.exports = {
   cleanMentionID,
-  multipleMembersFound,
-  findMemberRegEx, getUser,
+  multipleMembersFound, multipleRolesFound, multipleChannelsFound,
+  findMemberRegEx, findChannelRegEx, findRoleRegEx,
+  getUser,
   getChannelMessage, errLog,
   execCB, ranLog, noPerm,
   trySend, tryDelete, tryReact,

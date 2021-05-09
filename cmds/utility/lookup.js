@@ -1,7 +1,7 @@
 'use strict';
 
 const commando = require("@iceprod/discord.js-commando");
-const { cleanMentionID, findMemberRegEx, multipleMembersFound, trySend } = require("../../resources/functions");
+const { cleanMentionID, findMemberRegEx, multipleMembersFound, trySend, findRoleRegEx, multipleRolesFound, multipleChannelsFound, findChannelRegEx } = require("../../resources/functions");
 
 module.exports = class lookup extends commando.Command {
     constructor(client) {
@@ -12,6 +12,12 @@ module.exports = class lookup extends commando.Command {
             description: "Lookup something in the server using mention, ID, or RegExp."
         });
     }
+    /**
+     * 
+     * @param {commando.CommandoMessage} msg 
+     * @param {*} arg 
+     * @returns 
+     */
     async run(msg, arg) {
         let show;
         const showArg = arg.match(/\-\-show *\d*/i);
@@ -26,15 +32,16 @@ module.exports = class lookup extends commando.Command {
         }
         arg = arg.replace(/\-\-show *\d*/i, "");
         const args = arg.split(/ +/);
-        let [fetchedMember, memMes] = [[], ""];
-        if (args[0].toLowerCase() === "member") {
+        let [fetchedMember, fetchedRoles, fetchedChannels, memMes] = [[], [], [], ""];
+        const lowCaseArg0 = args[0].toLowerCase();
+        if (lowCaseArg0 === "member") {
             if (args[1]) {
                 const memberID = cleanMentionID(arg.slice("member".length).trim());
                 if (!/\D/.test(memberID)) {
                     fetchedMember.push(msg.guild.member(memberID));
                 }
                 if (/\D/.test(memberID) || fetchedMember[0] === null) {
-                    fetchedMember = await findMemberRegEx(msg, memberID);
+                    fetchedMember = findMemberRegEx(msg, memberID);
                 }
                 if (fetchedMember.length > 1) {
                     memMes = multipleMembersFound(this.client, msg, fetchedMember, memberID, show, true);
@@ -43,6 +50,44 @@ module.exports = class lookup extends commando.Command {
                         return trySend(this.client, msg, `No member found for: **${memberID}**`);
                     }
                     memMes = `Member found for: **${memberID}**\`\`\`md\n# ${fetchedMember[0].user.tag} (${fetchedMember[0].user.id})\`\`\``;
+                }
+            }
+        }
+        if (lowCaseArg0 === "role") {
+            if (args[1]) {
+                const cleanRoleID = cleanMentionID(arg.slice("role".length).trim());
+                if (!/\D/.test(cleanRoleID)) {
+                    fetchedRoles.push(msg.guild.roles.cache.get(cleanRoleID));
+                }
+                if (/\D/.test(cleanRoleID) || fetchedRoles[0] == null) {
+                    fetchedRoles = findRoleRegEx(msg, cleanRoleID);
+                }
+                if (fetchedRoles.length > 1) {
+                    memMes = multipleRolesFound(this.client, msg, fetchedRoles, cleanRoleID, show, true);
+                } else {
+                    if (fetchedRoles.length === 0 || fetchedRoles[0] === null) {
+                        return trySend(this.client, msg, `No role found for: **${cleanRoleID}**`);
+                    }
+                    memMes = `Role found for: **${cleanRoleID}**\`\`\`md\n# ${fetchedRoles[0].name} (${fetchedRoles[0].id})\`\`\``;
+                }
+            }
+        }
+        if (lowCaseArg0 === "channel") {
+            if (args[1]) {
+                const cleanChannelID = cleanMentionID(arg.slice("channel".length).trim());
+                if (!/\D/.test(cleanChannelID)) {
+                    fetchedChannels.push(msg.guild.roles.cache.get(cleanChannelID));
+                }
+                if (/\D/.test(cleanChannelID) || fetchedChannels[0] == null) {
+                    fetchedChannels = findChannelRegEx(msg, cleanChannelID);
+                }
+                if (fetchedChannels.length > 1) {
+                    memMes = multipleChannelsFound(this.client, msg, fetchedChannels, cleanChannelID, show, true);
+                } else {
+                    if (fetchedChannels.length === 0 || fetchedChannels[0] === null) {
+                        return trySend(this.client, msg, `No channel found for: **${cleanChannelID}**`);
+                    }
+                    memMes = `Channel found for: **${cleanChannelID}**\`\`\`md\n# ${fetchedChannels[0].name} (${fetchedChannels[0].id})\`\`\``;
                 }
             }
         }
