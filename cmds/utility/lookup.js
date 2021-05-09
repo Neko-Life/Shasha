@@ -39,7 +39,7 @@ module.exports = class lookup extends commando.Command {
                 if (fetchedMember.length > 1) {
                     memMes = multipleMembersFound(this.client, msg, fetchedMember, memberID, show, true);
                 } else {
-                    if (fetchedMember.length === 0) {
+                    if (fetchedMember.length === 0 || fetchedMember[0] === null) {
                         return trySend(this.client, msg, `No member found for: **${memberID}**`);
                     }
                     memMes = `Member found for: **${memberID}**\`\`\`md\n# ${fetchedMember[0].user.tag} (${fetchedMember[0].user.id})\`\`\``;
