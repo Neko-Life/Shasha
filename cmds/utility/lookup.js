@@ -33,7 +33,7 @@ module.exports = class lookup extends commando.Command {
                 if (!/\D/.test(memberID)) {
                     fetchedMember.push(msg.guild.member(memberID));
                 }
-                if (/\D/.test(memberID) || fetchedMember[0] === undefined) {
+                if (/\D/.test(memberID) || fetchedMember[0] === null) {
                     fetchedMember = await findMemberRegEx(msg, this.client, memberID);
                 }
                 if (fetchedMember.length > 1) {
