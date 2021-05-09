@@ -34,8 +34,6 @@ const guildLog = "840154722434154496";
 
 let shaGuild;
 
-client.registry.findCommands
-
 client.on('ready', async () => {
     //shaGuild = client.guilds.cache.map(g => g);
     //console.log(`Member in ${shaGuild.length} guilds.`);
