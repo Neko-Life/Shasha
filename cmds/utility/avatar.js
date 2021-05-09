@@ -69,7 +69,7 @@ module.exports = class avatar extends commando.Command {
             let ree = [];
             async function nonDigit(client) {
               const theree = findMemberRegEx(msg, uID);
-              if (theree) {
+              if (theree.length > 0) {
                 for (const reeRes of theree) {
                   ree.push(reeRes);
                 }
@@ -118,8 +118,6 @@ module.exports = class avatar extends commando.Command {
                 emb.setColor(16777214);
               }
               allEmb.push(emb);
-            } else {
-              trySend(this.client, msg, `Can't find user: **${avThis.trim()}**`);
             }
           }
           if (onceOnly) {
