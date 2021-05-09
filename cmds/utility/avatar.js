@@ -118,6 +118,8 @@ module.exports = class avatar extends commando.Command {
                 emb.setColor(16777214);
               }
               allEmb.push(emb);
+            } else {
+              trySend(this.client, msg, `Can't find user: **${avThis.trim()}**`);
             }
           }
           if (onceOnly) {
