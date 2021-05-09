@@ -34,7 +34,7 @@ module.exports = class lookup extends commando.Command {
                     fetchedMember.push(msg.guild.member(memberID));
                 }
                 if (/\D/.test(memberID) || fetchedMember[0] === null) {
-                    fetchedMember = await findMemberRegEx(msg, this.client, memberID);
+                    fetchedMember = await findMemberRegEx(msg, memberID);
                 }
                 if (fetchedMember.length > 1) {
                     memMes = multipleMembersFound(this.client, msg, fetchedMember, memberID, show, true);

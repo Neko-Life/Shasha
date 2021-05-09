@@ -210,16 +210,18 @@ function multipleMembersFound(client, msg, arr, key, max = 5, withID) {
  * @param {String} name
  * @returns {Promise<GuildMember[]>} Member object found
  */
-async function findMemberRegEx(msg, client, name) {
+async function findMemberRegEx(msg, name) {
   let found = [];
   const re = new RegExp(name, "i");
-  const list = msg.guild.members.cache.map(g => g);
-  for(const mem of list) {
-    if (re.test(mem.displayName) || re.test((await client.users.fetch(mem.id)).tag)) {
-      found.push(mem);
+  const list = msg.guild?.members.cache.array();
+  if (list) {
+    for(const mem of list) {
+      if (re.test(mem.displayName) || re.test(mem.user.tag)) {
+        found.push(mem);
+      }
     }
+    return found;
   }
-  return found;
 }
 
 /**

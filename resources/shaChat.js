@@ -45,7 +45,6 @@ async function shaChat(client, index, question) {
 			await page.waitForSelector("input[id=\"question\"]");
 			await page.type("input[id=\"question\"]", query);
 			await page.keyboard.press("Enter");
-			await page.waitForSelector(`#answer > div:nth-child(${index})`, {timeout:5000}).catch(() => {});
 			return fetchAnswer(page, index);
 		} catch (error) {
 			throw error;
@@ -60,6 +59,7 @@ async function shaChat(client, index, question) {
  */
 async function fetchAnswer(page, index) {
 	try {
+		await page.waitForSelector(`#answer > div:nth-child(${index})`, {timeout:5000}).catch(() => {});
 		const result = await page.evaluate((index) => {
 			const res = document.querySelector(`#answer > div:nth-child(${index})`).childNodes[4].textContent;
 			return res;

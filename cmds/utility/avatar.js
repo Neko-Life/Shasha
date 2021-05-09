@@ -5,6 +5,7 @@ const { MessageEmbed } = require("discord.js");
 const { ranLog, errLog, trySend, findMemberRegEx, multipleMembersFound, cleanMentionID } = require("../../resources/functions");
 const { database } = require("../../database/mongo");
 const { randomColors } = require("../../config.json");
+const { isArray } = require("util");
 
 module.exports = class avatar extends commando.Command {
   constructor(client) {
@@ -25,7 +26,6 @@ module.exports = class avatar extends commando.Command {
       }
       const footerQuote = r?.["settings"]?.defaultEmbed?.footerQuote;
       const withPerm = arg.trim().split(/,+/);
-      console.log(withPerm);
       const option = arg.trim().split(/(\-\-)+/);
       let user, avatar, member, show;
       let [allEmb, multipleMemMes, dupliCheck] = [[], [], []];
@@ -37,83 +37,91 @@ module.exports = class avatar extends commando.Command {
       if (!msg.guild || msg.guild.member(msg.author).hasPermission("MANAGE_MESSAGES")) {
         args = withPerm;
       } else {
-        args = withPerm[0];
-        if (withPerm.length > 1) {
+        if (withPerm.length < 2) {
+          args = withPerm;
+        } else {
+          args = withPerm[0];
           trySend(this.client, msg, "Manage messages permission required to show two or more avatar at once!");
         }
       }
       for (const ops of option) {
         if (ops.toLowerCase().startsWith("show")) {
           const val = ops.trim().split(/ +/);
-          const theVal = val[1]?.trim().replace(",", "");
-          if (theVal && !/\D/.test(theVal)) {
-            show = parseInt(val[1].trim(), 10);
+          const theVal = val[1]?.match(/\d*/);
+          if (theVal[0]) {
+            show = parseInt(theVal[0].trim(), 10);
           }
         }
       }
-      if (args.length !== 0) {
+      if (arg) {
+        let onceOnly = false;
         for(const theAvThis of args) {
-          const avThis = theAvThis.replace(/\-\-show *\d*/i, "");        
-          let uID = avThis.trim();
-          uID = cleanMentionID(uID);
-          if (uID.length === 1) {
-            return trySend(this.client, msg, "One character for searching member isn't allowed <:catstareLife:794930503076675584>");
-          } else {
-            if (uID) {
-              let ree = [];
-              async function nonDigit(client) {
-                const theree = await findMemberRegEx(msg, client, uID);
-                if (theree.length === 0) {
-                  user = undefined;
-                  trySend(client, msg, `Can't find user: **${avThis.trim()}**`);
-                }
+          let avThis = theAvThis.replace(/\-\-show *\d*/i, "");
+          if (avThis.length === 1) {
+            avThis = args.replace(/\-\-show *\d*/i, "");
+            onceOnly = true;
+            if (avThis.length === 1) {
+              return trySend(this.client, msg, "One character for searching member isn't allowed <:catstareLife:794930503076675584>");
+            }
+          }
+          let uID = cleanMentionID(avThis.trim());
+          if (uID.length > 1) {
+            let ree = [];
+            async function nonDigit(client) {
+              const theree = await findMemberRegEx(msg, uID);
+              if (theree) {
                 for (const reeRes of theree) {
                   ree.push(reeRes);
                 }
-              }
-              if (/\D/.test(uID)) {
-                await nonDigit(this.client);
               } else {
-                if (msg.guild.member(uID)) {
-                  ree.push(msg.guild.member(uID));
-                } else {
-                  await this.client.users.fetch(uID).then(r => ree.push(r)).catch(async e => await nonDigit(this.client));
-                }
-              }
-              if (ree.length > 0) {
-                const duplicateRes = dupliCheck.findIndex(yes => yes === ree[0].id);
-                if (duplicateRes !== -1) {
-                  allEmb[duplicateRes].setDescription(`Duplicate result for: **${avThis.trim()}**`);
-                  user = undefined;
-                } else {
-                  dupliCheck.push(ree[0].id);
-                  user = ree[0].user ?? ree[0];
-                  multipleMemMes.push(multipleMembersFound(this.client, msg, ree, uID, show));
-                }
-              }
-              if (user) {
-                avatar = user.displayAvatarURL({size:4096,dynamic:true});
-                let emb = new MessageEmbed()
-                .setImage(avatar)
-                .setFooter(footerQuote ?? "");
-                member = msg.guild ? msg.guild.member(user) : undefined;
-                if (member) {
-                  emb.setTitle(member.displayName);
-                  if (member.displayColor) {
-                    emb.setColor(member.displayColor)
-                  }
-                } else {
-                  emb.setTitle(user.username);
-                }
-                if (!msg.guild) {
-                  emb.setColor(randomColors[Math.floor(Math.random() * randomColors.length)]);
-                }
-                if (emb.color === 16777215) {
-                  emb.setColor(16777214);
-                }
-                allEmb.push(emb);
+                trySend(client, msg, `Can't find user: **${avThis.trim()}**`);
               }
             }
+            if (/\D/.test(uID)) {
+              await nonDigit(this.client);
+            } else {
+              if (msg.guild?.member(uID)) {
+                ree.push(msg.guild.member(uID));
+              } else {
+                await this.client.users.fetch(uID).then(r => ree.push(r)).catch(async e => await nonDigit(this.client));
+              }
+            }
+            if (ree.length > 0) {
+              const duplicateRes = dupliCheck.findIndex(yes => yes === ree[0].id);
+              if (duplicateRes !== -1) {
+                allEmb[duplicateRes].setDescription(`Duplicate result for: **${avThis.trim()}**`);
+                user = undefined;
+              } else {
+                dupliCheck.push(ree[0].id);
+                user = ree[0].user ?? ree[0];
+                multipleMemMes.push(multipleMembersFound(this.client, msg, ree, uID, show));
+              }
+            }
+            if (user) {
+              avatar = user.displayAvatarURL({size:4096,dynamic:true});
+              let emb = new MessageEmbed()
+              .setImage(avatar)
+              .setFooter(footerQuote ?? "");
+              member = msg.guild ? msg.guild.member(user) : undefined;
+              if (member) {
+                emb.setTitle(member.displayName);
+                if (member.displayColor) {
+                  emb.setColor(member.displayColor)
+                }
+              } else {
+                emb.setTitle(user.username);
+              }
+              if (!msg.guild) {
+                emb.setColor(randomColors[Math.floor(Math.random() * randomColors.length)]);
+              }
+              if (emb.color === 16777215) {
+                emb.setColor(16777214);
+              }
+              allEmb.push(emb);
+            }
+          }
+          if (onceOnly) {
+            break
           }
         }
       } else {
