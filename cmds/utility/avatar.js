@@ -56,7 +56,7 @@ module.exports = class avatar extends commando.Command {
             let ree = [];
             async function nonDigit(client) {
               const theree = findMemberRegEx(msg, uID);
-              if (theree.length > 0) {
+              if (theree?.length > 0) {
                 for (const reeRes of theree) {
                   ree.push(reeRes);
                 }
