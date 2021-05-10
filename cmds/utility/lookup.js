@@ -34,25 +34,6 @@ module.exports = class lookup extends commando.Command {
         const args = arg.split(/ +/);
         let [fetchedMember, fetchedRoles, fetchedChannels, memMes] = [[], [], [], ""];
         const lowCaseArg0 = args[0].toLowerCase();
-        if (lowCaseArg0 === "member") {
-            if (args[1]) {
-                const memberID = cleanMentionID(arg.slice("member".length).trim());
-                if (!/\D/.test(memberID)) {
-                    fetchedMember.push(msg.guild.member(memberID));
-                }
-                if (/\D/.test(memberID) || fetchedMember[0] === null) {
-                    fetchedMember = findMemberRegEx(msg, memberID);
-                }
-                if (fetchedMember.length > 1) {
-                    memMes = multipleMembersFound(this.client, msg, fetchedMember, memberID, show, true);
-                } else {
-                    if (fetchedMember.length === 0 || fetchedMember[0] === null) {
-                        return trySend(this.client, msg, `No member found for: **${memberID}**`);
-                    }
-                    memMes = `Member found for: **${memberID}**\`\`\`md\n# ${fetchedMember[0].user.tag} (${fetchedMember[0].user.id})\`\`\``;
-                }
-            }
-        }
         if (lowCaseArg0 === "role") {
             if (args[1]) {
                 const cleanRoleID = cleanMentionID(arg.slice("role".length).trim());
@@ -71,23 +52,39 @@ module.exports = class lookup extends commando.Command {
                     memMes = `Role found for: **${cleanRoleID}**\`\`\`md\n# ${fetchedRoles[0].name} (${fetchedRoles[0].id})\`\`\``;
                 }
             }
-        }
-        if (lowCaseArg0 === "channel") {
-            if (args[1]) {
-                const cleanChannelID = cleanMentionID(arg.slice("channel".length).trim());
-                if (!/\D/.test(cleanChannelID)) {
-                    fetchedChannels.push(msg.guild.roles.cache.get(cleanChannelID));
-                }
-                if (/\D/.test(cleanChannelID) || fetchedChannels[0] == null) {
-                    fetchedChannels = findChannelRegEx(msg, cleanChannelID);
-                }
-                if (fetchedChannels.length > 1) {
-                    memMes = multipleChannelsFound(this.client, msg, fetchedChannels, cleanChannelID, show, true);
-                } else {
-                    if (fetchedChannels.length === 0 || fetchedChannels[0] === null) {
-                        return trySend(this.client, msg, `No channel found for: **${cleanChannelID}**`);
+        } else {
+            if (lowCaseArg0 === "channel") {
+                if (args[1]) {
+                    const cleanChannelID = cleanMentionID(arg.slice("channel".length).trim());
+                    if (!/\D/.test(cleanChannelID)) {
+                        fetchedChannels.push(msg.guild.roles.cache.get(cleanChannelID));
                     }
-                    memMes = `Channel found for: **${cleanChannelID}**\`\`\`md\n# ${fetchedChannels[0].name} (${fetchedChannels[0].id})\`\`\``;
+                    if (/\D/.test(cleanChannelID) || fetchedChannels[0] == null) {
+                        fetchedChannels = findChannelRegEx(msg, cleanChannelID);
+                    }
+                    if (fetchedChannels.length > 1) {
+                        memMes = multipleChannelsFound(this.client, msg, fetchedChannels, cleanChannelID, show, true);
+                    } else {
+                        if (fetchedChannels.length === 0 || fetchedChannels[0] === null) {
+                            return trySend(this.client, msg, `No channel found for: **${cleanChannelID}**`);
+                        }
+                        memMes = `Channel found for: **${cleanChannelID}**\`\`\`md\n# ${fetchedChannels[0].name} (${fetchedChannels[0].id})\`\`\``;
+                    }
+                }
+            } else {
+                if (!/\D/.test(arg)) {
+                    fetchedMember.push(msg.guild.member(arg));
+                }
+                if (/\D/.test(arg) || fetchedMember[0] === null) {
+                    fetchedMember = findMemberRegEx(msg, arg);
+                }
+                if (fetchedMember.length > 1) {
+                    memMes = multipleMembersFound(this.client, msg, fetchedMember, arg, show, true);
+                } else {
+                    if (fetchedMember.length === 0 || fetchedMember[0] === null) {
+                        return trySend(this.client, msg, `No member found for: **${arg}**`);
+                    }
+                    memMes = `Member found for: **${arg}**\`\`\`md\n# ${fetchedMember[0].user.tag} (${fetchedMember[0].user.id})\`\`\``;
                 }
             }
         }

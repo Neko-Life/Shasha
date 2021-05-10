@@ -117,7 +117,7 @@ module.exports = class mute extends commando.Command {
             }
         }
         const testdate = new Date(String(duration.year), String(duration.month), String(duration.date), String(duration.hour), String(duration.minute), String(duration.second));
-        return trySend(this.client, msg, `Result:\`\`\`js\n${targetUser}\n${reason}\n${invokedAt.toUTCString()}\n${testdate.toUTCString()}\nMuted for: ${timeForMessage.join(" + ")}\`\`\``);
+        return trySend(this.client, msg, `Result:\`\`\`js\nUsers: ${targetUser}\nReason: ${reason}\nMuted for: ${timeForMessage.join(" + ")}\nFrom: ${invokedAt.toUTCString()}\nEnds: ${testdate.toUTCString()}\`\`\``);
     }
 };
 
