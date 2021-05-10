@@ -51,11 +51,8 @@ module.exports = class avatar extends commando.Command {
       if (arg) {
         for(const theAvThis of args) {
           let avThis = theAvThis.replace(/\-\-show *\d*/i, "");
-          if (avThis.length === 1) {
-            return trySend(this.client, msg, "One character for searching member isn't allowed <:catstareLife:794930503076675584>");
-          }
           let uID = cleanMentionID(avThis.trim());
-          if (uID.length > 1) {
+          if (uID.length > 0) {
             let ree = [];
             async function nonDigit(client) {
               const theree = findMemberRegEx(msg, uID);
