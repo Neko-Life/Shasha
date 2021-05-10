@@ -1,7 +1,6 @@
 'use strict';
 
-const fs = require('fs-extra');
-const { MessageEmbed, Message, GuildMember, User, Channel, Client, GuildChannel, Role, GuildMemberRoleManager } = require('discord.js');
+const { MessageEmbed, Message, GuildMember, User, Client, GuildChannel, Role } = require('discord.js');
 const { defaultErrorLogChannel } = require("../config.json");
 const { database } = require("../database/mongo");
 
@@ -55,25 +54,6 @@ async function errLog(theError, msg, client, sendTheError, errorMessage, notify)
   logThis = logThis+theError.stack+"\nat: "+f;
   return //console.log(logThis);
 }
-    /*
-    fs.appendFile(join(__dirname, errLogPath + 'Error.txt'), logThis+"\n", (err) => {
-      if (err) {
-        console.error(err);
-        fs.mkdir(join(__dirname, errLogPath), { recursive: true }, (err) => {
-          if (err) {
-            return console.error('Unable to create directory. Error: ' + err.stack);
-          }
-          console.log(errLogPath + ' created.');
-          fs.writeFile(join(__dirname, errLogPath + 'Error.txt'), logThis+"\n", (err2) => {
-            if (err2) {
-              return console.error(err2);
-            }
-            console.error(logThis);
-          });
-        });
-      }
-      console.error(logThis);
-    }); */
 
 /**
  * Get message object from the message channel or provided channel
@@ -145,24 +125,8 @@ async function ranLog(msg, cmd, addition) {
   }
   let add = '\n'+addition;
   const b = new Date().toUTCString();
-  const inLog = `NEW USAGE! Message ID: ${msg.id} url: ${msg.url}\nCommand \`${cmd}\` ran by **${msg.author.tag}** (${msg.author.id}) in ${msg.guild ? `**${msg.channel.name}**` : 'DM'} (${msg.channel.id}) ${msg.guild ? `of **${msg.guild.name}** (${msg.guild.id})` : ``}${add}\nAt: ${b}`;
   return //console.log(inLog);
 }
-    /* fs.appendFile(join(__dirname, `${errLogPath}CmdUsage.txt`),`${inLog}\n`, e => {
-      if (e) {
-        fs.mkdir(join(errLogPath),{recursive:true}, e2 => {
-          if (e2) {}
-          fs.writeFile(join(__dirname, `${errLogPath}CmdUsage.txt`),`${inLog}\n`, e3 => {
-            if (e3) {
-              errLog(e3, msg);
-            } else {
-              console.log(`${errLogPath}CmdUsage.txt created.`);
-            }
-          });
-        });
-      }
-    });
-    */
 
 /**
  * Notify when more than one member found when looking in the member list
@@ -230,7 +194,7 @@ function findMemberRegEx(msg, name) {
  */
 function noPerm(msg) {
   if (msg) {
-    msg.react("sadduLife:797107817001386025").catch(e => {});
+    msg.react("sadduLife:797107817001386025").catch(() => {});
   }
 }
 
@@ -250,7 +214,7 @@ async function trySend(client, msg, ...content) {
     msgOf = client.channels.cache.get(msg);
   }
   const sentMes = await msgOf.send(...content)
-  .catch(e => {
+  .catch(() => {
     if (msg?.channel) {
       noPerm(msg);
     }
@@ -474,4 +438,5 @@ module.exports = {
   getChannelMessage, errLog,
   execCB, ranLog, noPerm,
   trySend, tryDelete, tryReact,
-  sentAdCheck, defaultImageEmbed }
+  sentAdCheck, defaultImageEmbed 
+}
