@@ -33,7 +33,7 @@ module.exports = class avatar extends commando.Command {
         avatar = msg.author.displayAvatarURL({size:4096,dynamic:true});
       }
       let onceOnly = false;
-      if (msg.guild && !msg.guild.member(msg.author).hasPermission("MANAGE_MESSAGES")) {
+      if (!msg.guild?.member(msg.author).hasPermission("MANAGE_MESSAGES")) {
         onceOnly = true;
         if (args.length > 1) {
           trySend(this.client, msg, "Manage messages permission required to show two or more avatar at once!");
