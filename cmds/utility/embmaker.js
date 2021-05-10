@@ -19,7 +19,7 @@ module.exports = class embmaker extends commando.Command {
         });
     }
     async run(msg, arg) {
-        const args = arg.trim().split(/(\-\-)+/);
+        const args = arg.trim().split(/(?<!\\)(\-\-)+/);
         let embed = new MessageEmbed();
         let autName, footertext, autIcon, autUrl, footericon, content, channel, editSrc, newAttach = [];
         try {

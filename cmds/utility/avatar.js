@@ -25,7 +25,7 @@ module.exports = class avatar extends commando.Command {
       }
       const footerQuote = r?.["settings"]?.defaultEmbed?.footerQuote;
       const args = arg.trim().split(/(?<!\\),+/);
-      const option = arg.trim().split(/(\-\-)+/);
+      const option = arg.trim().split(/(?<!\\)(\-\-)+/);
       let user, avatar, member, show;
       let [allEmb, multipleMemMes, dupliCheck] = [[], [], []];
       if (!arg) {
