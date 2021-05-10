@@ -5,7 +5,6 @@ const { MessageEmbed } = require("discord.js");
 const { ranLog, errLog, trySend, findMemberRegEx, multipleMembersFound, cleanMentionID } = require("../../resources/functions");
 const { database } = require("../../database/mongo");
 const { randomColors } = require("../../config.json");
-const { isArray } = require("util");
 
 module.exports = class avatar extends commando.Command {
   constructor(client) {
