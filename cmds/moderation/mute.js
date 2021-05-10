@@ -41,11 +41,13 @@ module.exports = class mute extends commando.Command {
             minute: invokedAt.getMinutes(),
             second: invokedAt.getSeconds()
         }
-        let [timeForMessage, targetUser] = [[], []], reason = "No reason provided by " + msg.author.tag;
+        let durationHasSet = false;
+        let [timeForMessage, targetUser] = [["Indefinite"], []], reason = "No reason provided by " + msg.author.tag;
         for (const argument of args) {
-            if (/^\d+(?![^ymwdhs])[ymwdhs]?o?/i.test(argument.trim())) {
+            if (/^\d+(?![^ymwdhs])[ymwdhs]?o?/i.test(argument.trim()) && !durationHasSet) {
                 const durationArg = argument.match(durationRegExp);
                 console.log(durationArg);
+                timeForMessage = [];
                 for (const value of durationArg) {
                     console.log(value);
                     const val = parseInt(value.match(/\d+/)[0], 10);
@@ -79,6 +81,7 @@ module.exports = class mute extends commando.Command {
                         timeForMessage.push(val + " Seconds");
                     }
                 }
+                durationHasSet = true;
             } else {
                 if (argument.length > 0 && argument !== "--") {
                     reason = msg.author.tag+": "+argument.trim();
@@ -116,8 +119,11 @@ module.exports = class mute extends commando.Command {
                 }
             }
         }
-        const testdate = new Date(String(duration.year), String(duration.month), String(duration.date), String(duration.hour), String(duration.minute), String(duration.second));
-        return trySend(this.client, msg, `Result:\`\`\`js\nUsers: ${targetUser}\nReason: ${reason}\nMuted for: ${timeForMessage.join(" + ")}\nFrom: ${invokedAt.toUTCString()}\nEnds: ${testdate.toUTCString()}\`\`\``);
+        let testdate = new Date(String(duration.year), String(duration.month), String(duration.date), String(duration.hour), String(duration.minute), String(duration.second));
+        if (testdate.toUTCString() === invokedAt.toUTCString()) {
+            testdate = undefined;
+        }
+        return trySend(this.client, msg, `Result:\`\`\`js\nUsers: ${targetUser}\nReason: ${reason}\nFor: ${timeForMessage.join(" + ")}\nBegins: ${invokedAt.toUTCString()}\nEnds: ${testdate?.toUTCString()}\`\`\``);
     }
 };
 

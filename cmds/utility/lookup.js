@@ -20,7 +20,7 @@ module.exports = class lookup extends commando.Command {
      */
     async run(msg, arg) {
         let show;
-        const showArg = arg.match(/\-\-show *\d*/i);
+        const showArg = arg.match(/(?<!\\)\-\-show *\d*/i);
         if (showArg?.[0]) {
             const digit = showArg[0].match(/\d*/g);
             for (const val of digit) {
@@ -30,7 +30,7 @@ module.exports = class lookup extends commando.Command {
                 }
             }
         }
-        arg = arg.replace(/\-\-show *\d*/i, "");
+        arg = arg.replace(/(?<!\\)\-\-show *\d*/i, "").trim();
         const args = arg.split(/ +/);
         let [fetchedMember, fetchedRoles, fetchedChannels, memMes] = [[], [], [], ""];
         const lowCaseArg0 = args[0].toLowerCase();
@@ -49,7 +49,7 @@ module.exports = class lookup extends commando.Command {
                     if (fetchedRoles.length === 0 || fetchedRoles[0] === null) {
                         return trySend(this.client, msg, `No role found for: **${cleanRoleID}**`);
                     }
-                    memMes = `Role found for: **${cleanRoleID}**\`\`\`md\n# ${fetchedRoles[0].name} (${fetchedRoles[0].id})\`\`\``;
+                    memMes = `Role found for: **${cleanRoleID}**\`\`\`js\n' ${fetchedRoles[0].name} (${fetchedRoles[0].id})\`\`\``;
                 }
             }
         } else {
@@ -68,7 +68,7 @@ module.exports = class lookup extends commando.Command {
                         if (fetchedChannels.length === 0 || fetchedChannels[0] === null) {
                             return trySend(this.client, msg, `No channel found for: **${cleanChannelID}**`);
                         }
-                        memMes = `Channel found for: **${cleanChannelID}**\`\`\`md\n# ${fetchedChannels[0].name} (${fetchedChannels[0].id})\`\`\``;
+                        memMes = `Channel found for: **${cleanChannelID}**\`\`\`js\n' ${fetchedChannels[0].name} (${fetchedChannels[0].id})\`\`\``;
                     }
                 }
             } else {
@@ -84,7 +84,7 @@ module.exports = class lookup extends commando.Command {
                     if (fetchedMember.length === 0 || fetchedMember[0] === null) {
                         return trySend(this.client, msg, `No member found for: **${arg}**`);
                     }
-                    memMes = `Member found for: **${arg}**\`\`\`md\n# ${fetchedMember[0].user.tag} (${fetchedMember[0].user.id})\`\`\``;
+                    memMes = `Member found for: **${arg}**\`\`\`js\n' ${fetchedMember[0].user.tag} (${fetchedMember[0].user.id})\`\`\``;
                 }
             }
         }

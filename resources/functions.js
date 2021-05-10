@@ -191,11 +191,11 @@ function multipleMembersFound(client, msg, arr, key, max = 5, withID) {
           multi.push(mu);
         }
       }
-      let mes = multi.join(", ");
+      let mes = multi.join(",\n' ");
       if (multipleFound.length > max) {
-        mes = mes+` and ${multipleFound.length - max} more...`;
+        mes = mes+`,\n' ${multipleFound.length - max} more...`;
       }
-      return `Multiple members found for: **${key}**\`\`\`md\n# ${mes}\`\`\``;
+      return `Multiple members found for: **${key}**\`\`\`js\n' ${mes}\`\`\``;
     } catch (e) {
       errLog(e, msg, client);
     }
@@ -413,11 +413,11 @@ function multipleChannelsFound(client, msg, arr, key, max = 5, withID) {
           multi.push(mu);
         }
       }
-      let mes = multi.join(", ");
+      let mes = multi.join(",\n' ");
       if (multipleFound.length > max) {
-        mes = mes+` and ${multipleFound.length - max} more...`;
+        mes = mes+`,\n' ${multipleFound.length - max} more...`;
       }
-      return `Multiple channels found for: **${key}**\`\`\`md\n# ${mes}\`\`\``;
+      return `Multiple channels found for: **${key}**\`\`\`js\n' ${mes}\`\`\``;
     } catch (e) {
       errLog(e, msg, client);
     }
@@ -453,11 +453,11 @@ function multipleChannelsFound(client, msg, arr, key, max = 5, withID) {
           multi.push(mu);
         }
       }
-      let mes = multi.join(", ");
+      let mes = multi.join(",\n' ");
       if (multipleFound.length > max) {
-        mes = mes+` and ${multipleFound.length - max} more...`;
+        mes = mes+`,\n' ${multipleFound.length - max} more...`;
       }
-      return `Multiple roles found for: **${key}**\`\`\`md\n# ${mes}\`\`\``;
+      return `Multiple roles found for: **${key}**\`\`\`js\n' ${mes}\`\`\``;
     } catch (e) {
       errLog(e, msg, client);
     }
