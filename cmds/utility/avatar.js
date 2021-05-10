@@ -24,7 +24,7 @@ module.exports = class avatar extends commando.Command {
         errLog(docErr, msg, this.client);
       }
       const footerQuote = r?.["settings"]?.defaultEmbed?.footerQuote;
-      const args = arg.trim().split(/,+/);
+      const args = arg.trim().split(/(?<!\\),+/);
       const option = arg.trim().split(/(\-\-)+/);
       let user, avatar, member, show;
       let [allEmb, multipleMemMes, dupliCheck] = [[], [], []];
@@ -33,7 +33,7 @@ module.exports = class avatar extends commando.Command {
         avatar = msg.author.displayAvatarURL({size:4096,dynamic:true});
       }
       let onceOnly = false;
-      if (!msg.guild?.member(msg.author).hasPermission("MANAGE_MESSAGES")) {
+      if (msg.guild ? !msg.guild.member(msg.author).hasPermission("MANAGE_MESSAGES") : false) {
         onceOnly = true;
         if (args.length > 1) {
           trySend(this.client, msg, "Manage messages permission required to show two or more avatar at once!");
@@ -61,6 +61,7 @@ module.exports = class avatar extends commando.Command {
                   ree.push(reeRes);
                 }
               } else {
+                user = undefined;
                 trySend(client, msg, `Can't find user: **${avThis.trim()}**`);
               }
             }
