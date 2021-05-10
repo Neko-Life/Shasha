@@ -281,7 +281,6 @@ module.exports = class embmaker extends commando.Command {
             if (newAttach.length > 0) {
                 console.log("Uploading attachments...");
             }
-            console.log(embed);
             if (editSrc) {
                 if (channel) {
                     channel.send({content:content,embed:embed,files:newAttach}).catch(e => noPerm(msg));

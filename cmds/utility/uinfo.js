@@ -21,17 +21,14 @@ module.exports = class uinfo extends commando.Command {
             } else {
                 profile = msg.author;
             }
-            const member = await msg.guild.member(profile);
+            const member = msg.guild.member(profile);
             let result = 'User: '+profile.tag+'```js\n';
             if (profile) {
-                console.log(profile);
                 result = result+JSON.stringify(profile).split(',"').join(',\n"').split(',{').join(',\n{')+'```';
             }
             if (member) {
-                console.log(member);
                 result = result+'As member: '+member.displayName+'```js\n'+JSON.stringify(member).split(',"').join(',\n"').split(',{').join(',\n{')+'```';
                 if ((member.displayColor)) {
-                    console.log(member.displayColor);
                     result = result+'Display color:```js\n'+member.displayColor+'```';
                 }
             }
