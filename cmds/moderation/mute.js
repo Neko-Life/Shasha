@@ -1,9 +1,8 @@
 'use strict';
 
 const commando = require("@iceprod/discord.js-commando");
-const { getUser, trySend, findMemberRegEx, cleanMentionID } = require("../../resources/functions");
+const { trySend, findMemberRegEx, cleanMentionID } = require("../../resources/functions");
 const { database } = require("../../database/mongo");
-const { muteDurationMultiplier } = require("../../resources/date");
 const col = database.collection("Guild");
 const dbExp = database.collection("Experiment");
 const { scheduler } = require("../../resources/scheduler");
@@ -26,9 +25,8 @@ module.exports = class mute extends commando.Command {
      */
     async run(msg, arg) {
         const doc = await col.findOne({document: msg.guild.id});
-        const modConf = doc?.["moderation"];
-        const muteConf = modConf?.mute;
-        const modCase = modConf?.case;
+        const moderationDoc = doc?.["moderation"];
+        const infractionDoc = moderationDoc?.infractions;
         const args = arg.trim().split(/(?<!\\)(\-\-)+/, 5);
         const mentions = args.shift().split(/(?<!\\),+/);
         const durationRegExp = /\d+(?![^ymwdhs])[ymwdhs]?o?/gi;
@@ -41,17 +39,13 @@ module.exports = class mute extends commando.Command {
             minute: invokedAt.getMinutes(),
             second: invokedAt.getSeconds()
         }
-        let durationHasSet = false;
-        let [timeForMessage, targetUser] = [["Indefinite"], []], reason = "No reason provided by " + msg.author.tag;
+        let durationHasSet = false, [timeForMessage, targetUser] = [["Indefinite"], []], reason = "No reason provided.", resultMsg = "";
         for (const argument of args) {
             if (/^\d+(?![^ymwdhs])[ymwdhs]?o?/i.test(argument.trim()) && !durationHasSet) {
                 const durationArg = argument.match(durationRegExp);
-                console.log(durationArg);
                 timeForMessage = [];
                 for (const value of durationArg) {
-                    console.log(value);
                     const val = parseInt(value.match(/\d+/)[0], 10);
-                    console.log(val);
                     if (value.endsWith("h") || value.endsWith("ho")) {
                         duration.hour = duration.hour + val;
                         timeForMessage.push(val + " Hours");
@@ -84,46 +78,68 @@ module.exports = class mute extends commando.Command {
                 durationHasSet = true;
             } else {
                 if (argument.length > 0 && argument !== "--") {
-                    reason = msg.author.tag+": "+argument.trim();
+                    reason = argument.trim();
                 }
             }
+        }
+        let untilDate = new Date(String(duration.year), String(duration.month), String(duration.date), String(duration.hour), String(duration.minute), String(duration.second));
+        if (untilDate.toUTCString() === invokedAt.toUTCString()) {
+            untilDate = "Indefinite";
         }
         for (const usermention of mentions) {
             if (usermention.length > 0) {
                 let found = [];
                 let nameid = usermention.trim();
                 nameid = cleanMentionID(nameid);
-                if (/\D/.test(nameid)) {
-                    found = findMemberRegEx(msg, nameid);
-                } else {
-                    found.push(msg.guild.member(nameid));
-                    if (found[0] === null) {
-                        found = [];
-                        found = findMemberRegEx(msg, nameid);
+                if (/^\d{17,19}$/.test(nameid)) {
+                    const findmem = msg.guild.member(nameid);
+                    if (findmem) {
+                        found.push(findmem.user);
+                    } else {
+                        await this.client.users.fetch(nameid).then(fetchUser => found.push(fetchUser)).catch(() => {});
                     }
-                }
-                if (found.length > 0) {
-                    targetUser.push(found[0].user.tag);
                 } else {
-                    trySend(this.client, msg, `Can't find user: **${usermention.trim()}**`);
+                    found = findMemberRegEx(msg, nameid).map(r => r.user);
+                }
+                if (found.length > 0 && found[0] !== null) {
+                    const foundDupli = targetUser.findIndex(r => r === found[0]);
+                    if (foundDupli !== -1) {
+                        resultMsg += `**[WARNING]** Duplicate for user **${targetUser[foundDupli].tag}** with keyword: **${usermention.trim()}**\n`;
+                    } else {
+                        targetUser.push(found[0]);
+                        if (found.length > 1) {
+                            resultMsg += `**[WARNING]** Multiple users found for: **${usermention.trim()}**\n`;
+                        }
+                    }
+                } else {
+                    resultMsg += `Can't find user: **${usermention.trim()}**\n`;
                 }
             }
-            if (targetUser.length > 0) {
-                const dateDur = new Date(msg.createdAt.valueOf() + duration).toUTCString();
-                const newMuteSchedule = {
-                    name: "unmute schedule " + targetUser.id,
-                    path: "./scheduler/unmute.js",
-                    worker: {
-                        argv: [msg.guild.id, modCase?.length + 1 ?? 1, targetUser.id]
+        }
+        if (targetUser.length > 0) {
+            const infractionToDoc = {
+                infraction: Math.max(infractionDoc?.map(r => r.infraction) + 1),
+                by: targetUser,
+                moderator: `**${msg.author.tag}** <@${msg.author.id}> (${msg.author.id})`,
+                punishment: "Mute",
+                at: invokedAt,
+                for: timeForMessage,
+                until: untilDate,
+                reason: reason,
+                scene: msg.url
+            }
+            const newUnmuteSchedule = {
+                name: "unmute schedule " + targetUser?.id,
+                path: "./scheduler/unmute.js",
+                worker: {
+                    argv: {
+
                     }
                 }
             }
         }
-        let testdate = new Date(String(duration.year), String(duration.month), String(duration.date), String(duration.hour), String(duration.minute), String(duration.second));
-        if (testdate.toUTCString() === invokedAt.toUTCString()) {
-            testdate = undefined;
-        }
-        return trySend(this.client, msg, `Result:\`\`\`js\nUsers: ${targetUser}\nReason: ${reason}\nFor: ${timeForMessage.join(" + ")}\nBegins: ${invokedAt.toUTCString()}\nEnds: ${testdate?.toUTCString()}\`\`\``);
+        resultMsg += `Result:\`\`\`js\nUsers: ${targetUser.map(r => r?.tag).join(", ")}\nReason: ${reason}\nAt: ${invokedAt.toUTCString()}\nFor: ${timeForMessage === "Indefinite" ? timeForMessage : timeForMessage.join(" + ")}\nUntil: ${typeof untilDate !== "string" ? untilDate.toUTCString() : untilDate}\`\`\`\n`;
+        return trySend(this.client, msg, resultMsg);
     }
 };
 
