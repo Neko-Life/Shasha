@@ -24,10 +24,10 @@ module.exports = class uinfo extends commando.Command {
             const member = msg.guild.member(profile);
             let result = 'User: '+profile.tag+'```js\n';
             if (profile) {
-                result = result+JSON.stringify(profile, null, 4)+'```';
+                result = result+JSON.stringify(profile, null, 2)+'```';
             }
             if (member) {
-                result = result+'As member: '+member.displayName+'```js\n'+JSON.stringify(member, null, 4)+'```';
+                result = result+'As member: '+member.displayName+'```js\n'+JSON.stringify(member, null, 2)+'```';
                 if ((member.displayColor)) {
                     result = result+'Display color:```js\n'+member.displayColor+'```';
                 }

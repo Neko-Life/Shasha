@@ -140,7 +140,7 @@ module.exports = class mute extends commando.Command {
             }
         }
         resultMsg += `Result:\`\`\`js\nUsers: ${targetUser.map(r => r?.tag).join(", ")}\nReason: ${reason}\nAt: ${invokedAt.toUTCString()}\nFor: ${timeForMessage === "Indefinite" ? timeForMessage : timeForMessage.join(" + ")}\nUntil: ${typeof untilDate !== "string" ? untilDate.toUTCString() : untilDate}\`\`\`\n`;
-        trySend(this.client, msg, JSON.stringify(infractionToDoc, null, 4));
+        trySend(this.client, msg, "```js\n" + JSON.stringify(infractionToDoc, null, 2) + "```");
         return trySend(this.client, msg, resultMsg);
     }
 };
