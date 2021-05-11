@@ -1,6 +1,6 @@
 'use strict';
 
-const { MessageEmbed, Message, GuildMember, User, Client, GuildChannel, Role } = require('discord.js');
+const { MessageEmbed, Message, GuildMember, User, Client, GuildChannel, Role, MessageOptions } = require('discord.js');
 const { defaultErrorLogChannel } = require("../config.json");
 const { database } = require("../database/mongo");
 
@@ -204,10 +204,10 @@ function noPerm(msg) {
  * Send message
  * @param {Client} client - (this.client)
  * @param {Message | String} msg Message object | channel_ID
- * @param  {...any} content - ({content:content,optionblabla})
+ * @param  {MessageOptions} content - ({content:content,optionblabla})
  * @returns {Promise<Message>} Sent message object
  */
-async function trySend(client, msg, ...content) {
+async function trySend(client, msg, content) {
   //console.log(...content);
   let msgOf;
   if (msg?.channel) {
@@ -215,7 +215,7 @@ async function trySend(client, msg, ...content) {
   } else {
     msgOf = client.channels.cache.get(msg);
   }
-  const sentMes = await msgOf.send(...content)
+  const sentMes = await msgOf.send(content)
   .catch(() => {
     if (msg?.channel) {
       noPerm(msg);
