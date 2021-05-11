@@ -26,7 +26,7 @@ module.exports = class avatar extends commando.Command {
       const footerQuote = r?.["settings"]?.defaultEmbed?.footerQuote;
       const args = arg.trim().split(/(?<!\\),+/);
       const option = arg.trim().split(/(?<!\\)(\-\-)+/);
-      let user, avatar, member, show;
+      let user, avatar, member, show, notFound = "";
       let [allEmb, multipleMemMes, dupliCheck] = [[], [], []];
       if (!arg) {
         user = msg.guild ? msg.guild.member(msg.author) : msg.author;
@@ -54,36 +54,33 @@ module.exports = class avatar extends commando.Command {
           let uID = cleanMentionID(avThis.trim());
           if (uID.length > 0) {
             let ree = [];
-            async function nonDigit(client) {
-              const theree = findMemberRegEx(msg, uID);
-              if (theree?.length > 0) {
-                for (const reeRes of theree) {
-                  ree.push(reeRes);
+            if (/^\d{17,19}$/.test(uID)) {
+                const findmem = msg.guild.member(uID);
+                if (findmem) {
+                    ree.push(findmem.user);
+                } else {
+                    await this.client.users.fetch(uID).then(fetchUser => ree.push(fetchUser)).catch(() => {});
                 }
-              } else {
-                user = undefined;
-                trySend(client, msg, `Can't find user: **${avThis.trim()}**`);
-              }
-            }
-            if (/\D/.test(uID)) {
-              await nonDigit(this.client);
             } else {
-              if (msg.guild?.member(uID)) {
-                ree.push(msg.guild.member(uID));
-              } else {
-                await this.client.users.fetch(uID).then(r => ree.push(r)).catch(async e => await nonDigit(this.client));
-              }
+                ree = findMemberRegEx(msg, uID).map(r => r.user);
             }
             if (ree.length > 0) {
               const duplicateRes = dupliCheck.findIndex(yes => yes === ree[0].id);
               if (duplicateRes !== -1) {
-                allEmb[duplicateRes].setDescription(`Duplicate result for: **${avThis.trim()}**`);
+                if (allEmb[duplicateRes].description !== null) {
+                  allEmb[duplicateRes].setDescription(allEmb[duplicateRes].description.slice(0, -2) + ", " + avThis.trim() + "**");
+                } else {
+                  allEmb[duplicateRes].setDescription(`Duplicate result for: **${avThis.trim()}**`);
+                }
                 user = undefined;
               } else {
                 dupliCheck.push(ree[0].id);
-                user = ree[0].user ?? ree[0];
+                user = ree[0];
                 multipleMemMes.push(multipleMembersFound(this.client, msg, ree, uID, show));
               }
+            } else {
+              user = undefined;
+              notFound += `Can't find user: **${avThis.trim()}**\n`;
             }
             if (user) {
               avatar = user.displayAvatarURL({size:4096,dynamic:true});
@@ -127,6 +124,9 @@ module.exports = class avatar extends commando.Command {
           emb.setColor(16777214);
         }
         allEmb.push(emb);
+      }
+      if (notFound.length > 0) {
+        trySend(this.client, msg, notFound);
       }
       for (let index = 0; index < allEmb.length; index++) {
         const embelement = allEmb[index];
