@@ -21,7 +21,7 @@ module.exports = class mydatabase extends commando.Command {
                 return errLog(e, msg, this.client);
             }
             let mes = `Fetched documents for ${msg.guild ? `server **${msg.guild.name}**` : `**${msg.author.tag}**`}`;
-            mes = `${mes}\`\`\`js\n${JSON.stringify(fetched).split(',"').join(',\n"').split(',{').join(',\n{').split("{\"").join("{\n\"").split("\"}").join("\"\n}")}\`\`\``;
+            mes = `${mes}\`\`\`js\n${JSON.stringify(fetched, null, 4)}\`\`\``;
             trySend(this.client, msg, mes);
             return ranLog(msg, "mydatabase", fetched);
         });

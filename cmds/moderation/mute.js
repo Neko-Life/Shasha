@@ -116,8 +116,9 @@ module.exports = class mute extends commando.Command {
                 }
             }
         }
+        let infractionToDoc;
         if (targetUser.length > 0) {
-            const infractionToDoc = {
+            infractionToDoc = {
                 infraction: Math.max(infractionDoc?.map(r => r.infraction) + 1),
                 by: targetUser,
                 moderator: `**${msg.author.tag}** <@${msg.author.id}> (${msg.author.id})`,
@@ -139,6 +140,7 @@ module.exports = class mute extends commando.Command {
             }
         }
         resultMsg += `Result:\`\`\`js\nUsers: ${targetUser.map(r => r?.tag).join(", ")}\nReason: ${reason}\nAt: ${invokedAt.toUTCString()}\nFor: ${timeForMessage === "Indefinite" ? timeForMessage : timeForMessage.join(" + ")}\nUntil: ${typeof untilDate !== "string" ? untilDate.toUTCString() : untilDate}\`\`\`\n`;
+        trySend(this.client, msg, JSON.stringify(infractionToDoc, null, 4));
         return trySend(this.client, msg, resultMsg);
     }
 };
