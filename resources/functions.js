@@ -138,14 +138,16 @@ async function ranLog(msg, cmd, addition) {
  * @param {Boolean} withID - Include user_ID
  * @returns {String}
  */
-function multipleMembersFound(client, msg, arr, key, max = 5, withID) {
-  if (arr.length > 1) {
+function multipleMembersFound(client, msg, arr, key, max = 4, withID) {
+  arr = arr.slice(1);
+  if (arr.length > 0) {
     try {
       let multipleFound = [];
       for(const one of arr) {
-        let mes = one.user.tag;
+        const user = one.user ?? one;
+        let mes = user.tag;
         if (withID) {
-          mes = mes + ` (${one.user.id})`;
+          mes = mes + ` (${user.id})`;
         }
         multipleFound.push(mes);
       }
@@ -360,8 +362,9 @@ function findRoleRegEx(msg, name) {
  * @param {Boolean} withID - Include channel_ID
  * @returns {String}
  */
-function multipleChannelsFound(client, msg, arr, key, max = 5, withID) {
-  if (arr.length > 1) {
+function multipleChannelsFound(client, msg, arr, key, max = 4, withID) {
+  arr = arr.slice(1);
+  if (arr.length > 0) {
     try {
       let multipleFound = [];
       for(const one of arr) {
@@ -400,8 +403,9 @@ function multipleChannelsFound(client, msg, arr, key, max = 5, withID) {
  * @param {Boolean} withID - Include role_ID
  * @returns {String}
  */
- function multipleRolesFound(client, msg, arr, key, max = 5, withID) {
-  if (arr.length > 1) {
+ function multipleRolesFound(client, msg, arr, key, max = 4, withID) {
+  arr = arr.slice(1);
+  if (arr.length > 0) {
     try {
       let multipleFound = [];
       for(const one of arr) {
