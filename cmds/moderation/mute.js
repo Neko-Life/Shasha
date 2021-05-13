@@ -24,55 +24,58 @@ module.exports = class mute extends commando.Command {
      * @returns 
      */
     async run(msg, arg) {
-        const doc = await col.findOne({document: msg.guild.id});
-        const moderationDoc = doc?.["moderation"];
-        const infractionDoc = moderationDoc?.infractions;
-        const args = arg.trim().split(/(?<!\\)(\-\-)+/, 5);
-        const mentions = args.shift().split(/(?<!\\),+/);
-        const durationRegExp = /\d+(?![^ymwdhs])[ymwdhs]?o?/gi;
-        const invokedAt = msg.createdAt;
-        const duration = {
+        const doc = await col.findOne({document: msg.guild.id}),
+        moderationDoc = doc?.["moderation"],
+        infractionDoc = moderationDoc?.infractions,
+        args = arg.trim().split(/(?<!\\)(\-\-)+/, 5),
+        mentions = args.shift().split(/(?<!\\),+/),
+        durationRegExp = /\d+(?![^ymwdhs])[ymwdhs]?o?/gi,
+        invokedAt = msg.createdAt,
+        duration = {
             year: invokedAt.getFullYear(),
             month: invokedAt.getMonth(),
             date: invokedAt.getDate(),
             hour: invokedAt.getHours(),
             minute: invokedAt.getMinutes(),
             second: invokedAt.getSeconds()
-        }
-        let durationHasSet = false, [timeForMessage, targetUser] = [["Indefinite"], []], reason = "No reason provided.", resultMsg = "";
+        };
+        let durationHasSet = false,
+        [timeForMessage, targetUser] = [["Indefinite"], []],
+        reason = "No reason provided.",
+        resultMsg = "";
         for (const argument of args) {
             if (/^\d+(?![^ymwdhs])[ymwdhs]?o?/i.test(argument.trim()) && !durationHasSet) {
                 const durationArg = argument.match(durationRegExp);
-                timeForMessage = [];
+                //timeForMessage = [];
                 for (const value of durationArg) {
                     const val = parseInt(value.match(/\d+/)[0], 10);
                     if (value.endsWith("h") || value.endsWith("ho")) {
                         duration.hour = duration.hour + val;
-                        timeForMessage.push(val + " Hours");
+                        //timeForMessage.push(val + " Hours");
                     }
                     if (value.endsWith("y")) {
                         duration.year = duration.year + val;
-                        timeForMessage.push(val + " Years");
+                        //timeForMessage.push(val + " Years");
                     }
                     if (value.endsWith("mo")) {
                         duration.month = duration.month + val;
-                        timeForMessage.push(val + " Months");
+                        //timeForMessage.push(val + " Months");
                     }
                     if (value.endsWith("w")) {
                         duration.date = duration.date + 7 * val;
-                        timeForMessage.push(val + " Weeks");
+                        //timeForMessage.push(val + " Weeks");
                     }
                     if (value.endsWith("d")) {
                         duration.date = duration.date + val;
-                        timeForMessage.push(val + " Days");
+                        //timeForMessage.push(val + " Days");
                     }
                     if (value.endsWith("m") || !/\D/.test(value)) {
                         duration.minute = duration.minute + val;
-                        timeForMessage.push(val + " Minutes");
+                        //timeForMessage.push(val + " Minutes");
                     }
                     if (value.endsWith("s")) {
                         duration.second = duration.second + val;
-                        timeForMessage.push(val + " Seconds");
+                        //timeForMessage.push(val + " Seconds");
                     }
                 }
                 durationHasSet = true;
@@ -85,12 +88,43 @@ module.exports = class mute extends commando.Command {
         let untilDate = new Date(String(duration.year), String(duration.month), String(duration.date), String(duration.hour), String(duration.minute), String(duration.second));
         if (untilDate.toUTCString() === invokedAt.toUTCString()) {
             untilDate = "Indefinite";
+        } else {
+            timeForMessage = [];
+            const elapsedTime = new Date(untilDate.valueOf() - invokedAt.valueOf() + 1000),
+            elapsed = [
+                elapsedTime.getFullYear() - 1970,
+                elapsedTime.getMonth(),
+                elapsedTime.getDate() - 1,
+                elapsedTime.getHours(),
+                elapsedTime.getMinutes(),
+                elapsedTime.getSeconds()
+            ],
+            elapsedName = [
+                "year",
+                "month",
+                "day",
+                "hour",
+                "minute",
+                "second"
+            ];
+            for (let index = 0; index < elapsed.length; index++) {
+                if (elapsed[index] > 0) {
+                    timeForMessage.push(`${elapsed[index]} ${elapsedName[index]}`);
+                } else {}
+            }
+            for (let index = 0; index < timeForMessage.length; index++) {
+                if (parseInt(timeForMessage[index].split(" ")[0], 10) > 1) {
+                    timeForMessage[index] += "s";
+                }
+            }
+            if (timeForMessage.length > 1) {
+                timeForMessage[timeForMessage.length - 2] += " and";
+            }
         }
         for (const usermention of mentions) {
             if (usermention.length > 0) {
-                let found = [];
-                let nameid = usermention.trim();
-                nameid = cleanMentionID(nameid);
+                let found = [],
+                nameid = cleanMentionID(usermention);
                 if (/^\d{17,19}$/.test(nameid)) {
                     const findmem = msg.guild.member(nameid);
                     if (findmem) {
@@ -118,11 +152,12 @@ module.exports = class mute extends commando.Command {
         }
         let infractionToDoc;
         if (targetUser.length > 0) {
+            const infractionCase = infractionDoc?.map(r => r.infraction)?.length;
             infractionToDoc = {
-                infraction: Math.max(infractionDoc?.map(r => r.infraction) + 1),
+                infraction: infractionCase ? infractionCase + 1 : 1,
                 by: targetUser,
                 moderator: `**${msg.author.tag}** <@${msg.author.id}> (${msg.author.id})`,
-                punishment: "Mute",
+                punishment: "**Mute**",
                 at: invokedAt,
                 for: timeForMessage,
                 until: untilDate,
@@ -139,7 +174,7 @@ module.exports = class mute extends commando.Command {
                 }
             }
         }
-        resultMsg += `Result:\`\`\`js\nUsers: ${targetUser.map(r => r?.tag).join(", ")}\nReason: ${reason}\nAt: ${invokedAt.toUTCString()}\nFor: ${timeForMessage === "Indefinite" ? timeForMessage : timeForMessage.join(" + ")}\nUntil: ${typeof untilDate !== "string" ? untilDate.toUTCString() : untilDate}\`\`\`\n`;
+        resultMsg += `Result:\`\`\`js\nUsers: ${targetUser.map(r => r?.tag).join(", ")}\nReason: ${reason}\nAt: ${invokedAt.toUTCString()}\nFor: ${timeForMessage.join(" ")}\nUntil: ${typeof untilDate !== "string" ? untilDate.toUTCString() : untilDate}\`\`\`\n`;
         trySend(this.client, msg, "```js\n" + JSON.stringify(infractionToDoc, null, 2) + "```");
         return trySend(this.client, msg, resultMsg);
     }
