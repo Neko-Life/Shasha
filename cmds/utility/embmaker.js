@@ -269,7 +269,10 @@ module.exports = class embmaker extends commando.Command {
             if (footertext || footericon && embed.footer !== null) {
                 embed.setFooter(footertext,footericon);
             }
-            if (embed.length === 0 && (embed.thumbnail === null || embed.thumbnail.url === null) && embed.author === null && (embed.image === null || embed.image.url === null)) {
+            if (embed.timestamp && embed.description === null && !embed.footer) {
+                embed.setFooter('​', footericon);
+            }
+            if (embed.length === 0 && (embed.thumbnail === null || embed.thumbnail.url === null) && embed.author === null && (embed.image === null || embed.image.url === null) && embed.timestamp === null) {
                 embed.setDescription('​');
             }
             if (embed.color === 16777215) {
