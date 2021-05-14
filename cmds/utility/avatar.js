@@ -76,7 +76,7 @@ module.exports = class avatar extends commando.Command {
               } else {
                 dupliCheck.push(ree[0].id);
                 user = ree[0];
-                multipleMemMes.push(multipleMembersFound(this.client, msg, ree, uID, show));
+                multipleMemMes.push(multipleMembersFound(this.client, msg, ree.slice(1), uID, show));
               }
             } else {
               user = undefined;

@@ -85,6 +85,9 @@ module.exports = class mute extends commando.Command {
                 }
             }
         }
+        if (duration.year > 275500) {
+            duration.year = 275500;
+        }
         let untilDate = new Date(String(duration.year), String(duration.month), String(duration.date), String(duration.hour), String(duration.minute), String(duration.second));
         if (untilDate.toUTCString() === invokedAt.toUTCString()) {
             untilDate = "Indefinite";
