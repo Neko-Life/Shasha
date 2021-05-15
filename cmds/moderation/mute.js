@@ -1,10 +1,10 @@
 'use strict';
 
 const commando = require("@iceprod/discord.js-commando");
-const { trySend, findMemberRegEx, cleanMentionID } = require("../../resources/functions");
+const { trySend, findMemberRegEx, cleanMentionID, findChannelRegEx, findRoleRegEx, defaultImageEmbed } = require("../../resources/functions");
 const { database } = require("../../database/mongo");
 const col = database.collection("Guild");
-const dbExp = database.collection("Experiment");
+const schedule = database.collection("Schedule");
 const { scheduler } = require("../../resources/scheduler");
 
 module.exports = class mute extends commando.Command {
@@ -25,9 +25,11 @@ module.exports = class mute extends commando.Command {
      */
     async run(msg, arg) {
         const doc = await col.findOne({document: msg.guild.id}),
-        moderationDoc = doc?.["moderation"],
-        infractionDoc = moderationDoc?.infractions,
-        args = arg.trim().split(/(?<!\\)(\-\-)+/, 5),
+        modDoc = doc?.["moderation"],
+        muteSettingsDoc = modDoc?.["settings"]?.mute,
+        defaultDurationDoc = muteSettingsDoc?.defaultDuration,
+        infractionsDoc = modDoc?.infractions,
+        args = arg.trim().split(/(?<!\\)(\-\-)+/),
         mentions = args.shift().split(/(?<!\\),+/),
         durationRegExp = /\d+(?![^ymwdhs])[ymwdhs]?o?/gi,
         invokedAt = msg.createdAt,
@@ -39,59 +41,123 @@ module.exports = class mute extends commando.Command {
             minute: invokedAt.getMinutes(),
             second: invokedAt.getSeconds()
         };
-        let durationHasSet = false,
+        let theSettingUp = {
+            role: undefined,
+            defaultDuration: {
+                date: undefined,
+                string: undefined
+            },
+            logChannel: undefined
+        },
+        durationHasSet = false,
+        settingUp = false,
+        settingRole = false,
+        settingRoleHasSet = false,
+        settingDuration = false,
+        settingDurationHasSet = false,
+        settingLogChannel = false,
+        settingLogChannelHasSet = false,
         [timeForMessage, targetUser] = [["Indefinite"], []],
         reason = "No reason provided.",
         resultMsg = "";
         for (const argument of args) {
-            if (/^\d+(?![^ymwdhs])[ymwdhs]?o?/i.test(argument.trim()) && !durationHasSet) {
+            const setArg = argument.toLowerCase().trim();
+            if (/^settings?$/i.test(setArg)) {
+                settingUp = true;
+            }
+            if (settingUp && /^durations?$/i.test(setArg)) {
+                settingDuration = true;
+            }
+            if (settingUp && /^log$/i.test(setArg)) {
+                settingLogChannel = true;
+            }
+            if (settingUp && /^role$/i.test(setArg)) {
+                settingRole = true;
+            }
+            if (/^\d{1,16}(?![^ymwdhs])[ymwdhs]?o?/i.test(argument.trim()) && !durationHasSet) {
                 const durationArg = argument.match(durationRegExp);
-                //timeForMessage = [];
                 for (const value of durationArg) {
                     const val = parseInt(value.match(/\d+/)[0], 10);
                     if (value.endsWith("h") || value.endsWith("ho")) {
                         duration.hour = duration.hour + val;
-                        //timeForMessage.push(val + " Hours");
                     }
                     if (value.endsWith("y")) {
                         duration.year = duration.year + val;
-                        //timeForMessage.push(val + " Years");
                     }
                     if (value.endsWith("mo")) {
                         duration.month = duration.month + val;
-                        //timeForMessage.push(val + " Months");
                     }
                     if (value.endsWith("w")) {
                         duration.date = duration.date + 7 * val;
-                        //timeForMessage.push(val + " Weeks");
                     }
                     if (value.endsWith("d")) {
                         duration.date = duration.date + val;
-                        //timeForMessage.push(val + " Days");
                     }
                     if (value.endsWith("m") || !/\D/.test(value)) {
                         duration.minute = duration.minute + val;
-                        //timeForMessage.push(val + " Minutes");
                     }
                     if (value.endsWith("s")) {
                         duration.second = duration.second + val;
-                        //timeForMessage.push(val + " Seconds");
                     }
                 }
                 durationHasSet = true;
             } else {
-                if (argument.length > 0 && argument !== "--") {
+                if (!settingRole && !settingLogChannel && argument.length > 0 && argument !== "--") {
                     reason = argument.trim();
+                } else {
+                    if (settingLogChannel && !settingLogChannelHasSet && argument.length > 0 && argument !== "--" && setArg !== "log") {
+                        settingLogChannelHasSet = true;
+                        const key = cleanMentionID(argument);
+                        let logChannel;
+                        if (/^\d{17,19}$/.test(key)) {
+                            logChannel = msg.guild.channels.cache.get(argument);
+                        } else {
+                            const found = findChannelRegEx(msg, key);
+                            logChannel = found[0];
+                        }
+                        if (logChannel) {
+                            theSettingUp.logChannel = logChannel.id;
+                            resultMsg += `Log channel set to: **${logChannel.name}**\n`;
+                        } else {
+                            resultMsg += `No channel found for: **${argument}**\n`;
+                        }
+                    }
+                    if (settingRole && !settingRoleHasSet && argument.length > 0 && argument !== "--" && setArg !== "role") {
+                        settingRoleHasSet = true;
+                        const key = cleanMentionID(argument);
+                        let role;
+                        if (/^\d{17,19}$/.test(key)) {
+                            role = msg.guild.roles.cache.get(argument);
+                        } else {
+                            const found = findRoleRegEx(msg, key);
+                            role = found[0].id;
+                        }
+                        if (role) {
+                            theSettingUp.role = role;
+                            resultMsg += `Mute role set to: **${role.name}**\n`;
+                        } else {
+                            resultMsg += `No role found for: **${argument}**\n`;
+                        }
+                    }
                 }
             }
+        }
+        const roleConfCheck = msg.guild.roles.cache.get(muteSettingsDoc?.role);
+        if (!roleConfCheck && !settingUp) {
+            return trySend(this.clientPermissions, msg, `No mute role configured! Run \`${this.client.commandPrefix}mute --settings <--role --<role_[name | ID]>> [--duration --<duration> | --log --<channel_[name | ID]>]\` to set it up.`);
         }
         if (duration.year > 275500) {
             duration.year = 275500;
         }
         let untilDate = new Date(String(duration.year), String(duration.month), String(duration.date), String(duration.hour), String(duration.minute), String(duration.second));
-        if (untilDate.toUTCString() === invokedAt.toUTCString()) {
-            untilDate = "Indefinite";
-        } else {
+        if (untilDate.toUTCString() === invokedAt.toUTCString() && !settingDuration) {
+            if (defaultDurationDoc?.date?.valueOf() > 0) {
+                untilDate = new Date(invokedAt.valueOf() + defaultDurationDoc.date.valueOf() - 1000);
+            } else {
+                untilDate = "Indefinite";
+            }
+        } 
+        if (untilDate !== "Indefinite") {
             timeForMessage = [];
             const elapsedTime = new Date(untilDate.valueOf() - invokedAt.valueOf() + 1000),
             elapsed = [
@@ -110,19 +176,49 @@ module.exports = class mute extends commando.Command {
                 "minute",
                 "second"
             ];
+
             for (let index = 0; index < elapsed.length; index++) {
                 if (elapsed[index] > 0) {
-                    timeForMessage.push(`${elapsed[index]} ${elapsedName[index]}`);
+                    let mes = `${elapsed[index]} ${elapsedName[index]}`;
+                    if (elapsed[index] > 1) {
+                        mes += "s";
+                    } else {}
+                    timeForMessage.push(mes);
                 } else {}
-            }
-            for (let index = 0; index < timeForMessage.length; index++) {
-                if (parseInt(timeForMessage[index].split(" ")[0], 10) > 1) {
-                    timeForMessage[index] += "s";
-                }
             }
             if (timeForMessage.length > 1) {
                 timeForMessage[timeForMessage.length - 2] += " and";
             }
+            if (settingDuration && !settingDurationHasSet && timeForMessage.length > 0) {
+                settingDurationHasSet = true;
+                theSettingUp.defaultDuration.date = elapsedTime,
+                theSettingUp.defaultDuration.string = timeForMessage.join(" ");
+                resultMsg += `Default Duration set to: **${theSettingUp.defaultDuration.string}**\n`;
+            }
+        }
+        if (settingUp) {
+            if(settingRoleHasSet) {
+                await col.updateOne({document:msg.guild.id}, {$set:{"moderation.settings.mute.role":theSettingUp.role}}, {upsert:true}).catch(e => {return trySend(this.client, msg, "```js\n"+e.stack+"```")});
+            }
+            if (durationHasSet) {
+                await col.updateOne({document:msg.guild.id}, {$set:{"moderation.settings.mute.defaultDuration":theSettingUp.defaultDuration}}, {upsert:true}).catch(e => {return trySend(this.client, msg, "```js\n"+e.stack+"```")});
+            }
+            if (settingLogChannelHasSet) {
+                await col.updateOne({document:msg.guild.id}, {$set:{"moderation.settings.mute.logChannel":theSettingUp.logChannel}}, {upsert:true}).catch(e => {return trySend(this.client, msg, "```js\n"+e.stack+"```")});
+            } 
+            const doc = await col.findOne({document: msg.guild.id}),
+            modDoc = doc?.["moderation"],
+            muteSettingsDoc = modDoc?.["settings"]?.mute,
+            defaultDurationDoc = muteSettingsDoc?.defaultDuration,
+            logChannelDoc = muteSettingsDoc?.logChannel,
+            roleDoc = muteSettingsDoc?.role;
+            let settings = await defaultImageEmbed(this.client, msg, msg.member);
+            settings
+            .setTitle("Mute Configuration")
+            .addField("Role", roleDoc ? "<@&"+roleDoc+">" : "Not set")
+            .addField("Duration", defaultDurationDoc?.string ?? "Not set")
+            .addField("Log", logChannelDoc ? "<#"+logChannelDoc+">" : "Not set");
+            return trySend(this.client, msg, settings);
         }
         for (const usermention of mentions) {
             if (usermention.length > 0) {
@@ -151,35 +247,62 @@ module.exports = class mute extends commando.Command {
                 } else {
                     resultMsg += `Can't find user: **${usermention.trim()}**\n`;
                 }
+            } else {
+                if (!settingUp) {
+                    return trySend(this.client, msg, "Who are you wanna mute? Provide as first argument `<[RegExp | user_[mention | ID]]>`");
+                } else {
+
+                }
             }
         }
         let infractionToDoc;
         if (targetUser.length > 0) {
-            const infractionCase = infractionDoc?.map(r => r.infraction)?.length;
+            let targetMember = [],
+            notInServer = [];
+            for (const user of targetUser) {
+                const member = msg.guild.member(user);
+                if (member) {
+                    const pushIt = {
+                        name:member.user.tag,
+                        id:member.id,
+                        roles:member.roles.cache.map(r => r.id)
+                    }
+                    targetMember.push(pushIt);
+                } else {
+                    const pushIt = {
+                        name: user.tag,
+                        id:user.id
+                    }
+                    notInServer.push(pushIt);
+                }
+            }
+            const infractionCase = infractionsDoc?.map(r => r.infraction)?.length;
             infractionToDoc = {
                 infraction: infractionCase ? infractionCase + 1 : 1,
                 by: targetUser,
                 moderator: `**${msg.author.tag}** <@${msg.author.id}> (${msg.author.id})`,
-                punishment: "**Mute**",
+                punishment: "mute",
                 at: invokedAt,
                 for: timeForMessage,
                 until: untilDate,
                 reason: reason,
-                scene: msg.url
+                scene: msg.url,
+                members: targetMember,
+                users: notInServer
             }
+            await col.updateOne({document: msg.guild.id}, { $push:{"moderation.infractions": infractionToDoc}}, {upsert:true});
             const newUnmuteSchedule = {
-                name: "unmute schedule " + targetUser?.id,
+                name: "unmute",
                 path: "./scheduler/unmute.js",
                 worker: {
-                    argv: {
-
-                    }
-                }
+                    argv: [msg, infractionToDoc.infraction]
+                },
+                date: untilDate
             }
         }
-        resultMsg += `Result:\`\`\`js\nUsers: ${targetUser.map(r => r?.tag).join(", ")}\nReason: ${reason}\nAt: ${invokedAt.toUTCString()}\nFor: ${timeForMessage.join(" ")}\nUntil: ${typeof untilDate !== "string" ? untilDate.toUTCString() : untilDate}\`\`\`\n`;
-        trySend(this.client, msg, "```js\n" + JSON.stringify(infractionToDoc, null, 2) + "```");
-        return trySend(this.client, msg, resultMsg);
+        resultMsg += `Result:\`\`\`js\nUsers: ${targetUser.map(r => r?.tag).join(", ")}\nReason: ${reason}\nAt: ${invokedAt.toUTCString()}\nFor: ${timeForMessage.join(" ")}\nUntil: ${typeof untilDate !== "string" ? untilDate.toUTCString() : untilDate}\`\`\``;
+        trySend(this.client, msg, {content:resultMsg+"```js\n" + JSON.stringify(infractionToDoc, null, 2) + "```",split:{maxLength:2000,append:",```",prepend:"```js\n",char:","}});
+        return
     }
 };
 

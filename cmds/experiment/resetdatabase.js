@@ -10,10 +10,14 @@ module.exports = class resetdatabase extends commando.Command {
             name: "resetdatabase",
             memberName: "resetdatabase",
             group: "experiment",
-            description: "Reset your server/private database."
+            description: "Reset your server/private database.",
+            ownerOnly:true
         });
     }
     async run(msg) {
+        if (!msg.guild?.member(msg.author).hasPermission("MANAGE_GUILD")) {
+            return trySend(this.client, msg, "No");
+        }
         const doc = msg.guild?.id ?? msg.author.id;
         const col = database.collection(msg.guild ? "Guild" : "User");
         trySend(this.client, msg, "Are you sure? You will lose every saved settings. This process can't be undone. Type `yes` in 30 seconds to confirm.");
