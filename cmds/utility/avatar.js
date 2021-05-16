@@ -43,7 +43,7 @@ module.exports = class avatar extends commando.Command {
         if (ops.toLowerCase().startsWith("show")) {
           const val = ops.trim().split(/ +/);
           const theVal = val[1]?.match(/\d*/);
-          if (theVal[0]) {
+          if (theVal?.[0]) {
             show = parseInt(theVal[0].trim(), 10);
           }
         }

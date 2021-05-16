@@ -115,9 +115,11 @@ module.exports = class mute extends commando.Command {
                             const found = findChannelRegEx(msg, key);
                             logChannel = found[0];
                         }
-                        if (logChannel) {
-                            theSettingUp.logChannel = logChannel.id;
-                            resultMsg += `Log channel set to: **${logChannel.name}**\n`;
+                        if (/^none$/.test(key)) {
+                            logChannel = undefined;
+                        }
+                        if (logChannel || /^none$/.test(key)) {
+                            theSettingUp.logChannel = logChannel?.id;
                         } else {
                             resultMsg += `No channel found for: **${argument}**\n`;
                         }
@@ -130,11 +132,13 @@ module.exports = class mute extends commando.Command {
                             role = msg.guild.roles.cache.get(argument);
                         } else {
                             const found = findRoleRegEx(msg, key);
-                            role = found[0].id;
+                            role = found[0]?.id;
                         }
-                        if (role) {
+                        if (/^none$/.test(key)) {
+                            role = undefined;
+                        }
+                        if (role || /^none$/.test(key)) {
                             theSettingUp.role = role;
-                            resultMsg += `Mute role set to: **${role.name}**\n`;
                         } else {
                             resultMsg += `No role found for: **${argument}**\n`;
                         }
@@ -193,7 +197,6 @@ module.exports = class mute extends commando.Command {
                 settingDurationHasSet = true;
                 theSettingUp.defaultDuration.date = elapsedTime,
                 theSettingUp.defaultDuration.string = timeForMessage.join(" ");
-                resultMsg += `Default Duration set to: **${theSettingUp.defaultDuration.string}**\n`;
             }
         }
         if (settingUp) {
@@ -218,7 +221,7 @@ module.exports = class mute extends commando.Command {
             .addField("Role", roleDoc ? "<@&"+roleDoc+">" : "Not set")
             .addField("Duration", defaultDurationDoc?.string ?? "Not set")
             .addField("Log", logChannelDoc ? "<#"+logChannelDoc+">" : "Not set");
-            return trySend(this.client, msg, settings);
+            return trySend(this.client, msg, {content:resultMsg, embed:settings});
         }
         for (const usermention of mentions) {
             if (usermention.length > 0) {
