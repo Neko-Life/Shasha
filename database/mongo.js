@@ -11,7 +11,6 @@ dbClient.connect(e => {
         console.error(e);
         return process.exit();
     }
-    dbClient.getMongo().slaveOk();
     console.log("Database connected!");
 });
 
