@@ -11,6 +11,7 @@ dbClient.connect(e => {
         console.error(e);
         return process.exit();
     }
+    dbClient.slaveOk();
     console.log("Database connected!");
 });
 
