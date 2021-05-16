@@ -9,13 +9,18 @@ const getColor = require("../../resources/getColor");
 module.exports = class servav extends commando.Command {
     constructor(client) {
         super(client, {
-            name: "servav",
-            memberName: "servav",
-            aliases: ["serveravatar", "servavatar", "serverav"],
+            name: "serv-av",
+            memberName: "serv-av",
+            aliases: ["server-avatar", "serv-avatar", "server-av"],
             group: "utility",
             description: "Show server avatar."
         });
     }
+    /**
+     * 
+     * @param {commando.CommandoMessage} msg 
+     * @param {*} arg 
+     */
     run(msg, arg) {
         const server_ID = arg.split(/ +/)[0];
         const doc = msg.guild?.id ?? msg.author.id;
@@ -26,7 +31,7 @@ module.exports = class servav extends commando.Command {
             }
             const footerQuote = res?.["settings"]?.defaultEmbed?.footerQuote;
             let icon, target;
-            if (server_ID) {
+            if (server_ID && this.client.owners.includes(msg.author.id)) {
                 if (!/\D/.test(server_ID)) {
                     target = this.client.guilds.cache.get(server_ID);
                 } else {

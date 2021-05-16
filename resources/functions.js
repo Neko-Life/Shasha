@@ -1,8 +1,9 @@
 'use strict';
 
-const { MessageEmbed, Message, GuildMember, User, Client, GuildChannel, Role, MessageOptions } = require('discord.js');
+const { MessageEmbed, Message, GuildMember, User, Client, GuildChannel, Role, MessageOptions, Channel } = require('discord.js');
 const { defaultErrorLogChannel } = require("../config.json");
 const { database } = require("../database/mongo");
+const getColor = require('./getColor');
 
 /**
  * Log an error. If second argument, third argument is required
@@ -139,7 +140,6 @@ async function ranLog(msg, cmd, addition) {
  * @returns {String}
  */
 function multipleMembersFound(client, msg, arr, key, max = 4, withID) {
-  arr = arr.slice(1);
   if (arr.length > 0) {
     try {
       let multipleFound = [];
@@ -203,7 +203,7 @@ function noPerm(msg) {
 /**
  * Send message
  * @param {Client} client - (this.client)
- * @param {Message | String} msg Message object | channel_ID
+ * @param {Message | String | Channel} msg Message object | channel_ID
  * @param  {MessageOptions} content - ({content:content,optionblabla})
  * @returns {Promise<Message>} Sent message object
  */
@@ -213,10 +213,15 @@ async function trySend(client, msg, content) {
   if (msg?.channel) {
     msgOf = msg.channel;
   } else {
-    msgOf = client.channels.cache.get(msg);
+    if (typeof msg === "string") {
+      msgOf = client.channels.cache.get(msg);
+    } else {
+      msgOf = msg;
+    }
   }
   const sentMes = await msgOf.send(content)
-  .catch(() => {
+  .catch((e) => {
+    console.error(e);
     if (msg?.channel) {
       noPerm(msg);
     }
@@ -270,23 +275,20 @@ function sentAdCheck(sent) {
  * @param {String} footerText
  * @returns {Promise<MessageEmbed>}
  */
-async function defaultImageEmbed(client, msg, image, author, title, footerText) {
+async function defaultImageEmbed(client, msg, author, image, title, footerText) {
   const { randomColors } = require("../config.json");
   let footerQuote = footerText;
   if (!footerQuote) {
-    const doc = await database.collection(msg.guild ? "Guild" : "User").findOne({document: msg.guild?.id ?? msg.author.id});
-    footerQuote = doc?.["settings"]?.defaultEmbed?.footerQuote || "";
+    const r = await database.collection(msg.guild ? "Guild" : "User").findOne({document: msg.guild?.id ?? msg.author.id});
+    footerQuote = r?.["settings"]?.defaultEmbed?.footerQuote || "";
   }
   let emb = new MessageEmbed();
   try {
     emb
     .setTitle(title)
     .setImage(image)
-    .setColor(msg.guild ? author?.displayColor : randomColors[Math.floor(Math.random() * randomColors.length)])
+    .setColor(msg.guild ? getColor(author?.displayColor) : randomColors[Math.floor(Math.random() * randomColors.length)])
     .setFooter(footerQuote);
-    if (author?.displayColor === 16777215) {
-      emb.setColor(16777214);
-    }
   } catch (e) {
     return errLog(e, msg, client, false, "", false);
   }
@@ -363,7 +365,6 @@ function findRoleRegEx(msg, name) {
  * @returns {String}
  */
 function multipleChannelsFound(client, msg, arr, key, max = 4, withID) {
-  arr = arr.slice(1);
   if (arr.length > 0) {
     try {
       let multipleFound = [];
@@ -404,7 +405,6 @@ function multipleChannelsFound(client, msg, arr, key, max = 4, withID) {
  * @returns {String}
  */
  function multipleRolesFound(client, msg, arr, key, max = 4, withID) {
-  arr = arr.slice(1);
   if (arr.length > 0) {
     try {
       let multipleFound = [];

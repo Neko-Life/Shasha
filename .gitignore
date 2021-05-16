@@ -1,5 +1,6 @@
 config.json
 package-lock.json
+*.sqlite3
 
 # Logs
 logs
@@ -43,6 +44,7 @@ build/Release
 # Dependency directories
 node_modules/
 jspm_packages/
+exp/
 
 # Snowpack dependency directory (https://snowpack.dev/)
 web_modules/
@@ -117,3 +119,5 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+settings.sqlite3
+settings.sqlite3

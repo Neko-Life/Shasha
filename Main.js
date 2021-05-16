@@ -2,7 +2,7 @@
 
 const Commando = require('@iceprod/discord.js-commando');
 const client = new Commando.Client({
-    owner: '750335181285490760',
+    owner: ['820696421912412191', '750335181285490760'],
     partials: ["CHANNEL", "GUILD_MEMBER", "MESSAGE", "REACTION", "USER"]
 });
 const sqlite = require('sqlite');

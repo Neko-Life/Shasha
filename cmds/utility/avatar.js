@@ -43,7 +43,7 @@ module.exports = class avatar extends commando.Command {
         if (ops.toLowerCase().startsWith("show")) {
           const val = ops.trim().split(/ +/);
           const theVal = val[1]?.match(/\d*/);
-          if (theVal[0]) {
+          if (theVal?.[0]) {
             show = parseInt(theVal[0].trim(), 10);
           }
         }
@@ -55,7 +55,7 @@ module.exports = class avatar extends commando.Command {
           if (uID.length > 0) {
             let ree = [];
             if (/^\d{17,19}$/.test(uID)) {
-                const findmem = msg.guild.member(uID);
+                const findmem = msg.guild?.member(uID);
                 if (findmem) {
                     ree.push(findmem.user);
                 } else {

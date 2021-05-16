@@ -17,8 +17,12 @@ module.exports = class say extends commando.Command {
         if (!args) {
             args = noArgs;
         }
-        trySend(this.client, msg, args);
-        if (args !== noArgs && msg.channel.guild) {
+        const sendThis = {content:args, disableMentions:"all"};
+        if (msg.member?.hasPermission("ADMINISTRATOR")) {
+          sendThis.disableMentions = "none";
+        }
+        trySend(this.client, msg, sendThis);
+        if (args !== noArgs && msg.channel.guild && msg.member.hasPermission("MANAGE_MESSAGES")) {
             tryDelete(msg);
         }
         return ranLog(msg,'say',`Content: ${args}`);

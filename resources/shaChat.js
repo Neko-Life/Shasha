@@ -2,7 +2,7 @@
 
 
 const puppeteer = require('puppeteer');
-const { trySend, errLog, ranLog, noPerm } = require('./functions');
+const { trySend, ranLog, noPerm } = require('./functions');
 const Commando = require("@iceprod/discord.js-commando");
 require("discord.js");
 

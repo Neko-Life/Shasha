@@ -6,6 +6,9 @@
  * @returns {String | Number} Color hex | Color number
  */
 module.exports = function getColor(name) {
+    if (!name) {
+        return
+    }
     if (typeof name === "string") {
         name = name.toLowerCase();
     }

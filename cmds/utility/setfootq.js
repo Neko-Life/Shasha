@@ -11,7 +11,8 @@ module.exports = class setfootq extends commando.Command {
             aliases:["setfooterquote"],
             memberName: "setfootq",
             group: "utility",
-            description: "Set server embed footer text."
+            description: "Set server embed footer text.",
+            userPermissions: ["ADMINISTRATOR"]
         });
     }
     async run(msg, args) {
