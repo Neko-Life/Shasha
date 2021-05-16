@@ -55,7 +55,7 @@ module.exports = class avatar extends commando.Command {
           if (uID.length > 0) {
             let ree = [];
             if (/^\d{17,19}$/.test(uID)) {
-                const findmem = msg.guild.member(uID);
+                const findmem = msg.guild?.member(uID);
                 if (findmem) {
                     ree.push(findmem.user);
                 } else {
