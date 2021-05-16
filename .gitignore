@@ -1,5 +1,6 @@
 config.json
 package-lock.json
+*.sqlite3
 
 # Logs
 logs
@@ -50,7 +51,6 @@ web_modules/
 
 # TypeScript cache
 *.tsbuildinfo
-*.sqlite3
 
 # Optional npm cache directory
 .npm
