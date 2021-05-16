@@ -8,7 +8,8 @@ module.exports = class send extends commando.Command {
             name: "send",
             memberName: "send",
             group: "utility",
-            description: "Send message to designated channel."
+            description: "Send message to designated channel.",
+            userPermissions:"MANAGE_MESSAGES"
         });
     }
     async run(msg, args ) {
@@ -30,7 +31,11 @@ module.exports = class send extends commando.Command {
           if (sendTheMes.length === 0) {
             return trySend(this.client, at, `<@!${msg.author.id}> If you wanna send nothin then why you even typed that <:bruhLife:798789686242967554>`);
           }
-          const send = await channel.send(sendTheMes);
+          const sendThis = {content:sendTheMes, disableMentions:"all"};
+          if (msg.member?.hasPermission("ADMINISTRATOR")) {
+            sendThis.disableMentions = "none";
+          }
+          const send = await trySend(this.client, msg, sendThis);
           sentAdCheck(send);
           const filter = () => true;
           const collector = send.createReactionCollector(filter, {time: 15*6*1000, dispose:true});

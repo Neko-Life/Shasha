@@ -13,7 +13,8 @@ module.exports = class newquoteotd extends commando.Command {
             memberName: "newquoteotd",
             group: "utility",
             description: "The Life exclusive command for Quote of the day.",
-            guildOnly: true
+            guildOnly: true,
+            userPermissions:"ADMINISTRATOR"
         });
     }
     async run(msg, arg) {
