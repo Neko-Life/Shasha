@@ -9,7 +9,7 @@ module.exports = class send extends commando.Command {
             memberName: "send",
             group: "utility",
             description: "Send message to designated channel.",
-            userPermissions:"MANAGE_MESSAGES"
+            userPermissions:["MANAGE_MESSAGES"]
         });
     }
     async run(msg, args ) {

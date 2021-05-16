@@ -16,7 +16,7 @@ module.exports = class quoteotd extends commando.Command {
             description: "Set Quote of the day channel and settings.",
             details:"```\n--channel\n--text\n--icon```",
             guildOnly: true,
-            userPermissions:"ADMINISTRATOR"
+            userPermissions:["ADMINISTRATOR"]
         });
     }
     async run(msg, arg) {

@@ -14,7 +14,7 @@ module.exports = class newquoteotd extends commando.Command {
             group: "utility",
             description: "The Life exclusive command for Quote of the day.",
             guildOnly: true,
-            userPermissions:"ADMINISTRATOR"
+            userPermissions:["ADMINISTRATOR"]
         });
     }
     async run(msg, arg) {
