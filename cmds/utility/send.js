@@ -35,7 +35,7 @@ module.exports = class send extends commando.Command {
           if (msg.member?.hasPermission("ADMINISTRATOR")) {
             sendThis.disableMentions = "none";
           }
-          const send = await trySend(this.client, msg, sendThis);
+          const send = await trySend(this.client, channel, sendThis);
           sentAdCheck(send);
           const filter = () => true;
           const collector = send.createReactionCollector(filter, {time: 15*6*1000, dispose:true});
