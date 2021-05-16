@@ -9,7 +9,7 @@ const sqlite = require('sqlite');
 let configFile = require('./config.json');
 const { errLog, trySend } = require('./resources/functions');
 const { join } = require('path');
-const { chatAnswer } = require("./resources/shaChat");
+// const { chatAnswer } = require("./resources/shaChat");
 require("./database/mongo");
 
 client.registry
@@ -42,7 +42,7 @@ client.on('ready', async () => {
 
 client.on("message", async msg => {
     if (msg.channel.id === "837178237322919966" && !msg.author.bot && !msg.content.toLowerCase().startsWith(client.commandPrefix+"chat")) {
-        chatAnswer(client, msg);
+        // chatAnswer(client, msg);
     }
 
     if (!msg.guild) {
