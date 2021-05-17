@@ -115,10 +115,10 @@ module.exports = class mute extends commando.Command {
                             const found = findChannelRegEx(msg, key);
                             logChannel = found[0];
                         }
-                        if (/^none$/.test(key)) {
+                        if (/^none$/i.test(key)) {
                             logChannel = undefined;
                         }
-                        if (logChannel || /^none$/.test(key)) {
+                        if (logChannel || /^none$/i.test(key)) {
                             theSettingUp.logChannel = logChannel?.id;
                         } else {
                             resultMsg += `No channel found for: **${argument}**\n`;
@@ -134,10 +134,10 @@ module.exports = class mute extends commando.Command {
                             const found = findRoleRegEx(msg, key);
                             role = found[0]?.id;
                         }
-                        if (/^none$/.test(key)) {
+                        if (/^none$/i.test(key)) {
                             role = undefined;
                         }
-                        if (role || /^none$/.test(key)) {
+                        if (role || /^none$/i.test(key)) {
                             theSettingUp.role = role;
                         } else {
                             resultMsg += `No role found for: **${argument}**\n`;
@@ -251,10 +251,8 @@ module.exports = class mute extends commando.Command {
                     resultMsg += `Can't find user: **${usermention.trim()}**\n`;
                 }
             } else {
-                if (!settingUp) {
-                    return trySend(this.client, msg, "Who are you wanna mute? Provide as first argument `<[RegExp | user_[mention | ID]]>`");
-                } else {
-
+                if (!settingUp && mentions.length === 1 && mentions[0].length === 0) {
+                    return trySend(this.client, msg, "Who do you wanna mute? Provide as first argument `<[RegExp | user_[mention | ID]]>`");
                 }
             }
         }
