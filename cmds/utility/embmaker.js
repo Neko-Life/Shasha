@@ -263,14 +263,15 @@ module.exports = class embmaker extends commando.Command {
             if (autName || autIcon && embed.author !== null) {
                 embed.setAuthor(autName,autIcon,autUrl);
             }
-            if (!footertext && footericon || !footertext && embed.timestamp) {
-                footertext = '​';
-            }
             if (footertext || footericon && embed.footer !== null) {
                 embed.setFooter(footertext,footericon);
             }
-            if (embed.length === 0 && (embed.thumbnail === null || embed.thumbnail.url === null) && embed.author === null && (embed.image === null || embed.image.url === null) && embed.timestamp === null) {
-                embed.setDescription('​');
+            if (embed.length === 0 && (embed.thumbnail === null || embed.thumbnail.url === null) && embed.author === null && (embed.image === null || embed.image.url === null)) {
+                if (embed.timestamp) {
+                    embed.setFooter('​');
+                } else {
+                    embed.setDescription("_ _");
+                }
             }
             if (embed.color === 16777215) {
               embed.setColor(16777214);
