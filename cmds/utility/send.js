@@ -19,14 +19,19 @@ module.exports = class send extends commando.Command {
           return trySend(this.client, msg, 'Where?!?');
         }
         const search = cleanMentionID(comarg[0]),
-        channel = findChannelRegEx(msg, search)[0],
         sendTheMes = args.slice(comarg[0].length).trim();
+        let channel;
+        if (/^\d{17,19}$/.test(search)) {
+          channel = msg.guild.channels.cache.get(search);
+        }
         if (!channel) {
-          return trySend(this.client, msg, "That channel is like your gf. Doesn't exist <:cathmmLife:772716381874946068>");
-        } else {
-          if (!channel.permissionsFor(msg.author).has("SEND_MESSAGES")) {
-            return trySend(this.client, msg, "No <:cathmmLife:772716381874946068>");
+          channel = findChannelRegEx(msg, search, ["category", "voice"])[0];
+          if (!channel) {
+            return trySend(this.client, msg, "That channel is like your gf. Doesn't exist <:cathmmLife:772716381874946068>");
           }
+        }
+        if (!channel.permissionsFor(msg.author).has("SEND_MESSAGES")) {
+          return trySend(this.client, msg, "No <:cathmmLife:772716381874946068>");
         }
         try {
           if (sendTheMes.length === 0) {
