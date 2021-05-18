@@ -172,8 +172,8 @@ function multipleMembersFound(client, msg, arr, key, max = 4, withID) {
 
 /**
  * Get member object with RegExp
- * @param {Message} msg
- * @param {String} name
+ * @param {Message} msg Message object of the guild being searched
+ * @param {String} name Keyword
  * @returns {GuildMember[]} Member object found
  */
 function findMemberRegEx(msg, name) {
@@ -290,7 +290,7 @@ async function defaultImageEmbed(client, msg, author, image, title, footerText) 
     .setColor(msg.guild ? getColor(author?.displayColor) : randomColors[Math.floor(Math.random() * randomColors.length)])
     .setFooter(footerQuote);
   } catch (e) {
-    return errLog(e, msg, client, false, "", false);
+    return errLog(e, msg, client);
   }
   return emb;
 }
@@ -316,18 +316,21 @@ function cleanMentionID(key) {
 
 /**
  * Get channel object wit RegExp
- * @param {Message} msg 
- * @param {String} name 
+ * @param {Message} msg Message object of the guild being searched
+ * @param {String} name Keyword
+ * @param {ChannelType[]} exclude Exclude channel type
  * @returns {GuildChannel[]} Channels object found
  */
-function findChannelRegEx(msg, name) {
+function findChannelRegEx(msg, name, exclude) {
   let found = [];
   const re = new RegExp(name, "i");
   const list = msg.guild?.channels.cache.array();
   if (list) {
     for(const mem of list) {
       if (re.test(mem.name)) {
-        found.push(mem);
+        if (exclude?.includes(mem.type)) {} else {
+          found.push(mem);
+        }
       }
     }
     return found;
@@ -336,8 +339,8 @@ function findChannelRegEx(msg, name) {
 
 /**
  * Get role object with RegExp
- * @param {Message} msg 
- * @param {String} name 
+ * @param {Message} msg Message object of the guild being searched
+ * @param {String} name Keyword
  * @returns {Role[]} Roles object found
  */
 function findRoleRegEx(msg, name) {
