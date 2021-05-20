@@ -68,6 +68,10 @@ client.on("guildMemberAdd", newMember => {
     //console.log(`New member ${newMember.displayName} (${newMember.user.tag}) (${newMember.id}) joined ${newMember.guild.name} (${newMember.guild.id})! Now it has ${newMember.guild.memberCount} total members count.`);
 });
 
+process.on("uncaughtException", e => errLog(e, null, client));
+process.on("unhandledRejection", e => errLog(e, null, client));
+process.on("warning", e => errLog(e, null, client));
+
 // client.on("debug", (...args) => console.log(...args));
 
 client.login(configFile.token);
