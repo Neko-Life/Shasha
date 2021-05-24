@@ -45,7 +45,7 @@ async function errLog(theError, msg, client, sendTheError, errorMessage, notify)
       if (msg && msg.guild && msg.guild.id === "823815890285756447") {
         logThis = "";
       }
-      const sendAt = await client.channels.cache.get(defaultErrorLogChannel);
+      const sendAt = client.channels.cache.get(defaultErrorLogChannel);
       sendAt.send(logThis + inLogChannel.trim(),{split:true});
     } catch (errmes) {
       errLog(errmes, msg);
@@ -81,31 +81,10 @@ async function getChannelMessage(client, msg, MainID, SecondID) {
       const meschannel = client.channels.cache.get(MainID);
       return await meschannel.messages.fetch(SecondID);
     } catch (theError) {
-      return errLog(theError, msg, client);
+      return
     }
   }
-  return await msg.channel.messages.fetch(MainID).catch(e => {return errLog(e, msg, client)});
-}
-
-/**
- * Get user object
- * @param {Client} client - This client (this.client)
- * @param {String} MainID - User ID | User Mention
- * @returns {Promise<User>} User object
- * @example const user = getUser(this.client, args[0]);
- */
-async function getUser(client, msg, MainID) {
-  if (MainID.startsWith('<') && MainID.endsWith('>')) {
-    MainID = MainID.slice(2, -1);
-  }
-  if (MainID.startsWith('!')) {
-    MainID = (MainID.slice(1));
-  }
-  try {
-    return await client.users.fetch(MainID);
-  } catch (theError) {
-    return errLog(theError, msg, client);
-  }
+  return await msg.channel.messages.fetch(MainID).catch(e => {return});
 }
 
 function execCB(error, stdout, stderr) {
@@ -117,7 +96,7 @@ function execCB(error, stdout, stderr) {
   console.log('stderr:\n'+stderr);
 }
 
-async function ranLog(msg, cmd, addition) {
+async function ranLog(msg, cmd, addition) { return /*
   let errLogPath;
   if (msg.guild) {
     errLogPath = `../Guilds/${msg.guild.id}/Log/`;
@@ -126,7 +105,7 @@ async function ranLog(msg, cmd, addition) {
   }
   let add = '\n'+addition;
   const b = new Date().toUTCString();
-  return //console.log(inLog);
+  return //console.log(inLog); */
 }
 
 /**
@@ -441,7 +420,6 @@ module.exports = {
   cleanMentionID,
   multipleMembersFound, multipleRolesFound, multipleChannelsFound,
   findMemberRegEx, findChannelRegEx, findRoleRegEx,
-  getUser,
   getChannelMessage, errLog,
   execCB, ranLog, noPerm,
   trySend, tryDelete, tryReact,
