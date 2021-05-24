@@ -15,26 +15,29 @@ Structures.extend("Guild", g => {
         }
         /**
          * Get user infractions
-         * @param {User} get - User object
-         * @returns {Array<Object>} Infractions object
+         * @param {String} get - User ID
+         * @returns {Promise<Object[]>} Infractions object
          */
         async getInfractions(get) {
-            let found;
-            if (this.infractions.length > 0) {
-                found = [];
-                this.infractions.map(r => {
-                    if (r) {
-                        for (const inf of r) {
-                            if (inf?.by) {
-                                if (inf.by.includes(get)) {
-                                    found.push(inf);
-                                }
+            try {
+                const r = await database.collection("Guild").findOne({ document: this.id });
+                this.infractions = r?.moderation?.infractions;
+                let found = [];
+                if (this.infractions.length > 0) {
+                    for (const inf of this.infractions) {
+                        let added = false;
+                        for (const user of inf.by) {
+                            if (user.id === get) {
+                                found.push(inf);
+                                break;
                             }
                         }
                     }
-                });
-            }
-            return found;
+                    if (found.length > 0) {
+                        return found;
+                    }
+                }
+            } catch (e) { }
         }
         async setDefaultEmbed(set) {
             await database.collection("Guild").updateOne({document: this.id}, {$set:{"settings.defaultEmbed": set}}, {upsert: true}).catch(e => {throw e});
