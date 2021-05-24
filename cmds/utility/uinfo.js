@@ -1,7 +1,7 @@
 'use strict';
 
 const commando = require("@iceprod/discord.js-commando");
-const { getUser, errLog, ranLog, trySend } = require("../../resources/functions");
+const { ranLog, trySend, cleanMentionID, findMemberRegEx } = require("../../resources/functions");
 
 module.exports = class uinfo extends commando.Command {
     constructor(client) {
@@ -12,12 +12,17 @@ module.exports = class uinfo extends commando.Command {
             description: "\"Detailed\" Profile."
         });
     }
-    async run(msg,  arg ) {
-        const args = arg.trim().split(/ +/);
+    async run(msg,  arg) {
         try {
-            let profile;
-            if (args[0]) {
-                profile = await getUser(this.client, msg, args[0]);
+            let profile,
+            hmm;
+            if (arg.length > 0) {
+                hmm = cleanMentionID(arg);
+                if (/^\d{17,19}$/.test(hmm)) {
+                    profile = this.client.users.cache.get(hmm);
+                } else {
+                    profile = findMemberRegEx(msg, hmm)[0].user;
+                }
             } else {
                 profile = msg.author;
             }
@@ -35,7 +40,7 @@ module.exports = class uinfo extends commando.Command {
             trySend(this.client, msg, result, {split:{maxLength:2000,char: ", " || ",\n" || ". " || ".\n" || "," || ".",append:',```',prepend:'```js\n'}});
             return ranLog(msg,'profile', msg.content);
         } catch (e) {
-            return errLog(e, msg, this.client, false, 'Gimme the right ID!', true);
+            return trySend(this.client, msg, "Ya lookin for ya lover? 404 not found.");
         }
     }
 };
