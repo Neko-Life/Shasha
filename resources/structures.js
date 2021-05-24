@@ -25,7 +25,6 @@ Structures.extend("Guild", g => {
                 let found = [];
                 if (this.infractions.length > 0) {
                     for (const inf of this.infractions) {
-                        let added = false;
                         for (const user of inf.by) {
                             if (user.id === get) {
                                 found.push(inf);
