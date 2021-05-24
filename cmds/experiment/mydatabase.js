@@ -16,7 +16,7 @@ module.exports = class mydatabase extends commando.Command {
         });
     }
     async run(msg) {
-        if (!msg.guild?.member(msg.author).hasPermission("MANAGE_GUILD")) {
+        if (msg.guild ? !msg.member.hasPermission("MANAGE_GUILD") : false) {
             return trySend(this.client, msg, "No");
         }
         const data = msg.guild ? "Guild" : "User";
