@@ -30,12 +30,12 @@ module.exports = class send extends commando.Command {
             return trySend(this.client, msg, "That channel is like your gf. Doesn't exist <:cathmmLife:772716381874946068>");
           }
         }
-        if (!channel.permissionsFor(msg.author).has("SEND_MESSAGES")) {
+        if (!channel.permissionsFor(msg.author).has("SEND_MESSAGES") || !channel.permissionsFor(msg.author).has("VIEW_CHANNEL")) {
           return trySend(this.client, msg, "No <:cathmmLife:772716381874946068>");
         }
         try {
           if (sendTheMes.length === 0) {
-            return trySend(this.client, channel, `<@!${msg.author.id}> If you wanna send nothin then why you even typed that <:bruhLife:798789686242967554>`);
+            return trySend(this.client, channel, `<@!${msg.author.id}>, If you wanna send nothin then why you even typed that <:bruhLife:798789686242967554>`);
           }
           const sendThis = {content:sendTheMes, disableMentions:"all"};
           if (msg.member?.hasPermission("MENTION_EVERYONE")) {
