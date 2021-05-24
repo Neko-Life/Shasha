@@ -1,70 +1,64 @@
 'use strict';
 
-const { Structures } = require("discord.js");
+const { Structures, User } = require("discord.js"),
+{ database } = require("../database/mongo");
 
-class Settings {
-    constructor(client, type, id) {
-        this.client = client;
-        this.type = type;
-        this.id = id;
-    }
-    
-    get(setting) {
-        collection(this.type).findOne({ id: this.id })[setting];
-    }
-}
-
-Structures.extend("Guild", Guild => {
-    return class GuildSettings extends Guild {
+Structures.extend("Guild", g => {
+    return class Guild extends g {
         constructor(client, data) {
             super(client, data);
-            this.settings = new Settings(client, "Guild", this.id);
+            database.collection("Guild").findOne({document: this.id}).then(r => {
+                this.infractions = r?.moderation?.infractions;
+                this.moderation = r?.moderation?.settings;
+                this.defaultEmbed = r?.settings?.defaultEmbed;
+            }).catch(() => {});
         }
-        embed = {
-            footer: {
-                text: undefined,
-                icon: undefined
-            },
-            timestamp: false
-        };
-        moderation = {
-            mute: {
-                role: undefined,
-                duration: {
-                    date: undefined,
-                    string: undefined
-                },
-                log: undefined,
-                publicLog: undefined
-            },
-            ban: {
-                duration: {
-                    date: undefined,
-                    string: undefined
-                },
-                log: undefined,
-                publicLog: undefined
-            },
-            kick: {
-                log: undefined,
-                publicLog: undefined
+        /**
+         * Get user infractions
+         * @param {User} get - User object
+         * @returns {Array<Object>} Infractions object
+         */
+        async getInfractions(get) {
+            let found;
+            if (this.infractions.length > 0) {
+                found = [];
+                this.infractions.map(r => {
+                    if (r) {
+                        for (const inf of r) {
+                            if (inf?.by) {
+                                if (inf.by.includes(get)) {
+                                    found.push(inf);
+                                }
+                            }
+                        }
+                    }
+                });
             }
+            return found;
+        }
+        async setDefaultEmbed(set) {
+            await database.collection("Guild").updateOne({document: this.id}, {$set:{"settings.defaultEmbed": set}}, {upsert: true}).catch(e => {throw e});
+            this.defaultEmbed = set;
+            return true;
+        }
+        async setModerationSettings(set) {
+            await database.collection("Guild").updateOne({document:this.id}, {$set:{"moderation.settings": set}}, {upsert: true}).catch(e => {throw e});
+            this.moderation = set;
+            return true;
         }
     }
 });
 
-Structures.extend("User", User => {
-    return class Settings extends User {
+Structures.extend("User", u => {
+    return class User extends u {
         constructor(client, data) {
             super(client, data);
-            this.settings = new Settings(client, User, this.id);
+            database.collection("User").findOne({document: this.id}).then(r => this.defaultEmbed = r?.settings?.defaultEmbed).catch(() => {});
         }
-        embed = {
-            footer: {
-                text: undefined,
-                icon: undefined
-            },
-            timestamp: false
-        };
+        async setDefaultEmbed(set) {
+            await database.collection("User").updateOne({document: this.id}, {$set:{"settings.defaultEmbed": set}}, {upsert: true}).catch(e => {throw e});
+            this.defaultEmbed = set;
+            return true;
+        }
     }
 });
