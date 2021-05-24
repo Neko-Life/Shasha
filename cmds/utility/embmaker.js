@@ -2,7 +2,7 @@
 
 const commando = require("@iceprod/discord.js-commando");
 const { MessageEmbed } = require("discord.js");
-const { ranLog, errLog, getChannelMessage, noPerm, tryReact, findChannelRegEx, trySend } = require("../../resources/functions");
+const { ranLog, errLog, getChannelMessage, noPerm, tryReact, findChannelRegEx, trySend, cleanMentionID } = require("../../resources/functions");
 const getColor = require("../../resources/getColor");
 
 module.exports = class embmaker extends commando.Command {
@@ -270,7 +270,7 @@ module.exports = class embmaker extends commando.Command {
                     content = value.slice('content'.length).trim().replace(/\\(?!\\)/g,'');
                 }
                 if (value.toLowerCase().startsWith('channel')) {
-                    let ID = value.slice('channel'.length).trim();
+                    let ID = cleanMentionID(value.slice('channel'.length).trim());
                     if (ID.toLowerCase() === 'here') {
                         channel = msg.channel;
                     } else {
