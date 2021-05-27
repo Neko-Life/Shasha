@@ -34,13 +34,12 @@ module.exports = class lookup extends commando.Command {
         const args = arg.split(/ +/);
         let [fetchedMember, fetchedRoles, fetchedChannels, memMes] = [[], [], [], ""];
         const lowCaseArg0 = args[0].toLowerCase();
-        if (lowCaseArg0 === "role") {
+        if (lowCaseArg0 === "--role") {
             if (args[1]) {
-                const cleanRoleID = cleanMentionID(arg.slice("role".length).trim());
-                if (!/\D/.test(cleanRoleID)) {
+                const cleanRoleID = cleanMentionID(arg.slice("--role".length).trim());
+                if (/^\d{17,19}$/.test(cleanRoleID)) {
                     fetchedRoles.push(msg.guild.roles.cache.get(cleanRoleID));
-                }
-                if (/\D/.test(cleanRoleID) || fetchedRoles[0] == null) {
+                } else {
                     fetchedRoles = findRoleRegEx(msg, cleanRoleID);
                 }
                 if (fetchedRoles.length > 1) {
@@ -53,13 +52,12 @@ module.exports = class lookup extends commando.Command {
                 }
             }
         } else {
-            if (lowCaseArg0 === "channel") {
+            if (lowCaseArg0 === "--channel") {
                 if (args[1]) {
-                    const cleanChannelID = cleanMentionID(arg.slice("channel".length).trim());
-                    if (!/\D/.test(cleanChannelID)) {
+                    const cleanChannelID = cleanMentionID(arg.slice("--channel".length).trim());
+                    if (/^\d{17,19}$/.test(cleanChannelID)) {
                         fetchedChannels.push(msg.guild.roles.cache.get(cleanChannelID));
-                    }
-                    if (/\D/.test(cleanChannelID) || fetchedChannels[0] == null) {
+                    } else {
                         fetchedChannels = findChannelRegEx(msg, cleanChannelID);
                     }
                     if (fetchedChannels.length > 1) {
@@ -72,10 +70,13 @@ module.exports = class lookup extends commando.Command {
                     }
                 }
             } else {
-                if (!/\D/.test(arg)) {
-                    fetchedMember.push(msg.guild.member(arg));
+                if (arg.toLowerCase().startsWith("--member")) {
+                    arg = arg.slice("--members".length).trim();
                 }
-                if (/\D/.test(arg) || fetchedMember[0] === null) {
+                arg = cleanMentionID(arg);
+                if (/^\d{17,19}$/.test(arg)) {
+                    fetchedMember.push(msg.guild.member(arg));
+                } else {
                     fetchedMember = findMemberRegEx(msg, arg);
                 }
                 if (fetchedMember.length > 1) {
