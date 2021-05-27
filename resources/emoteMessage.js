@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = function emoteMessage(client, content) {
-    const emotes = content.match(/(?<![<a]):\w{1,32}:(?!\d{17,19}>)/g);
+    const emotes = content.match(/:\w{1,32}:(?!\d{17,19}>)/g);
     if (emotes?.length > 0) {
         let theEmotes = [];
         for (const emoteName of emotes) {
