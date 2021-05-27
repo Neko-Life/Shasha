@@ -1,5 +1,6 @@
 'use strict';
 const commando = require("@iceprod/discord.js-commando");
+const emoteMessage = require("../../resources/emoteMessage");
 const { ranLog, errLog, trySend, sentAdCheck, tryReact, findChannelRegEx, cleanMentionID } = require("../../resources/functions");
 
 module.exports = class send extends commando.Command {
@@ -19,7 +20,7 @@ module.exports = class send extends commando.Command {
           return trySend(this.client, msg, 'Where?!?');
         }
         const search = cleanMentionID(comarg[0]),
-        sendTheMes = args.slice(comarg[0].length).trim();
+        sendTheMes = emoteMessage(this.client, args.slice(comarg[0].length).trim());
         let channel;
         if (/^\d{17,19}$/.test(search)) {
           channel = msg.guild.channels.cache.get(search);
@@ -27,7 +28,12 @@ module.exports = class send extends commando.Command {
         if (!channel) {
           channel = findChannelRegEx(msg, search, ["category", "voice"])[0];
           if (!channel) {
-            return trySend(this.client, msg, "That channel is like your gf. Doesn't exist <:cathmmLife:772716381874946068>");
+            if (this.client.owners.includes(msg.author.id)) {
+              channel = this.client.channels.cache.get(search);
+            }
+            if (!channel) {
+              return trySend(this.client, msg, "That channel is like your gf. Doesn't exist <:cathmmLife:772716381874946068>");
+            }
           }
         }
         if (!channel.permissionsFor(msg.author).has("SEND_MESSAGES") || !channel.permissionsFor(msg.author).has("VIEW_CHANNEL")) {

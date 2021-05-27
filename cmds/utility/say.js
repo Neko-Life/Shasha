@@ -1,6 +1,7 @@
 'use strict';
 
 const commando = require("@iceprod/discord.js-commando");
+const emoteMessage = require("../../resources/emoteMessage");
 const { ranLog, trySend, tryDelete } = require("../../resources/functions");
 
 module.exports = class say extends commando.Command {
@@ -17,6 +18,7 @@ module.exports = class say extends commando.Command {
         if (!args) {
             args = noArgs;
         }
+        args = emoteMessage(this.client, args);
         const sendThis = {content:args, disableMentions:"all"};
         if (msg.member?.hasPermission("ADMINISTRATOR")) {
           sendThis.disableMentions = "none";
