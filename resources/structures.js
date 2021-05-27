@@ -1,17 +1,24 @@
 'use strict';
 
-const { Structures, User } = require("discord.js"),
+const { Structures } = require("discord.js"),
 { database } = require("../database/mongo");
+const { errLog } = require("./functions");
 
 Structures.extend("Guild", g => {
     return class Guild extends g {
         constructor(client, data) {
             super(client, data);
-            database.collection("Guild").findOne({document: this.id}).then(r => {
+            this.dbLoaded = false;
+        }
+        async dbLoad() {
+            const ret = await database.collection("Guild").findOne({document: this.id}).then((r, j) => {
+                if (j) return errLog(j, null, this.client);
                 this.infractions = r?.moderation?.infractions;
                 this.moderation = r?.moderation?.settings;
                 this.defaultEmbed = r?.settings?.defaultEmbed;
-            }).catch(() => {});
+                return this.dbLoaded = true;
+            });
+            return ret;
         }
         /**
          * Get user infractions
@@ -38,15 +45,21 @@ Structures.extend("Guild", g => {
                 }
             } catch (e) { }
         }
-        async setDefaultEmbed(set) {
-            await database.collection("Guild").updateOne({document: this.id}, {$set:{"settings.defaultEmbed": set}}, {upsert: true}).catch(e => {throw e});
-            this.defaultEmbed = set;
-            return true;
+        setDefaultEmbed(set) {
+            const ret = database.collection("Guild").updateOne({document: this.id}, {$set:{"settings.defaultEmbed": set}}, {upsert: true}, (e) => {
+                if (e) return errLog(e, null, this.client);
+                this.defaultEmbed = set;
+                return true;
+            });
+            return ret;
         }
-        async setModerationSettings(set) {
-            await database.collection("Guild").updateOne({document:this.id}, {$set:{"moderation.settings": set}}, {upsert: true}).catch(e => {throw e});
-            this.moderation = set;
-            return true;
+        setModerationSettings(set) {
+            const ret = database.collection("Guild").updateOne({document:this.id}, {$set:{"moderation.settings": set}}, {upsert: true}, (e) => {
+                if (e) return errLog(e, null, this.client);
+                this.moderation = set;
+                return true;
+            });
+            return ret;
         }
     }
 });
@@ -55,12 +68,23 @@ Structures.extend("User", u => {
     return class User extends u {
         constructor(client, data) {
             super(client, data);
-            database.collection("User").findOne({document: this.id}).then(r => this.defaultEmbed = r?.settings?.defaultEmbed).catch(() => {});
+            this.dbLoaded = false;
         }
-        async setDefaultEmbed(set) {
-            await database.collection("User").updateOne({document: this.id}, {$set:{"settings.defaultEmbed": set}}, {upsert: true}).catch(e => {throw e});
-            this.defaultEmbed = set;
-            return true;
+        async dbLoad() {
+            const ret = await database.collection("User").findOne({document: this.id}).then((r, j) => {
+                if (j) return errLog(j, null, this.client);
+                this.defaultEmbed = r?.settings?.defaultEmbed;
+                return this.dbLoaded = true;
+            });
+            return ret;
+        }
+        setDefaultEmbed(set) {
+            const ret = database.collection("User").updateOne({document: this.id}, {$set:{"settings.defaultEmbed": set}}, {upsert: true}, (e) => {
+                if (e) return errLog(e, null, this.client);
+                this.defaultEmbed = set;
+                return true;
+            });
+            return ret;
         }
     }
 });
