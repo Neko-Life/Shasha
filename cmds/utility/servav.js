@@ -31,7 +31,7 @@ module.exports = class servav extends commando.Command {
             }
             const footerQuote = res?.["settings"]?.defaultEmbed?.footerQuote;
             let icon, target;
-            if (server_ID && this.client.owners.includes(msg.author.id)) {
+            if (server_ID && this.client.owners.includes(msg.author)) {
                 if (!/\D/.test(server_ID)) {
                     target = this.client.guilds.cache.get(server_ID);
                 } else {

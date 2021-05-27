@@ -17,7 +17,7 @@ module.exports = class setfootq extends commando.Command {
     }
     async run(msg, args) {
         try {
-            if (msg.guild ? !msg.guild.member(msg.author).hasPermission("MANAGE_GUILD") : false && !this.client.owners.includes(msg.author.id)) {
+            if (msg.guild ? !msg.guild.member(msg.author).hasPermission("MANAGE_GUILD") : false && !this.client.owners.includes(msg.author)) {
                 return trySend(this.client, msg, 'No lol');
             }
             const data = msg.guild ? "Guild" : "User";

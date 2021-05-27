@@ -28,7 +28,7 @@ module.exports = class send extends commando.Command {
         if (!channel) {
           channel = findChannelRegEx(msg, search, ["category", "voice"])[0];
           if (!channel) {
-            if (this.client.owners.includes(msg.author.id)) {
+            if (this.client.owners.includes(msg.author)) {
               channel = this.client.channels.cache.get(search);
             }
             if (!channel) {
