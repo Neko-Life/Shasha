@@ -26,11 +26,11 @@ module.exports = class mesinfo extends commando.Command {
           const sendMentionInfo = 'Mentions:```js\n'+JSON.stringify(mentionJSON, null, 2)+'```';
           const Attachments = 'Attachments:```js\n'+JSON.stringify(message.attachments, null, 2)+'```';
           const sendmesinfo = mesinfo+sendMentionInfo+Attachments;
-          const result1 = await trySend(this.client, msg, {content:sendmesinfo,split:{maxLength:2000,char: ", " || ",\n" || ". " || ".\n" || "," || ".",append:',```',prepend:'```js\n'}});
+          const result1 = await trySend(this.client, msg, {content:sendmesinfo,split:{maxLength:2000,char: ",",append:',```',prepend:'```js\n'}});
           return ranLog(msg,'mesinfo',`${result1}`);
         } catch (e) {
           noPerm(msg);
-          return errLog(e, msg, this.client, false, "", false, defaultErrorLogChannel);
+          return errLog(e, msg, this.client);
         }
       }
     }
