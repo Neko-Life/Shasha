@@ -2,7 +2,7 @@
 
 const commando = require("@iceprod/discord.js-commando");
 const { MessageEmbed } = require("discord.js");
-const { ranLog, errLog, trySend, findMemberRegEx, multipleMembersFound, cleanMentionID } = require("../../resources/functions");
+const { ranLog, errLog, trySend, findMemberRegEx, multipleMembersFound, cleanMentionID, tryReact } = require("../../resources/functions");
 const { database } = require("../../database/mongo");
 const { randomColors } = require("../../config.json");
 
@@ -24,7 +24,7 @@ module.exports = class avatar extends commando.Command {
         errLog(docErr, msg, this.client);
       }
       const footerQuote = r?.["settings"]?.defaultEmbed?.footerQuote;
-      const args = arg.trim().split(/(?<!\\),+/);
+      const args = arg.trim().split(/(?<!\\),+(?!\d*})/);
       const option = arg.trim().split(/(?<!\\)(\-\-)+/);
       let user, avatar, member, show, notFound = "";
       let [allEmb, multipleMemMes, dupliCheck] = [[], [], []];
@@ -36,7 +36,7 @@ module.exports = class avatar extends commando.Command {
       if (msg.guild ? !msg.guild.member(msg.author).hasPermission("MANAGE_MESSAGES") : false) {
         onceOnly = true;
         if (args.length > 1) {
-          trySend(this.client, msg, "Manage messages permission required to show two or more avatar at once!");
+          tryReact(msg, "cathmmLife:772716381874946068");
         }
       }
       for (const ops of option) {
