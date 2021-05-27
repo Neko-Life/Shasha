@@ -36,13 +36,13 @@ module.exports = class quoteotd extends commando.Command {
                 if (!this.client.channels.cache.get(data)) {
                     return trySend(this.client, msg, 'Invalid/unknown channel provided! Try mentioning a channel or use `ChannelID`');
                 } else {
-                    col.updateOne({document: msg.guild.id}, {$set: {"settings.quoteOTD.channel": data}}, { upsert: true });
+                    col.updateOne({document: msg.guild.id}, {$set: {"settings.quoteOTD.channel": data}, $setOnInsert: { document: msg.guild.id }}, { upsert: true });
                     result = result+`Channel set to \`${this.client.channels.cache.get(data).name}\`\n`;
                 }
             }
             if (startW.startsWith('text')) {
                 data = arr.slice('text'.length).trim();
-                col.updateOne({document: msg.guild.id}, {$set: {"settings.quoteOTD.footerText": data}}, { upsert: true });
+                col.updateOne({document: msg.guild.id}, {$set: {"settings.quoteOTD.footerText": data}, $setOnInsert: { document: msg.guild.id }}, { upsert: true });
                 result = result+`Footer text set to \`${data}\`\n`;
             }
             if (startW.startsWith('icon')) {
@@ -50,7 +50,7 @@ module.exports = class quoteotd extends commando.Command {
                 if (!/^http/.test(data)) {
                     return trySend(this.client, msg, 'Invalid icon url provided!');
                 } else {
-                    col.updateOne({document: msg.guild.id}, {$set: {"settings.quoteOTD.footerIcon": data}}, { upsert: true });
+                    col.updateOne({document: msg.guild.id}, {$set: {"settings.quoteOTD.footerIcon": data}, $setOnInsert: { document: msg.guild.id }}, { upsert: true });
                     result = result+`Footer icon set!\n`;
                 }
             }
