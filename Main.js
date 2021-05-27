@@ -1,5 +1,7 @@
 'use strict';
 
+require("./database/mongo");
+require("./resources/structures");
 const Commando = require('@iceprod/discord.js-commando');
 const client = new Commando.Client({
     owner: ['820696421912412191', '750335181285490760'],
@@ -10,7 +12,7 @@ let configFile = require('./config.json');
 const { errLog, trySend } = require('./resources/functions');
 const { join } = require('path');
 const { chatAnswer } = require("./resources/shaChat");
-require("./database/mongo");
+const { timestampAt } = require("./resources/debug");
 
 client.registry
 .registerGroups([
@@ -32,8 +34,6 @@ client.setProvider(
 
 const guildLog = "840154722434154496";
 
-let shaGuild;
-
 client.on('ready', async () => {
     //shaGuild = client.guilds.cache.map(g => g);
     //console.log(`Member in ${shaGuild.length} guilds.`);
@@ -41,6 +41,12 @@ client.on('ready', async () => {
 });
 
 client.on("message", async msg => {
+    if (msg.guild?.dbLoaded === false && !msg.author.bot) {
+        await msg.guild.dbLoad();
+    }
+    if (msg.author.dbLoaded === false && !msg.author.bot) {
+        await msg.author.dbLoad();
+    }
     if (msg.channel.id === "837178237322919966" && !msg.author.bot && !msg.content.toLowerCase().startsWith(client.commandPrefix+"chat")) {
         chatAnswer(client, msg);
     }
@@ -55,12 +61,12 @@ client.on("guildMemberRemove", memberLeave => {
 });
 
 client.on("guildCreate", newShaGuild => {
-    shaGuild = client.guilds.cache.map(g => g);
+    const shaGuild = client.guilds.cache.map(g => g);
     trySend(client, guildLog, `Joined **${newShaGuild.name}** (${newShaGuild.id}) <:awamazedLife:795227334339985418> I'm in ${shaGuild.length} servers now.`);
 });
 
 client.on("guildDelete", leaveShaGuild => {
-    shaGuild = client.guilds.cache.map(g => g);
+    const shaGuild = client.guilds.cache.map(g => g);
     trySend(client, guildLog, `Left **${leaveShaGuild.name}** (${leaveShaGuild.id}) <:WhenLife:773061840351657984> I'm in ${shaGuild.length} servers now.`);
 });
 
@@ -72,6 +78,6 @@ process.on("uncaughtException", e => errLog(e, null, client));
 process.on("unhandledRejection", e => errLog(e, null, client));
 process.on("warning", e => errLog(e, null, client));
 
-// client.on("debug", (...args) => console.log(...args));
+//client.on("debug", (...args) => console.log(...args, timestampAt()));
 
 client.login(configFile.token);
