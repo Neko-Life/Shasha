@@ -3,6 +3,7 @@
 const { MessageEmbed, Message, GuildMember, User, Client, GuildChannel, Role, MessageOptions, Channel } = require('discord.js');
 const { defaultErrorLogChannel } = require("../config.json");
 const { database } = require("../database/mongo");
+const { timestampAt } = require('./debug');
 const getColor = require('./getColor');
 
 /**
@@ -46,7 +47,7 @@ async function errLog(theError, msg, client, sendTheError, errorMessage, notify)
         logThis = "";
       }
       const sendAt = client.channels.cache.get(defaultErrorLogChannel);
-      sendAt.send(logThis + inLogChannel.trim(),{split:true});
+      sendAt.send(logThis + inLogChannel.trim() + timestampAt(),{split:true});
     } catch (errmes) {
       errLog(errmes, msg);
     }
