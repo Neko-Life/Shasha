@@ -187,7 +187,7 @@ function noPerm(msg) {
  * @param  {MessageOptions} content - ({content:content,optionblabla})
  * @returns {Promise<Message>} Sent message object
  */
-async function trySend(client, msg, content) {
+async function trySend(client, msg, content, adCheck = true) {
   //console.log(...content);
   let msgOf;
   if (msg?.channel) {
@@ -199,6 +199,15 @@ async function trySend(client, msg, content) {
       msgOf = msg;
     }
   }
+  if (adCheck) {
+    if (content.content) {
+      content.content = sentAdCheck(content.content);
+    } else {
+      if (typeof content === "string") {
+        content = sentAdCheck(content);
+      }
+    }
+  }
   const sentMes = await msgOf.send(content)
   .catch((e) => {
     console.error(e);
@@ -207,7 +216,6 @@ async function trySend(client, msg, content) {
     }
     return
   });
-  sentAdCheck(sentMes);
   return sentMes;
 }
 
@@ -234,13 +242,13 @@ function tryReact(msg, reaction) {
 
 /**
  * Check a message sent by client for ads
- * @param {Message} sent - Sent message object (await msg.channel.send("discord.gg/banana"))
+ * @param {String} content - Sent message object (await msg.channel.send("discord.gg/banana"))
  */
-function sentAdCheck(sent) {
-  if (sent) {
-    if (/(https:\/\/)?(www\.)?discord\.gg\/(?:\w{2,15}(?!\w)(?= *))/.test(sent.content)) {
-      let newCont = sent.content.replace(/(https:\/\/)?(www\.)?discord\.gg\/(?:\w{2,15}(?!\w)(?= *))/, '`Some invite link goes here`');
-      sent.edit(newCont, `Command abuse: Contain server invite link.`);
+function sentAdCheck(content) {
+  if (content.length > 5) {
+    if (/(https:\/\/)?(www\.)?discord\.gg\/(?:\w{2,15}(?!\w)(?= *))/.test(content)) {
+      let newCont = content.replace(/(https:\/\/)?(www\.)?discord\.gg\/(?:\w{2,15}(?!\w)(?= *))/, '`Some invite link goes here`');
+      return newCont;
     }
   }
 }
