@@ -3,6 +3,7 @@
 const { MessageEmbed, Message, GuildMember, User, Client, GuildChannel, Role, MessageOptions, Channel } = require('discord.js');
 const { defaultErrorLogChannel } = require("../config.json");
 const { database } = require("../database/mongo");
+const { timestampAt } = require('./debug');
 const getColor = require('./getColor');
 
 /**
@@ -45,8 +46,8 @@ async function errLog(theError, msg, client, sendTheError, errorMessage, notify)
       if (msg && msg.guild && msg.guild.id === "823815890285756447") {
         logThis = "";
       }
-      const sendAt = await client.channels.cache.get(defaultErrorLogChannel);
-      sendAt.send(logThis + inLogChannel.trim(),{split:true});
+      const sendAt = client.channels.cache.get(defaultErrorLogChannel);
+      sendAt.send(logThis + inLogChannel.trim() + timestampAt(),{split:true});
     } catch (errmes) {
       errLog(errmes, msg);
     }
@@ -81,31 +82,10 @@ async function getChannelMessage(client, msg, MainID, SecondID) {
       const meschannel = client.channels.cache.get(MainID);
       return await meschannel.messages.fetch(SecondID);
     } catch (theError) {
-      return errLog(theError, msg, client);
+      return
     }
   }
-  return await msg.channel.messages.fetch(MainID).catch(e => {return errLog(e, msg, client)});
-}
-
-/**
- * Get user object
- * @param {Client} client - This client (this.client)
- * @param {String} MainID - User ID | User Mention
- * @returns {Promise<User>} User object
- * @example const user = getUser(this.client, args[0]);
- */
-async function getUser(client, msg, MainID) {
-  if (MainID.startsWith('<') && MainID.endsWith('>')) {
-    MainID = MainID.slice(2, -1);
-  }
-  if (MainID.startsWith('!')) {
-    MainID = (MainID.slice(1));
-  }
-  try {
-    return await client.users.fetch(MainID);
-  } catch (theError) {
-    return errLog(theError, msg, client);
-  }
+  return await msg.channel.messages.fetch(MainID).catch(e => {return});
 }
 
 function execCB(error, stdout, stderr) {
@@ -117,7 +97,7 @@ function execCB(error, stdout, stderr) {
   console.log('stderr:\n'+stderr);
 }
 
-async function ranLog(msg, cmd, addition) {
+async function ranLog(msg, cmd, addition) { return /*
   let errLogPath;
   if (msg.guild) {
     errLogPath = `../Guilds/${msg.guild.id}/Log/`;
@@ -126,7 +106,7 @@ async function ranLog(msg, cmd, addition) {
   }
   let add = '\n'+addition;
   const b = new Date().toUTCString();
-  return //console.log(inLog);
+  return //console.log(inLog); */
 }
 
 /**
@@ -172,8 +152,8 @@ function multipleMembersFound(client, msg, arr, key, max = 4, withID) {
 
 /**
  * Get member object with RegExp
- * @param {Message} msg
- * @param {String} name
+ * @param {Message} msg Message object of the guild being searched
+ * @param {String} name Keyword
  * @returns {GuildMember[]} Member object found
  */
 function findMemberRegEx(msg, name) {
@@ -290,7 +270,7 @@ async function defaultImageEmbed(client, msg, author, image, title, footerText) 
     .setColor(msg.guild ? getColor(author?.displayColor) : randomColors[Math.floor(Math.random() * randomColors.length)])
     .setFooter(footerQuote);
   } catch (e) {
-    return errLog(e, msg, client, false, "", false);
+    return errLog(e, msg, client);
   }
   return emb;
 }
@@ -316,18 +296,21 @@ function cleanMentionID(key) {
 
 /**
  * Get channel object wit RegExp
- * @param {Message} msg 
- * @param {String} name 
+ * @param {Message} msg Message object of the guild being searched
+ * @param {String} name Keyword
+ * @param {ChannelType[]} exclude Exclude channel type
  * @returns {GuildChannel[]} Channels object found
  */
-function findChannelRegEx(msg, name) {
+function findChannelRegEx(msg, name, exclude) {
   let found = [];
   const re = new RegExp(name, "i");
   const list = msg.guild?.channels.cache.array();
   if (list) {
     for(const mem of list) {
       if (re.test(mem.name)) {
-        found.push(mem);
+        if (exclude?.includes(mem.type)) {} else {
+          found.push(mem);
+        }
       }
     }
     return found;
@@ -336,8 +319,8 @@ function findChannelRegEx(msg, name) {
 
 /**
  * Get role object with RegExp
- * @param {Message} msg 
- * @param {String} name 
+ * @param {Message} msg Message object of the guild being searched
+ * @param {String} name Keyword
  * @returns {Role[]} Roles object found
  */
 function findRoleRegEx(msg, name) {
@@ -438,7 +421,6 @@ module.exports = {
   cleanMentionID,
   multipleMembersFound, multipleRolesFound, multipleChannelsFound,
   findMemberRegEx, findChannelRegEx, findRoleRegEx,
-  getUser,
   getChannelMessage, errLog,
   execCB, ranLog, noPerm,
   trySend, tryDelete, tryReact,

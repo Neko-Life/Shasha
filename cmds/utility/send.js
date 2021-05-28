@@ -1,6 +1,7 @@
 'use strict';
 const commando = require("@iceprod/discord.js-commando");
-const { ranLog, errLog, trySend, sentAdCheck, tryReact } = require("../../resources/functions");
+const emoteMessage = require("../../resources/emoteMessage");
+const { ranLog, errLog, trySend, sentAdCheck, tryReact, findChannelRegEx, cleanMentionID } = require("../../resources/functions");
 
 module.exports = class send extends commando.Command {
     constructor(client) {
@@ -9,36 +10,47 @@ module.exports = class send extends commando.Command {
             memberName: "send",
             group: "utility",
             description: "Send message to designated channel.",
-            userPermissions:["MANAGE_MESSAGES"]
+            guildOnly:true
         });
     }
     async run(msg, args ) {
         const comarg = args.trim().split(/ +/);
-        const bot = this.client;
         let at = comarg[0];
         if (!comarg[0]) {
           return trySend(this.client, msg, 'Where?!?');
         }
-        if (comarg[0].startsWith('<#') && comarg[0].endsWith('>')) {
-          at = comarg[0].slice(2, -1);
+        const search = cleanMentionID(comarg[0]),
+        sendTheMes = emoteMessage(this.client, args.slice(comarg[0].length).trim());
+        let channel;
+        if (/^\d{17,19}$/.test(search)) {
+          channel = msg.guild.channels.cache.get(search);
         }
-        const channel = bot.channels.cache.get(at);
-        const sendTheMes = args.slice(comarg[0].length).trim();
         if (!channel) {
-          return trySend(this.client, msg, "Give me the right `channel_[mention, ID]` bruh");
+          channel = findChannelRegEx(msg, search, ["category", "voice"])[0];
+          if (!channel) {
+            if (this.client.owners.includes(msg.author)) {
+              channel = this.client.channels.cache.get(search);
+            }
+            if (!channel) {
+              return trySend(this.client, msg, "That channel is like your gf. Doesn't exist <:cathmmLife:772716381874946068>");
+            }
+          }
+        }
+        if (!channel.permissionsFor(msg.author).has("SEND_MESSAGES") || !channel.permissionsFor(msg.author).has("VIEW_CHANNEL")) {
+          return trySend(this.client, msg, "No <:cathmmLife:772716381874946068>");
         }
         try {
           if (sendTheMes.length === 0) {
-            return trySend(this.client, at, `<@!${msg.author.id}> If you wanna send nothin then why you even typed that <:bruhLife:798789686242967554>`);
+            return trySend(this.client, channel, `<@!${msg.author.id}>, If you wanna send nothin then why you even typed that <:bruhLife:798789686242967554>`);
           }
           const sendThis = {content:sendTheMes, disableMentions:"all"};
-          if (msg.member?.hasPermission("ADMINISTRATOR")) {
+          if (msg.member?.hasPermission("MENTION_EVERYONE")) {
             sendThis.disableMentions = "none";
           }
           const send = await trySend(this.client, channel, sendThis);
           sentAdCheck(send);
-          const filter = () => true;
-          const collector = send.createReactionCollector(filter, {time: 15*6*1000, dispose:true});
+          const filter = () => true,
+          collector = send.createReactionCollector(filter, {time: 15*6*1000, dispose:true});
           collector.on('collect', r => {
             try {
               msg.react(r.emoji);

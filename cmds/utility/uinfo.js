@@ -1,7 +1,7 @@
 'use strict';
 
 const commando = require("@iceprod/discord.js-commando");
-const { getUser, errLog, ranLog, trySend } = require("../../resources/functions");
+const { ranLog, trySend, cleanMentionID, findMemberRegEx } = require("../../resources/functions");
 
 module.exports = class uinfo extends commando.Command {
     constructor(client) {
@@ -12,30 +12,37 @@ module.exports = class uinfo extends commando.Command {
             description: "\"Detailed\" Profile."
         });
     }
-    async run(msg,  arg ) {
-        const args = arg.trim().split(/ +/);
+    async run(msg,  arg) {
         try {
             let profile;
-            if (args[0]) {
-                profile = await getUser(this.client, msg, args[0]);
+            if (arg.length > 0) {
+                const hmm = cleanMentionID(arg);
+                if (/^\d{17,19}$/.test(hmm)) {
+                    profile = this.client.users.cache.get(hmm);
+                    if (!profile) {
+                        profile = await this.client.users.fetch(hmm);
+                    }
+                } else {
+                    profile = findMemberRegEx(msg, hmm)[0].user;
+                }
             } else {
                 profile = msg.author;
             }
             const member = msg.guild.member(profile);
-            let result = 'User: '+profile.tag+'```js\n';
+            let result = "";
             if (profile) {
-                result = result+JSON.stringify(profile, null, 2)+'```';
+                result += 'User: '+profile.tag+'```js\n' + JSON.stringify(profile, null, 2)+'```';
             }
             if (member) {
-                result = result+'As member: '+member.displayName+'```js\n'+JSON.stringify(member, null, 2)+'```';
+                result += 'As member: '+member.displayName+'```js\n'+JSON.stringify(member, null, 2)+'```';
                 if ((member.displayColor)) {
-                    result = result+'Display color:```js\n'+member.displayColor+'```';
+                    result += 'Display color:```js\n'+member.displayColor+'```';
                 }
             }
-            trySend(this.client, msg, result, {split:{maxLength:2000,char: ", " || ",\n" || ". " || ".\n" || "," || ".",append:',```',prepend:'```js\n'}});
+            trySend(this.client, msg, result, {split:{maxLength:2000,char: ",",append:',```',prepend:'```js\n'}});
             return ranLog(msg,'profile', msg.content);
         } catch (e) {
-            return errLog(e, msg, this.client, false, 'Gimme the right ID!', true);
+            return trySend(this.client, msg, "404 ERROR not found~");
         }
     }
 };

@@ -2,7 +2,7 @@
 
 const commando = require("@iceprod/discord.js-commando");
 const { MessageEmbed } = require("discord.js");
-const { ranLog, errLog, trySend, findMemberRegEx, multipleMembersFound, cleanMentionID } = require("../../resources/functions");
+const { ranLog, errLog, trySend, findMemberRegEx, multipleMembersFound, cleanMentionID, tryReact } = require("../../resources/functions");
 const { database } = require("../../database/mongo");
 const { randomColors } = require("../../config.json");
 
@@ -24,7 +24,7 @@ module.exports = class avatar extends commando.Command {
         errLog(docErr, msg, this.client);
       }
       const footerQuote = r?.["settings"]?.defaultEmbed?.footerQuote;
-      const args = arg.trim().split(/(?<!\\),+/);
+      const args = arg.trim().split(/(?<!\\),+(?!\d*})/);
       const option = arg.trim().split(/(?<!\\)(\-\-)+/);
       let user, avatar, member, show, notFound = "";
       let [allEmb, multipleMemMes, dupliCheck] = [[], [], []];
@@ -36,7 +36,7 @@ module.exports = class avatar extends commando.Command {
       if (msg.guild ? !msg.guild.member(msg.author).hasPermission("MANAGE_MESSAGES") : false) {
         onceOnly = true;
         if (args.length > 1) {
-          trySend(this.client, msg, "Manage messages permission required to show two or more avatar at once!");
+          tryReact(msg, "cathmmLife:772716381874946068");
         }
       }
       for (const ops of option) {
@@ -137,46 +137,3 @@ module.exports = class avatar extends commando.Command {
     });
   }
 };
-
-// Old codes
-    /*args = args.split(/ +/);
-    try {
-      let member;
-      let avUrl;
-      let avatar = new MessageEmbed();
-      if (args[0]) {
-        member = await getUser(this.client, args[0]);
-      }
-      if (!args[0]) {
-        avUrl = msg.author.displayAvatarURL({size:4096,dynamic:true});
-        avatar
-        .setColor(msg.member.displayColor)
-        .setTitle(msg.member.displayName);
-      } else
-      if (member) {
-        avUrl = member.displayAvatarURL({size:4096,dynamic:true});
-        try {
-          avatar.setColor(msg.guild.member(member).displayColor);
-        } catch (e) {errLog(e)}
-        try {
-          avatar
-          .setTitle(msg.guild.member(member).displayName);
-        } catch (e) {
-          errLog(e);
-          avatar
-          .setTitle(member.username);
-        }
-      }
-      if (!avUrl) {
-        return msg.channel.send('Who is that? I dunno them!');
-      }
-      avatar
-      //.setAuthor(msg.author.username, msg.author.displayAvatarURL({size:4096, dynamic:true}))
-      .setImage(avUrl)
-      .setFooter(footerQuote);
-      msg.channel.send(avatar);
-      return ranLog(msg,'avatar', `${member ? `Avatar of ${member.tag} (${member.id}): ` : `Self avatar: `} ${avUrl}`);
-    } catch (e) {
-      await msg.channel.send('Who is that? I dunno them!');
-      return errLog(e);
-    }*/

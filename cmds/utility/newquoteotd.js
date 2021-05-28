@@ -24,7 +24,7 @@ module.exports = class newquoteotd extends commando.Command {
         const quoteOTD = findDoc?.["settings"]?.quoteOTD;
         const color = colorConf.randomColors;
         if (!quoteOTD || !quoteOTD.channel) {
-            return msg.channel.send(`Quote OTD channel not set! Run \`${this.client.commandPrefix}quoteotd\` to set one.`);
+            return msg.channel.send(`Quote OTD channel not set! Run \`${msg.guild.commandPrefix}quoteotd\` to set one.`);
         }
         if (!args[0]) {
             return msg.channel.send('Provide `<message_ID>`!');
