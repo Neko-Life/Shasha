@@ -11,7 +11,7 @@ const sqlite = require('sqlite');
 let configFile = require('./config.json');
 const { errLog, trySend } = require('./resources/functions');
 const { join } = require('path');
-const { chatAnswer } = require("./resources/shaChat");
+//const { chatAnswer } = require("./resources/shaChat");
 const { timestampAt } = require("./resources/debug");
 
 client.registry
@@ -46,14 +46,14 @@ client.on("message", async msg => {
     }
     if (msg.author.dbLoaded === false && !msg.author.bot) {
         await msg.author.dbLoad();
-    }
+    }/*
     if (msg.channel.id === "837178237322919966" && !msg.author.bot && !msg.content.toLowerCase().startsWith(client.commandPrefix+"chat")) {
         chatAnswer(client, msg);
     }
 
     if (!msg.guild) {
         console.log(`(${msg.channel.recipient.id}) ${msg.channel.recipient.tag}: (${msg.author.id}) ${msg.author.tag}: ${msg.content}`);
-    }
+    } */
 });
 
 client.on("guildMemberRemove", memberLeave => {
@@ -78,6 +78,6 @@ process.on("uncaughtException", e => errLog(e, null, client));
 process.on("unhandledRejection", e => errLog(e, null, client));
 process.on("warning", e => errLog(e, null, client));
 
-client.on("debug", (...args) => console.log(...args, timestampAt()));
+//client.on("debug", (...args) => console.log(...args, timestampAt()));
 
 client.login(configFile.token);

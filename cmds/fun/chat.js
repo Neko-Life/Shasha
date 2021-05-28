@@ -1,7 +1,7 @@
 'use strict';
 
 const commando = require("@iceprod/discord.js-commando");
-const { chatAnswer } = require("../../resources/shaChat");
+//const { chatAnswer } = require("../../resources/shaChat");
 
 module.exports = class chat extends commando.Command {
     constructor(client) {
@@ -13,6 +13,6 @@ module.exports = class chat extends commando.Command {
         });
     }
     async run(msg) {
-        chatAnswer(this.client, msg);
+        //chatAnswer(this.client, msg);
     }
 };
