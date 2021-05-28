@@ -45,6 +45,20 @@ Structures.extend("Guild", g => {
                 }
             } catch (e) { }
         }
+        async addInfraction(add) {
+            try {
+                const r = await database.collection("Guild").findOne({ document: this.id });
+                this.infractions = r?.moderation?.infractions;
+                const ret = database.collection("Guild").updateOne({document: this.id}, {$push:{"moderation.infractions":add}}, (e, r) => {
+                    if (e) return errLog(e, null, this.client);
+                    if (r) {
+                        this.infractions.push(add);
+                        return true;
+                    };
+                });
+                return ret;
+            } catch (e) { }
+        }
         setDefaultEmbed(set) {
             const ret = database.collection("Guild").updateOne({document: this.id}, {$set:{"settings.defaultEmbed": set}}, {upsert: true}, (e) => {
                 if (e) return errLog(e, null, this.client);

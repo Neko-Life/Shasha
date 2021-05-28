@@ -1,7 +1,7 @@
 'use strict';
 const commando = require("@iceprod/discord.js-commando");
 const emoteMessage = require("../../resources/emoteMessage");
-const { ranLog, errLog, trySend, sentAdCheck, tryReact, findChannelRegEx, cleanMentionID } = require("../../resources/functions");
+const { ranLog, errLog, trySend, tryReact, findChannelRegEx, cleanMentionID } = require("../../resources/functions");
 
 module.exports = class send extends commando.Command {
     constructor(client) {
@@ -48,7 +48,6 @@ module.exports = class send extends commando.Command {
             sendThis.disableMentions = "none";
           }
           const send = await trySend(this.client, channel, sendThis);
-          sentAdCheck(send);
           const filter = () => true,
           collector = send.createReactionCollector(filter, {time: 15*6*1000, dispose:true});
           collector.on('collect', r => {

@@ -24,7 +24,7 @@ const URL = [
 ];
 const browser = puppeteer.launch();
 const page1 = browser.then(r => r.newPage());
-page1.then(r => r.goto(URL[10]).catch(console.error));
+page1.then(r => r.goto(URL[1]).catch(console.error));
 
 /**
  * Chat with Shasha
@@ -59,7 +59,7 @@ async function shaChat(client, index, question) {
  */
 async function fetchAnswer(page, index) {
 	try {
-		await page.waitForSelector(`#answer > div:nth-child(${index})`, {timeout:5000}).catch(() => {});
+		await page.waitForSelector(`#answer > div:nth-child(${index})`).catch(() => {});
 		const result = await page.evaluate((index) => {
 			const res = document.querySelector(`#answer > div:nth-child(${index})`).childNodes[4].textContent;
 			return res;

@@ -52,7 +52,7 @@ client.on("message", async msg => {
     }
 
     if (!msg.guild) {
-        //console.log(`(${msg.channel.recipient.id}) ${msg.channel.recipient.tag}: (${msg.author.id}) ${msg.author.tag}: ${msg.content}`);
+        console.log(`(${msg.channel.recipient.id}) ${msg.channel.recipient.tag}: (${msg.author.id}) ${msg.author.tag}: ${msg.content}`);
     }
 });
 
@@ -78,6 +78,6 @@ process.on("uncaughtException", e => errLog(e, null, client));
 process.on("unhandledRejection", e => errLog(e, null, client));
 process.on("warning", e => errLog(e, null, client));
 
-//client.on("debug", (...args) => console.log(...args, timestampAt()));
+client.on("debug", (...args) => console.log(...args, timestampAt()));
 
 client.login(configFile.token);
