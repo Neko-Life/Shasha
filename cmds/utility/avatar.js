@@ -131,7 +131,7 @@ module.exports = class avatar extends commando.Command {
       for (let index = 0; index < allEmb.length; index++) {
         const embelement = allEmb[index];
         const contelement = multipleMemMes[index];
-        trySend(this.client, msg, { embed: embelement, content: contelement, split:{maxLength:2000,char: ", " || ",\n" || ". " || ".\n" || "," || ".",append:',```',prepend:'```md\n# ' }}); 
+        trySend(this.client, msg, { embed: embelement, content: contelement, split:{maxLength:2000,char: ",",append:',```',prepend:'```js' }}); 
       }
       return ranLog(msg,'avatar',arg);
     });

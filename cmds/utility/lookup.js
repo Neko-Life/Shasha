@@ -90,7 +90,7 @@ module.exports = class lookup extends commando.Command {
             }
         }
         if (memMes.length > 0) {
-            return trySend(this.client, msg, memMes);
+            return trySend(this.client, msg, { content: memMes, split: { char: ",", append: ",```", prepend: "```js", maxLength: 2000 } });
         }
     }
 };
