@@ -247,10 +247,10 @@ function tryReact(msg, reaction) {
 function sentAdCheck(content) {
   if (content.length > 5) {
     if (/(https:\/\/)?(www\.)?discord\.gg\/(?:\w{2,15}(?!\w)(?= *))/.test(content)) {
-      let newCont = content.replace(/(https:\/\/)?(www\.)?discord\.gg\/(?:\w{2,15}(?!\w)(?= *))/, '`Some invite link goes here`');
-      return newCont;
+      content = content.replace(/(https:\/\/)?(www\.)?discord\.gg\/(?:\w{2,15}(?!\w)(?= *))/, '`Some invite link goes here`');
     }
   }
+  return content;
 }
 
 /**
