@@ -354,7 +354,9 @@ module.exports = class embmaker extends commando.Command {
                 }
                 sent.push(channel.send({content:content,embed:embed,files:newAttach}).catch(e => noPerm(msg)));
             }
-            tryReact(msg, "a:yesLife:794788847996370945");
+            if (sent.length > 0) {
+                tryReact(msg, "a:yesLife:794788847996370945");
+            }
             return sent;
         } catch (e) {
             return errLog(e, msg, this.client, true, "", true);
