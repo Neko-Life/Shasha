@@ -276,10 +276,8 @@ module.exports = class embmaker extends commando.Command {
                     } else {
                         if (/^\d{17,19}$/.test(ID)) {
                             channel = msg.guild.channels.cache.get(ID);
-                            if (!channel) {
-                                if (this.client.owners.includes(msg.author.id)) {
-                                    channel = this.client.channels.cache.get(ID);
-                                }
+                            if (!channel && this.client.owners.includes(msg.author.id)) {
+                                channel = this.client.channels.cache.get(ID);
                             }
                         } else {
                             channel = findChannelRegEx(msg, ID, ["category", "voice"])[0];

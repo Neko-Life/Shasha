@@ -24,17 +24,15 @@ module.exports = class send extends commando.Command {
         let channel;
         if (/^\d{17,19}$/.test(search)) {
           channel = msg.guild.channels.cache.get(search);
+          if (!channel && this.client.owners.includes(msg.author)) {
+            channel = this.client.channels.cache.get(search);
+          }
         }
         if (!channel) {
           channel = findChannelRegEx(msg, search, ["category", "voice"])[0];
-          if (!channel) {
-            if (this.client.owners.includes(msg.author)) {
-              channel = this.client.channels.cache.get(search);
-            }
-            if (!channel) {
-              return trySend(this.client, msg, "That channel is like your gf. Doesn't exist <:cathmmLife:772716381874946068>");
-            }
-          }
+        }
+        if (!channel) {
+          return trySend(this.client, msg, "That channel is like your gf. Doesn't exist <:cathmmLife:772716381874946068>");
         }
         if (!channel.permissionsFor(msg.author).has("SEND_MESSAGES") || !channel.permissionsFor(msg.author).has("VIEW_CHANNEL")) {
           return trySend(this.client, msg, "No <:cathmmLife:772716381874946068>");
