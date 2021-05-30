@@ -1,7 +1,7 @@
 'use strict';
 
 const commando = require("@iceprod/discord.js-commando");
-const { errLog, getChannelMessage, ranLog, noPerm, trySend } = require("../../resources/functions");
+const { getChannelMessage, trySend } = require("../../resources/functions");
 
 module.exports = class mesinfo extends commando.Command {
   constructor(client) {

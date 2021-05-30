@@ -2,7 +2,7 @@
 
 const commando = require("@iceprod/discord.js-commando");
 const { MessageEmbed } = require("discord.js");
-const { getChannelMessage, ranLog, errLog, noPerm, tryReact, trySend } = require("../../resources/functions");
+const { getChannelMessage, errLog, noPerm, tryReact, trySend, ranLog } = require("../../resources/functions");
 const { database } = require("../../database/mongo");
 const col = database.collection("Guild");
 
@@ -57,6 +57,7 @@ module.exports = class newquoteotd extends commando.Command {
                 }
                 return sent;
             }
+            ranLog(this.client, msg, "New quote: " + msg.content + "\nBy: " + mes.author.tag + ` (${mes.author.id})`);
             return trySend(this.client, msg, 'No message with that ID from this channel. Use `[<channel_[mention, ID]> <message_ID>, message_link]` if it\'s in another channel.');
         } catch (e) {
             noPerm(msg);

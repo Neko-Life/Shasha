@@ -1,9 +1,7 @@
 'use strict';
 
 const commando = require("@iceprod/discord.js-commando");
-const { writeJSONSync } = require("fs-extra");
-const { join } = require("path");
-const { ranLog, trySend } = require("../../resources/functions");
+const { trySend, ranLog } = require("../../resources/functions");
 const { database } = require("../../database/mongo");
 const col = database.collection("Guild");
 
@@ -56,6 +54,7 @@ module.exports = class quoteotd extends commando.Command {
             }
         }
         if (result.length > 0) {
+            ranLog(this.client, msg, result);
             return trySend(this.client, msg, result);
         } else {
             return trySend(this.client, msg, `Provide argument: \`--channel [mention, ID], --text [footer text], --icon [url footer icon]\``);

@@ -1,15 +1,17 @@
 'use strict';
 
 const { MessageEmbed, Message, GuildMember, User, Client, GuildChannel, Role, MessageOptions, Channel } = require('discord.js');
-const { defaultErrorLogChannel } = require("../config.json");
+const { defaultErrorLogChannel, ranLogger } = require("../config.json");
 const { database } = require("../database/mongo");
 const { timestampAt } = require('./debug');
 const getColor = require('./getColor');
+const { randomColors } = require("../config.json");
+const { CommandoMessage, CommandoClient } = require('@iceprod/discord.js-commando');
 
 /**
  * Log an error. If second argument, third argument is required
  * @param {Error} theError - Catched error (error)
- * @param {Message} msg - Message object (msg)
+ * @param {CommandoMessage} msg - Message object (msg)
  * @param {Client} client - This client (this.client)
  * @param {Boolean} sendTheError - Add error content to notify message (true | false)
  * @param {String} errorMessage - Error message ("You don't have enough permission to use that command!")
@@ -18,8 +20,7 @@ const getColor = require('./getColor');
 async function errLog(theError, msg, client, sendTheError, errorMessage, notify) {
   let errLogPath, [logThis, inLogChannel, sendErr] = ['', '', ''];
   if (msg) {
-    const comErr = msg.content.trim().split(/ +/)[0];
-    logThis = `\`${comErr}\` (${msg.id}) ${msg.url} in ${msg.guild ? `**${msg.channel.name}** (${msg.channel.id}) of **${msg.guild.name}** (${msg.guild.id})` : `**DM**`} ran by **${msg.author.tag}** (${msg.author.id}) \n\n`;
+    logThis = `\`${msg.command.name}\` (${msg.id}) ${msg.url} in ${msg.guild ? `**${msg.channel.name}** (${msg.channel.id}) of **${msg.guild.name}** (${msg.guild.id})` : `**DM**`} ran by **${msg.author.tag}** (${msg.author.id}) \n\n`;
     msg.guild ? errLogPath = `../Guilds/${msg.guild.id}/Log/` : errLogPath = '../Log/';
     if (errorMessage) {
       if (errorMessage.length > 0) {
@@ -96,17 +97,22 @@ function execCB(error, stdout, stderr) {
   console.log('stdout:\n'+stdout);
   console.log('stderr:\n'+stderr);
 }
-
-async function ranLog(msg, cmd, addition) { return /*
-  let errLogPath;
-  if (msg.guild) {
-    errLogPath = `../Guilds/${msg.guild.id}/Log/`;
-  } else {
-    errLogPath = '../Log/';
-  }
-  let add = '\n'+addition;
-  const b = new Date().toUTCString();
-  return //console.log(inLog); */
+/**
+ * Command usage logger
+ * @param {CommandoClient} client 
+ * @param {CommandoMessage} msg 
+ * @param {String} addition 
+ */
+async function ranLog(client, msg, addition) {
+  const channel = client.channels.cache.get(ranLogger);
+  const embed = await defaultImageEmbed(msg, null, msg.command.name.toLocaleUpperCase() + ` (${msg.id})`);
+  embed.setAuthor(msg.author.tag + ` (${msg.author.id})`, msg.author.displayAvatarURL({"size": 4096, "dynamic": true}))
+  .setURL(msg.url)
+  .setDescription(addition)
+  .setFooter(timestampAt(), msg.guild?.iconURL({"size": 4096, "dynamic": true}))
+  .addField("Guild", `**${msg.guild?.name}** (${msg.guild?.id})`, true)
+  .addField("Channel", `**${msg.channel?.name}** (${msg.channel.id})`, true);
+  trySend(client, channel, {embed: embed});
 }
 
 /**
@@ -247,32 +253,23 @@ function sentAdCheck(content) {
 
 /**
  * Make default image embed
- * @param {Client} client 
  * @param {Message} msg 
- * @param {URL} image 
+ * @param {String} image 
  * @param {GuildMember | User} author 
  * @param {String} title 
- * @param {String} footerText
+ * @param {String} footerQuote
  * @returns {Promise<MessageEmbed>}
  */
-async function defaultImageEmbed(client, msg, author, image, title, footerText) {
-  const { randomColors } = require("../config.json");
-  let footerQuote = footerText;
+async function defaultImageEmbed(msg, image, title, footerQuote) {
   if (!footerQuote) {
-    const r = await database.collection(msg.guild ? "Guild" : "User").findOne({document: msg.guild?.id ?? msg.author.id});
+    const r = await database.collection(msg.guild ? "Guild" : "User").findOne({document: msg.guild?.id ?? msg.author.id}).catch(() => {});
     footerQuote = r?.["settings"]?.defaultEmbed?.footerQuote || "";
   }
-  let emb = new MessageEmbed();
-  try {
-    emb
-    .setTitle(title)
-    .setImage(image)
-    .setColor(msg.guild ? getColor(author?.displayColor) : randomColors[Math.floor(Math.random() * randomColors.length)])
-    .setFooter(footerQuote);
-  } catch (e) {
-    return errLog(e, msg, client);
-  }
-  return emb;
+  return new MessageEmbed()
+  .setTitle(title)
+  .setImage(image)
+  .setColor(msg.guild ? getColor(msg.member.displayColor) : randomColors[Math.floor(Math.random() * randomColors.length)])
+  .setFooter(footerQuote);
 }
 
 /**

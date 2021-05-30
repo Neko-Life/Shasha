@@ -13,7 +13,7 @@ module.exports = class say extends commando.Command {
             description: "Say."
         });
     }
-    run(msg, args) {
+    async run(msg, args) {
         let noArgs = '​';
         if (!args) {
             args = noArgs;
@@ -23,10 +23,11 @@ module.exports = class say extends commando.Command {
         if (msg.member?.hasPermission('MENTION_EVERYONE')) {
           sendThis.disableMentions = "none";
         }
-        const sent = trySend(this.client, msg, sendThis);
+        const sent = await trySend(this.client, msg, sendThis);
         if (args !== noArgs && msg.channel.guild && msg.member.hasPermission("MANAGE_MESSAGES")) {
             tryDelete(msg);
         }
+        ranLog(this.client, msg, sent.content);
         return sent;
     }
 };

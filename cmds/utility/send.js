@@ -57,6 +57,7 @@ module.exports = class send extends commando.Command {
           if (send) {
             tryReact(msg, 'yeLife:796401669188354090');
           }
+          ranLog(this.client, msg, send.content);
           return send;
         } catch (e) {
           return errLog(e, msg, this.client);

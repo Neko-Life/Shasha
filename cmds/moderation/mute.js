@@ -245,7 +245,7 @@ module.exports = class mute extends commando.Command {
             defaultDurationDoc = muteSettingsDoc?.defaultDuration,
             logChannelDoc = muteSettingsDoc?.logChannel,
             roleDoc = muteSettingsDoc?.role;
-            let settings = await defaultImageEmbed(this.client, msg, msg.member);
+            let settings = await defaultImageEmbed(msg);
             settings
             .setTitle("Mute Configuration")
             .addField("Role", roleDoc ? "<@&"+roleDoc+">" : "Not set")
