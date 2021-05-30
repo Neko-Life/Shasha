@@ -63,7 +63,7 @@ async function errLog(theError, msg, client, sendTheError, errorMessage, notify)
  * @param {Message} msg - Message object (msg)
  * @param {String} MainID - Message ID | Channel ID | Channel Mention
  * @param {String} SecondID - Message ID
- * @returns {Promise<Message>} Message object
+ * @returns {Promise<Message>} Message object | undefined
  */
 async function getChannelMessage(client, msg, MainID, SecondID) {
   if (!MainID) {
@@ -157,17 +157,8 @@ function multipleMembersFound(client, msg, arr, key, max = 4, withID) {
  * @returns {GuildMember[]} Member object found
  */
 function findMemberRegEx(msg, name) {
-  let found = [];
   const re = new RegExp(name, "i");
-  const list = msg.guild?.members.cache.array();
-  if (list) {
-    for(const mem of list) {
-      if (re.test(mem.displayName) || re.test(mem.user.tag)) {
-        found.push(mem);
-      }
-    }
-    return found;
-  }
+  return msg.guild?.members.cache.array().filter(r => re.test(r.displayName) || re.test(r.user.tag));
 }
 
 /**
@@ -184,7 +175,8 @@ function noPerm(msg) {
  * Send message
  * @param {Client} client - (this.client)
  * @param {Message | String | Channel} msg Message object | channel_ID
- * @param  {MessageOptions} content - ({content:content,optionblabla})
+ * @param {MessageOptions} content - ({content:content,optionblabla})
+ * @param {Boolean} adCheck - Check source for Discord invite link (true)
  * @returns {Promise<Message>} Sent message object
  */
 async function trySend(client, msg, content, adCheck = true) {
@@ -310,19 +302,14 @@ function cleanMentionID(key) {
  * @returns {GuildChannel[]} Channels object found
  */
 function findChannelRegEx(msg, name, exclude) {
-  let found = [];
   const re = new RegExp(name, "i");
-  const list = msg.guild?.channels.cache.array();
-  if (list) {
-    for(const mem of list) {
-      if (re.test(mem.name)) {
-        if (exclude?.includes(mem.type)) {} else {
-          found.push(mem);
-        }
-      }
+  return msg.guild?.channels.cache.array().filter(r => {
+    if (exclude?.includes(r.type)) {
+      return false;
+    } else {
+      return re.test(r.name);
     }
-    return found;
-  }
+  });
 }
 
 /**
@@ -332,17 +319,8 @@ function findChannelRegEx(msg, name, exclude) {
  * @returns {Role[]} Roles object found
  */
 function findRoleRegEx(msg, name) {
-  let found = [];
   const re = new RegExp(name, "i");
-  const list = msg.guild?.roles.cache.array();
-  if (list) {
-    for(const mem of list) {
-      if (re.test(mem.name)) {
-        found.push(mem);
-      }
-    }
-    return found;
-  }
+  return msg.guild?.roles.cache.array().filter(r => re.test(r.name));
 }
 
 /**

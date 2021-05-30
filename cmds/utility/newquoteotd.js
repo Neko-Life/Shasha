@@ -24,10 +24,10 @@ module.exports = class newquoteotd extends commando.Command {
         const quoteOTD = findDoc?.["settings"]?.quoteOTD;
         const color = colorConf.randomColors;
         if (!quoteOTD || !quoteOTD.channel) {
-            return msg.channel.send(`Quote OTD channel not set! Run \`${msg.guild.commandPrefix}quoteotd\` to set one.`);
+            return trySend(this.client, msg, `Quote OTD channel not set! Run \`${msg.guild.commandPrefix}quoteotd\` to set one.`);
         }
         if (!args[0]) {
-            return msg.channel.send('Provide `<message_ID>`!');
+            return trySend(this.client, msg, 'Provide `<message_ID>`!');
         }
         try {
             let emb = new MessageEmbed();
@@ -51,11 +51,13 @@ module.exports = class newquoteotd extends commando.Command {
                 .setThumbnail(thumbnail)
                 .setFooter(quoteOTD.footerText, quoteOTD.footerIcon)
                 .setColor(color[Math.floor(Math.random()*color.length)]);
-                await trySend(this.client, quoteOTD.channel, emb);
-                tryReact(msg, "a:yesLife:794788847996370945");
-                return ranLog(msg,'newqotd',`${msg.author.tag} (${msg.author.id}) made new QOTD \`${description}\` by ${author.tag} (${author.id})`);
+                const sent = trySend(this.client, quoteOTD.channel, emb);
+                if (sent) {
+                    tryReact(msg, "a:yesLife:794788847996370945");
+                }
+                return sent;
             }
-            return msg.channel.send('No message with that ID from this channel. Use `[<channel_[mention, ID]> <message_ID>, message_link]` if it\'s in another channel.');
+            return trySend(this.client, msg, 'No message with that ID from this channel. Use `[<channel_[mention, ID]> <message_ID>, message_link]` if it\'s in another channel.');
         } catch (e) {
             noPerm(msg);
             return errLog(e, msg, this.client, true, "", true);

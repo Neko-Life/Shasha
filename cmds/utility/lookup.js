@@ -12,12 +12,6 @@ module.exports = class lookup extends commando.Command {
             description: "Lookup something in the server using mention, ID, or RegExp."
         });
     }
-    /**
-     * 
-     * @param {commando.CommandoMessage} msg 
-     * @param {*} arg 
-     * @returns 
-     */
     async run(msg, arg) {
         let show;
         const showArg = arg.match(/(?<!\\)\-\-show *\d*/i);
@@ -34,9 +28,9 @@ module.exports = class lookup extends commando.Command {
         const args = arg.split(/ +/);
         let [fetchedMember, fetchedRoles, fetchedChannels, memMes] = [[], [], [], ""];
         const lowCaseArg0 = args[0].toLowerCase();
-        if (lowCaseArg0 === "--role") {
+        if (lowCaseArg0.startsWith("--role")) {
             if (args[1]) {
-                const cleanRoleID = cleanMentionID(arg.slice("--role".length).trim());
+                const cleanRoleID = cleanMentionID(arg.slice("--roles".length).trim());
                 if (/^\d{17,19}$/.test(cleanRoleID)) {
                     fetchedRoles.push(msg.guild.roles.cache.get(cleanRoleID));
                 } else {
@@ -52,9 +46,9 @@ module.exports = class lookup extends commando.Command {
                 }
             }
         } else {
-            if (lowCaseArg0 === "--channel") {
+            if (lowCaseArg0.startsWith("--channel")) {
                 if (args[1]) {
-                    const cleanChannelID = cleanMentionID(arg.slice("--channel".length).trim());
+                    const cleanChannelID = cleanMentionID(arg.slice("--channels".length).trim());
                     if (/^\d{17,19}$/.test(cleanChannelID)) {
                         fetchedChannels.push(msg.guild.roles.cache.get(cleanChannelID));
                     } else {

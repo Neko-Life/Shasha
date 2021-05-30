@@ -39,8 +39,7 @@ module.exports = class uinfo extends commando.Command {
                     result += 'Display color:```js\n'+member.displayColor+'```';
                 }
             }
-            trySend(this.client, msg, result, {split:{maxLength:2000,char: ",",append:',```',prepend:'```js\n'}});
-            return ranLog(msg,'profile', msg.content);
+            return trySend(this.client, msg, result, {split:{maxLength:2000,char: ",",append:',```',prepend:'```js\n'}});
         } catch (e) {
             return trySend(this.client, msg, "404 ERROR not found~");
         }

@@ -56,8 +56,10 @@ module.exports = class send extends commando.Command {
             } catch (e) {}
           });
           collector.on('remove', async r => await msg.reactions.resolve(r).id.remove(r.id));
-          tryReact(msg, 'yeLife:796401669188354090');
-          return ranLog(msg,'send',`ID: ${send.id} url: ${send.url}\nSent to channel: ${channel.name} (${channel.id}) of ${send.guild.name}\nContent: ${args.slice(at.length)}`);
+          if (send) {
+            tryReact(msg, 'yeLife:796401669188354090');
+          }
+          return send;
         } catch (e) {
           return errLog(e, msg, this.client);
         }        

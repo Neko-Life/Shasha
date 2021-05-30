@@ -140,7 +140,7 @@ module.exports = class embmaker extends commando.Command {
                             autName = autVal.slice('name'.length).trim().replace(/\\(?!\\)/g,'');
                         }
                         if (autVal.toLowerCase().startsWith('icon')) {
-                            if (/^http/.test(autVal.slice('icon'.length).trim())) {
+                            if (/^https?:\/\/\w+\.\w\w/.test(autVal.slice('icon'.length).trim())) {
                                 autIcon = autVal.slice('icon'.length).trim();
                             } else {
                                 reportMessage += "**[AUTHOR]** Invalid icon URL.\n";
@@ -148,7 +148,7 @@ module.exports = class embmaker extends commando.Command {
                             }
                         }
                         if (autVal.toLowerCase().startsWith('url')) {
-                            if (/^http/.test(autVal.slice('url'.length).trim())) {
+                            if (/^https?:\/\/\w+\.\w\w/.test(autVal.slice('url'.length).trim())) {
                                 autUrl = autVal.slice('url'.length).trim();
                             } else {
                                 reportMessage += "**[AUTHOR]** Invalid URL.\n";
@@ -165,7 +165,7 @@ module.exports = class embmaker extends commando.Command {
                     }
                 }
                 if (value.toLowerCase().startsWith("image")) {
-                    if (/^http/.test(value.slice("image".length).trim())) {
+                    if (/^https?:\/\/\w+\.\w\w/.test(value.slice("image".length).trim())) {
                         embed.setImage(value.slice("image".length).trim());
                     } else {
                         reportMessage += "**[IMAGE]** Invalid URL.\n";
@@ -173,7 +173,7 @@ module.exports = class embmaker extends commando.Command {
                     }
                 }
                 if (value.toLowerCase().startsWith("thumbnail")) {
-                    if (/^http/.test(value.slice("thumbnail".length).trim())) {
+                    if (/^https?:\/\/\w+\.\w\w/.test(value.slice("thumbnail".length).trim())) {
                         embed.setThumbnail(value.slice("thumbnail".length).trim());
                     } else {
                         reportMessage += "**[THUMBNAIL]** Invalid URL.\n";
@@ -181,7 +181,7 @@ module.exports = class embmaker extends commando.Command {
                     }
                 }
                 if (value.toLowerCase().startsWith('url')) {
-                    if (/^http/.test(value.slice("url".length).trim())) {
+                    if (/^https?:\/\/\w+\.\w\w/.test(value.slice("url".length).trim())) {
                         embed.setURL(value.slice("url".length).trim());
                     } else {
                         reportMessage += "**[URL]** Invalid URL.\n";
@@ -191,7 +191,7 @@ module.exports = class embmaker extends commando.Command {
                 if (value.toLowerCase().startsWith('attachment')) {
                     const attach = value.slice("attachments".length).trim().split(/ +/);
                     for(const theFile of attach) {
-                        if (/^http/.test(theFile)) {
+                        if (/^https?:\/\/\w+\.\w\w/.test(theFile)) {
                             newAttach.push(theFile);
                         } else {
                             if (theFile.toLowerCase() !== "-copy") {
@@ -232,7 +232,7 @@ module.exports = class embmaker extends commando.Command {
                             footertext = footval.slice("text".length).trim().replace(/\\(?!\\)/g,'');
                         }
                         if (footval.toLowerCase().startsWith('icon')) {
-                            if (/^http/.test(footval.slice('icon'.length).trim())) {
+                            if (/^https?:\/\/\w+\.\w\w/.test(footval.slice('icon'.length).trim())) {
                                 footericon = footval.slice('icon'.length).trim();
                             } else {
                                 reportMessage += "**[FOOTER]** Invalid icon URL.\n";
@@ -320,29 +320,29 @@ module.exports = class embmaker extends commando.Command {
             if (newAttach.length > 0) {
                 reportMessage += "**[ATTACHMENT]** Uploading attachments....\n";
             }
+            let sent = [];
             if (reportMessage.length > 0) {
-                trySend(this.client, msg, reportMessage);
+                sent.push(trySend(this.client, msg, reportMessage));
             }
             if (editSrc) {
                 if (channel) {
-                    channel.send({content:content,embed:embed,files:newAttach}).catch(e => noPerm(msg));
+                    sent.push(channel.send({content:content,embed:embed,files:newAttach}).catch(e => noPerm(msg)));
                 } else {
                     channel = msg.channel;
                     if (editSrc.author === this.client.user) {
-                        try {
-                            editSrc.edit({content:content,embed:embed,files:newAttach}).catch(e => errLog(e, msg, this.client));
-                        } catch (e) {
+                        sent.push(editSrc.edit({content:content,embed:embed,files:newAttach}).catch(e => {
+                            errLog(e, msg, this.client);
                             try {
-                                channel.send('Something\'s wrong, i can\'t edit that so here <:WhenLife:773061840351657984>');
-                                channel.send({content:content,embed:embed,files:newAttach});
+                                sent.push(channel.send('Something\'s wrong, i can\'t edit that so here <:WhenLife:773061840351657984>'));
+                                sent.push(channel.send({content:content,embed:embed,files:newAttach}));
                             } catch (e) {
                                 noPerm(msg);
                             }
-                        }
+                        }));
                     } else {
                         try {
-                            channel.send('I can\'t edit that, so here <:catstareLife:794930503076675584>');
-                            channel.send({content:content,embed:embed,files:newAttach});
+                            sent.push(channel.send('I can\'t edit that, so here <:catstareLife:794930503076675584>'));
+                            sent.push(channel.send({content:content,embed:embed,files:newAttach}));
                         } catch (e) {
                             noPerm(msg);
                         }
@@ -352,10 +352,10 @@ module.exports = class embmaker extends commando.Command {
                 if (!channel) {
                     channel = msg.channel;
                 }
-                channel.send({content:content,embed:embed,files:newAttach}).catch(e => noPerm(msg));
+                sent.push(channel.send({content:content,embed:embed,files:newAttach}).catch(e => noPerm(msg)));
             }
             tryReact(msg, "a:yesLife:794788847996370945");
-            return ranLog(msg,'embmaker',`${arg}\nContent: ${content}\nAttachments: ${newAttach}`);
+            return sent;
         } catch (e) {
             return errLog(e, msg, this.client, true, "", true);
         }

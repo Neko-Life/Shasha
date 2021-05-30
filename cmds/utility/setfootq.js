@@ -29,7 +29,7 @@ module.exports = class setfootq extends commando.Command {
                     return errLog(e, msg, this.client);
                 }
                 const result = await trySend(this.client, msg, `Changed from \`${oldQ?.["settings"]?.defaultEmbed?.footerQuote}\` to \`${args.trim()}\``);
-                return ranLog(msg, "setfooterquote", result.content);
+                return result;
             });
         } catch (e) {
             return errLog(e, msg, this.client);

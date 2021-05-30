@@ -28,13 +28,11 @@ module.exports = class cloneembed extends commando.Command {
           if (!args[0]) {
             return trySend(this.client, msg, 'Which message??');
           }
-          trySend(this.client, msg, {content:content,embed:theMes.embeds[0]});
-          const moreEmb = theMes.embeds.slice(1);
-          for(const emb of moreEmb) {
-            trySend(this.client, msg, new MessageEmbed(emb));
+          const sent = theMes.embeds.map(r => trySend(this.client, msg, {content:content,embed:r}));
+          if (sent) {
+            tryReact(msg, "a:yesLife:794788847996370945");
           }
-          tryReact(msg, "a:yesLife:794788847996370945");
-          return ranLog(msg,'clonemb',`Embed ${theMes.url} (${theMes.id}) in ${theMes.channel.name} (${theMes.channel.id}) of ${theMes.guild.name} cloned.`);
+          return sent;
         } catch (e) {
           return trySend(this.client, msg, "No embed found. Use `<channel_[mention, ID]> <message_ID>` if it's in another channel.");
         }

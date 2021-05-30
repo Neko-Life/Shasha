@@ -13,16 +13,12 @@ module.exports = class mesemb extends commando.Command {
         });
     }
     async run(msg, arg) {
-        const args = arg.trim().split(/ +/);
-        try {
-          const message = await getChannelMessage(this.client,msg,args[0],args[1]);
-          console.log(message.embeds);
-          const mesemb = '```js\n'+JSON.stringify(message.embeds, null, 2)+'```';
-          const result = await trySend(this.client, msg, {content:'Collected:'+mesemb,split:{maxLength:2000,char: ",",append:',```',prepend:'```js\n'}});
-          return ranLog(msg,'mesemb',result.content);
-        } catch (e) {
-          noPerm(msg);
-          return errLog(e, msg, this.client);
-        }
+      const args = arg.trim().split(/ +/);
+      const message = await getChannelMessage(this.client,msg,args[0],args[1]);
+      if (!message) {
+        return trySend(this.client, msg, "404 message not found!");
+      }
+      const mesemb = '```js\n'+JSON.stringify(message.embeds, null, 2)+'```';
+      return trySend(this.client, msg, {content:'Collected:'+mesemb,split:{maxLength:2000,char: ",",append:',```',prepend:'```js\n'}});
     }
 };

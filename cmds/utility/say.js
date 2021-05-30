@@ -14,19 +14,19 @@ module.exports = class say extends commando.Command {
         });
     }
     run(msg, args) {
-        let noArgs = `<@!${msg.author.id}> what to say?`;
+        let noArgs = '​';
         if (!args) {
             args = noArgs;
         }
         args = emoteMessage(this.client, args);
         const sendThis = {content:args, disableMentions:"all"};
-        if (msg.member?.hasPermission("ADMINISTRATOR")) {
+        if (msg.member?.hasPermission('MENTION_EVERYONE')) {
           sendThis.disableMentions = "none";
         }
-        trySend(this.client, msg, sendThis);
+        const sent = trySend(this.client, msg, sendThis);
         if (args !== noArgs && msg.channel.guild && msg.member.hasPermission("MANAGE_MESSAGES")) {
             tryDelete(msg);
         }
-        return ranLog(msg,'say',`Content: ${args}`);
+        return sent;
     }
 };

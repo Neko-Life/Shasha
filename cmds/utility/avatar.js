@@ -125,15 +125,16 @@ module.exports = class avatar extends commando.Command {
         }
         allEmb.push(emb);
       }
+      let retSent = [];
       if (notFound.length > 0) {
-        trySend(this.client, msg, notFound);
+        retSent.push(notFound);
       }
       for (let index = 0; index < allEmb.length; index++) {
         const embelement = allEmb[index];
         const contelement = multipleMemMes[index];
-        trySend(this.client, msg, { embed: embelement, content: contelement, split:{maxLength:2000,char: ",",append:',```',prepend:'```js' }}); 
+        retSent.push({ embed: embelement, content: contelement, split:{maxLength:2000,char: ",",append:',```',prepend:'```js' }});
       }
-      return ranLog(msg,'avatar',arg);
+      return retSent.map(r => trySend(this.client, msg, r));
     });
   }
 };

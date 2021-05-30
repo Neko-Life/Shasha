@@ -25,7 +25,7 @@ module.exports = class servav extends commando.Command {
         const server_ID = arg.split(/ +/)[0];
         const doc = msg.guild?.id ?? msg.author.id;
         const col = database.collection(msg.guild ? "Guild" : "User");
-        col.findOne({document: doc}, async (err, res) => {
+        col.findOne({document: doc}, (err, res) => {
             if (err) {
                 errLog(err, msg, this.client);
             }
@@ -54,8 +54,7 @@ module.exports = class servav extends commando.Command {
                     const color = getColor(target.owner.displayColor)
                     embed.setColor(color);
                 }
-                trySend(this.client, msg, embed);
-                return ranLog(msg, "servav", `**${target.name}** (${target.id})`);
+                return trySend(this.client, msg, embed);
             }
         });
     }
