@@ -1,6 +1,7 @@
 'use strict';
 
 const commando = require("@iceprod/discord.js-commando");
+const emoteMessage = require("../../resources/emoteMessage");
 const { ranLog, trySend, tryDelete } = require("../../resources/functions");
 
 module.exports = class say extends commando.Command {
@@ -12,19 +13,21 @@ module.exports = class say extends commando.Command {
             description: "Say."
         });
     }
-    run(msg, args) {
-        let noArgs = `<@!${msg.author.id}> what to say?`;
+    async run(msg, args) {
+        let noArgs = '​';
         if (!args) {
             args = noArgs;
         }
+        args = emoteMessage(this.client, args);
         const sendThis = {content:args, disableMentions:"all"};
-        if (msg.member?.hasPermission("ADMINISTRATOR")) {
+        if (msg.member?.hasPermission('MENTION_EVERYONE')) {
           sendThis.disableMentions = "none";
         }
-        trySend(this.client, msg, sendThis);
+        const sent = await trySend(this.client, msg, sendThis);
         if (args !== noArgs && msg.channel.guild && msg.member.hasPermission("MANAGE_MESSAGES")) {
             tryDelete(msg);
         }
-        return ranLog(msg,'say',`Content: ${args}`);
+        ranLog(this.client, msg, sent.content);
+        return sent;
     }
 };

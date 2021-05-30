@@ -2,7 +2,7 @@
 
 const commando = require("@iceprod/discord.js-commando");
 const { MessageEmbed } = require("discord.js");
-const { ranLog, errLog, getChannelMessage, noPerm, tryReact } = require("../../resources/functions");
+const { ranLog, errLog, getChannelMessage, noPerm, tryReact, findChannelRegEx, trySend, cleanMentionID } = require("../../resources/functions");
 const getColor = require("../../resources/getColor");
 
 module.exports = class embmaker extends commando.Command {
@@ -18,15 +18,24 @@ module.exports = class embmaker extends commando.Command {
             hidden:false
         });
     }
+    /**
+     * 
+     * @param {commando.CommandoMessage} msg 
+     * @param {*} arg 
+     * @returns 
+     */
     async run(msg, arg) {
         const args = arg.trim().split(/(?<!\\)(\-\-)+/);
         let embed = new MessageEmbed();
-        let autName, footertext, autIcon, autUrl, footericon, content, channel, editSrc, newAttach = [];
+        let autName, footertext, autIcon, autUrl, footericon, content, channel, editSrc, newAttach = [], reportMessage = "";
         try {
             for(const value of args) {
+                if (value.toLowerCase().startsWith("json")) {
+                    embed = new MessageEmbed(JSON.parse(value.slice("json".length).trim()));
+                }
                 if (value.toLowerCase().startsWith('edit')) {
                     const editArg = value.slice('edit'.length).trim().split(/ +/);
-                    if (editArg) {
+                    if (editArg[0].length > 0) {
                         editSrc = await getChannelMessage(this.client, msg, editArg[0], editArg[1]);
                         if (editSrc) {
                             const editEmb = editSrc.embeds[0];
@@ -54,17 +63,23 @@ module.exports = class embmaker extends commando.Command {
                                         footericon = editEmb.footer.iconURL;
                                     }
                                 }
+                            } else {
+                                reportMessage += "**[EDIT]** No editable embed found.\n";
                             }
+                        } else {
+                            reportMessage += "**[EDIT]** Unknown message.\n";
                         }
+                    } else {
+                        reportMessage += "**[EDIT]** No argument provided.\n";
                     }
                 }
                 if (value.toLowerCase().startsWith('quote')) {
                     const quoteargs = value.slice('quote'.length).toLowerCase().trim().split(/ +/);
-                    if (quoteargs) {
+                    if (quoteargs[0].length > 0) {
                         await getChannelMessage(this.client, msg, quoteargs[0], quoteargs[1])
                         .then(quoteThis => {
                             if (quoteThis) {
-                                const author = quoteThis.guild.member(quoteThis.author);
+                                const author = quoteThis.member;
                                 autName = author ? author.displayName : quoteThis.author.username;
                                 autIcon = quoteThis.author.displayAvatarURL({size:4096,dynamic:true});
                                 autUrl = quoteThis.url;
@@ -78,14 +93,16 @@ module.exports = class embmaker extends commando.Command {
                                 if (quoteThis.attachments) {
                                     for(const attach of quoteThis.attachments) {
                                         attach.map(g => {
-                                            if (/^http/.test(g.proxyURL)) {
-                                                newAttach.push(g.proxyURL);
-                                            }
+                                            newAttach.push(g.proxyURL);
                                         });
                                     }
                                 }
+                            } else {
+                                reportMessage += "**[QUOTE]** Unknown message.\n";
                             }
                         });
+                    } else {
+                        reportMessage += "**[QUOTE]** No argument provided.\n";
                     }
                 }
                 if (value.toLowerCase().startsWith('remove')) {
@@ -123,16 +140,18 @@ module.exports = class embmaker extends commando.Command {
                             autName = autVal.slice('name'.length).trim().replace(/\\(?!\\)/g,'');
                         }
                         if (autVal.toLowerCase().startsWith('icon')) {
-                            if (/^http/.test(autVal.slice('icon'.length).trim())) {
+                            if (/^https?:\/\/\w+\.\w\w/.test(autVal.slice('icon'.length).trim())) {
                                 autIcon = autVal.slice('icon'.length).trim();
                             } else {
+                                reportMessage += "**[AUTHOR]** Invalid icon URL.\n";
                                 autIcon = null;
                             }
                         }
                         if (autVal.toLowerCase().startsWith('url')) {
-                            if (/^http/.test(autVal.slice('url'.length).trim())) {
+                            if (/^https?:\/\/\w+\.\w\w/.test(autVal.slice('url'.length).trim())) {
                                 autUrl = autVal.slice('url'.length).trim();
                             } else {
+                                reportMessage += "**[AUTHOR]** Invalid URL.\n";
                                 autUrl = null;
                             }
                         }
@@ -146,47 +165,54 @@ module.exports = class embmaker extends commando.Command {
                     }
                 }
                 if (value.toLowerCase().startsWith("image")) {
-                    if (/^http/.test(value.slice("image".length).trim())) {
+                    if (/^https?:\/\/\w+\.\w\w/.test(value.slice("image".length).trim())) {
                         embed.setImage(value.slice("image".length).trim());
                     } else {
+                        reportMessage += "**[IMAGE]** Invalid URL.\n";
                         embed.setImage(null);
                     }
                 }
                 if (value.toLowerCase().startsWith("thumbnail")) {
-                    if (/^http/.test(value.slice("thumbnail".length).trim())) {
+                    if (/^https?:\/\/\w+\.\w\w/.test(value.slice("thumbnail".length).trim())) {
                         embed.setThumbnail(value.slice("thumbnail".length).trim());
                     } else {
+                        reportMessage += "**[THUMBNAIL]** Invalid URL.\n";
                         embed.setThumbnail(null);
                     }
                 }
                 if (value.toLowerCase().startsWith('url')) {
-                    if (/^http/.test(value.slice("url".length).trim())) {
+                    if (/^https?:\/\/\w+\.\w\w/.test(value.slice("url".length).trim())) {
                         embed.setURL(value.slice("url".length).trim());
                     } else {
+                        reportMessage += "**[URL]** Invalid URL.\n";
                         embed.setURL(null);
                     }
                 }
                 if (value.toLowerCase().startsWith('attachment')) {
                     const attach = value.slice("attachments".length).trim().split(/ +/);
                     for(const theFile of attach) {
-                        if (/^http/.test(theFile)) {
+                        if (/^https?:\/\/\w+\.\w\w/.test(theFile)) {
                             newAttach.push(theFile);
+                        } else {
+                            if (theFile.toLowerCase() !== "-copy") {
+                                reportMessage += "**[ATTACHMENT]** Invalid URL.\n";
+                            }
                         }
-                        if (theFile === '-copy' && editSrc) {
-                            if (editSrc.attachments) {
+                        if (theFile.toLowerCase() === '-copy' && editSrc) {
+                            if (editSrc.attachments[0].length > 0) {
                                 for(const attach of editSrc.attachments) {
                                     attach.map(g => {
-                                        if (/^http/.test(g.proxyURL)) {
-                                            newAttach.push(g.proxyURL);
-                                        }
+                                        newAttach.push(g.proxyURL);
                                     });
                                 }
+                            } else {
+                                reportMessage += "**[ATTACHMENT]** No attachment to copy.\n";
                             }
                         }
                     }
                 }
                 if (value.toLowerCase().startsWith("timestamp")) {
-                    if(!/[a-zA-Z]/.test(value.slice("timestamp".length).trim())) {
+                    if(!/\D/.test(value.slice("timestamp".length).trim())) {
                         embed.setTimestamp(parseInt(value.slice("timestamp".length).trim(), 10));
                     } else {
                         if (value.slice("timestamp".length).trim().toLowerCase() === 'now') {
@@ -194,6 +220,9 @@ module.exports = class embmaker extends commando.Command {
                         } else {
                             embed.setTimestamp(value.slice("timestamp".length).trim());
                         }
+                    }
+                    if (!embed.timestamp) {
+                        reportMessage += "**[TIMESTAMP]** Invalid format.\n";
                     }
                 }
                 if (value.toLowerCase().startsWith('footer')) {
@@ -203,9 +232,10 @@ module.exports = class embmaker extends commando.Command {
                             footertext = footval.slice("text".length).trim().replace(/\\(?!\\)/g,'');
                         }
                         if (footval.toLowerCase().startsWith('icon')) {
-                            if (/^http/.test(footval.slice('icon'.length).trim())) {
+                            if (/^https?:\/\/\w+\.\w\w/.test(footval.slice('icon'.length).trim())) {
                                 footericon = footval.slice('icon'.length).trim();
                             } else {
+                                reportMessage += "**[FOOTER]** Invalid icon URL.\n";
                                 footericon = null;
                             }
                         }
@@ -240,15 +270,21 @@ module.exports = class embmaker extends commando.Command {
                     content = value.slice('content'.length).trim().replace(/\\(?!\\)/g,'');
                 }
                 if (value.toLowerCase().startsWith('channel')) {
-                    let ID = value.slice('channel'.length).trim();
+                    let ID = cleanMentionID(value.slice('channel'.length).trim());
                     if (ID.toLowerCase() === 'here') {
                         channel = msg.channel;
-                    }
-                    if (ID.startsWith('<#') && ID.endsWith('>')) {
-                      ID = ID.slice(2, -1);
-                    }
-                    if (!/\D/.test(ID)) {
-                        channel = this.client.channels.cache.get(ID);
+                    } else {
+                        if (/^\d{17,19}$/.test(ID)) {
+                            channel = msg.guild.channels.cache.get(ID);
+                            if (!channel && this.client.owners.includes(msg.author.id)) {
+                                channel = this.client.channels.cache.get(ID);
+                            }
+                        } else {
+                            channel = findChannelRegEx(msg, ID, ["category", "voice"])[0];
+                        }
+                        if (!channel) {
+                            reportMessage += "**[CHANNEL]** Unknown channel.\n";
+                        }
                     }
                 }
             }
@@ -263,14 +299,15 @@ module.exports = class embmaker extends commando.Command {
             if (autName || autIcon && embed.author !== null) {
                 embed.setAuthor(autName,autIcon,autUrl);
             }
-            if (!footertext && footericon || !footertext && embed.timestamp) {
-                footertext = '​';
-            }
             if (footertext || footericon && embed.footer !== null) {
                 embed.setFooter(footertext,footericon);
             }
-            if (embed.length === 0 && (embed.thumbnail === null || embed.thumbnail.url === null) && embed.author === null && (embed.image === null || embed.image.url === null) && embed.timestamp === null) {
-                embed.setDescription('​');
+            if (embed.length === 0 && (embed.thumbnail === null || embed.thumbnail.url === null) && embed.author === null && (embed.image === null || embed.image.url === null)) {
+                if (embed.timestamp) {
+                    embed.setFooter('​');
+                } else {
+                    embed.setDescription("_ _");
+                }
             }
             if (embed.color === 16777215) {
               embed.setColor(16777214);
@@ -279,28 +316,31 @@ module.exports = class embmaker extends commando.Command {
                 embed = null;
             }
             if (newAttach.length > 0) {
-                console.log("Uploading attachments...");
+                reportMessage += "**[ATTACHMENT]** Uploading attachments....\n";
+            }
+            let sent = [];
+            if (reportMessage.length > 0) {
+                sent.push(trySend(this.client, msg, reportMessage));
             }
             if (editSrc) {
                 if (channel) {
-                    channel.send({content:content,embed:embed,files:newAttach}).catch(e => noPerm(msg));
+                    sent.push(channel.send({content:content,embed:embed,files:newAttach}).catch(e => noPerm(msg)));
                 } else {
                     channel = msg.channel;
                     if (editSrc.author === this.client.user) {
-                        try {
-                            editSrc.edit({content:content,embed:embed,files:newAttach}).catch(e => errLog(e, msg, this.client));
-                        } catch (e) {
+                        sent.push(editSrc.edit({content:content,embed:embed,files:newAttach}).catch(e => {
+                            errLog(e, msg, this.client);
                             try {
-                                channel.send('Something\'s wrong, i can\'t edit that so here <:WhenLife:773061840351657984>');
-                                channel.send({content:content,embed:embed,files:newAttach});
+                                sent.push(channel.send('Something\'s wrong, i can\'t edit that so here <:WhenLife:773061840351657984>'));
+                                sent.push(channel.send({content:content,embed:embed,files:newAttach}));
                             } catch (e) {
                                 noPerm(msg);
                             }
-                        }
+                        }));
                     } else {
                         try {
-                            channel.send('I can\'t edit that, so here <:catstareLife:794930503076675584>');
-                            channel.send({content:content,embed:embed,files:newAttach});
+                            sent.push(channel.send('I can\'t edit that, so here <:catstareLife:794930503076675584>'));
+                            sent.push(channel.send({content:content,embed:embed,files:newAttach}));
                         } catch (e) {
                             noPerm(msg);
                         }
@@ -310,10 +350,13 @@ module.exports = class embmaker extends commando.Command {
                 if (!channel) {
                     channel = msg.channel;
                 }
-                channel.send({content:content,embed:embed,files:newAttach}).catch(e => noPerm(msg));
+                sent.push(channel.send({content:content,embed:embed,files:newAttach}).catch(e => noPerm(msg)));
             }
-            tryReact(msg, "a:yesLife:794788847996370945");
-            return ranLog(msg,'embmaker',`${arg}\nContent: ${content}\nAttachments: ${newAttach}`);
+            if (sent.length > 0) {
+                tryReact(msg, "a:yesLife:794788847996370945");
+            }
+            ranLog(this.client, msg, ("```js\n" + JSON.stringify(embed, null, 2) + "```").slice(0, 2048));
+            return sent;
         } catch (e) {
             return errLog(e, msg, this.client, true, "", true);
         }

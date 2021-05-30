@@ -25,13 +25,13 @@ module.exports = class servav extends commando.Command {
         const server_ID = arg.split(/ +/)[0];
         const doc = msg.guild?.id ?? msg.author.id;
         const col = database.collection(msg.guild ? "Guild" : "User");
-        col.findOne({document: doc}, async (err, res) => {
+        col.findOne({document: doc}, (err, res) => {
             if (err) {
                 errLog(err, msg, this.client);
             }
             const footerQuote = res?.["settings"]?.defaultEmbed?.footerQuote;
             let icon, target;
-            if (server_ID && this.client.owners.includes(msg.author.id)) {
+            if (server_ID && this.client.owners.includes(msg.author)) {
                 if (!/\D/.test(server_ID)) {
                     target = this.client.guilds.cache.get(server_ID);
                 } else {
@@ -54,8 +54,7 @@ module.exports = class servav extends commando.Command {
                     const color = getColor(target.owner.displayColor)
                     embed.setColor(color);
                 }
-                trySend(this.client, msg, embed);
-                return ranLog(msg, "servav", `**${target.name}** (${target.id})`);
+                return trySend(this.client, msg, embed);
             }
         });
     }
