@@ -182,10 +182,8 @@ module.exports = class mute extends commando.Command {
         if (!roleConfCheck && !settingUp) {
             return trySend(this.clientPermissions, msg, `No mute role configured! Run \`${msg.guild.commandPrefix}${this.name} --settings <--role --<role_[name | ID]>> [--duration --<duration> | --log --<channel_[name | ID]>]\` to set it up.`);
         }
-        if (duration.year > 275500) {
-            duration.year = 275500;
-        }
         let untilDate = new Date(String(duration.year), String(duration.month), String(duration.date), String(duration.hour), String(duration.minute), String(duration.second));
+        if (untilDate.toString() === "Invalid Date") untilDate = "Indefinite";
         if (untilDate?.toUTCString() === invokedAt.toUTCString() && !settingDuration) {
             if (defaultDurationDoc?.date?.valueOf() > 0) {
                 untilDate = new Date(invokedAt.valueOf() + defaultDurationDoc.date.valueOf() - 1000);
@@ -193,7 +191,7 @@ module.exports = class mute extends commando.Command {
                 untilDate = "Indefinite";
             }
         }
-        if (untilDate !== "Indefinite") {
+        if (untilDate instanceof Date) {
             timeForMessage = [];
             const elapsedTime = new Date(untilDate.valueOf() - invokedAt.valueOf() + 1000),
             elapsed = [
@@ -284,7 +282,7 @@ module.exports = class mute extends commando.Command {
                 }
             } else {
                 if (!settingUp && mentions[0].length === 0) {
-                    return trySend(this.client, msg, "Who do you wanna mute? Provide as first argument `<[RegExp | user_[mention | ID]]>`. Use `,` to provide more than one user. Use `--` to split arguments.\nExample:```js\n" + `${msg.guild.commandPrefix}${this.name} 832423842785623423, @Shasha#1234, retard wanna get muted, #6969, ^fuck (ur)? .{5}#\\d\\d69$--69y69mo69w420d420h420m420s--Saying "joe"`);
+                    return trySend(this.client, msg, "Who do you wanna mute? Provide as first argument `<[RegExp | user_[mention | ID]]>`. Use `,` to provide more than one user. Use `--` to split arguments.\nExample:```js\n" + `${msg.guild.commandPrefix}${this.name} 832423842785623423, @Shasha#1234, retard wanna get muted, #6969, ^fuck (ur)? .{5}#\\d\\d69$--69y69mo69w420d420h420m420s--Saying "joe"\`\`\``);
                 }
             }
         }
@@ -313,7 +311,7 @@ module.exports = class mute extends commando.Command {
             infractionToDoc = {
                 infraction: infractionCase ? infractionCase + 1 : 1,
                 by: targetUser,
-                moderator: `**${msg.author.tag}** <@${msg.author.id}> (${msg.author.id})`,
+                moderator: msg.author,
                 punishment: "mute",
                 at: invokedAt,
                 for: timeForMessage,
