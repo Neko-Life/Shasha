@@ -13,8 +13,6 @@ const { errLog, trySend } = require('./resources/functions');
 const { join } = require('path');
 // const { chatAnswer } = require("./resources/shaChat");
 require("./database/mongo");
-//const { chatAnswer } = require("./resources/shaChat");
-const { timestampAt } = require("./resources/debug");
 
 client.registry
 .registerGroups([
