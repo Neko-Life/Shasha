@@ -14,7 +14,6 @@ module.exports = class invite extends commando.Command {
         });
     }
     run(msg) {
-        trySend(this.client, msg, "Mute me after cuz it's spam\n"+conf.invite);
-        return ranLog(msg, "invite");
+        return trySend(this.client, msg, "Mute me after cuz it's spam\n"+conf.invite);
     }
 };
