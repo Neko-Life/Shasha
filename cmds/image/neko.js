@@ -14,7 +14,7 @@ module.exports = class neko extends commando.Command {
     }
     async run(msg) {
         const title = `${msg.guild ? msg.member.displayName : msg.author.username}! ~Nyann~ (UwU) <3`;
-        const image = `https://nekos.best/nekos/${String(Math.floor(Math.random() * 314)).padStart(4, '0')}.png`;
+        const image = `https://nekos.best/nekos/${String(Math.floor(Math.random() * 450)).padStart(4, '0')}.png`;
         const emb = await defaultImageEmbed(msg, image, title);
         return trySend(this.client, msg, emb);
     }
