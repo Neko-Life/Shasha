@@ -14,7 +14,7 @@ module.exports = class fixchat extends commando.Command {
         });
     }
     async run(msg) {
-        const r;// = await fixChat();
+        //const r = await fixChat();
         if (r === 3) {
             return trySend(this.client, msg, "Fixed!");
         } else {
