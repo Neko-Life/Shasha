@@ -1,8 +1,7 @@
 'use strict';
 
-
 const puppeteer = require('puppeteer');
-const { trySend, ranLog, noPerm } = require('./functions');
+const { trySend, noPerm } = require('./functions');
 const Commando = require("@iceprod/discord.js-commando");
 require("discord.js");
 
@@ -70,45 +69,47 @@ async function fetchAnswer(page, index) {
 	}
 }
 
-
 let chatIndex = 3;
 
-
-    /**
-     * @param {Commando.Client} client
-     * @param {Commando.CommandoMessage} message 
-     * @returns 
-     */
-     async function chatAnswer(client, message) {
-        //console.log(message.content);
-        //console.log(chatIndex);
-        if (message.content.trim().length === 0) {
-            return
-        } else {
-            try {
-                message.channel.startTyping();
-                await shaChat(client, chatIndex, message).then(async answer => {
-					chatIndex += 2;
-					if (message.channel.lastMessage.author === client.user && answer?.trim() === message.channel.lastMessage.content.trim()) {
-						return trySend(client, message, "Please speak one by one, I'm overwhelmed <:catstareLife:794930503076675584>");
-					} else {
-						trySend(client, message, answer.trim()).then(() => {
-							message.channel.stopTyping();
-						}).catch(e => {
-							noPerm(message);
-							message.channel.stopTyping();
-						});
-					}
-					return ranLog(message, message.content.trim(), answer);
-				}).catch(e => {
-					noPerm(message);
-					message.channel.stopTyping();
-				});
-            } catch (e) {
+/**
+ * @param {Commando.Client} client
+ * @param {Commando.CommandoMessage} message 
+ * @returns 
+ */
+ async function chatAnswer(client, message) {
+	//console.log(message.content);
+	//console.log(chatIndex);
+	if (message.content.trim().length === 0) {
+		return
+	} else {
+		try {
+			message.channel.startTyping();
+			await shaChat(client, chatIndex, message).then(async answer => {
+				chatIndex += 2;
+				if (message.channel.lastMessage.author === client.user && answer?.trim() === message.channel.lastMessage.content.trim()) {
+					return trySend(client, message, "Please speak one by one, I'm overwhelmed <:catstareLife:794930503076675584>");
+				} else {
+					trySend(client, message, answer.trim()).then(() => {
+						message.channel.stopTyping();
+					}).catch(e => {
+						noPerm(message);
+						message.channel.stopTyping();
+					});
+				}
+				return //ranLog(message, message.content.trim(), answer);
+			}).catch(e => {
 				noPerm(message);
-                message.channel.stopTyping();
-            }
-        }
-    }
+				message.channel.stopTyping();
+			});
+		} catch (e) {
+			noPerm(message);
+			message.channel.stopTyping();
+		}
+	}
+}
 
-	module.exports = { chatAnswer }
+async function fixChat() {
+	return page1.then(r => r.reload()).then(() => {return chatIndex = 3}).catch(e => {return console.log(e)});
+}
+
+module.exports = { chatAnswer, fixChat }
