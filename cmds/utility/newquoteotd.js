@@ -49,15 +49,15 @@ module.exports = class newquoteotd extends commando.Command {
                 .setTitle(name)
                 .setDescription(description)
                 .setThumbnail(thumbnail)
-                .setFooter(quoteOTD.footerText, quoteOTD.footerIcon)
+                .setFooter(quoteOTD.footerText || "", quoteOTD.footerIcon)
                 .setColor(color[Math.floor(Math.random()*color.length)]);
-                const sent = trySend(this.client, quoteOTD.channel, emb);
+                const sent = await trySend(this.client, quoteOTD.channel, emb);
                 if (sent) {
+                    ranLog(this.client, msg, "New quote: " + sent.content + "\nBy: " + mes.author.tag + ` (${mes.author.id})`);
                     tryReact(msg, "a:yesLife:794788847996370945");
                 }
                 return sent;
             }
-            ranLog(this.client, msg, "New quote: " + msg.content + "\nBy: " + mes.author.tag + ` (${mes.author.id})`);
             return trySend(this.client, msg, 'No message with that ID from this channel. Use `[<channel_[mention, ID]> <message_ID>, message_link]` if it\'s in another channel.');
         } catch (e) {
             noPerm(msg);

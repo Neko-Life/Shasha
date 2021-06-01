@@ -111,7 +111,8 @@ async function ranLog(client, msg, addition) {
   .setDescription(addition)
   .setFooter(timestampAt(), msg.guild?.iconURL({"size": 4096, "dynamic": true}))
   .addField("Guild", `**${msg.guild?.name}** (${msg.guild?.id})`, true)
-  .addField("Channel", `**${msg.channel?.name}** (${msg.channel.id})`, true);
+  .addField("Channel", `**${msg.channel?.name}** (${msg.channel.id})`, true)
+  .addField("User", `<@!${msg.author.id}>`, true);
   trySend(client, channel, {embed: embed});
 }
 
