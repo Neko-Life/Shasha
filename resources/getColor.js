@@ -9,11 +9,8 @@ module.exports = function getColor(name) {
     if (!name) {
         return
     }
-    if (typeof name === "string") {
-        name = name.toLowerCase();
-    }
     if (typeof name === 'number') {
-        if ( name === 16777215) {
+        if (name === 16777215) {
             return 16777214;
         } else {
             return name;
