@@ -9,7 +9,7 @@ const { randomColors } = require("../config.json");
 const { CommandoMessage, CommandoClient } = require('@iceprod/discord.js-commando');
 
 /**
- * Log an error. If second argument, third argument is required
+ * Log an error. Second or third argument is required
  * @param {Error} theError - Catched error (error)
  * @param {CommandoMessage} msg - Message object (msg)
  * @param {Client} client - This client (this.client)
@@ -18,10 +18,10 @@ const { CommandoMessage, CommandoClient } = require('@iceprod/discord.js-command
  * @param {Boolean} notify - Send error to user who ran the command
  */
 async function errLog(theError, msg, client, sendTheError, errorMessage, notify) {
-  let errLogPath, [logThis, inLogChannel, sendErr] = ['', '', ''];
+  if (!(theError instanceof Error) || !(msg ?? client)) return console.error("[ERRLOG] Not error instance or no required param.");
+  let [logThis, inLogChannel, sendErr] = ['', '', ''];
   if (msg) {
-    logThis = `\`${msg.command.name}\` (${msg.id}) ${msg.url} in ${msg.guild ? `**${msg.channel.name}** (${msg.channel.id}) of **${msg.guild.name}** (${msg.guild.id})` : `**DM**`} ran by **${msg.author.tag}** (${msg.author.id}) \n\n`;
-    msg.guild ? errLogPath = `../Guilds/${msg.guild.id}/Log/` : errLogPath = '../Log/';
+    logThis = `\`${msg.command?.name}\` (${msg.id}) ${msg.url} in ${msg.guild ? `**${msg.channel.name}** (${msg.channel.id}) of **${msg.guild.name}** (${msg.guild.id})` : `**DM**`} ran by **${msg.author.tag}** (${msg.author.id}) \n\n`;
     if (errorMessage) {
       if (errorMessage.length > 0) {
         sendErr = sendErr + errorMessage+'\n\n';
@@ -31,31 +31,19 @@ async function errLog(theError, msg, client, sendTheError, errorMessage, notify)
     if (sendTheError) {
       sendErr = sendErr+'```js\n'+theError.stack+'```';
     }
-    if (notify) {
-      try {
-        msg.channel.send(sendErr.trim(),{split:true});
-      } catch (e) {
-        errLog(e,msg);
-      }
+    if (notify || !client) {
+      msg.channel.send(sendErr.trim(),{split:true}).catch(noPerm(msg));
     }
-  } else {
-    errLogPath = '../Log/';
   }
   if (client) {
     try {
       inLogChannel = inLogChannel+'```js\n'+theError.stack+'```';
-      if (msg && msg.guild && msg.guild.id === "823815890285756447") {
-        logThis = "";
-      }
       const sendAt = client.channels.cache.get(defaultErrorLogChannel);
       sendAt.send(logThis + inLogChannel.trim() + timestampAt(),{split:true});
     } catch (errmes) {
-      errLog(errmes, msg);
+      console.error(errmes);
     }
   }
-  const f = new Date().toUTCString();
-  logThis = logThis+theError.stack+"\nat: "+f;
-  return //console.log(logThis);
 }
 
 /**
@@ -67,26 +55,25 @@ async function errLog(theError, msg, client, sendTheError, errorMessage, notify)
  * @returns {Promise<Message>} Message object | undefined
  */
 async function getChannelMessage(client, msg, MainID, SecondID) {
-  if (!MainID) {
-    return
+  if (!MainID || !(client ?? msg)) {
+    return;
   }
   if (/\//.test(MainID)) {
     const splitURL = MainID.split(/\/+/);
     SecondID = splitURL[splitURL.length-1];
     MainID = splitURL[splitURL.length-2];
   }
-  if (MainID.startsWith('<') && MainID.endsWith('>')) {
-    MainID = MainID.slice(2, -1);
-  }
-  if (SecondID && (!/\D/.test(SecondID))) {
+  MainID = cleanMentionID(MainID);
+  if (SecondID && !/\D/.test(SecondID) && client) {
     try {
       const meschannel = client.channels.cache.get(MainID);
-      return await meschannel.messages.fetch(SecondID);
+      return meschannel.messages.fetch(SecondID);
     } catch (theError) {
       return
     }
+  } else {
+    return msg.channel.messages.fetch(MainID).catch(() => {});
   }
-  return await msg.channel.messages.fetch(MainID).catch(e => {return});
 }
 
 function execCB(error, stdout, stderr) {
@@ -97,6 +84,7 @@ function execCB(error, stdout, stderr) {
   console.log('stdout:\n'+stdout);
   console.log('stderr:\n'+stderr);
 }
+
 /**
  * Command usage logger
  * @param {CommandoClient} client 
@@ -164,6 +152,9 @@ function multipleMembersFound(client, msg, arr, key, max = 4, withID) {
  * @returns {GuildMember[]} Member object found
  */
 function findMemberRegEx(msg, name) {
+  if (!(msg ?? name)) {
+    return;
+  }
   const re = new RegExp(name, "i");
   return msg.guild?.members.cache.array().filter(r => re.test(r.displayName) || re.test(r.user.tag));
 }
@@ -173,9 +164,10 @@ function findMemberRegEx(msg, name) {
  * @param {Message} msg 
  */
 function noPerm(msg) {
-  if (msg) {
-    msg.react("sadduLife:797107817001386025").catch(() => {});
+  if (!msg) {
+    return;
   }
+  msg.react("sadduLife:797107817001386025").catch(() => {});
 }
 
 /**
@@ -187,7 +179,9 @@ function noPerm(msg) {
  * @returns {Promise<Message>} Sent message object
  */
 async function trySend(client, msg, content, adCheck = true) {
-  //console.log(...content);
+  if (!client || !msg) {
+    return;
+  }
   let msgOf;
   if (msg?.channel) {
     msgOf = msg.channel;
@@ -223,9 +217,10 @@ async function trySend(client, msg, content, adCheck = true) {
  * @param {Message} msg - Message to delete (msg)
  */
 function tryDelete(msg) {
-  if (msg) {
-    msg.delete().catch(noPerm(msg));
+  if (!msg) {
+    return;
   }
+  msg.delete().catch(() => {});
 }
 
  /**
@@ -234,9 +229,10 @@ function tryDelete(msg) {
   * @param {String} reaction - Emote ("name:ID")
   */
 function tryReact(msg, reaction) {
-  if (msg) {
-      msg.react(reaction).catch(() => {});
+  if (!msg || reaction.length === 0) {
+    return;
   }
+  msg.react(reaction).catch(() => {});
 }
 
 /**
@@ -279,7 +275,13 @@ async function defaultImageEmbed(msg, image, title, footerQuote) {
  * @returns {String} Clean ID
  */
 function cleanMentionID(key) {
+  if (!key) {
+    return;
+  }
   let uID = key.trim();
+  if (!/\D/.test(uID)) {
+    return uID;
+  }
   if (uID.startsWith('<@') || uID.startsWith('<#')) {
     uID = uID.slice(2);
   }
