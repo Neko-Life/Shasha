@@ -1,6 +1,6 @@
 'use strict';
 
-const { MessageEmbed, Message, GuildMember, User, Client, GuildChannel, Role, MessageOptions, Channel } = require('discord.js');
+const { MessageEmbed, Message, GuildMember, User, Client, GuildChannel, Role, MessageOptions, TextChannel, DMChannel } = require('discord.js');
 const { defaultErrorLogChannel, ranLogger } = require("../config.json");
 const { database } = require("../database/mongo");
 const { timestampAt } = require('./debug');
@@ -172,25 +172,24 @@ function noPerm(msg) {
 
 /**
  * Send message
- * @param {Client} client - (this.client)
- * @param {Message | String | Channel} msg Message object | channel_ID
+ * @param {CommandoClient} client - (this.client)
+ * @param {Message | String | TextChannel | DMChannel} msg Message object | channel_ID
  * @param {MessageOptions} content - ({content:content,optionblabla})
  * @param {Boolean} adCheck - Check source for Discord invite link (true)
  * @returns {Promise<Message>} Sent message object
  */
-async function trySend(client, msg, content, adCheck = true) {
+function trySend(client, msg, content, adCheck = true) {
   if (!client || !msg) {
     return;
   }
-  let msgOf;
-  if (msg?.channel) {
-    msgOf = msg.channel;
-  } else {
-    if (typeof msg === "string") {
-      msgOf = client.channels.cache.get(msg);
-    } else {
-      msgOf = msg;
+  if (client.owners.includes(msg.author)) {
+    adCheck = false;
+    if (content.disableMentions) {
+      content.disableMentions = "none";
     }
+  }
+  if (typeof msg === "string") {
+    msg = client.channels.cache.get(msg);
   }
   if (adCheck) {
     if (content.content) {
@@ -201,15 +200,15 @@ async function trySend(client, msg, content, adCheck = true) {
       }
     }
   }
-  const sentMes = await msgOf.send(content)
-  .catch((e) => {
-    console.error(e);
-    if (msg?.channel) {
-      noPerm(msg);
+  if (msg instanceof Message) {
+    return msg.channel.send(content).catch(() => {});
+  } else {
+    if (msg instanceof TextChannel || msg instanceof DMChannel) {
+      return msg.send(content).catch(() => {});
+    } else {
+      console.error("[TRYSEND] Unknown {msg} type.", msg);
     }
-    return
-  });
-  return sentMes;
+  }
 }
 
 /**
@@ -403,6 +402,34 @@ function multipleChannelsFound(client, msg, arr, key, max = 4, withID) {
   }
 }
 
+/**
+ * Standard 
+ * @param {Client} client this.client
+ * @param {Message} msg - Message object
+ * @param {String} key - Channel ID | Mention | Name
+ * @returns 
+ */
+function getChannelProchedure(client, msg, key) {
+  if (key.length === 0) {
+    return;
+  }
+  const search = cleanMentionID(key);
+  if (search.length === 0) {
+    return;
+  }
+  let channel;
+  if (/^\d{17,19}$/.test(search)) {
+    channel = msg.guild.channels.cache.get(search);
+    if (!channel && client.owners.includes(msg.author)) {
+      channel = client.channels.cache.get(search);
+    }
+  }
+  if (!channel) {
+    channel = findChannelRegEx(msg, search, ["category", "voice"])[0];
+  }
+  return channel;
+}
+
 module.exports = {
   cleanMentionID,
   multipleMembersFound, multipleRolesFound, multipleChannelsFound,
@@ -410,5 +437,5 @@ module.exports = {
   getChannelMessage, errLog,
   execCB, ranLog, noPerm,
   trySend, tryDelete, tryReact,
-  sentAdCheck, defaultImageEmbed 
+  sentAdCheck, defaultImageEmbed, getChannelProchedure
 }

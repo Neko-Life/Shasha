@@ -1,8 +1,8 @@
 'use strict';
 
 const { Structures } = require("discord.js"),
-{ database } = require("../database/mongo");
-const { errLog } = require("./functions");
+{ database } = require("../database/mongo"),
+{ errLog } = require("./functions");
 
 Structures.extend("Guild", g => {
     return class Guild extends g {
@@ -16,6 +16,9 @@ Structures.extend("Guild", g => {
                 this.infractions = r?.moderation?.infractions;
                 this.moderation = r?.moderation?.settings;
                 this.defaultEmbed = r?.settings?.defaultEmbed;
+                
+                this.eventChannels = r?.settings?.eventChannels;
+
                 return this.dbLoaded = true;
             });
             return ret;
@@ -42,6 +45,8 @@ Structures.extend("Guild", g => {
                     if (found.length > 0) {
                         return found;
                     }
+                } else {
+                    return;
                 }
             } catch (e) { }
         }
@@ -49,15 +54,21 @@ Structures.extend("Guild", g => {
             try {
                 const r = await database.collection("Guild").findOne({ document: this.id });
                 this.infractions = r?.moderation?.infractions;
-                const ret = database.collection("Guild").updateOne({document: this.id}, {$push:{"moderation.infractions":add}}, (e, r) => {
+                const ret = database.collection("Guild").updateOne({document: this.id}, {$push:{"moderation.infractions":add}}, (e) => {
                     if (e) return errLog(e, null, this.client);
-                    if (r) {
-                        this.infractions.push(add);
-                        return true;
-                    };
+                    this.infractions.push(add);
+                    return true;
                 });
                 return ret;
             } catch (e) { }
+        }
+        setEventChannels(set) {
+            const ret = database.collection("Guild").updateOne({document: this.id}, {$set: {"settings.eventChannels": set}}, {upsert: true}, (e) => {
+                if (e) return errLog(e, null, this.client);
+                this.eventChannels = set;
+                return true;
+            });
+            return ret;
         }
         setDefaultEmbed(set) {
             const ret = database.collection("Guild").updateOne({document: this.id}, {$set:{"settings.defaultEmbed": set}}, {upsert: true}, (e) => {
@@ -83,6 +94,7 @@ Structures.extend("User", u => {
         constructor(client, data) {
             super(client, data);
             this.dbLoaded = false;
+            this.giveHeart = "yes";
         }
         async dbLoad() {
             const ret = await database.collection("User").findOne({document: this.id}).then((r, j) => {

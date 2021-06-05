@@ -13,9 +13,7 @@ module.exports = class embmaker extends commando.Command {
             aliases: ["embedmaker","createmb","creatembed"],
             group: "utility",
             description: "Embed creator.",
-            details:`Embed creator: You can just copy this template and remove unneeded argument. Every argument is optional.\`\`\`\n--title [text]\n--description [text]\n--author:\n    -name [text]\n    -icon [url]\n    -url [url]\n--color [hex, number, name of color]\n--image [url]\n--thumbnail [url]\n--url [url]\n--newfield:\n    -name [text]\n    -desc [text]\n    -inline (true if provided)\n--footer:\n    -text [text]\n    -icon [url]\n--content [text]\n--channel [channel_[mention, ID]]\n--timestamp [ISO 8601, UNIX Timestamp (Milliseconds)] - Use https://time.lol \n--attachments [url] - You can put [-copy] when editing to copy all the message attachments (Cannot remove existing attachment unless [--channel] provided) \`\`\`Embed editor: You can put \`\`\`--edit <[message_ID, channel_[mention, ID] message_ID]>\`\`\` as first argument to edit the embed in a message. All existing property will be replaced with provided argument. Put \`\`\`--remove [author, fields, footer]\`\`\` to remove all existing property of the provided argument in the embed.\n\nOther arguments:\`\`\`\n--quote <[message_ID, channel_[mention, ID] message_ID]> - Quote a message\`\`\``,
-            ownerOnly:false,
-            hidden:false
+            details:`Embed creator: You can just copy this template and remove unneeded argument. Every argument is optional.\`\`\`\n--title [text]\n--description [text]\n--author:\n    -name [text]\n    -icon [url]\n    -url [url]\n--color [hex, number, name of color]\n--image [url]\n--thumbnail [url]\n--url [url]\n--newfield:\n    -name [text]\n    -desc [text]\n    -inline (true if provided)\n--footer:\n    -text [text]\n    -icon [url]\n--content [text]\n--channel [channel_[mention, ID]]\n--timestamp [ISO 8601, UNIX Timestamp (Milliseconds)] - Use https://time.lol \n--attachments [url] - You can put [-copy] when editing to copy all the message attachments (Cannot remove existing attachment unless [--channel] provided) \`\`\`Embed editor: You can put \`\`\`--edit <[message_ID, channel_[mention, ID] message_ID]>\`\`\` as first argument to edit the embed in a message. All existing property will be replaced with provided argument. Put \`\`\`--remove [author, fields, footer]\`\`\` to remove all existing property of the provided argument in the embed.\n\nOther arguments:\`\`\`\n--quote <[message_ID, channel_[mention, ID] message_ID]> - Quote a message\`\`\``
         });
     }
     /**
@@ -25,6 +23,9 @@ module.exports = class embmaker extends commando.Command {
      * @returns 
      */
     async run(msg, arg) {
+        if (msg.guild && !this.client.owners.includes(msg.author) && !msg.member.hasPermission("EMBED_LINKS")) {
+            return trySend(this.client, msg, "LMFAO no");
+        }
         const args = arg.trim().split(/(?<!\\)(\-\-)+/);
         let embed = new MessageEmbed();
         let autName, footertext, autIcon, autUrl, footericon, content, channel, editSrc, newAttach = [], reportMessage = "";
@@ -32,8 +33,13 @@ module.exports = class embmaker extends commando.Command {
             for(const value of args) {
                 if (value.toLowerCase().startsWith("json")) {
                     embed = new MessageEmbed(JSON.parse(value.slice("json".length).trim()));
+                    continue;
                 }
                 if (value.toLowerCase().startsWith('edit')) {
+                    if (msg.guild && !msg.member.hasPermission("MANAGE_MESSAGES")) {
+                        reportMessage += "**[EDIT]** Require Manage Messages.\n";
+                        continue;
+                    }
                     const editArg = value.slice('edit'.length).trim().split(/ +/);
                     if (editArg[0].length > 0) {
                         editSrc = await getChannelMessage(this.client, msg, editArg[0], editArg[1]);
@@ -72,6 +78,7 @@ module.exports = class embmaker extends commando.Command {
                     } else {
                         reportMessage += "**[EDIT]** No argument provided.\n";
                     }
+                    continue;
                 }
                 if (value.toLowerCase().startsWith('quote')) {
                     const quoteargs = value.slice('quote'.length).toLowerCase().trim().split(/ +/);
@@ -104,6 +111,7 @@ module.exports = class embmaker extends commando.Command {
                     } else {
                         reportMessage += "**[QUOTE]** No argument provided.\n";
                     }
+                    continue;
                 }
                 if (value.toLowerCase().startsWith('remove')) {
                     const remove = value.slice('remove'.length).toLowerCase().trim().split(/ +/);
@@ -123,21 +131,26 @@ module.exports = class embmaker extends commando.Command {
                             embed.footer = null;
                         }
                     }
+                    continue;
                 }
                 if (value.toLowerCase().startsWith('title')) {
                     embed.setTitle(value.slice('title'.length).trim().replace(/\\(?!\\)/g,''));
+                    continue;
                 }
                 if (value.toLowerCase().startsWith('desc')) {
                     embed.setDescription(value.slice('desc'.length).trim().replace(/\\(?!\\)/g,''));
+                    continue;
                 }
                 if (value.toLowerCase().startsWith('description')) {
                     embed.setDescription(value.slice('description'.length).trim().replace(/\\(?!\\)/g,''));
+                    continue;
                 }
                 if (value.toLowerCase().startsWith("author")) {
                     const autData = value.trim().split(/( \-)+/);
                     for(const autVal of autData) {
                         if (autVal.toLowerCase().startsWith('name')) {
                             autName = autVal.slice('name'.length).trim().replace(/\\(?!\\)/g,'');
+                            continue;
                         }
                         if (autVal.toLowerCase().startsWith('icon')) {
                             if (/^https?:\/\/\w+\.\w\w/.test(autVal.slice('icon'.length).trim())) {
@@ -146,6 +159,7 @@ module.exports = class embmaker extends commando.Command {
                                 reportMessage += "**[AUTHOR]** Invalid icon URL.\n";
                                 autIcon = null;
                             }
+                            continue;
                         }
                         if (autVal.toLowerCase().startsWith('url')) {
                             if (/^https?:\/\/\w+\.\w\w/.test(autVal.slice('url'.length).trim())) {
@@ -154,8 +168,10 @@ module.exports = class embmaker extends commando.Command {
                                 reportMessage += "**[AUTHOR]** Invalid URL.\n";
                                 autUrl = null;
                             }
+                            continue;
                         }
                     }
+                    continue;
                 }
                 if (value.toLowerCase().startsWith("color")) {
                     const colorName = value.slice("color".length).trim();
@@ -163,6 +179,7 @@ module.exports = class embmaker extends commando.Command {
                     if (color) {
                         embed.setColor(color);
                     }
+                    continue;
                 }
                 if (value.toLowerCase().startsWith("image")) {
                     if (/^https?:\/\/\w+\.\w\w/.test(value.slice("image".length).trim())) {
@@ -171,6 +188,7 @@ module.exports = class embmaker extends commando.Command {
                         reportMessage += "**[IMAGE]** Invalid URL.\n";
                         embed.setImage(null);
                     }
+                    continue;
                 }
                 if (value.toLowerCase().startsWith("thumbnail")) {
                     if (/^https?:\/\/\w+\.\w\w/.test(value.slice("thumbnail".length).trim())) {
@@ -179,6 +197,7 @@ module.exports = class embmaker extends commando.Command {
                         reportMessage += "**[THUMBNAIL]** Invalid URL.\n";
                         embed.setThumbnail(null);
                     }
+                    continue;
                 }
                 if (value.toLowerCase().startsWith('url')) {
                     if (/^https?:\/\/\w+\.\w\w/.test(value.slice("url".length).trim())) {
@@ -187,6 +206,7 @@ module.exports = class embmaker extends commando.Command {
                         reportMessage += "**[URL]** Invalid URL.\n";
                         embed.setURL(null);
                     }
+                    continue;
                 }
                 if (value.toLowerCase().startsWith('attachment')) {
                     const attach = value.slice("attachments".length).trim().split(/ +/);
@@ -210,6 +230,7 @@ module.exports = class embmaker extends commando.Command {
                             }
                         }
                     }
+                    continue;
                 }
                 if (value.toLowerCase().startsWith("timestamp")) {
                     if(!/\D/.test(value.slice("timestamp".length).trim())) {
@@ -224,6 +245,7 @@ module.exports = class embmaker extends commando.Command {
                     if (!embed.timestamp) {
                         reportMessage += "**[TIMESTAMP]** Invalid format.\n";
                     }
+                    continue;
                 }
                 if (value.toLowerCase().startsWith('footer')) {
                     const footerData = value.trim().split(/( \-)+/);
@@ -240,6 +262,7 @@ module.exports = class embmaker extends commando.Command {
                             }
                         }
                     }
+                    continue;
                 }
                 if (value.toLowerCase().startsWith('newfield')) {
                     const fieldData = value.trim().split(/( \-)+/);
@@ -265,9 +288,11 @@ module.exports = class embmaker extends commando.Command {
                         fieldValue = '​';
                     }
                     embed.addField(fieldName,fieldValue,inline);
+                    continue;
                 }
                 if (value.toLowerCase().startsWith('content')) {
                     content = value.slice('content'.length).trim().replace(/\\(?!\\)/g,'');
+                    continue;
                 }
                 if (value.toLowerCase().startsWith('channel')) {
                     let ID = cleanMentionID(value.slice('channel'.length).trim());
@@ -279,13 +304,21 @@ module.exports = class embmaker extends commando.Command {
                             if (!channel && this.client.owners.includes(msg.author.id)) {
                                 channel = this.client.channels.cache.get(ID);
                             }
-                        } else {
+                        } 
+                        if (!channel) {
                             channel = findChannelRegEx(msg, ID, ["category", "voice"])[0];
                         }
                         if (!channel) {
                             reportMessage += "**[CHANNEL]** Unknown channel.\n";
+                        } else {
+                            const p = msg.guild?.channels.cache.get(channel)?.permissionsFor(msg.author);
+                            if (!p || p.missing("SEND_MESSAGES") || p.missing("EMBED_LINKS") || p.missing("VIEW_CHANNEL")) {
+                                channel = undefined;
+                                reportMessage += "**[CHANNEL]** Missing permission.\n";
+                            }
                         }
                     }
+                    continue;
                 }
             }
             if(autIcon === false) {
@@ -315,18 +348,29 @@ module.exports = class embmaker extends commando.Command {
             if (embed.description === '​' && (content || newAttach.length > 0)) {
                 embed = null;
             }
-            if (newAttach.length > 0) {
-                reportMessage += "**[ATTACHMENT]** Uploading attachments....\n";
-            }
             let sent = [];
             if (reportMessage.length > 0) {
                 sent.push(trySend(this.client, msg, reportMessage));
             }
             if (editSrc) {
                 if (channel) {
+                    if (msg.guild?.channels.cache.get(channel)?.permissionsFor(msg.author).has("ATTACH_FILES") && newAttach.length > 0) {
+                        reportMessage += "**[ATTACHMENT]** Uploading attachments....\n";
+                    } else {
+                        if (newAttach.length > 0) {
+                            newAttach = [];
+                            reportMessage += "**[ATTACHMENT]** Missing permission.\n";
+                        }
+                    }
                     sent.push(channel.send({content:content,embed:embed,files:newAttach}).catch(e => noPerm(msg)));
                 } else {
                     channel = msg.channel;
+                    if (msg.guild && channel.permissionsFor(msg.author).missing("ATTACH_FILES")) {
+                        if (newAttach.length > 0) {
+                            newAttach = [];
+                            reportMessage += "**[ATTACHMENT]** Missing permission.\n";
+                        }
+                    }
                     if (editSrc.author === this.client.user) {
                         sent.push(editSrc.edit({content:content,embed:embed,files:newAttach}).catch(e => {
                             errLog(e, msg, this.client);

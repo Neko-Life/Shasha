@@ -9,9 +9,9 @@ const client = new Commando.Client({
 });
 const sqlite = require('sqlite');
 let configFile = require('./config.json');
-const { errLog, trySend } = require('./resources/functions');
+const { errLog, trySend, noPerm } = require('./resources/functions');
 const { join } = require('path');
-//const { chatAnswer } = require("./resources/shaChat");
+const { chatAnswer } = require("./resources/shaChat");
 const { timestampAt } = require("./resources/debug");
 
 client.registry
@@ -20,7 +20,8 @@ client.registry
     'moderation',
     'experiment',
     'image',
-    'fun'
+    'fun',
+    "owner"
 ])
 .registerDefaults()
 .registerCommandsIn(join(__dirname, 'cmds'));
@@ -41,19 +42,43 @@ client.on('ready', async () => {
 });
 
 client.on("message", async msg => {
-    if (msg.guild?.dbLoaded === false && !msg.author.bot) {
-        await msg.guild.dbLoad();
-    }
     if (msg.author.dbLoaded === false && !msg.author.bot) {
-        await msg.author.dbLoad();
-    }/*
-    if (msg.channel.id === "837178237322919966" && !msg.author.bot && !msg.content.toLowerCase().startsWith(client.commandPrefix+"chat")) {
-        chatAnswer(client, msg);
+        msg.author.dbLoad();
+    }
+    if (msg.channel.id === "837178237322919966" && !msg.author.bot && !msg.isCommand) {
+        msg.channel.startTyping().then(trySend(client, msg, await chatAnswer(msg.cleanContent))
+        ).then(msg.channel.stopTyping()).catch(msg.channel.stopTyping());
     }
 
     if (!msg.guild) {
-        console.log(`(${msg.channel.recipient.id}) ${msg.channel.recipient.tag}: (${msg.author.id}) ${msg.author.tag}: ${msg.content}`);
-    } */
+        //console.log(`(${msg.channel.recipient.id}) ${msg.channel.recipient.tag}: (${msg.author.id}) ${msg.author.tag}: ${msg.content}`);
+    } else {
+        if (/(?<!dont|don't|no).*giv.*(heart|nick).*(nick|heart)/i.test(msg.content)) {
+            if (!msg.member.displayName?.endsWith("<3")) {
+                msg.member.setNickname(msg.member.displayName + " <3")
+                .then(r => {
+                    if (r) {
+                        trySend(client, msg, "YES! <3 <3");
+                    };
+                })
+                .catch(noPerm(msg));
+            }
+        }
+        if (/(dont|don't|no).*giv.*(heart|nick).*(nick|heart)/i.test(msg.content)) {
+            if (msg.member.displayName?.endsWith(" <3")) {
+                msg.member.setNickname(msg.member.displayName.slice(0, -3))
+                .then(r => {
+                    if (r) {
+                        trySend(client, msg, "okay <3");
+                    };
+                })
+                .catch(noPerm(msg));
+            }
+        }
+        if (msg.guild.dbLoaded === false) {
+            msg.guild.dbLoad();
+        }
+    }
 });
 
 client.on("guildMemberRemove", memberLeave => {

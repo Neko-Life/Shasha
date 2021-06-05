@@ -15,7 +15,6 @@ module.exports = class send extends commando.Command {
     }
     async run(msg, args ) {
         const comarg = args.trim().split(/ +/);
-        let at = comarg[0];
         if (!comarg[0]) {
           return trySend(this.client, msg, 'Where?!?');
         }

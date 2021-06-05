@@ -1,12 +1,13 @@
 'use strict';
 
-const puppeteer = require('puppeteer');
-const { trySend, noPerm } = require('./functions');
+//const puppeteer = require('puppeteer');
+const axios = require("axios").default;
+const { errLog } = require('./functions');
 const Commando = require("@iceprod/discord.js-commando");
-require("discord.js");
+//require("discord.js");
 
 //'4, 15, 10, 11, 14, 17, 18'
-
+/*
 const URL = [
 	'https://rebot.me/simsimi', 'https://rebot.me/ryuko-matoi',//1
 	'https://rebot.me/xmonikax', 'https://rebot.me/futa-nun',//3
@@ -20,7 +21,7 @@ const URL = [
 	'https://rebot.me/zacharie-1', 'https://rebot.me/natsuki-41',//19
 	'https://rebot.me/lea-7062078', 'https://rebot.me/bunny-exe',//21
 	'https://rebot.me/just-monika-56'
-];
+];/*
 const browser = puppeteer.launch();
 const page1 = browser.then(r => r.newPage());
 page1.then(r => r.goto(URL[1]).catch(console.error));
@@ -31,7 +32,7 @@ page1.then(r => r.goto(URL[1]).catch(console.error));
  * @param {Number} index - Index of answer
  * @param {Commando.Message} question - Message object
  * @returns {Promise<String | Boolean>} Reply
- */
+ *
 async function shaChat(client, index, question) {
 	if (page1) {
 		let query = question.content.trim();
@@ -55,7 +56,7 @@ async function shaChat(client, index, question) {
  * @param {puppeteer.Page} page
  * @param {Number} index
  * @returns {String}
- */
+ *
 async function fetchAnswer(page, index) {
 	try {
 		await page.waitForSelector(`#answer > div:nth-child(${index})`).catch(() => {});
@@ -70,13 +71,15 @@ async function fetchAnswer(page, index) {
 }
 
 let chatIndex = 3;
-
+*/
 /**
- * @param {Commando.Client} client
- * @param {Commando.CommandoMessage} message 
- * @returns 
+ * @param {String} message - Query
+ * @returns {Promise<String>} Answers
  */
- async function chatAnswer(client, message) {
+ async function chatAnswer(message) {
+	const r = await axios.post("https://rebot.me/ask", { username: "muffin-6", question: message }).catch(() => {});
+	return r.data;
+ } /* {
 	//console.log(message.content);
 	//console.log(chatIndex);
 	if (message.content.trim().length === 0) {
@@ -106,10 +109,10 @@ let chatIndex = 3;
 			message.channel.stopTyping();
 		}
 	}
-}
+} 
 
 async function fixChat() {
 	return page1.then(r => r.reload()).then(() => {return chatIndex = 3}).catch(e => {return console.log(e)});
-}
+} */
 
-module.exports = { chatAnswer, fixChat }
+module.exports = { chatAnswer }

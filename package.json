@@ -1,10 +1,10 @@
 {
   "dependencies": {
     "@iceprod/discord.js-commando": "^0.14.3",
+    "axios": "^0.21.1",
     "bree": "^6.2.0",
     "bufferutil": "^4.0.3",
     "cabin": "^9.0.4",
-    "cleverbot-node": "^0.3.11",
     "discord.js": "^12.5.2",
     "discord.js-commando": "^0.12.3",
     "erlpack": "github:discord/erlpack",
@@ -12,8 +12,6 @@
     "lodash": "^4.17.21",
     "mongodb": "^3.6.6",
     "node": "^15.12.0",
-    "node-fetch": "^2.6.1",
-    "puppeteer": "^9.0.0",
     "sqlite": "^4.0.21",
     "sqlite3": "^5.0.2",
     "utf-8-validate": "^5.0.4",

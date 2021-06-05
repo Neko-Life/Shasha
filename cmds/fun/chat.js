@@ -1,7 +1,8 @@
 'use strict';
 
 const commando = require("@iceprod/discord.js-commando");
-//const { chatAnswer } = require("../../resources/shaChat");
+const { trySend } = require("../../resources/functions");
+const { chatAnswer } = require("../../resources/shaChat");
 
 module.exports = class chat extends commando.Command {
     constructor(client) {
@@ -13,6 +14,13 @@ module.exports = class chat extends commando.Command {
         });
     }
     async run(msg) {
-        //chatAnswer(this.client, msg);
+        return msg.channel.startTyping().then(
+            trySend(this.client, msg, await chatAnswer(msg.cleanContent.slice((msg.guild.commandPrefix + msg.command.name).length + 1))).then(r => {
+                msg.channel.stopTyping();
+                return r;
+            }).catch(
+                msg.channel.stopTyping()
+            )
+        );
     }
 };
