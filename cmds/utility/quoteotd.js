@@ -54,7 +54,7 @@ module.exports = class quoteotd extends commando.Command {
             }
         }
         if (result.length > 0) {
-            ranLog(this.client, msg, result);
+            ranLog(msg, result);
             return trySend(this.client, msg, result);
         } else {
             return trySend(this.client, msg, `Provide argument: \`--channel [mention, ID], --text [footer text], --icon [url footer icon]\``);

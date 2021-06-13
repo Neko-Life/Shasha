@@ -17,7 +17,7 @@ module.exports = class cloneembed extends commando.Command {
     async run(msg, cargs) {
         const args = cargs.trim().split(/ +/);
         try {
-          const theMes = await getChannelMessage(this.client,msg,args[0],args[1]);
+          const theMes = await getChannelMessage(msg,args[0],args[1]);
           let content;
           if (theMes.content) {
             content = theMes.content;

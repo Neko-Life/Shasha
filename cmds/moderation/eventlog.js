@@ -16,6 +16,9 @@ module.exports = class eventlog extends commando.Command {
         });
     }
     async run(msg, arg) {
+        if (!msg.guild.dbLoaded) {
+            await msg.guild.dbLoad();
+        }
         const set = arg.split(/(?<!\\)(--)+/);
         let eventChannels = msg.guild.eventChannels;
         if (!eventChannels) eventChannels = {};
@@ -26,13 +29,13 @@ module.exports = class eventlog extends commando.Command {
             if (lowArg.startsWith("remove")) remove = true;
             if (lowArg.startsWith("joinleave")) {
                 if (remove) eventChannels.joinLeave = undefined; else {
-                    joinleavelog = getChannelProchedure(this.client, msg, args.slice("joinleaves".length).trim())?.id;
+                    joinleavelog = getChannelProchedure(msg, args.slice("joinleaves".length).trim())?.id;
                     if (!joinleavelog) report += "**[JOINLEAVE]** Unknown channel.\n";
                 }
             }
             if (lowArg.startsWith("channel")) {
                 if (remove) eventChannels.channel = undefined; else {
-                    channellog = getChannelProchedure(this.client, msg, args.slice("channels".length).trim())?.id;
+                    channellog = getChannelProchedure(msg, args.slice("channels".length).trim())?.id;
                     if (!channellog) report += "**[CHANNEL]** Unknown channel.\n";
                 }
             }
@@ -40,7 +43,7 @@ module.exports = class eventlog extends commando.Command {
                 if (remove) {
                     eventChannels.banUnban = undefined;
                 } else {
-                    banunbanlog = getChannelProchedure(this.client, msg, args.slice("banunbanS".length).trim())?.id;
+                    banunbanlog = getChannelProchedure(msg, args.slice("banunbanS".length).trim())?.id;
                     if (!banunbanlog) {
                         report += "**[BANUNBAN]** Unknown channel.\n";
                     }
@@ -64,7 +67,7 @@ module.exports = class eventlog extends commando.Command {
                                         if (ign.length === 0) {
                                             continue;
                                         }
-                                        const chan = getChannelProchedure(this.client, msg, ign);
+                                        const chan = getChannelProchedure(msg, ign);
                                         if (chan) {
                                             if (messagelog.ignore.includes(chan.id)) {
                                                 report += "**[MESSAGE_CHANNELIGNORE]** Duplicate result: <#" + chan.id +
@@ -80,9 +83,14 @@ module.exports = class eventlog extends commando.Command {
                             }
                         }
                     }
-                    messagelog.channel = getChannelProchedure(this.client, msg, args.slice("messages".length).replace(/(?<!\\)-ignore.*/i, "").trim())?.id;
+                    const igno = /(?<!\\)-ignore.*/i.test(args);
+                    messagelog.channel = getChannelProchedure(msg, args.slice("messages".length).replace(/(?<!\\)-ignore.*/i, "").trim())?.id;
                     if (!messagelog.channel) {
-                        report += "**[MESSAGE]** Unknown channel.\n";
+                        if (!igno) {
+                            report += "**[MESSAGE]** Unknown channel.\n";
+                        } else {
+                            report += "**[MESSAGE]** Ignored channels reset!\n"
+                        }
                     }
                 }
             }
@@ -90,7 +98,7 @@ module.exports = class eventlog extends commando.Command {
                 if (remove) {
                     eventChannels.invite = undefined;
                 } else {
-                    invitelog = getChannelProchedure(this.client, msg, args.slice("invites".length).trim())?.id;
+                    invitelog = getChannelProchedure(msg, args.slice("invites".length).trim())?.id;
                     if (!invitelog) {
                         report += "**[INVITE]** Unknown channel.\n";
                     }
@@ -100,7 +108,7 @@ module.exports = class eventlog extends commando.Command {
                 if (remove) {
                     eventChannels.role = undefined;
                 } else {
-                    rolelog = getChannelProchedure(this.client, msg, args.slice("roles".length).trim())?.id;
+                    rolelog = getChannelProchedure(msg, args.slice("roles".length).trim())?.id;
                     if (!rolelog) {
                         report += "**[ROLE]** Unknown channel.\n";
                     }
@@ -110,19 +118,20 @@ module.exports = class eventlog extends commando.Command {
                 if (remove) {
                     eventChannels.guild = undefined;
                 } else {
-                    guildlog = getChannelProchedure(this.client, msg, args.slice("guilds".length).trim())?.id;
+                    guildlog = getChannelProchedure(msg, args.slice("guilds".length).trim())?.id;
                     if (!guildlog) {
                         report += "**[GUILD]** Unknown channel.\n";
                     }
                 }
             }
-            if (lowArg.startsWith("member")) {
+            if (lowArg.startsWith("memberprofile")) {
                 if (remove) {
                     eventChannels.member = undefined;
                 } else {
-                    membernicklog = getChannelProchedure(this.client, msg, args.slice("members".length).trim())?.id;
+                    console.log(args);
+                    membernicklog = getChannelProchedure(msg, args.slice("members".length).trim())?.id;
                     if (!membernicklog) {
-                        report += "**[MEMBER]** Unknown channel.\n";
+                        report += "**[MEMBERPROFILE]** Unknown channel.\n";
                     }
                 }
             }
@@ -130,7 +139,7 @@ module.exports = class eventlog extends commando.Command {
                 if (remove) {
                     eventChannels.emote = undefined;
                 } else {
-                    emotelog = getChannelProchedure(this.client, msg, args.slice("emojis".length).trim())?.id;
+                    emotelog = getChannelProchedure(msg, args.slice("emojis".length).trim())?.id;
                     if (!emotelog) {
                         report += "**[EMOJI]** Unknown channel.\n";
                     }
@@ -140,7 +149,7 @@ module.exports = class eventlog extends commando.Command {
                 if (remove) {
                     eventChannels.memberRole = undefined;
                 } else {
-                    memberroleslog = getChannelProchedure(this.client, msg, args.slice("memberroles".length).trim())?.id;
+                    memberroleslog = getChannelProchedure(msg, args.slice("memberroles".length).trim())?.id;
                     if (!memberroleslog) {
                         report += "**[MEMBERROLE]** Unknown channel.\n";
                     }
@@ -180,13 +189,11 @@ module.exports = class eventlog extends commando.Command {
             emote: emotelog ?? eventChannels?.emote,
             memberRole: memberroleslog ?? eventChannels?.memberRole
         }
-        await msg.guild.setEventChannels(eventChannels);
-        if (msg.guild.eventChannels === eventChannels) {
+        const r = await msg.guild.setEventChannels(eventChannels);
+        if (r) {
             report += "Event Log Channels set!\n";
+            report += "\n**SUMMARY:**";
         }
-        report += "\n**SUMMARY:**";
-        if (report.length > 0) {
-            return trySend(this.client, msg, (await resultEmbed(this)).setDescription(report.slice(0, 2048)));
-        }
+        return trySend(this.client, msg, (await resultEmbed(this)).setDescription(report.slice(0, 2048)));
     }
 };

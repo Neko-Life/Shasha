@@ -20,18 +20,20 @@ module.exports = class setfootq extends commando.Command {
             if (msg.guild ? !msg.guild.member(msg.author).hasPermission("MANAGE_GUILD") : false && !this.client.owners.includes(msg.author)) {
                 return trySend(this.client, msg, 'No lol');
             }
-            const data = msg.guild ? "Guild" : "User";
-            const col = database.collection(data);
-            const doc = msg.guild?.id ?? msg.author.id;
-            const oldQ = await col.findOne({document: doc});
-            col.updateOne({document: doc}, {$set: {"settings.defaultEmbed.footerQuote": args.trim()}, $setOnInsert: { document: msg.guild?.id ?? msg.author.id }}, { upsert: true }, async (e) => {
-                if (e) {
-                    return errLog(e, msg, this.client);
-                }
-                const result = await trySend(this.client, msg, `Changed from \`${oldQ?.["settings"]?.defaultEmbed?.footerQuote}\` to \`${args.trim()}\``);
-                ranLog(this.client, msg, result.content);
+            let oldQ = msg.guild?.defaultEmbed ?? msg.author.defaultEmbed;
+            if (!oldQ) {
+                oldQ = {};
+            }
+            const newQ = oldQ?.footerQuote;
+            oldQ.footerQuote = args.trim();
+            const r = msg.guild ? msg.guild.setDefaultEmbed(oldQ) : msg.author.setDefaultEmbed(oldQ);
+            if (r) {
+                const result = await trySend(this.client, msg, `Changed from \`${newQ?.length > 0 ? newQ : "none"}\` to \`${oldQ.footerQuote?.length > 0 ? oldQ.footerQuote : "none"}\``);
+                await ranLog(msg, result.content);
                 return result;
-            });
+            } else {
+                return trySend(this.client, msg, "Somethin's wrong <:WhenLife:773061840351657984>");
+            }
         } catch (e) {
             return errLog(e, msg, this.client);
         }

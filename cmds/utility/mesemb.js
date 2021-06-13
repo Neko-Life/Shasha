@@ -14,11 +14,11 @@ module.exports = class mesemb extends commando.Command {
     }
     async run(msg, arg) {
       const args = arg.trim().split(/ +/);
-      const message = await getChannelMessage(this.client,msg,args[0],args[1]);
+      const message = await getChannelMessage(msg, args[0], args[1]);
       if (!message) {
         return trySend(this.client, msg, "404 message not found!");
       }
-      const mesemb = '```js\n'+JSON.stringify(message.embeds, null, 2)+'```';
-      return trySend(this.client, msg, {content:'Collected:'+mesemb,split:{maxLength:2000,char: ",",append:',```',prepend:'```js\n'}});
+      const mesemb = '```js\n' + JSON.stringify(message.embeds, (k, v) => v ?? undefined, 2).replace(/`/g,"\\`") + '```';
+      return trySend(this.client, msg, { content: 'Collected:' + mesemb, split: { maxLength: 4000, char: ",", append: ',```', prepend:'```js\n' }});
     }
 };

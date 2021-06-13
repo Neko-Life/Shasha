@@ -1,7 +1,7 @@
 'use strict';
 const commando = require("@iceprod/discord.js-commando");
 const emoteMessage = require("../../resources/emoteMessage");
-const { ranLog, errLog, trySend, tryReact, findChannelRegEx, cleanMentionID } = require("../../resources/functions");
+const { ranLog, errLog, trySend, tryReact, findChannelRegEx, cleanMentionID, getChannelProchedure } = require("../../resources/functions");
 
 module.exports = class send extends commando.Command {
     constructor(client) {
@@ -20,16 +20,7 @@ module.exports = class send extends commando.Command {
         }
         const search = cleanMentionID(comarg[0]),
         sendTheMes = emoteMessage(this.client, args.slice(comarg[0].length).trim());
-        let channel;
-        if (/^\d{17,19}$/.test(search)) {
-          channel = msg.guild.channels.cache.get(search);
-          if (!channel && this.client.owners.includes(msg.author)) {
-            channel = this.client.channels.cache.get(search);
-          }
-        }
-        if (!channel) {
-          channel = findChannelRegEx(msg, search, ["category", "voice"])[0];
-        }
+        let channel = getChannelProchedure(msg, search);
         if (!channel) {
           return trySend(this.client, msg, "That channel is like your gf. Doesn't exist <:cathmmLife:772716381874946068>");
         }
@@ -54,7 +45,7 @@ module.exports = class send extends commando.Command {
           });
           collector.on('remove', async r => await msg.reactions.resolve(r).id.remove(r.id));
           if (send) {
-            ranLog(this.client, msg, send.content.slice(0, 1900) + "\n\nSent to: " + `[${send.channel.name}](${send.url}) <#${send.channel.id}> (${send.channel.id})`);
+            ranLog(msg, send.content.slice(0, 1900) + "\n\nSent to: " + `[${send.channel.name}](${send.url}) <#${send.channel.id}> (${send.channel.id})`);
             tryReact(msg, 'yeLife:796401669188354090');
           }
           return send;

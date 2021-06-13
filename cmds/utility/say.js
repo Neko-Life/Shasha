@@ -27,7 +27,7 @@ module.exports = class say extends commando.Command {
         if (args !== noArgs && msg.channel.guild && msg.member.hasPermission("MANAGE_MESSAGES")) {
             tryDelete(msg);
         }
-        ranLog(this.client, msg, sent.content);
+        ranLog(msg, sent.content);
         return sent;
     }
 };

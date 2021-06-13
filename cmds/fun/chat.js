@@ -13,7 +13,10 @@ module.exports = class chat extends commando.Command {
             description: "Lets chat!"
         });
     }
-    async run(msg) {
+    async run(msg, args) {
+        if (args?.length === 0) {
+            return trySend("Ask me somethin?");
+        }
         return msg.channel.startTyping().then(
             trySend(this.client, msg, await chatAnswer(msg.cleanContent.slice((msg.guild.commandPrefix + msg.command.name).length + 1))).then(r => {
                 msg.channel.stopTyping();

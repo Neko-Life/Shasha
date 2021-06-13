@@ -1,6 +1,6 @@
 'use strict';
 
-const { MessageEmbed, Message, GuildMember, User, Client, GuildChannel, Role, MessageOptions, TextChannel, DMChannel } = require('discord.js');
+const { MessageEmbed, Message, GuildMember, User, Client, GuildChannel, Role, MessageOptions, TextChannel, DMChannel, Guild, Channel } = require('discord.js');
 const { defaultErrorLogChannel, ranLogger } = require("../config.json");
 const { database } = require("../database/mongo");
 const { timestampAt } = require('./debug');
@@ -18,13 +18,13 @@ const { CommandoMessage, CommandoClient } = require('@iceprod/discord.js-command
  * @param {Boolean} notify - Send error to user who ran the command
  */
 async function errLog(theError, msg, client, sendTheError, errorMessage, notify) {
-  if (!(theError instanceof Error) || !(msg ?? client)) return console.error("[ERRLOG] Not error instance or no required param.");
+  if (!(theError instanceof Error) || !(msg ?? client)) return console.error("[ERRLOG] Not error instance or no required param.\n", theError);
   let [logThis, inLogChannel, sendErr] = ['', '', ''];
   if (msg) {
     logThis = `\`${msg.command?.name}\` (${msg.id}) ${msg.url} in ${msg.guild ? `**${msg.channel.name}** (${msg.channel.id}) of **${msg.guild.name}** (${msg.guild.id})` : `**DM**`} ran by **${msg.author.tag}** (${msg.author.id}) \n\n`;
     if (errorMessage) {
       if (errorMessage.length > 0) {
-        sendErr = sendErr + errorMessage+'\n\n';
+        sendErr = sendErr + errorMessage+'\n';
         inLogChannel = errorMessage+'\n';
       }
     }
@@ -39,7 +39,7 @@ async function errLog(theError, msg, client, sendTheError, errorMessage, notify)
     try {
       inLogChannel = inLogChannel+'```js\n'+theError.stack+'```';
       const sendAt = client.channels.cache.get(defaultErrorLogChannel);
-      sendAt.send(logThis + inLogChannel.trim() + timestampAt(),{split:true});
+      sendAt.send(logThis + inLogChannel.trim() + timestampAt(client),{split:{maxLength:4000,char: "\n",append:'```',prepend:'```js\n'}});
     } catch (errmes) {
       console.error(errmes);
     }
@@ -48,14 +48,13 @@ async function errLog(theError, msg, client, sendTheError, errorMessage, notify)
 
 /**
  * Get message object from the message channel or provided channel
- * @param {Client} client - This client (this.client)
  * @param {Message} msg - Message object (msg)
  * @param {String} MainID - Message ID | Channel ID | Channel Mention
  * @param {String} SecondID - Message ID
  * @returns {Promise<Message>} Message object | undefined
  */
-async function getChannelMessage(client, msg, MainID, SecondID) {
-  if (!MainID || !(client ?? msg)) {
+async function getChannelMessage(msg, MainID, SecondID) {
+  if (!MainID || !msg) {
     return;
   }
   if (/\//.test(MainID)) {
@@ -64,9 +63,9 @@ async function getChannelMessage(client, msg, MainID, SecondID) {
     MainID = splitURL[splitURL.length-2];
   }
   MainID = cleanMentionID(MainID);
-  if (SecondID && !/\D/.test(SecondID) && client) {
+  if (SecondID && !/\D/.test(SecondID)) {
     try {
-      const meschannel = client.channels.cache.get(MainID);
+      const meschannel = msg.client.channels.cache.get(MainID);
       return meschannel.messages.fetch(SecondID);
     } catch (theError) {
       return
@@ -87,26 +86,27 @@ function execCB(error, stdout, stderr) {
 
 /**
  * Command usage logger
- * @param {CommandoClient} client 
  * @param {CommandoMessage} msg 
  * @param {String} addition 
  */
-async function ranLog(client, msg, addition) {
-  const channel = client.channels.cache.get(ranLogger);
+async function ranLog(msg, addition) {
+  const channel = msg.client.channels.cache.get(ranLogger),
+  ifCode = addition.startsWith("```") && addition.endsWith("```");
+  const addSplit = splitOnLength((addition.substr(ifCode ? 2045 : 2049)).split(","), 1010, ",");
   const embed = await defaultImageEmbed(msg, null, msg.command.name.toLocaleUpperCase() + ` (${msg.id})`);
-  embed.setAuthor(msg.author.tag + ` (${msg.author.id})`, msg.author.displayAvatarURL({"size": 4096, "dynamic": true}))
+  embed.setAuthor(msg.author.tag + ` (${msg.author.id})`, msg.author.displayAvatarURL({format: "png", size: 4096, dynamic: true}))
   .setURL(msg.url)
-  .setDescription(addition)
-  .setFooter(timestampAt(), msg.guild?.iconURL({"size": 4096, "dynamic": true}))
-  .addField("Guild", `**${msg.guild?.name}** (${msg.guild?.id})`, true)
-  .addField("Channel", `**${msg.channel?.name}** (${msg.channel.id})`, true)
+  .setDescription(addition.slice(0, ifCode && addSplit[0]?.[0].length > 0 ? 2044 : 2048) + (ifCode && addSplit[0]?.[0].length > 0 ? "```" : ""));
+  if (addSplit[0]?.[0].length > 0) for (const add of addSplit) embed.addField("​", "```js\n" + add.join(",") + (embed.fields.length < (addSplit.length - 1) ? ",```" : ""));
+  embed.setFooter(timestampAt(msg.client), msg.guild?.iconURL({"size": 4096, "dynamic": true}));
+  if (msg.guild) embed.addField("Guild", `\`${msg.guild?.name}\`\n(${msg.guild?.id})`, true);
+  embed.addField("Channel", (msg.guild ? `<#${msg.channel.id}>\n\`${msg.channel?.name}\`` : `**DM**\n\`${msg.channel.recipient.tag}\``) + `\n(${msg.channel.id})`, true)
   .addField("User", `<@!${msg.author.id}>`, true);
-  trySend(client, channel, {embed: embed});
+  trySend(msg.client, channel, {embed: embed});
 }
 
 /**
  * Notify when more than one member found when looking in the member list
- * @param {Client} client - (this.client)
  * @param {Message} msg - Message object
  * @param {GuildMember[]} arr - Test array
  * @param {String} key - Keyword
@@ -114,8 +114,8 @@ async function ranLog(client, msg, addition) {
  * @param {Boolean} withID - Include user_ID
  * @returns {String}
  */
-function multipleMembersFound(client, msg, arr, key, max = 4, withID) {
-  if (arr.length > 0) {
+function multipleMembersFound(msg, arr, key, max = 4, withID) {
+  if (msg && arr.length > 0) {
     try {
       let multipleFound = [];
       for(const one of arr) {
@@ -138,7 +138,7 @@ function multipleMembersFound(client, msg, arr, key, max = 4, withID) {
       }
       return `Multiple members found for: **${key}**\`\`\`js\n' ${mes}\`\`\``;
     } catch (e) {
-      errLog(e, msg, client);
+      errLog(e, msg, msg.client);
     }
   } else {
     return '';
@@ -147,7 +147,7 @@ function multipleMembersFound(client, msg, arr, key, max = 4, withID) {
 
 /**
  * Get member object with RegExp
- * @param {Message} msg Message object of the guild being searched
+ * @param {Message | GuildMember} msg Object of the guild being searched
  * @param {String} name Keyword
  * @returns {GuildMember[]} Member object found
  */
@@ -173,23 +173,31 @@ function noPerm(msg) {
 /**
  * Send message
  * @param {CommandoClient} client - (this.client)
- * @param {Message | String | TextChannel | DMChannel} msg Message object | channel_ID
+ * @param {Message | String | TextChannel | DMChannel} msgOrChannel Message object | channel_ID
  * @param {MessageOptions} content - ({content:content,optionblabla})
  * @param {Boolean} adCheck - Check source for Discord invite link (true)
  * @returns {Promise<Message>} Sent message object
  */
-function trySend(client, msg, content, adCheck = true) {
-  if (!client || !msg) {
+async function trySend(client, msgOrChannel, content, adCheck = true) {
+  /*if (content instanceof MessageEmbed) {
+    let fLength = [];
+    for (const f of content.fields) {
+      fLength.push(f.value.length);
+    }
+    console.log("Embed", content.title, timestampAt(client), "\n", content.description, content.description?.length, "\n", content.fields, fLength)
+  }*/
+  if (!client || !msgOrChannel) {
     return;
   }
-  if (client.owners.includes(msg.author)) {
+  if (typeof msgOrChannel === "string") {
+    msgOrChannel = client.channels.cache.get(msgOrChannel);
+  };
+  msgOrChannel.channel?.startTyping() || msgOrChannel.startTyping();
+  if (client.owners.includes(msgOrChannel.author)) {
     adCheck = false;
     if (content.disableMentions) {
       content.disableMentions = "none";
     }
-  }
-  if (typeof msg === "string") {
-    msg = client.channels.cache.get(msg);
   }
   if (adCheck) {
     if (content.content) {
@@ -200,13 +208,23 @@ function trySend(client, msg, content, adCheck = true) {
       }
     }
   }
-  if (msg instanceof Message) {
-    return msg.channel.send(content).catch(() => {});
+  if (msgOrChannel instanceof Message) {
+    const ret = await msgOrChannel.channel.send(content).catch(() => {
+      noPerm(msgOrChannel);
+      msgOrChannel.channel.stopTyping();
+    });
+    msgOrChannel.channel.stopTyping();
+    return ret;
   } else {
-    if (msg instanceof TextChannel || msg instanceof DMChannel) {
-      return msg.send(content).catch(() => {});
+    if ((msgOrChannel instanceof TextChannel) || (msgOrChannel instanceof DMChannel)) {
+      const ret = await msgOrChannel.send(content).catch((e) => {
+        errLog(e, null, client);
+        msgOrChannel.stopTyping();
+      });
+      msgOrChannel.stopTyping();
+      return ret;
     } else {
-      console.error("[TRYSEND] Unknown {msg} type.", msg);
+      errLog(e, null, client, false, "[TRYSEND] Invalid {msgOrChannel} type.```js\n" + JSON.stringify(msgOrChannel, (k, v) => v ?? undefined, 2) + "```");
     }
   }
 }
@@ -219,7 +237,7 @@ function tryDelete(msg) {
   if (!msg) {
     return;
   }
-  msg.delete().catch(() => {});
+  msg.delete().catch(e => {throw e});
 }
 
  /**
@@ -231,12 +249,12 @@ function tryReact(msg, reaction) {
   if (!msg || reaction.length === 0) {
     return;
   }
-  msg.react(reaction).catch(() => {});
+  msg.react(reaction).catch(e => {throw e});
 }
 
 /**
- * Check a message sent by client for ads
- * @param {String} content - Sent message object (await msg.channel.send("discord.gg/banana"))
+ * Check message's content for ads
+ * @param {String} content - Content to check
  */
 function sentAdCheck(content) {
   if (content.length > 5) {
@@ -249,7 +267,7 @@ function sentAdCheck(content) {
 
 /**
  * Make default image embed
- * @param {Message} msg 
+ * @param {Message | GuildMember} msg 
  * @param {String} image 
  * @param {GuildMember | User} author 
  * @param {String} title 
@@ -258,13 +276,13 @@ function sentAdCheck(content) {
  */
 async function defaultImageEmbed(msg, image, title, footerQuote) {
   if (!footerQuote) {
-    const r = await database.collection(msg.guild ? "Guild" : "User").findOne({document: msg.guild?.id ?? msg.author.id}).catch(() => {});
+    const r = await database.collection(msg.guild ? "Guild" : "User").findOne({document: msg.guild?.id ?? msg.author?.id}).catch(() => {});
     footerQuote = r?.["settings"]?.defaultEmbed?.footerQuote || "";
   }
   return new MessageEmbed()
   .setTitle(title)
   .setImage(image)
-  .setColor(msg.guild ? getColor(msg.member.displayColor) : randomColors[Math.floor(Math.random() * randomColors.length)])
+  .setColor(msg.guild ? getColor(msg.member?.displayColor) : randomColors[Math.floor(Math.random() * randomColors.length)])
   .setFooter(footerQuote);
 }
 
@@ -295,7 +313,7 @@ function cleanMentionID(key) {
 
 /**
  * Get channel object wit RegExp
- * @param {Message} msg Message object of the guild being searched
+ * @param {Message | GuildMember} msg Object of the guild being searched
  * @param {String} name Keyword
  * @param {ChannelType[]} exclude Exclude channel type
  * @returns {GuildChannel[]} Channels object found
@@ -313,7 +331,7 @@ function findChannelRegEx(msg, name, exclude) {
 
 /**
  * Get role object with RegExp
- * @param {Message} msg Message object of the guild being searched
+ * @param {Message | GuildMember} msg Object of the guild being searched
  * @param {String} name Keyword
  * @returns {Role[]} Roles object found
  */
@@ -324,7 +342,6 @@ function findRoleRegEx(msg, name) {
 
 /**
  * Notify when more than one channel found when looking in the channel list
- * @param {Client} client - (this.client)
  * @param {Message} msg - Message object
  * @param {GuildChannel[]} arr - Test array
  * @param {String} key - Keyword
@@ -332,7 +349,7 @@ function findRoleRegEx(msg, name) {
  * @param {Boolean} withID - Include channel_ID
  * @returns {String}
  */
-function multipleChannelsFound(client, msg, arr, key, max = 4, withID) {
+function multipleChannelsFound(msg, arr, key, max = 4, withID) {
   if (arr.length > 0) {
     try {
       let multipleFound = [];
@@ -355,7 +372,7 @@ function multipleChannelsFound(client, msg, arr, key, max = 4, withID) {
       }
       return `Multiple channels found for: **${key}**\`\`\`js\n' ${mes}\`\`\``;
     } catch (e) {
-      errLog(e, msg, client);
+      errLog(e, msg, msg.client);
     }
   } else {
     return '';
@@ -364,7 +381,6 @@ function multipleChannelsFound(client, msg, arr, key, max = 4, withID) {
 
 /**
  * Notify when more than one role found when looking in the role list
- * @param {Client} client - (this.client)
  * @param {Message} msg - Message object
  * @param {Role[]} arr - Test array
  * @param {String} key - Keyword
@@ -372,7 +388,7 @@ function multipleChannelsFound(client, msg, arr, key, max = 4, withID) {
  * @param {Boolean} withID - Include role_ID
  * @returns {String}
  */
- function multipleRolesFound(client, msg, arr, key, max = 4, withID) {
+ function multipleRolesFound(msg, arr, key, max = 4, withID) {
   if (arr.length > 0) {
     try {
       let multipleFound = [];
@@ -395,7 +411,7 @@ function multipleChannelsFound(client, msg, arr, key, max = 4, withID) {
       }
       return `Multiple roles found for: **${key}**\`\`\`js\n' ${mes}\`\`\``;
     } catch (e) {
-      errLog(e, msg, client);
+      errLog(e, msg, msg.client);
     }
   } else {
     return '';
@@ -403,13 +419,12 @@ function multipleChannelsFound(client, msg, arr, key, max = 4, withID) {
 }
 
 /**
- * Standard 
- * @param {Client} client this.client
+ * Standard
  * @param {Message} msg - Message object
  * @param {String} key - Channel ID | Mention | Name
- * @returns 
+ * @returns {GuildChannel | Channel} Channel object
  */
-function getChannelProchedure(client, msg, key) {
+function getChannelProchedure(msg, key) {
   if (key.length === 0) {
     return;
   }
@@ -419,23 +434,68 @@ function getChannelProchedure(client, msg, key) {
   }
   let channel;
   if (/^\d{17,19}$/.test(search)) {
-    channel = msg.guild.channels.cache.get(search);
-    if (!channel && client.owners.includes(msg.author)) {
-      channel = client.channels.cache.get(search);
+    channel = msg.guild?.channels.cache.get(search);
+    if (!channel && msg.client.owners.includes(msg.author)) {
+      channel = msg.client.channels.cache.get(search);
     }
   }
   if (!channel) {
-    channel = findChannelRegEx(msg, search, ["category", "voice"])[0];
+    channel = findChannelRegEx(msg, search, ["category", "voice"])?.[0];
   }
   return channel;
 }
+/**
+ * Compare 2 different timestamp
+ * @param {Number} compare - Number to compare
+ * @returns {Number} Result
+ */
+function getUTCComparison(compare) {
+  return compare - new Date().valueOf();
+}
+/**
+ * Make guild's event log embed with author and footer
+ * @param {Guild} guild 
+ * @returns {MessageEmbed}
+ */
+function defaultEventLogEmbed(guild) {
+  return new MessageEmbed()
+  .setAuthor(guild.name, guild.iconURL({size:4096, dynamic: true}))
+  .setFooter((guild.defaultEmbed?.footerQuote ? guild.defaultEmbed.footerQuote + "・" : "") + new Date(new Date().valueOf() + (guild.client.matchTimestamp ?? 0)).toUTCString().slice(0, -4));
+}
+
+/**
+ * Split on Length
+ * @param {Array<String>} arr
+ * @param {Number} maxLength - Max character length per split
+ * @param {String} joiner
+ * @returns {Array<String[]>}
+ */
+function splitOnLength(arr, maxLength, joiner = "\n") {
+  let toField = [], i = 0, pushed = 0;
+  for (const res of arr) {
+    if (arr[pushed] && ((toField[i] ? toField[i].join(joiner) : "") + joiner + arr[pushed]).length > maxLength) {
+      i++;
+    } else {
+      pushed++;
+    }
+    if (!toField[i] || toField[i].length === 0) {
+      toField[i] = [];
+    }
+    toField[i].push(res);
+    if (!arr[pushed]) {
+      break;
+    }
+  }
+  return toField;
+}
 
 module.exports = {
-  cleanMentionID,
+  cleanMentionID, defaultEventLogEmbed,
   multipleMembersFound, multipleRolesFound, multipleChannelsFound,
   findMemberRegEx, findChannelRegEx, findRoleRegEx,
   getChannelMessage, errLog,
-  execCB, ranLog, noPerm,
+  execCB, ranLog, noPerm, getUTCComparison,
   trySend, tryDelete, tryReact,
-  sentAdCheck, defaultImageEmbed, getChannelProchedure
+  sentAdCheck, defaultImageEmbed, getChannelProchedure,
+  splitOnLength
 }

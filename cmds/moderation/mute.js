@@ -293,17 +293,11 @@ module.exports = class mute extends commando.Command {
             for (const user of targetUser) {
                 const member = msg.guild.member(user);
                 if (member) {
-                    const pushIt = {
-                        name:member.user.tag,
-                        id:member.id,
-                        roles:member.roles.cache.map(r => r.id)
-                    }
+                    const pushIt = member.toJSON();
+                    pushIt.roles = member.roles.cache.map(r => r.id);
                     targetMember.push(pushIt);
                 } else {
-                    const pushIt = {
-                        name: user.tag,
-                        id:user.id
-                    }
+                    const pushIt = user.toJSON();
                     notInServer.push(pushIt);
                 }
             }
@@ -332,7 +326,7 @@ module.exports = class mute extends commando.Command {
             }
         }
         resultMsg += `Result:\`\`\`js\nUsers: ${targetUser.map(r => r?.tag).join(", ")}\nReason: ${reason}\nAt: ${invokedAt.toUTCString()}\nFor: ${timeForMessage.join(" ")}\nUntil: ${typeof untilDate !== "string" ? untilDate.toUTCString() : untilDate}\`\`\``;
-        trySend(this.client, msg, {content:resultMsg+"```js\n" + JSON.stringify(infractionToDoc, null, 2) + "```",split:{maxLength:2000,append:",```",prepend:"```js\n",char:","}});
+        trySend(this.client, msg, {content:resultMsg+"```js\n" + JSON.stringify(infractionToDoc, null, 2) + "```",split:{maxLength:4000,append:",```",prepend:"```js\n",char:","}});
         return
     }
 };

@@ -37,7 +37,7 @@ module.exports = class lookup extends commando.Command {
                     fetchedRoles = findRoleRegEx(msg, cleanRoleID);
                 }
                 if (fetchedRoles.length > 1) {
-                    memMes = multipleRolesFound(this.client, msg, fetchedRoles, cleanRoleID, show, true);
+                    memMes = multipleRolesFound(msg, fetchedRoles, cleanRoleID, show, true);
                 } else {
                     if (fetchedRoles.length === 0 || fetchedRoles[0] === null) {
                         return trySend(this.client, msg, `No role found for: **${cleanRoleID}**`);
@@ -55,7 +55,7 @@ module.exports = class lookup extends commando.Command {
                         fetchedChannels = findChannelRegEx(msg, cleanChannelID);
                     }
                     if (fetchedChannels.length > 1) {
-                        memMes = multipleChannelsFound(this.client, msg, fetchedChannels, cleanChannelID, show, true);
+                        memMes = multipleChannelsFound(msg, fetchedChannels, cleanChannelID, show, true);
                     } else {
                         if (fetchedChannels.length === 0 || fetchedChannels[0] === null) {
                             return trySend(this.client, msg, `No channel found for: **${cleanChannelID}**`);
@@ -74,7 +74,7 @@ module.exports = class lookup extends commando.Command {
                     fetchedMember = findMemberRegEx(msg, arg);
                 }
                 if (fetchedMember.length > 1) {
-                    memMes = multipleMembersFound(this.client, msg, fetchedMember, arg, show, true);
+                    memMes = multipleMembersFound(msg, fetchedMember, arg, show, true);
                 } else {
                     if (fetchedMember.length === 0 || fetchedMember[0] === null) {
                         return trySend(this.client, msg, `No member found for: **${arg}**`);
@@ -84,7 +84,7 @@ module.exports = class lookup extends commando.Command {
             }
         }
         if (memMes.length > 0) {
-            return trySend(this.client, msg, { content: memMes, split: { char: ",", append: ",```", prepend: "```js", maxLength: 2000 } });
+            return trySend(this.client, msg, { content: memMes, split: { char: ",", append: ",```", prepend: "```js", maxLength: 4000 } });
         }
     }
 };

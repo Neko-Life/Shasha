@@ -3,8 +3,7 @@
 const commando = require("@iceprod/discord.js-commando");
 const { MessageEmbed } = require("discord.js");
 const { getChannelMessage, errLog, noPerm, tryReact, trySend, ranLog } = require("../../resources/functions");
-const { database } = require("../../database/mongo");
-const col = database.collection("Guild");
+const colorConf = require(`../../config.json`);
 
 module.exports = class newquoteotd extends commando.Command {
     constructor(client) {
@@ -19,26 +18,24 @@ module.exports = class newquoteotd extends commando.Command {
     }
     async run(msg, arg) {
         const args = arg.trim().split(/ +/);
-        const colorConf = require(`../../config.json`);
-        const findDoc = await col.findOne({document: msg.guild.id});
-        const quoteOTD = findDoc?.["settings"]?.quoteOTD;
+        const quoteOTD = msg.guild.quoteOTD;
         const color = colorConf.randomColors;
         if (!quoteOTD || !quoteOTD.channel) {
-            return trySend(this.client, msg, `Quote OTD channel not set! Run \`${msg.guild.commandPrefix}quoteotd\` to set one.`);
+            return trySend(this.client, msg, `Quote OTD channel not set! Run \`${msg.guild.commandPrefix + this.name}\` to set one.`);
         }
         if (!args[0]) {
             return trySend(this.client, msg, 'Provide `<message_ID>`!');
         }
         try {
             let emb = new MessageEmbed();
-            const mes = await getChannelMessage(this.client,msg,args[0],args[1]);
+            const mes = await getChannelMessage(msg, args[0], args[1]);
             if (mes) {
                 const author = mes.guild.member(mes.author);
                 let description = mes.content;
                 if (!description.endsWith('.')) {
                     description = description+'.';
                 }
-                const thumbnail = mes.author.displayAvatarURL({size:4096,dynamic:true});
+                const thumbnail = mes.author.displayAvatarURL({format: "png", size: 4096, dynamic: true});
                 let name;
                 if (author.displayName) {
                     name = author.displayName;
@@ -53,7 +50,7 @@ module.exports = class newquoteotd extends commando.Command {
                 .setColor(color[Math.floor(Math.random()*color.length)]);
                 const sent = await trySend(this.client, quoteOTD.channel, emb);
                 if (sent) {
-                    ranLog(this.client, msg, "New quote: " + sent.content + "\nBy: " + mes.author.tag + ` (${mes.author.id})`);
+                    ranLog(msg, "New quote: " + sent.content + "\nBy: " + mes.author.tag + ` (${mes.author.id})`);
                     tryReact(msg, "a:yesLife:794788847996370945");
                 }
                 return sent;
