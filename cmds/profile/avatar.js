@@ -11,7 +11,7 @@ module.exports = class avatar extends commando.Command {
       name: "avatar",
       aliases:["av","avat"],
       memberName: "avatar",
-      group: "utility",
+      group: "profile",
       description: "Avatar showcase."
     });
   }

@@ -9,7 +9,7 @@ module.exports = class say extends commando.Command {
         super(client, {
             name: "say",
             memberName: "say",
-            group: "utility",
+            group: "fun",
             description: "Say."
         });
     }

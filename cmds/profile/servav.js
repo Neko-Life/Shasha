@@ -12,7 +12,7 @@ module.exports = class servav extends commando.Command {
             name: "serv-av",
             memberName: "serv-av",
             aliases: ["server-avatar", "serv-avatar", "server-av"],
-            group: "utility",
+            group: "profile",
             description: "Show server avatar."
         });
     }

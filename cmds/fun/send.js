@@ -8,7 +8,7 @@ module.exports = class send extends commando.Command {
         super(client, {
             name: "send",
             memberName: "send",
-            group: "utility",
+            group: "fun",
             description: "Send message to designated channel.",
             guildOnly:true
         });

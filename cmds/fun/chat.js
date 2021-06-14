@@ -14,7 +14,7 @@ module.exports = class chat extends commando.Command {
         });
     }
     async run(msg, args) {
-        if (args?.length === 0) {
+        if (!args) {
             return trySend("Ask me somethin?");
         }
         return msg.channel.startTyping().then(

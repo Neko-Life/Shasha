@@ -9,7 +9,7 @@ module.exports = class profile extends commando.Command {
         super(client, {
             name: "profile",
             memberName: "profile",
-            group: "utility",
+            group: "profile",
             description: "Show Users/Member profile"
         });
     }

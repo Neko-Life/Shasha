@@ -29,6 +29,7 @@ client.registry
     'experiment',
     'image',
     'fun',
+    "profile",
     "owner"
 ])
 .registerDefaults()
@@ -101,7 +102,7 @@ client.on("messageUpdate", async (msgold, msgnew) => {
 });
 
 client.on("guildMemberUpdate", async (memberold, membernew) => {
-    console.log(memberold.toJSON(), "\n\n", membernew.toJSON());
+    //console.log(memberold.toJSON(), "\n\n", membernew.toJSON());
     if (!membernew.user.dbLoaded && !membernew.user.bot) {
         await membernew.user.dbLoad();
     }
