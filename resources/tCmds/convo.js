@@ -74,14 +74,13 @@ module.exports = {
                 }
                 if (u === "r") {
                     if (C.length > 0) {
-                        for (const a of C) console.log("Resuming session:", a.guild.name, a.guild.id, a.name, a.id);
+                        for (let i = 0; i < C.length; i++) console.log("Resuming session:", C[i].guild.name, C[i].guild.id, i + ":", C[i].name, C[i].id);
                         return client.convo = true;
                     } else return console.log("No previous session");
                 }
                 if (u === "q") {
                     if (C.length > 0 && client.convo) {
-                        console.log("Ending sessions:");
-                        for (const a of C) console.log(a.guild.name, a.guild.id, a.name, a.id);
+                        for (let i = 0; i < C.length; i++) console.log("Ending session:", C[i].guild.name, C[i].guild.id, i + ":", C[i].name, C[i].id);
                         client.convo = false;
                     }
                     return console.log("Ended");
@@ -100,7 +99,8 @@ module.exports = {
             for (let i = 0; i < C.length; i++) console.log(C[i].guild.name, C[i].guild.id, i + ":", C[i].name, C[i].id);
         } else if (C[num]) return C[num].send(emoteMessage(client, sl ? arg.slice(num?.toString().length).trim() : arg)).catch(console.error); else {
             console.log('No session. Available sessions:');
-            for (const a of C) console.log(a.guild.name, a.guild.id, a.name, a.id);
+            for (let i = 0; i < C.length; i++) console.log(C[i].guild.name, C[i].guild.id, i + ":", C[i].name, C[i].id);
+            return;
         };
         return client.convo = true;
     }

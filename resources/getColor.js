@@ -14,7 +14,7 @@ module.exports = function getColor(name) {
             return name;
         }
     }
-    switch(name) {
+    switch (name) {
         case 'rosy brown':
             return 12357519;
         case 'magenta':
@@ -56,7 +56,9 @@ module.exports = function getColor(name) {
                 if (name.startsWith("#")) name = name.slice(1);
                 return name;
             } else {
-                return parseInt(name, 10);
+                const n = parseInt(name, 10);
+                if (n >= 16777215) return 16777214;
+                return n;
             }
         }
     }
