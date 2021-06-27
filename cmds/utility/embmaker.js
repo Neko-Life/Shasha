@@ -353,7 +353,7 @@ module.exports = class embmaker extends commando.Command {
             if (embed.color === 16777215) embed.setColor(16777214);
             if (embed.description === "​" && (content || newAttach.length > 0)) embed = null;
             let sent = [];
-            if (editSrc && editSrc.author != this.client.user && !channel) reportMessage += "I can\"t edit that, so here <:catstareLife:794930503076675584>\n";
+            if (editSrc && editSrc.author != this.client.user && !channel) reportMessage += "I can\'t edit that, so here <:catstareLife:794930503076675584>\n";
             if (reportMessage.length > 0) sent.push(trySend(this.client, msg, reportMessage, !isAdmin));
             if (editSrc) {
                 if (channel) {
@@ -382,7 +382,7 @@ module.exports = class embmaker extends commando.Command {
                     if (editSrc.author === this.client.user) {
                         sent.push(editSrc.edit({ content: content, embed: embed, files: newAttach }).catch(e => {
                             errLog(e, msg, this.client);
-                            sent.push(trySend(this.client, msg, "Something\"s wrong, i can\"t edit that so here <:WhenLife:773061840351657984>"));
+                            sent.push(trySend(this.client, msg, "Something\'s wrong, i can\'t edit that so here <:WhenLife:773061840351657984>"));
                             sent.push(trySend(this.client, msg, { content: content, embed: embed, files: newAttach }));
                         }));
                     } else {
