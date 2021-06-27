@@ -16,11 +16,6 @@ module.exports = class servav extends commando.Command {
             description: "Show server avatar."
         });
     }
-    /**
-     * 
-     * @param {commando.CommandoMessage} msg 
-     * @param {*} arg 
-     */
     run(msg, arg) {
         const server_ID = arg.split(/ +/)[0];
         const doc = msg.guild?.id ?? msg.author.id;

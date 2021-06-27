@@ -1,7 +1,7 @@
 'use strict';
 
 const commando = require("@iceprod/discord.js-commando");
-const { trySend, findMemberRegEx, cleanMentionID, findChannelRegEx, findRoleRegEx, defaultImageEmbed } = require("../../resources/functions");
+const { trySend, findMemberRegEx, cleanMentionID, findChannelRegEx, findRoleRegEx, defaultImageEmbed, parseDoubleDash, parseComa } = require("../../resources/functions");
 const { database } = require("../../database/mongo");
 const col = database.collection("Guild");
 const schedule = database.collection("Schedule");
@@ -61,8 +61,8 @@ module.exports = class mute extends commando.Command {
         muteSettingsDoc = modDoc?.["settings"]?.mute,
         defaultDurationDoc = muteSettingsDoc?.defaultDuration,
         infractionsDoc = modDoc?.infractions,
-        args = arg.trim().split(/(?<!\\)(\-\-)+/),
-        mentions = args.shift().split(/(?<!\\),+(?!\d*})/),
+        args = parseDoubleDash(arg),
+        mentions = parseComa(args.shift()),
         durationRegExp = /\d+(?![^ymwdhs])[ymwdhs]?o?/gi,
         invokedAt = msg.createdAt,
         duration = {
@@ -112,24 +112,31 @@ module.exports = class mute extends commando.Command {
                     const val = parseInt(value.match(/\d+/)[0], 10);
                     if (value.endsWith("h") || value.endsWith("ho")) {
                         duration.hour = duration.hour + val;
+                        continue;
                     }
                     if (value.endsWith("y")) {
                         duration.year = duration.year + val;
+                        continue;
                     }
                     if (value.endsWith("mo")) {
                         duration.month = duration.month + val;
+                        continue;
                     }
                     if (value.endsWith("w")) {
                         duration.date = duration.date + 7 * val;
+                        continue;
                     }
                     if (value.endsWith("d")) {
                         duration.date = duration.date + val;
+                        continue;
                     }
                     if (value.endsWith("m") || !/\D/.test(value)) {
                         duration.minute = duration.minute + val;
+                        continue;
                     }
                     if (value.endsWith("s")) {
                         duration.second = duration.second + val;
+                        continue;
                     }
                 }
                 durationHasSet = true;
@@ -245,7 +252,7 @@ module.exports = class mute extends commando.Command {
             defaultDurationDoc = muteSettingsDoc?.defaultDuration,
             logChannelDoc = muteSettingsDoc?.logChannel,
             roleDoc = muteSettingsDoc?.role;
-            let settings = await defaultImageEmbed(msg);
+            let settings = defaultImageEmbed(msg);
             settings
             .setTitle("Mute Configuration")
             .addField("Role", roleDoc ? "<@&"+roleDoc+">" : "Not set")
@@ -282,7 +289,7 @@ module.exports = class mute extends commando.Command {
                 }
             } else {
                 if (!settingUp && mentions[0].length === 0) {
-                    return trySend(this.client, msg, "Who do you wanna mute? Provide as first argument `<[RegExp | user_[mention | ID]]>`. Use `,` to provide more than one user. Use `--` to split arguments.\nExample:```js\n" + `${msg.guild.commandPrefix}${this.name} 832423842785623423, @Shasha#1234, retard wanna get muted, #6969, ^fuck (ur)? .{5}#\\d\\d69$--69y69mo69w420d420h420m420s--Saying "joe"\`\`\``);
+                    return trySend(this.client, msg, "Who do you wanna mute? Provide as first argument `<[RegExp | user_[mention | ID]]>`. Use `,` to provide more than one user. Use `--` to split arguments.\nExample:```js\n" + `${msg.guild.commandPrefix}${this.name} 832423842785623423, @Shasha#1234, retard wanna get muted, #6969, ^fuck\\s(ur)?\\s.{5}#\\d+69$--69y69mo69w420d420h420m420s--Saying "joe"\`\`\``);
                 }
             }
         }
@@ -326,7 +333,7 @@ module.exports = class mute extends commando.Command {
             }
         }
         resultMsg += `Result:\`\`\`js\nUsers: ${targetUser.map(r => r?.tag).join(", ")}\nReason: ${reason}\nAt: ${invokedAt.toUTCString()}\nFor: ${timeForMessage.join(" ")}\nUntil: ${typeof untilDate !== "string" ? untilDate.toUTCString() : untilDate}\`\`\``;
-        trySend(this.client, msg, {content:resultMsg+"```js\n" + JSON.stringify(infractionToDoc, null, 2) + "```",split:{maxLength:4000,append:",```",prepend:"```js\n",char:","}});
+        trySend(this.client, msg, {content:resultMsg+"```js\n" + JSON.stringify(infractionToDoc, null, 2) + "```",split:{maxLength: 2000,append:",```",prepend:"```js\n",char:","}});
         return
     }
 };

@@ -18,7 +18,7 @@ module.exports = class mesemb extends commando.Command {
       if (!message) {
         return trySend(this.client, msg, "404 message not found!");
       }
-      const mesemb = '```js\n' + JSON.stringify(message.embeds, (k, v) => v ?? undefined, 2).replace(/`/g,"\\`") + '```';
-      return trySend(this.client, msg, { content: 'Collected:' + mesemb, split: { maxLength: 4000, char: ",", append: ',```', prepend:'```js\n' }});
+      const mesemb = '```js\n' + JSON.stringify(message.embeds, (k, v) => v ?? undefined, 2).replace(/```/g,"`\\``") + '```';
+      return trySend(this.client, msg, { content: 'Collected:' + mesemb, split: { maxLength: 2000, char: ",", append: ',```', prepend:'```js\n' }});
     }
 };

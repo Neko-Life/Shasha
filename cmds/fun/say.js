@@ -14,17 +14,14 @@ module.exports = class say extends commando.Command {
         });
     }
     async run(msg, args) {
-        let noArgs = '​';
-        if (!args) {
-            args = noArgs;
-        }
+        if (!args) args = '​';
         args = emoteMessage(this.client, args);
         const sendThis = {content:args, disableMentions:"all"};
         if (msg.member?.hasPermission('MENTION_EVERYONE')) {
           sendThis.disableMentions = "none";
         }
         const sent = await trySend(this.client, msg, sendThis);
-        if (args !== noArgs && msg.channel.guild && msg.member.hasPermission("MANAGE_MESSAGES")) {
+        if (args != '​' && msg.channel.guild && msg.member.hasPermission("MANAGE_MESSAGES")) {
             tryDelete(msg);
         }
         ranLog(msg, sent.content);

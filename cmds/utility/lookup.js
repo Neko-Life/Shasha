@@ -9,14 +9,18 @@ module.exports = class lookup extends commando.Command {
             name: "lookup",
             memberName: "lookup",
             group: "utility",
-            description: "Lookup something in the server using mention, ID, or RegExp."
+            description: "Lookup something in the server using mention, ID, or RegExp.",
+            guildOnly: true
         });
     }
     async run(msg, arg) {
+        if (!arg) {
+            return trySend(this.client, msg, "Args: `--[m|c|r]` [Member|Channel|Role]: `[mention|ID|name]` `--s` Show: `[number]`")
+        }
         let show;
-        const showArg = arg.match(/(?<!\\)\-\-show *\d*/i);
+        const showArg = arg.match(/(?<!\\)--s +\d+/);
         if (showArg?.[0]) {
-            const digit = showArg[0].match(/\d*/g);
+            const digit = showArg[0].match(/\d+/g);
             for (const val of digit) {
                 if (val.length > 0) {
                     const res = parseInt(val, 10);
@@ -24,13 +28,13 @@ module.exports = class lookup extends commando.Command {
                 }
             }
         }
-        arg = arg.replace(/(?<!\\)\-\-show *\d*/i, "").trim();
+        arg = arg.replace(/(?<!\\)--s +\d+/, "").trim();
         const args = arg.split(/ +/);
         let [fetchedMember, fetchedRoles, fetchedChannels, memMes] = [[], [], [], ""];
-        const lowCaseArg0 = args[0].toLowerCase();
-        if (lowCaseArg0.startsWith("--role")) {
+        const lowCaseArg0 = args[0];
+        if (lowCaseArg0.startsWith("--r ")) {
             if (args[1]) {
-                const cleanRoleID = cleanMentionID(arg.slice("--roles".length).trim());
+                const cleanRoleID = cleanMentionID(arg.slice("--r ".length).trim());
                 if (/^\d{17,19}$/.test(cleanRoleID)) {
                     fetchedRoles.push(msg.guild.roles.cache.get(cleanRoleID));
                 } else {
@@ -46,9 +50,9 @@ module.exports = class lookup extends commando.Command {
                 }
             }
         } else {
-            if (lowCaseArg0.startsWith("--channel")) {
+            if (lowCaseArg0.startsWith("--c ")) {
                 if (args[1]) {
-                    const cleanChannelID = cleanMentionID(arg.slice("--channels".length).trim());
+                    const cleanChannelID = cleanMentionID(arg.slice("--c ".length).trim());
                     if (/^\d{17,19}$/.test(cleanChannelID)) {
                         fetchedChannels.push(msg.guild.roles.cache.get(cleanChannelID));
                     } else {
@@ -64,8 +68,8 @@ module.exports = class lookup extends commando.Command {
                     }
                 }
             } else {
-                if (arg.toLowerCase().startsWith("--member")) {
-                    arg = arg.slice("--members".length).trim();
+                if (arg.startsWith("--m ")) {
+                    arg = arg.slice("--m ".length).trim();
                 }
                 arg = cleanMentionID(arg);
                 if (/^\d{17,19}$/.test(arg)) {
@@ -84,7 +88,7 @@ module.exports = class lookup extends commando.Command {
             }
         }
         if (memMes.length > 0) {
-            return trySend(this.client, msg, { content: memMes, split: { char: ",", append: ",```", prepend: "```js", maxLength: 4000 } });
+            return trySend(this.client, msg, { content: memMes, split: { char: ",", append: ",```", prepend: "```js", maxLength: 2000 } });
         }
     }
 };

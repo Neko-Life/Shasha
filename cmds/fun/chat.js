@@ -17,13 +17,13 @@ module.exports = class chat extends commando.Command {
         if (!args) {
             return trySend("Ask me somethin?");
         }
-        return msg.channel.startTyping().then(
-            trySend(this.client, msg, await chatAnswer(msg.cleanContent.slice((msg.guild.commandPrefix + msg.command.name).length + 1))).then(r => {
-                msg.channel.stopTyping();
+        return msg.channel.startTyping()
+        .then(
+            trySend(this.client, msg, await chatAnswer(
+                msg.cleanContent.slice((msg.guild.commandPrefix + msg.command.name).length + 1)
+                ))).then(r => {
                 return r;
-            }).catch(
-                msg.channel.stopTyping()
-            )
-        );
+            }).catch(() => {})
+        .finally(msg.channel.stopTyping());
     }
 };

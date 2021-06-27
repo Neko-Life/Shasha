@@ -1,7 +1,7 @@
 'use strict';
 
 const commando = require("@iceprod/discord.js-commando");
-const { trySend, ranLog } = require("../../resources/functions");
+const { trySend, ranLog, parseDoubleDash } = require("../../resources/functions");
 const { database } = require("../../database/mongo");
 const col = database.collection("Guild");
 
@@ -18,7 +18,7 @@ module.exports = class quoteotd extends commando.Command {
         });
     }
     async run(msg, arg) {
-        const args = arg.trim().split(/(\-\-)+/);
+        const args = parseDoubleDash(arg);
         if (args.length < 2) {
             return trySend(this.client, msg, `Provide argument: \`--channel [mention, ID], --text [footer text], --icon [url footer icon]\``);
         }

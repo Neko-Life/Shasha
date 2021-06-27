@@ -1,26 +1,18 @@
 'use strict';
 
 module.exports = function emoteMessage(client, content) {
-    const emotes = content.match(/:\w{1,32}:(?!\d{17,19}>)/g);
-    if (emotes?.length > 0) {
-        let theEmotes = [];
-        for (const emoteName of emotes) {
-            let findThis = emoteName.slice(1, -1);
-            const findEmote = client.emojis.cache.array();
-            let found;
-            for (const emote of findEmote) {
-                if (emote.name.toLowerCase() === findThis.toLowerCase()) {
-                    found = emote;
-                    break;
-                }
-            }
-            theEmotes.push(found);
-        }
-        if (theEmotes.length > 0) {
-            for (let index = 0; index < emotes.length; index++) {
-                if (theEmotes[index]) {
-                    content = content.replace(emotes[index], `<${theEmotes[index].animated ? "a" : ""}:${theEmotes[index].name}:${theEmotes[index].id}>`);
-                }
+    const E = content?.match(/:\w{1,32}:(?!\d{17,19}>)/g);
+    if (!E || E.length === 0) return content;
+    let tE = [];
+    for (const eN of E) {
+        let findThis = eN.slice(1, -1);
+        let found = client.emojis.cache.map(r => r).filter(r => r.name.toLowerCase() === findThis.toLowerCase())?.[0];
+        tE.push(found);
+    }
+    if (tE.length > 0) {
+        for (let index = 0; index < E.length; index++) {
+            if (tE[index]) {
+                content = content.replace(E[index], `<${tE[index].animated ? "a" : ""}:${tE[index].name}:${tE[index].id}>`);
             }
         }
     }

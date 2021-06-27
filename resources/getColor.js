@@ -6,9 +6,7 @@
  * @returns {String | Number} Color hex | Color number
  */
 module.exports = function getColor(name) {
-    if (!name) {
-        return
-    }
+    if (!name) return;
     if (typeof name === 'number') {
         if (name === 16777215) {
             return 16777214;
@@ -55,9 +53,7 @@ module.exports = function getColor(name) {
             return 16777214;
         default: {
             if (/\D/.test(name)) {
-                if (name.startsWith("#")) {
-                    name = name.slice(1);
-                }
+                if (name.startsWith("#")) name = name.slice(1);
                 return name;
             } else {
                 return parseInt(name, 10);

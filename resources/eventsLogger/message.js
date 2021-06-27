@@ -25,9 +25,9 @@ async function letsChat(msg) {
     if (msg.channel.id === configFile.chatChannel && !msg.author.bot && !msg.isCommand && msg.cleanContent.length > 0) {
         return msg.channel.startTyping().then(trySend(msg.client, msg, await chatAnswer(msg.cleanContent))
         ).then(r => {
-            msg.channel.stopTyping();
             return r;
-        }).catch(msg.channel.stopTyping());
+        }).catch(() => {})
+        .finally(msg.channel.stopTyping());
     }
 }
 

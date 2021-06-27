@@ -1,7 +1,7 @@
 'use strict';
 const commando = require("@iceprod/discord.js-commando");
 const emoteMessage = require("../../resources/emoteMessage");
-const { ranLog, errLog, trySend, tryReact, findChannelRegEx, cleanMentionID, getChannelProchedure } = require("../../resources/functions");
+const { ranLog, errLog, trySend, tryReact, findChannelRegEx, cleanMentionID, getChannel } = require("../../resources/functions");
 
 module.exports = class send extends commando.Command {
     constructor(client) {
@@ -20,21 +20,19 @@ module.exports = class send extends commando.Command {
         }
         const search = cleanMentionID(comarg[0]),
         sendTheMes = emoteMessage(this.client, args.slice(comarg[0].length).trim());
-        let channel = getChannelProchedure(msg, search);
+        let channel = getChannel(msg, search, ["category", "voice"]);
         if (!channel) {
-          return trySend(this.client, msg, "That channel is like your gf. Doesn't exist <:cathmmLife:772716381874946068>");
+          return trySend(this.client, msg, "That channel is like your gf. Doesn't exist <:yeLife:796401669188354090>");
         }
         if (!channel.permissionsFor(msg.author).has("SEND_MESSAGES") || !channel.permissionsFor(msg.author).has("VIEW_CHANNEL")) {
-          return trySend(this.client, msg, "No <:cathmmLife:772716381874946068>");
+          return trySend(this.client, msg, "No <:yeLife:796401669188354090>");
         }
         try {
           if (sendTheMes.length === 0) {
             return trySend(this.client, channel, `<@!${msg.author.id}>, If you wanna send nothin then why you even typed that <:bruhLife:798789686242967554>`);
           }
           const sendThis = {content:sendTheMes, disableMentions:"all"};
-          if (msg.member?.hasPermission("MENTION_EVERYONE")) {
-            sendThis.disableMentions = "none";
-          }
+          if (msg.member?.hasPermission("MENTION_EVERYONE")) sendThis.disableMentions = "none";
           const send = await trySend(this.client, channel, sendThis);
           const filter = () => true,
           collector = send.createReactionCollector(filter, {time: 15*6*1000, dispose:true});
