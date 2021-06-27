@@ -11,23 +11,23 @@ module.exports = class embmaker extends commando.Command {
         super(client, {
             name: "embmaker",
             memberName: "embmaker",
-            aliases: ["embed-maker","creat-emb","creat-embed"],
+            aliases: ["embed-maker", "creat-emb", "creat-embed", "embed"],
             group: "utility",
             description: "Embed creator.",
             details:
-            `**Embed creator:** You can just copy this template and remove unneeded argument. Every argument are optional.` +
-            `,\n\`--j\` JSON: \`[MessageEmbed JSON Object]\`,\n\`--t\` Title: \`[text]\`,\n\`--d\` Description: \`[text]\`,\n\`--a\` Author:\n\`  -n\` Name: \`[text]\`,\n\`  -i\` Icon: \`[url]\`,\n` +
-            `\`  -u\` URL: \`[url]\`,\n\`--c\` Color: \`[hex|number|name]\`,\n\`--i\` Image: \`[url]\`,\n\`--th\` Thumbnail: \`[url]\`,\n` +
-            `\`--u\` URL: \`[url]\`,\n\`--f\` Add Field:\n\`  -n\` Name: \`[text]\`,\n\`  -d\` Description: \`[text]\`,\n\`  -i\` Inline: True if provided,\n` +
-            `\`--fo\` Footer:\n\`  -t\` Text: \`[text]\`,\n\`  -i\` Icon: \`[url]\`,\n\`--co\` Content: \`[text]\`,\n\`--ch\` Channel: \`[mention|ID|name]\`,\n` +
-            `\`--ti\` Timestamp: \`[ISO 8601|UNIX (Milliseconds)]\` - Use https://time.lol ,\n` +
-            `\`--at\` Attachments: \`[url]\` - You can put \`-c\` when editing to copy all existing message attachments ` +
-            `(Cannot remove existing attachment unless \`--ch\` provided).\n\n**Embed editor:** ` +
-            `You can put\n\`--e\` Edit: \`<[message_[ID|link]|channel_[mention|ID] message_ID]>\`` +
-            `\nas first argument to edit the embed in provided message. All existing property will be replaced ` +
-            `with provided argument. Put\n\`--r\` Remove [Author, Fields, Footer]: \`[a, f, fo]\`\nto remove all existing property ` +
-            `of the provided argument in the embed.\n\nOther arguments:\n\`--q\` Quote: \`<[message_[ID|link]|channel_[mention|ID] message_ID]>\`` +
-            ` - Quote a message.`
+                `**Embed creator:** You can just copy this template and remove unneeded argument. Every argument are optional.` +
+                `,\n\`--j\` JSON: \`[MessageEmbed JSON Object]\`,\n\`--t\` Title: \`[text]\`,\n\`--d\` Description: \`[text]\`,\n\`--a\` Author:\n\`  -n\` Name: \`[text]\`,\n\`  -i\` Icon: \`[url]\`,\n` +
+                `\`  -u\` URL: \`[url]\`,\n\`--c\` Color: \`[hex|number|name]\`,\n\`--i\` Image: \`[url]\`,\n\`--th\` Thumbnail: \`[url]\`,\n` +
+                `\`--u\` URL: \`[url]\`,\n\`--f\` Add Field:\n\`  -n\` Name: \`[text]\`,\n\`  -d\` Description: \`[text]\`,\n\`  -i\` Inline: True if provided,\n` +
+                `\`--fo\` Footer:\n\`  -t\` Text: \`[text]\`,\n\`  -i\` Icon: \`[url]\`,\n\`--co\` Content: \`[text]\`,\n\`--ch\` Channel: \`[mention|ID|name]\`,\n` +
+                `\`--ti\` Timestamp: \`[ISO 8601|UNIX (Milliseconds)]\` - Use https://time.lol ,\n` +
+                `\`--at\` Attachments: \`[url]\` - You can put \`-c\` when editing to copy all existing message attachments ` +
+                `(Cannot remove existing attachment unless \`--ch\` provided).\n\n**Embed editor:** ` +
+                `You can put\n\`--e\` Edit: \`<[message_[ID|link]|channel_[mention|ID] message_ID]>\`` +
+                `\nas first argument to edit the embed in provided message. All existing property will be replaced ` +
+                `with provided argument. Put\n\`--r\` Remove [Author, Fields, Footer]: \`[a, f, fo]\`\nto remove all existing property ` +
+                `of the provided argument in the embed.\n\nOther arguments:\n\`--q\` Quote: \`<[message_[ID|link]|channel_[mention|ID] message_ID]>\`` +
+                ` - Quote a message.`
         });
     }
     async run(msg, arg) {
@@ -40,7 +40,7 @@ module.exports = class embmaker extends commando.Command {
         let embed = new MessageEmbed();
         let autName, footertext, autIcon, autUrl, footericon, content, channel, editSrc, newAttach = [], reportMessage = "";
         try {
-            for(const value of args) {
+            for (const value of args) {
                 if (value.startsWith("j ")) {
                     embed = new MessageEmbed(JSON.parse(value.slice("j ".length).trim()));
                     continue;
@@ -94,30 +94,30 @@ module.exports = class embmaker extends commando.Command {
                     const quoteargs = value.slice("q ".length).trim().split(/ +/);
                     if (quoteargs[0].length > 0) {
                         await getChannelMessage(msg, quoteargs[0], quoteargs[1])
-                        .then(quoteThis => {
-                            if (quoteThis) {
-                                const author = quoteThis.member;
-                                autName = author ? author.displayName : quoteThis.author.username;
-                                autIcon = quoteThis.author.displayAvatarURL({format: "png", size: 4096, dynamic: true});
-                                autUrl = quoteThis.url;
-                                embed
-                                .setAuthor(author ? author.displayName : quoteThis.author.username,quoteThis.author.displayAvatarURL({format: "png", size: 128, dynamic: true}),quoteThis.url)
-                                .setDescription(quoteThis.content)
-                                .setTimestamp(quoteThis.createdAt);
-                                if (author && author.displayColor) {
-                                    embed.setColor(author.displayColor);
-                                }
-                                if (quoteThis.attachments) {
-                                    for(const attach of quoteThis.attachments) {
-                                        attach.map(g => {
-                                            newAttach.push(g.proxyURL);
-                                        });
+                            .then(quoteThis => {
+                                if (quoteThis) {
+                                    const author = quoteThis.member;
+                                    autName = author ? author.displayName : quoteThis.author.username;
+                                    autIcon = quoteThis.author.displayAvatarURL({ format: "png", size: 4096, dynamic: true });
+                                    autUrl = quoteThis.url;
+                                    embed
+                                        .setAuthor(author ? author.displayName : quoteThis.author.username, quoteThis.author.displayAvatarURL({ format: "png", size: 128, dynamic: true }), quoteThis.url)
+                                        .setDescription(quoteThis.content)
+                                        .setTimestamp(quoteThis.createdAt);
+                                    if (author && author.displayColor) {
+                                        embed.setColor(author.displayColor);
                                     }
+                                    if (quoteThis.attachments) {
+                                        for (const attach of quoteThis.attachments) {
+                                            attach.map(g => {
+                                                newAttach.push(g.proxyURL);
+                                            });
+                                        }
+                                    }
+                                } else {
+                                    reportMessage += "**[QUOTE]** Unknown message.\n";
                                 }
-                            } else {
-                                reportMessage += "**[QUOTE]** Unknown message.\n";
-                            }
-                        });
+                            });
                     } else {
                         reportMessage += "**[QUOTE]** No argument provided.\n";
                     }
@@ -125,7 +125,7 @@ module.exports = class embmaker extends commando.Command {
                 }
                 if (value.startsWith("r ")) {
                     const r = value.slice("r ".length).toLowerCase().trim().split(/ +/);
-                    for(const remThis of r) {
+                    for (const remThis of r) {
                         if (remThis === "f") {
                             embed.fields = [];
                         }
@@ -144,20 +144,20 @@ module.exports = class embmaker extends commando.Command {
                     continue;
                 }
                 if (value.startsWith("t ")) {
-                    const use = emoteMessage(this.client, value.slice("t ".length).trim().replace(/\\(?!\\)/g,""));
+                    const use = emoteMessage(this.client, value.slice("t ".length).trim().replace(/\\(?!\\)/g, ""));
                     embed.setTitle(isAdmin ? use : adCheck(use));
                     continue;
                 }
                 if (value.startsWith("d ")) {
-                    const use = emoteMessage(this.client, value.slice("d ".length).trim().replace(/\\(?!\\)/g,""));
+                    const use = emoteMessage(this.client, value.slice("d ".length).trim().replace(/\\(?!\\)/g, ""));
                     embed.setDescription(isAdmin ? use : adCheck(use));
                     continue;
                 }
                 if (value.startsWith("a ")) {
                     const autData = parseDash(value);
-                    for(const autVal of autData) {
+                    for (const autVal of autData) {
                         if (autVal.startsWith("n ")) {
-                            const use = autVal.slice("n ".length).trim().replace(/\\(?!\\)/g,"");
+                            const use = autVal.slice("n ".length).trim().replace(/\\(?!\\)/g, "");
                             autName = isAdmin ? use : adCheck(use);
                             continue;
                         }
@@ -227,7 +227,7 @@ module.exports = class embmaker extends commando.Command {
                 }
                 if (value.startsWith("at ")) {
                     const attach = value.slice("at ".length).trim().split(/ +/);
-                    for(const theFile of attach) {
+                    for (const theFile of attach) {
                         if (reValidURL.test(theFile)) {
                             newAttach.push(theFile);
                         } else {
@@ -237,7 +237,7 @@ module.exports = class embmaker extends commando.Command {
                         }
                         if (theFile === "-c" && editSrc) {
                             if (editSrc.attachments[0].length > 0) {
-                                for(const attach of editSrc.attachments) {
+                                for (const attach of editSrc.attachments) {
                                     attach.map(g => {
                                         newAttach.push(g.proxyURL);
                                     });
@@ -251,7 +251,7 @@ module.exports = class embmaker extends commando.Command {
                 }
                 if (value.startsWith("ti ")) {
                     const use = value.slice("ti ".length).trim();
-                    if(!/\D/.test(use)) {
+                    if (!/\D/.test(use)) {
                         embed.setTimestamp(parseInt(use, 10));
                     } else {
                         if (use === "now") {
@@ -271,9 +271,9 @@ module.exports = class embmaker extends commando.Command {
                 }
                 if (value.startsWith("fo ")) {
                     const footerData = parseDash(value);
-                    for(const footval of footerData) {
+                    for (const footval of footerData) {
                         if (footval.startsWith("t ")) {
-                            const use = emoteMessage(this.client, footval.slice("t ".length).trim().replace(/\\(?!\\)/g,""));
+                            const use = emoteMessage(this.client, footval.slice("t ".length).trim().replace(/\\(?!\\)/g, ""));
                             footertext = isAdmin ? use : adCheck(use);
                         }
                         if (footval.startsWith("i ")) {
@@ -289,14 +289,14 @@ module.exports = class embmaker extends commando.Command {
                 }
                 if (value.startsWith("f ")) {
                     const fieldData = parseDash(value);
-                    let fieldName,fieldValue, inline = false;
-                    for(const data of fieldData) {
+                    let fieldName, fieldValue, inline = false;
+                    for (const data of fieldData) {
                         if (data.startsWith("n ")) {
-                            const use = emoteMessage(this.client, data.slice("n ".length).trim().replace(/\\(?!\\)/g,""));
+                            const use = emoteMessage(this.client, data.slice("n ".length).trim().replace(/\\(?!\\)/g, ""));
                             fieldName = isAdmin ? use : adCheck(use);
                         }
                         if (data.startsWith("d ")) {
-                            const use = emoteMessage(this.client, data.slice("d ".length).trim().replace(/\\(?!\\)/g,""));
+                            const use = emoteMessage(this.client, data.slice("d ".length).trim().replace(/\\(?!\\)/g, ""));
                             fieldValue = isAdmin ? use : adCheck(use);
                         }
                         if (data[0] === "i") {
@@ -313,7 +313,7 @@ module.exports = class embmaker extends commando.Command {
                     continue;
                 }
                 if (value.startsWith("co ")) {
-                    const use = emoteMessage(this.client, value.slice("co ".length).trim().replace(/\\(?!\\)/g,""));
+                    const use = emoteMessage(this.client, value.slice("co ".length).trim().replace(/\\(?!\\)/g, ""));
                     content = isAdmin ? use : adCheck(use);
                     continue;
                 }
@@ -328,7 +328,7 @@ module.exports = class embmaker extends commando.Command {
                         } else {
                             if ((channel instanceof GuildChannel) && !this.client.owners.includes(msg.author)) {
                                 const p = channel.permissionsFor(msg.author).serialize(),
-                                f = channel.permissionsFor(this.client.user).serialize();
+                                    f = channel.permissionsFor(this.client.user).serialize();
                                 if (!p.EMBED_LINKS || !p.SEND_MESSAGES || !p.VIEW_CHANNEL || !f.EMBED_LINKS || !f.SEND_MESSAGES) {
                                     channel = undefined;
                                     reportMessage += "**[CHANNEL]** Missing permission.\n";
@@ -339,7 +339,7 @@ module.exports = class embmaker extends commando.Command {
                     continue;
                 }
             }
-            if(autIcon === false && embed.author.name) delete embed.author.name;
+            if (autIcon === false && embed.author.name) delete embed.author.name;
             if (!autName && autIcon) autName = "​";
             if (autName || autIcon && embed.author !== null) embed.setAuthor(autName, autIcon, autUrl);
             if (!footertext && footericon) footertext = "​";
@@ -367,11 +367,11 @@ module.exports = class embmaker extends commando.Command {
                             }
                         }
                     }
-                    sent.push(trySend(this.client, channel, {content:content,embed:embed,files:newAttach}));
+                    sent.push(trySend(this.client, channel, { content: content, embed: embed, files: newAttach }));
                 } else {
                     if (msg.guild) {
                         const c = msg.channel.permissionsFor(msg.author).serialize(),
-                        f = msg.channel.permissionsFor(this.client.user).serialize();
+                            f = msg.channel.permissionsFor(this.client.user).serialize();
                         if (!c.ATTACH_FILES && !f.ATTACH_FILES) {
                             if (newAttach.length > 0) {
                                 newAttach = [];
@@ -380,13 +380,13 @@ module.exports = class embmaker extends commando.Command {
                         }
                     }
                     if (editSrc.author === this.client.user) {
-                        sent.push(editSrc.edit({content:content,embed:embed,files:newAttach}).catch(e => {
+                        sent.push(editSrc.edit({ content: content, embed: embed, files: newAttach }).catch(e => {
                             errLog(e, msg, this.client);
                             sent.push(trySend(this.client, msg, "Something\"s wrong, i can\"t edit that so here <:WhenLife:773061840351657984>"));
-                            sent.push(trySend(this.client, msg, {content:content,embed:embed,files:newAttach}));
+                            sent.push(trySend(this.client, msg, { content: content, embed: embed, files: newAttach }));
                         }));
                     } else {
-                        sent.push(trySend(this.client, msg, {content:content,embed:embed,files:newAttach}));
+                        sent.push(trySend(this.client, msg, { content: content, embed: embed, files: newAttach }));
                     }
                 }
             } else {
@@ -400,7 +400,7 @@ module.exports = class embmaker extends commando.Command {
                         }
                     }
                 }
-                sent.push(trySend(this.client, channel ?? msg.channel, {content:content, embed:embed, files:newAttach}).catch(e => noPerm(msg)));
+                sent.push(trySend(this.client, channel ?? msg.channel, { content: content, embed: embed, files: newAttach }).catch(e => noPerm(msg)));
             }
             if (await sent[0]) {
                 tryReact(msg, "a:yesLife:794788847996370945");
