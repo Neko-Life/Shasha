@@ -63,7 +63,10 @@ client.on("message", async msg => {
         const re = new RegExp("@​" + (msg.guild ? msg.guild.member(client.user).displayName : msg.author.username));
         const u = msg.cleanContent.replace(re, "").trim();
         console.log(u, re);
-        if (u.length > 0) await trySend(client, msg, await chatAnswer(u));
+        if (u.length > 0) {
+            msg.channel.startTyping();
+            await trySend(client, msg, await chatAnswer(u));
+        };
     }
 
     if (!msg.guild) {
