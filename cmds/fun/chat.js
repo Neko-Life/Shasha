@@ -15,15 +15,14 @@ module.exports = class chat extends commando.Command {
     }
     async run(msg, args) {
         if (!args) {
-            return trySend("Ask me somethin?");
+            return trySend(msg.client, msg, "Ask me somethin?");
         }
         return msg.channel.startTyping()
             .then(
                 trySend(this.client, msg, await chatAnswer(
-                    msg.cleanContent.slice((msg.guild.commandPrefix + msg.command.name).length + 1)
-                ))).then(r => {
-                    return r;
-                }).catch(() => { })
+                    msg.cleanContent.slice((msg.guild.commandPrefix + msg.command.name).length).trim()
+                )).then(r => r)
+            ).catch(() => { })
             .finally(msg.channel.stopTyping());
     }
 };
