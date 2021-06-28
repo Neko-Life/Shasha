@@ -169,7 +169,7 @@ async function trySend(client, msgOrChannel, content, checkAd = true) {
     for (const f of content.fields) fLength.push(f.value.length);
     console.log("Embed", content.title, timestampAt(client), "\n", content.description, content.description?.length, "\n", content.fields, fLength)
   }*/
-  if (!client || !msgOrChannel) return;
+  if (!client || !msgOrChannel || !content) return;
   if (typeof msgOrChannel === "string") msgOrChannel = client.channels.cache.get(msgOrChannel);
   if (!client.user.typingIn(msgOrChannel.channel || msgOrChannel)) (msgOrChannel.channel || msgOrChannel).startTyping();
   if (client.owners.includes(msgOrChannel.author)) {
@@ -409,6 +409,7 @@ function getUTCComparison(compare) {
  * @returns {MessageEmbed}
  */
 function defaultEventLogEmbed(guild) {
+  if (!guild) return;
   return new MessageEmbed()
     .setAuthor(guild.name)
     .setFooter((guild.defaultEmbed?.footerQuote ? guild.defaultEmbed.footerQuote : ""), guild.iconURL({ format: "png", size: 128, dynamic: true }))
