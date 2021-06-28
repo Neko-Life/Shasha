@@ -23,6 +23,7 @@ const { timestampAt } = require("./resources/debug");
 const requireAll = require("require-all");
 
 const lgr = requireAll({ dirname: join(__dirname, "resources/eventsLogger"), recursive: true });
+client.functions = requireAll({ dirname: join(__dirname, "../../resources"), recursive: true });
 
 client.registry
     .registerGroups([
@@ -34,7 +35,6 @@ client.registry
         "profile",
         "owner"
     ])
-    .registerDefaults()
     .registerCommandsIn(join(__dirname, 'cmds'));
 
 client.setProvider(

@@ -9,10 +9,11 @@ module.exports = class update extends commando.Command {
             memberName: "update",
             group: "owner",
             description: "Update Shasha.",
-            ownerOnly: true
+            ownerOnly: true,
+            guarded: true
         });
     }
     run(msg) {
-        
+
     }
 };
