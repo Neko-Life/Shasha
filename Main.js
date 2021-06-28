@@ -59,7 +59,7 @@ client.on("message", async msg => {
     if (!msg.author.dbLoaded && !msg.author.bot) await msg.author.dbLoad();
     lgr.message.letsChat(msg);
 
-    if (msg.mentions.has(client.user) && !msg.isCommand) {
+    if (msg.mentions.has(client.user) && !msg.isCommand && msg.channel.id != configFile.chatChannel) {
         const re = new RegExp("@​" + (msg.guild ? msg.guild.member(client.user).displayName : msg.author.username));
         const u = msg.cleanContent.replace(re, "").trim();
         console.log(u, re);
