@@ -14,6 +14,7 @@ module.exports = class laugh extends commando.Command {
         });
     }
     async run(msg) {
+        msg.channel.startTyping();
         const title = `${msg.guild ? msg.member.displayName : msg.author.username} is laughin XD`;
         const image = await fetchNeko("laugh");
         const emb = defaultImageEmbed(msg, image, title);

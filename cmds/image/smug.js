@@ -14,6 +14,7 @@ module.exports = class smug extends commando.Command {
         });
     }
     async run(msg) {
+        msg.channel.startTyping();
         const title = `${msg.guild ? msg.member.displayName : msg.author.username} got a smug face >:]`;
         const image = await fetchNeko("smug");
         const emb = defaultImageEmbed(msg, image, title);

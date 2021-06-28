@@ -14,6 +14,7 @@ module.exports = class neko extends commando.Command {
         });
     }
     async run(msg) {
+        msg.channel.startTyping();
         const title = `${msg.guild ? msg.member.displayName : msg.author.username} ~Nyann~ (UwU) <3`;
         const image = await fetchNeko("nekos");
         const emb = defaultImageEmbed(msg, image, title);

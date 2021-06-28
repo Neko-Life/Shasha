@@ -14,6 +14,7 @@ module.exports = class cry extends commando.Command {
         });
     }
     async run(msg) {
+        msg.channel.startTyping();
         const title = `${msg.guild ? msg.member.displayName : msg.author.username} is crying :<`;
         const image = await fetchNeko("cry");
         const emb = defaultImageEmbed(msg, image, title);

@@ -14,6 +14,7 @@ module.exports = class dance extends commando.Command {
         });
     }
     async run(msg) {
+        msg.channel.startTyping();
         const title = `${msg.guild ? msg.member.displayName : msg.author.username} is dancin :>`;
         const image = await fetchNeko("dance");
         const emb = defaultImageEmbed(msg, image, title);

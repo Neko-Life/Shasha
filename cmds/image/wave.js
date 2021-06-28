@@ -14,6 +14,7 @@ module.exports = class wave extends commando.Command {
         });
     }
     async run(msg) {
+        msg.channel.startTyping();
         const title = `${msg.guild ? msg.member.displayName : msg.author.username} is waving :)`;
         const image = await fetchNeko("wave");
         const emb = defaultImageEmbed(msg, image, title);
