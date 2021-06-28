@@ -60,7 +60,7 @@ client.on("message", async msg => {
     lgr.message.letsChat(msg);
 
     if (msg.mentions.has(client.user) && !msg.isCommand) {
-        const u = msg.cleanContent.replace(new RegExp(" ?<@!?" + client.user.id + ">"), "").trim();
+        const u = msg.cleanContent.replace(new RegExp("@" + (msg.guild ? msg.guild.member(client.user).displayName : msg.author.username)), "").trim();
         if (u.length > 0) trySend(client, msg, await chatAnswer(u));
     }
 
