@@ -21,8 +21,8 @@ const URL = [
 ];
 */
 
- async function chatAnswer(message) {
-	return axios.post("https://rebot.me/ask", { username: "muffin-6", question: message }).then(r => r.data).catch(() => {});
- }
+async function chatAnswer(message) {
+	return axios.post("https://rebot.me/ask", { username: "simsimi", question: message }).then(r => r.data).catch(() => { });
+}
 
 module.exports = { chatAnswer }
