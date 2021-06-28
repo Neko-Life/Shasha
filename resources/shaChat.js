@@ -24,7 +24,7 @@ const URL = [
 async function chatAnswer(message) {
 	// return axios.post("https://rebot.me/ask", { username: "simsimi", question: message }).then(r => r.data).catch(() => { });
 	console.log(message);
-	return axios.get(`https://api.simsimi.net/v1/?text=${message.replace(/( |\n|\t)+/, "+")}&lang=en&key=API-TEST-WEB`).then(r => {
+	return axios.get(`https://api.simsimi.net/v1/?text=${message.replace(/( |\n|\t)+/, "+").slice(0, 1000).replace(/Sim doesn't know what you are talking about. Please teach me/, "Sorry but i don't speak gibberish")}&lang=en`).then(r => {
 		console.log(r.data);
 		return r.data.success;
 	}).catch(() => { });
