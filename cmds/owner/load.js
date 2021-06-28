@@ -7,7 +7,7 @@ module.exports = class LoadCommandCommand extends Command {
 		super(client, {
 			name: 'load',
 			aliases: ['load-command'],
-			group: 'commands',
+			group: 'owner',
 			memberName: 'load',
 			description: 'Loads a new command.',
 			details: oneLine`

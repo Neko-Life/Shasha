@@ -6,7 +6,7 @@ module.exports = class ReloadCommandCommand extends Command {
 		super(client, {
 			name: 'reload',
 			aliases: ['reload-command'],
-			group: 'commands',
+			group: 'owner',
 			memberName: 'reload',
 			description: 'Reloads a command or command group.',
 			details: oneLine`

@@ -5,7 +5,7 @@ module.exports = class PingCommand extends Command {
 	constructor(client) {
 		super(client, {
 			name: 'ping',
-			group: 'util',
+			group: 'utility',
 			memberName: 'ping',
 			description: 'Checks the bot\'s ping to the Discord server.',
 			throttling: {

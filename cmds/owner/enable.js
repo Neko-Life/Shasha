@@ -6,7 +6,7 @@ module.exports = class EnableCommandCommand extends Command {
 		super(client, {
 			name: 'enable',
 			aliases: ['enable-command', 'cmd-on', 'command-on'],
-			group: 'commands',
+			group: 'owner',
 			memberName: 'enable',
 			description: 'Enables a command or command group.',
 			details: oneLine`
