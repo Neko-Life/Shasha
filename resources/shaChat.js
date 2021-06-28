@@ -23,13 +23,13 @@ const URL = [
 
 async function chatAnswer(message) {
 	// return axios.post("https://rebot.me/ask", { username: "simsimi", question: message }).then(r => r.data).catch(() => { });
-	console.log(message);
-	const u = message.replace(/( |\n|\t)+/g, "+").slice(0, 1000);
-	console.log(u);
-	return axios.get(`https://api.simsimi.net/v1/?text=${u}&lang=en`).then(r => {
-		console.log(r.data);
-		return r.data.success.replace(/Sim doesn't know what you are talking about. Please teach me/, "Sorry but i don't speak gibberish");
-	}).catch(() => { });
+	const u = message.slice(0, 1000);
+	return axios.get(`https://api.simsimi.net/v1/`, {
+		params: {
+			text: u,
+			lang: "en"
+		}
+	}).then(r => r.data.success.replace(/Sim doesn't know what you are talking about. Please teach me/, "Sorry but i don't speak gibberish")).catch(() => { });
 }
 
 module.exports = { chatAnswer }
