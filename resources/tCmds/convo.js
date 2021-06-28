@@ -13,8 +13,9 @@ module.exports = {
         if (!a) {
             client.addListener("message", m => {
                 if (client.convo && C.map(r => r?.id).includes(m.channel.id)) {
-                    if (!m.author.bot) last = C.indexOf(m.channel);
-                    console.log(last + ":", m.channel.name, m.channel.id, m.author.id, m.author.tag + ":", m.cleanContent);
+                    const n = C.indexOf(m.channel);
+                    if (!m.author.bot) last = n;
+                    console.log(n + ":", m.channel.name, m.channel.id, m.author.id, m.author.tag + ":", m.cleanContent);
                 }
             });
             a = true;
