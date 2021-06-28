@@ -21,7 +21,7 @@ async function errLog(theError, msg, client, sendTheError, errorMessage, notify)
   if (!(theError instanceof Error) || !client) return console.error("[ERRLOG] Not error instance or no required param:", theError);
   let [ret, logThis, inLogChannel, sendErr] = [undefined, '', '', ''];
   if (msg instanceof Message) {
-    client.emit("commandError", msg.command, theError, msg);
+    // client.emit("commandError", msg.command, theError, msg);
     logThis = `\`${msg.command?.name}\` (${msg.id}) ${msg.url} in ${msg.guild ? `**${msg.channel.name}** (${msg.channel.id}) of **${msg.guild.name}** (${msg.guild.id})` : `**DM**`} ran by **${msg.author.tag}** (${msg.author.id}) \n\n`;
     if (errorMessage) {
       if (errorMessage.length > 0) {

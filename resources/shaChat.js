@@ -22,7 +22,12 @@ const URL = [
 */
 
 async function chatAnswer(message) {
-	return axios.post("https://rebot.me/ask", { username: "simsimi", question: message }).then(r => r.data).catch(() => { });
+	// return axios.post("https://rebot.me/ask", { username: "simsimi", question: message }).then(r => r.data).catch(() => { });
+	console.log(message);
+	return axios.get(`https://api.simsimi.net/v1/?text=${message.replace(/( |\n|\t)+/, "+")}&lang=en&key=API-TEST-WEB`).then(r => {
+		console.log(r.data);
+		return r.data.success;
+	}).catch(() => { });
 }
 
 module.exports = { chatAnswer }
