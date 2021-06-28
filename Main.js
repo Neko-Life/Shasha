@@ -59,9 +59,9 @@ client.on("message", async msg => {
     if (!msg.author.dbLoaded && !msg.author.bot) await msg.author.dbLoad();
     lgr.message.letsChat(msg);
 
-    if (msg.mentions.has(client.user) && !msg.isCommand && msg.cleanContent?.length > 0) {
+    if (msg.mentions.has(client.user) && !msg.isCommand) {
         const u = msg.cleanContent.replace(new RegExp(" ?<@!?" + client.user.id + ">"), "").trim();
-        trySend(client, msg, await chatAnswer(u));
+        if (u.length > 0) trySend(client, msg, await chatAnswer(u));
     }
 
     if (!msg.guild) {
