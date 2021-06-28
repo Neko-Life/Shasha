@@ -21,6 +21,7 @@ const { join } = require('path');
 const getColor = require("./resources/getColor");
 const { timestampAt } = require("./resources/debug");
 const requireAll = require("require-all");
+const { chatAnswer } = require("./resources/shaChat");
 
 const lgr = requireAll({ dirname: join(__dirname, "resources/eventsLogger"), recursive: true });
 client.functions = requireAll({ dirname: join(__dirname, "resources"), recursive: true });
@@ -57,6 +58,11 @@ client.on("message", async msg => {
     if (!client.matchTimestamp) client.matchTimestamp = 0;//getUTCComparison(msg.createdTimestamp);
     if (!msg.author.dbLoaded && !msg.author.bot) await msg.author.dbLoad();
     lgr.message.letsChat(msg);
+
+    if (msg.mentions.has(client.user) && !msg.isCommand && msg.cleanContent?.length > 0) {
+        const u = msg.cleanContent.replace(new RegExp(" ?<@!?" + client.user.id + ">"), "").trim();
+        trySend(client, msg, await chatAnswer(u));
+    }
 
     if (!msg.guild) {
         //console.log(`(${msg.channel.recipient.id}) ${msg.channel.recipient.tag}: (${msg.author.id}) ${msg.author.tag}: ${msg.content}`);
