@@ -9,7 +9,7 @@ module.exports = class avatar extends commando.Command {
   constructor(client) {
     super(client, {
       name: "avatar",
-      aliases:["av","avat"],
+      aliases: ["av", "avat"],
       memberName: "avatar",
       group: "profile",
       description: "Avatar showcase."
@@ -23,7 +23,7 @@ module.exports = class avatar extends commando.Command {
     let [allEmb, multipleMemMes, dupliCheck] = [[], [], []];
     if (!arg) {
       user = msg.guild ? msg.member : msg.author;
-      avatar = msg.author.displayAvatarURL({format: "png", size: 4096, dynamic: true});
+      avatar = msg.author.displayAvatarURL({ format: "png", size: 4096, dynamic: true });
     }
     let onceOnly = false;
     const args = parseComa(arg);
@@ -36,15 +36,17 @@ module.exports = class avatar extends commando.Command {
       if (theVal) show = parseInt(theVal.trim(), 10);
     }
     if (arg) {
-      for(const theAvThis of args) {
+      for (const theAvThis of args) {
         let avThis = theAvThis.replace(/(?<!\\)--s +\d+/, "");
         let uID = cleanMentionID(avThis.trim());
-        if (uID.length > 0) {
+        if (uID?.length > 0) {
           let ree = [];
           if (/^\d{17,19}$/.test(uID)) {
-              const findmem = msg.guild?.member(uID);
-              if (findmem) ree.push(findmem.user); else this.client.users.fetch(uID).then(fetchUser => ree.push(fetchUser)).catch(() => {});
+            const findmem = msg.guild?.member(uID);
+            console.log(findmem);
+            if (findmem) ree.push(findmem.user); else await this.client.users.fetch(uID).then(fetchUser => ree.push(fetchUser)).catch(() => { });
           } else ree = findMemberRegEx(msg, uID).map(r => r.user);
+          console.log(ree);
           if (ree.length > 0) {
             const duplicateRes = dupliCheck.findIndex(yes => yes === ree[0].id);
             if (duplicateRes !== -1) {
@@ -62,10 +64,10 @@ module.exports = class avatar extends commando.Command {
             notFound += `Can't find user: **${avThis.trim()}**\n`;
           }
           if (user) {
-            avatar = user.displayAvatarURL({format: "png", size: 4096, dynamic: true});
+            avatar = user.displayAvatarURL({ format: "png", size: 4096, dynamic: true });
             let emb = new MessageEmbed()
-            .setImage(avatar)
-            .setFooter(footerQuote ?? "");
+              .setImage(avatar)
+              .setFooter(footerQuote ?? "");
             member = msg.guild ? msg.guild.member(user) : undefined;
             if (member) {
               emb.setTitle(member.displayName);
@@ -80,9 +82,9 @@ module.exports = class avatar extends commando.Command {
       }
     } else {
       let emb = new MessageEmbed()
-      .setTitle(user.displayName ?? user.username)
-      .setImage(avatar)
-      .setFooter(footerQuote ?? "");
+        .setTitle(user.displayName ?? user.username)
+        .setImage(avatar)
+        .setFooter(footerQuote ?? "");
       if (user.displayColor) emb.setColor(user.displayColor);
       if (!msg.guild) emb.setColor(randomColors[Math.floor(Math.random() * randomColors.length)]);
       if (emb.color === 16777215) emb.setColor(16777214);
@@ -93,7 +95,7 @@ module.exports = class avatar extends commando.Command {
     for (let index = 0; index < allEmb.length; index++) {
       const embelement = allEmb[index];
       const contelement = "" || multipleMemMes[index];
-      retSent.push({ embed: embelement, content: contelement, split: { maxLength: 2000, char: ",", append: ',```', prepend:'```js' }});
+      retSent.push({ embed: embelement, content: contelement, split: { maxLength: 2000, char: ",", append: ',```', prepend: '```js' } });
     }
     return retSent.map(r => trySend(this.client, msg, r));
   }
