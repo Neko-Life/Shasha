@@ -43,10 +43,8 @@ module.exports = class avatar extends commando.Command {
           let ree = [];
           if (/^\d{17,19}$/.test(uID)) {
             const findmem = msg.guild?.member(uID);
-            console.log(findmem);
             if (findmem) ree.push(findmem.user); else await this.client.users.fetch(uID).then(fetchUser => ree.push(fetchUser)).catch(() => { });
           } else ree = findMemberRegEx(msg, uID).map(r => r.user);
-          console.log(ree);
           if (ree.length > 0) {
             const duplicateRes = dupliCheck.findIndex(yes => yes === ree[0].id);
             if (duplicateRes !== -1) {
