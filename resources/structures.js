@@ -156,3 +156,35 @@ Structures.extend("User", u => {
         }
     }
 });
+
+Structures.extend("TextChannel", e => {
+    return class TextChannel extends e {
+        constructor(guild, data) {
+            super(guild, data);
+            this.lastMessagesID = [];
+        };
+
+        pushLastMessagesID() {
+            if (this.lastMessagesID.length === 3) {
+                this.lastMessagesID.shift();
+            };
+            return this.lastMessagesID.push(this.lastMessageID);
+        };
+    }
+});
+
+Structures.extend("DMChannel", e => {
+    return class DMChannel extends e {
+        constructor(client, data) {
+            super(client, data);
+            this.lastMessagesID = [];
+        };
+
+        pushLastMessagesID() {
+            if (this.lastMessagesID.length === 3) {
+                this.lastMessagesID.shift();
+            };
+            return this.lastMessagesID.push(this.lastMessageID);
+        };
+    }
+});

@@ -19,6 +19,6 @@ module.exports = class chat extends commando.Command {
         }
         msg.channel.startTyping();
         return trySend(this.client, msg, await chatAnswer(
-            msg.cleanContent.slice((msg.guild.commandPrefix + msg.command.name).length).trim()));
+            msg.cleanContent.slice((msg.guild.commandPrefix + msg.alias).length + 1).trim()));
     }
 };

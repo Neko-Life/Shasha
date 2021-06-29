@@ -28,4 +28,8 @@ async function letsChat(msg) {
     }
 }
 
-module.exports = { letsChat, giveNickHeart }
+function run(msg) {
+    msg.channel.pushLastMessagesID();
+}
+
+module.exports = { letsChat, giveNickHeart, run }

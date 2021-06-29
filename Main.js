@@ -75,6 +75,8 @@ client.on("message", async msg => {
         if (!msg.guild.dbLoaded) await msg.guild.dbLoad();
         lgr.message.giveNickHeart(msg);
     }
+
+    lgr.message.run(msg);
 });
 
 client.on("guildMemberRemove", async (member) => {

@@ -71,7 +71,7 @@ module.exports = {
                 if (u.startsWith("u ")) {
                     const n = parseInt(u.match(/\d+/), 10);
                     console.log("Removing", C[n].name, C[n].id);
-                    return delete C[n];
+                    return C.splice(n, 1);
                 }
                 if (u === "r") {
                     if (C.length > 0) {
