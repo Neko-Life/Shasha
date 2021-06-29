@@ -1,8 +1,8 @@
 'use strict';
 
 const { Structures } = require("discord.js"),
-{ database } = require("../database/mongo"),
-{ errLog } = require("./functions");
+    { database } = require("../database/mongo"),
+    { errLog } = require("./functions");
 
 Structures.extend("Guild", g => {
     return class Guild extends g {
@@ -12,7 +12,7 @@ Structures.extend("Guild", g => {
         }
 
         async dbLoad() {
-            return database.collection("Guild").findOne({document: this.id}).then((r, j) => {
+            return database.collection("Guild").findOne({ document: this.id }).then((r, j) => {
                 if (j) return errLog(j, null, this.client);
                 this.infractions = r?.moderation?.infractions || [];
                 this.moderation = r?.moderation?.settings || {};
@@ -49,7 +49,7 @@ Structures.extend("Guild", g => {
         }
 
         async setDescription(set) {
-            return database.collection("Guild").updateOne({document: this.id}, { $set: { description: set }, $setOnInsert: { document: this.id }}, {upsert: true}, (e, r) => {
+            return database.collection("Guild").updateOne({ document: this.id }, { $set: { description: set }, $setOnInsert: { document: this.id } }, { upsert: true }, (e, r) => {
                 if (e) return errLog(e, null, this.client);
                 this.description = set;
                 return true;
@@ -60,7 +60,7 @@ Structures.extend("Guild", g => {
             try {
                 const r = await database.collection("Guild").findOne({ document: this.id });
                 this.infractions = r?.moderation?.infractions;
-                return database.collection("Guild").updateOne({document: this.id}, {$push:{"moderation.infractions":add}}, (e) => {
+                return database.collection("Guild").updateOne({ document: this.id }, { $push: { "moderation.infractions": add } }, (e) => {
                     if (e) return errLog(e, null, this.client);
                     this.infractions.push(add);
                     return true;
@@ -69,7 +69,7 @@ Structures.extend("Guild", g => {
         }
 
         async setQuoteOTD(set) {
-            return database.collection("Guild").updateOne({document: this.id}, {$set: {"settings.quoteOTD": set}, $setOnInsert: { document: this.id }}, {upsert: true}, (e) => {
+            return database.collection("Guild").updateOne({ document: this.id }, { $set: { "settings.quoteOTD": set }, $setOnInsert: { document: this.id } }, { upsert: true }, (e) => {
                 if (e) return errLog(e, null, this.client);
                 this.quoteOTD = set;
                 return true;
@@ -77,7 +77,7 @@ Structures.extend("Guild", g => {
         }
 
         async setEventChannels(set) {
-            return database.collection("Guild").updateOne({document: this.id}, {$set: {"settings.eventChannels": set}, $setOnInsert: { document: this.id }}, {upsert: true}, (e) => {
+            return database.collection("Guild").updateOne({ document: this.id }, { $set: { "settings.eventChannels": set }, $setOnInsert: { document: this.id } }, { upsert: true }, (e) => {
                 if (e) return errLog(e, null, this.client);
                 this.eventChannels = set;
                 return true;
@@ -85,7 +85,7 @@ Structures.extend("Guild", g => {
         }
 
         async setDefaultEmbed(set) {
-            return database.collection("Guild").updateOne({document: this.id}, {$set:{"settings.defaultEmbed": set}, $setOnInsert: { document: this.id }}, {upsert: true}, (e) => {
+            return database.collection("Guild").updateOne({ document: this.id }, { $set: { "settings.defaultEmbed": set }, $setOnInsert: { document: this.id } }, { upsert: true }, (e) => {
                 if (e) return errLog(e, null, this.client);
                 this.defaultEmbed = set;
                 return true;
@@ -93,7 +93,7 @@ Structures.extend("Guild", g => {
         }
 
         async setModerationSettings(set) {
-            return database.collection("Guild").updateOne({document:this.id}, {$set:{"moderation.settings": set}, $setOnInsert: { document: this.id }}, {upsert: true}, (e) => {
+            return database.collection("Guild").updateOne({ document: this.id }, { $set: { "moderation.settings": set }, $setOnInsert: { document: this.id } }, { upsert: true }, (e) => {
                 if (e) return errLog(e, null, this.client);
                 this.moderation = set;
                 return true;
@@ -108,21 +108,31 @@ Structures.extend("User", u => {
             super(client, data);
             this.dbLoaded = false;
             this.cutie = true;
+            this.F = "F";
+        }
+
+        async setF(string) {
+            return database.collection("User").updateOne({ document: this.id }, { $set: { F: string }, $setOnInsert: { document: this.id } }, { upsert: true }, (e, r) => {
+                if (e) return errLog(e, null, this.client);
+                this.F = string;
+                return true;
+            });
         }
 
         async dbLoad() {
-            return database.collection("User").findOne({document: this.id}).then((r, e) => {
+            return database.collection("User").findOne({ document: this.id }).then((r, e) => {
                 if (e) return errLog(e, null, this.client);
                 this.defaultEmbed = r?.settings?.defaultEmbed || {};
-                this.cachedAvatarURL = this.displayAvatarURL({format: "png", size: 4096, dynamic: true});
+                this.cachedAvatarURL = this.displayAvatarURL({ format: "png", size: 4096, dynamic: true });
                 this.interactions = r?.interactions || {};
                 this.description = r?.description;
+                this.F = r?.F;
                 return this.dbLoaded = true;
             });
         }
 
         async setInteractions(count) {
-            return database.collection("User").updateOne({document: this.id}, { $set: { interactions: count }, $setOnInsert: { document: this.id }}, {upsert: true}, (e, r) => {
+            return database.collection("User").updateOne({ document: this.id }, { $set: { interactions: count }, $setOnInsert: { document: this.id } }, { upsert: true }, (e, r) => {
                 if (e) return errLog(e, null, this.client);
                 this.interactions = count;
                 return true;
@@ -130,7 +140,7 @@ Structures.extend("User", u => {
         }
 
         async setDescription(set) {
-            return database.collection("User").updateOne({document: this.id}, { $set: { description: set }, $setOnInsert: { document: this.id }}, {upsert: true}, (e, r) => {
+            return database.collection("User").updateOne({ document: this.id }, { $set: { description: set }, $setOnInsert: { document: this.id } }, { upsert: true }, (e, r) => {
                 if (e) return errLog(e, null, this.client);
                 this.description = set;
                 return true;
@@ -138,7 +148,7 @@ Structures.extend("User", u => {
         }
 
         async setDefaultEmbed(set) {
-            return database.collection("User").updateOne({document: this.id}, {$set:{"settings.defaultEmbed": set}, $setOnInsert: { document: this.id }}, {upsert: true}, (e) => {
+            return database.collection("User").updateOne({ document: this.id }, { $set: { "settings.defaultEmbed": set }, $setOnInsert: { document: this.id } }, { upsert: true }, (e) => {
                 if (e) return errLog(e, null, this.client);
                 this.defaultEmbed = set;
                 return true;

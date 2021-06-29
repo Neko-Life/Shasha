@@ -21,7 +21,7 @@ module.exports = class eventlog extends commando.Command {
         let eventChannels = msg.guild.eventChannels;
         if (set.length < 2 && set[0].length === 0) return trySend(this.client, msg, await resultEmbed(this));
         let report = "", joinlog, leavelog, channellog, banlog, unbanlog, mesEdlog = { channel: undefined, ignore: [] }, invitelog, rolelog,
-        guildlog, membernicklog, emotelog, memberroleslog, remove = false, [setMesEdIgnore, setMesDelIgnore] = [false, false], mesDellog = { channel: undefined, ignore: [] };
+            guildlog, membernicklog, emotelog, memberroleslog, remove = false, [setMesEdIgnore, setMesDelIgnore] = [false, false], mesDellog = { channel: undefined, ignore: [] };
         for (const args of set) {
             if (args.startsWith("r ")) remove = true;
             if (args.startsWith("j ")) {
@@ -84,7 +84,7 @@ module.exports = class eventlog extends commando.Command {
                                         if (chan) {
                                             if (mesEdlog.ignore.includes(chan.id)) {
                                                 report += "**[MESEDIT_CHANNELIGNORE]** Duplicate result: <#" + chan.id +
-                                                `> with keyword: **${ign.trim()}**\n`;
+                                                    `> with keyword: **${ign.trim()}**\n`;
                                             } else {
                                                 mesEdlog.ignore.push(chan.id);
                                             }
@@ -129,7 +129,7 @@ module.exports = class eventlog extends commando.Command {
                                         if (chan) {
                                             if (mesDellog.ignore.includes(chan.id)) {
                                                 report += "**[MESDEL_CHANNELIGNORE]** Duplicate result: <#" + chan.id +
-                                                `> with keyword: **${ign.trim()}**\n`;
+                                                    `> with keyword: **${ign.trim()}**\n`;
                                             } else {
                                                 mesDellog.ignore.push(chan.id);
                                             }
@@ -217,24 +217,24 @@ module.exports = class eventlog extends commando.Command {
         async function resultEmbed(the) {
             const emb = defaultImageEmbed(msg, null, "Event Log Channels Configuration");
             emb
-            .setDescription(`Set configuration using \`\`\`js\n${msg.guild.commandPrefix + the.name} [--remove] --<Category> <Channel_[Mention | Name | ID]>\`\`\`**Categories:** \`\`\`js\n[MESSAGE [-ignore <Channel_[Mention | Name | ID]>], JOINLEAVE, MEMBER, MEMBERROLE, BANUNBAN, GUILD, ROLE, CHANNEL, EMOJI, INVITE]\`\`\``)
-            .addField(`Message Edit`, eventChannels?.mesEd?.channel ? `<#${eventChannels?.mesEd.channel}>\n**Ignores:** ${eventChannels?.mesEd?.ignore?.length > 0 ?
-            "<#" + eventChannels?.mesEd.ignore.join(">, <#") + ">" : "None"}`
-            : "Not set", true)
-            .addField(`Message Delete`, eventChannels?.mesDel?.channel ? `<#${eventChannels?.mesDel.channel}>\n**Ignores:** ${eventChannels?.mesDel?.ignore?.length > 0 ?
-            "<#" + eventChannels?.mesDel.ignore.join(">, <#") + ">" : "None"}`
-            : "Not set", true)
-            .addField(`Member Join`, eventChannels?.join ? `<#${eventChannels.join}>` : "Not set", true)
-            .addField(`Member Leave`, eventChannels?.leave ? `<#${eventChannels.leave}>` : "Not set", true)
-            .addField(`Member Profile Updates`, eventChannels?.member ? `<#${eventChannels?.member}>` : "Not set", true)
-            .addField(`Member Role Updates`, eventChannels?.memberRole ? `<#${eventChannels?.memberRole}>` : "Not set", true)
-            .addField(`Member Ban`, eventChannels?.ban ? `<#${eventChannels?.ban}>` : "Not set", true)
-            .addField(`Member Unban`, eventChannels?.unban ? `<#${eventChannels?.unban}>` : "Not set", true)
-            .addField(`Server Updates`, eventChannels?.guild ? `<#${eventChannels?.guild}>` : "Not set", true)
-            .addField(`Server Role Updates`, eventChannels?.role ? `<#${eventChannels?.role}>` : "Not set", true)
-            .addField(`Server Channels Updates`, eventChannels?.channel ? `<#${eventChannels?.channel}>` : "Not set", true)
-            .addField(`Server Emoji Updates`, eventChannels?.emote ? `<#${eventChannels?.emote}>` : "Not set", true)
-            .addField(`Server Invites`, eventChannels?.invite ? `<#${eventChannels?.invite}>` : "Not set", true);
+                .setDescription(`Set configuration using \`\`\`js\n${msg.guild.commandPrefix + the.name} [--remove] --<Category> <Channel_[Mention | Name | ID]>\`\`\`**Categories:** \`\`\`js\n[MESSAGE[EDIT, DELETE]: --[e, d] [IGNORE: -i <Channel_[Mention | Name | ID]>], JOIN: --j, LEAVE: --l, MEMBER: --p, MEMBERROLE: --mr, BAN: --b, UNBAN: --u, GUILD: --g, ROLE: --r, CHANNEL: --c, EMOJI: --em, INVITE: --i]\`\`\``)
+                .addField(`Message Edit`, eventChannels?.mesEd?.channel ? `<#${eventChannels?.mesEd.channel}>\n**Ignores:** ${eventChannels?.mesEd?.ignore?.length > 0 ?
+                    "<#" + eventChannels?.mesEd.ignore.join(">, <#") + ">" : "None"}`
+                    : "Not set", true)
+                .addField(`Message Delete`, eventChannels?.mesDel?.channel ? `<#${eventChannels?.mesDel.channel}>\n**Ignores:** ${eventChannels?.mesDel?.ignore?.length > 0 ?
+                    "<#" + eventChannels?.mesDel.ignore.join(">, <#") + ">" : "None"}`
+                    : "Not set", true)
+                .addField(`Member Join`, eventChannels?.join ? `<#${eventChannels.join}>` : "Not set", true)
+                .addField(`Member Leave`, eventChannels?.leave ? `<#${eventChannels.leave}>` : "Not set", true)
+                .addField(`Member Profile Updates`, eventChannels?.member ? `<#${eventChannels?.member}>` : "Not set", true)
+                .addField(`Member Role Updates`, eventChannels?.memberRole ? `<#${eventChannels?.memberRole}>` : "Not set", true)
+                .addField(`Member Ban`, eventChannels?.ban ? `<#${eventChannels?.ban}>` : "Not set", true)
+                .addField(`Member Unban`, eventChannels?.unban ? `<#${eventChannels?.unban}>` : "Not set", true)
+                .addField(`Server Updates`, eventChannels?.guild ? `<#${eventChannels?.guild}>` : "Not set", true)
+                .addField(`Server Role Updates`, eventChannels?.role ? `<#${eventChannels?.role}>` : "Not set", true)
+                .addField(`Server Channels Updates`, eventChannels?.channel ? `<#${eventChannels?.channel}>` : "Not set", true)
+                .addField(`Server Emoji Updates`, eventChannels?.emote ? `<#${eventChannels?.emote}>` : "Not set", true)
+                .addField(`Server Invites`, eventChannels?.invite ? `<#${eventChannels?.invite}>` : "Not set", true);
             return emb;
         }
         eventChannels = {

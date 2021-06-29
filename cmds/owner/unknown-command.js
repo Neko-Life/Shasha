@@ -18,10 +18,14 @@ module.exports = class UnknownCommandCommand extends Command {
 	// eslint-disable-next-line
 	async run(msg) {
 		if (/^<@\!?\d{17,19}>\s.+/.test(msg.content)) {
+			msg.channel.startTyping();
 			const s = msg.cleanContent.slice((msg.guild ? msg.guild.member(msg.client.user).displayName.length : msg.client.user.username.length) + 2).trim();
-			return msg.channel.startTyping().then(trySend(msg.client, msg, await chatAnswer(s)).then(r => r)).catch(() => { }).finally(msg.channel.stopTyping());
+			return trySend(msg.client, msg, await chatAnswer(s));
 		}
-		if (!msg.guild && !msg.content.toLowerCase().startsWith(msg.client.commandPrefix)) return msg.channel.startTyping().then(trySend(msg.client, msg, await chatAnswer(msg.cleanContent)).then(r => r)).catch(() => { }).finally(msg.channel.stopTyping());
+		if (!msg.guild && !msg.content.toLowerCase().startsWith(msg.client.commandPrefix)) {
+			msg.channel.startTyping();
+			return trySend(msg.client, msg, await chatAnswer(msg.cleanContent));
+		};
 		try {
 			return await msg.channel.send(
 				`Unknown command \`${msg.content}\`. Use ${msg.anyUsage(

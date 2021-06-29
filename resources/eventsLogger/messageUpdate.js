@@ -18,7 +18,7 @@ module.exports = async (msgold, msgnew) => {
     let check = false;
     if (msgnew.channel.id === msgnew.guild.eventChannels?.mesEd?.channel && msgnew.author ? msgnew.author !== msgnew.client.user : false && ignored === false) check = true;
     if (msgnew.guild.eventChannels?.mesEd?.channel !== msgnew.channel.id && ignored === false || check) {
-        const log = getChannel(msgnew, msgnew.guild.eventChannels.mesEd.channel);
+        const log = getChannel(msgnew, msgnew.guild.eventChannels.mesEd?.channel);
         if (!log || !msgnew.author) return;
         const emb = defaultEventLogEmbed(msgnew.guild);
         emb
