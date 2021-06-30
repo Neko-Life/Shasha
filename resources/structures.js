@@ -188,3 +188,12 @@ Structures.extend("DMChannel", e => {
         };
     }
 });
+
+Structures.extend("Message", e => {
+    return class Message extends e {
+        constructor(client, data, channel) {
+            super(client, data, channel);
+            this.previousMessageID = channel.lastMessageID;
+        };
+    }
+});

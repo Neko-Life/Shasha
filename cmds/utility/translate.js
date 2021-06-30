@@ -50,7 +50,8 @@ module.exports = class translate extends commando.Command {
                 `\`ru\` Russian\n` +
                 `\`es\` Spanish\n` +
                 `\`tr\` Turkish\n` +
-                `\`vi\` Vietnamese`
+                `\`vi\` Vietnamese\n\n` +
+                `\`--h\` for help`
         });
     }
     /**
@@ -87,15 +88,15 @@ module.exports = class translate extends commando.Command {
         if (tmes) trans = tmes.cleanContent || tmes.content;
         if (ic) tar = TP; else tar = "en";
         if (ic) {
-            if (!tmes) trans = msg.cleanContent.slice((msg.guild.commandPrefix + msg.alias + TP).length).trim() || msg.channel.messages.cache.get(msg.channel.lastMessagesID[1])?.cleanContent;
+            if (!tmes) trans = msg.cleanContent.slice((msg.guild.commandPrefix + msg.alias + TP).length + 2).trim() || msg.channel.messages.cache.get(msg.previousMessageID)?.cleanContent;
         } else {
-            if (!tmes) if (!arg || arg.length === 0) trans = msg.channel.messages.cache.get(msg.channel.lastMessagesID[1])?.cleanContent; else trans = msg.cleanContent.slice((msg.guild.commandPrefix + msg.alias).length + 1).trim();
+            if (!tmes) trans = msg.cleanContent.slice((msg.guild.commandPrefix + msg.alias).length + 1).trim() || msg.channel.messages.cache.get(msg.previousMessageID)?.cleanContent;
         };
         if (!trans || trans.length === 0) {
             return trySend(msg.client, msg, "Nothing to translate. `--h` for help <:nekohmLife:846371737644957786>");
         }
         const res = await axios.post("https://translate.mentality.rip/translate", {
-            q: trans,
+            q: trans.replace(/\./g, ","),
             source: "auto",
             target: tar
         }).then(r => {
