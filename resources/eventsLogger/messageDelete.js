@@ -15,7 +15,7 @@ module.exports = async (msg) => {
     let check = false;
     if (msg.channel.id === msg.guild.eventChannels?.mesDel?.channel && msg.author ? msg.author !== msg.client.user : false && ignored === false) check = true;
     if (msg.guild.eventChannels?.mesDel?.channel !== msg.channel.id && ignored === false || check) {
-        const log = getChannel(msg, msg.guild.eventChannels.mesDel.channel);
+        const log = getChannel(msg, msg.guild.eventChannels.mesDel?.channel);
         if (!log || !msg.author) return;
         const emb = defaultEventLogEmbed(msg.guild);
         emb.setColor(getColor("yellow"))

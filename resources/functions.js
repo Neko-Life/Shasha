@@ -478,6 +478,7 @@ function getUser(msg, key) {
   const use = cleanMentionID(key);
   let u;
   if (/^\d{17,19}$/.test(use)) u = msg.client.users.cache.get(use);
+  console.log(u);
   if (!u) u = getMember(msg.guild, use)?.[0].user;
   return u;
 }
