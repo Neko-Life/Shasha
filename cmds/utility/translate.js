@@ -33,7 +33,7 @@ module.exports = class translate extends commando.Command {
             memberName: "translate",
             group: "utility",
             description: "Translate some alien languages.",
-            details: "Supported languages:\n" +
+            details: "**Supported languages:**\n" +
                 `\`en\` English\n` +
                 `\`ar\` Arabic\n` +
                 `\`zh\` Chinese\n` +

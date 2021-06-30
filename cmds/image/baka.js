@@ -17,7 +17,7 @@ module.exports = class baka extends commando.Command {
         msg.channel.startTyping();
         const title = `${msg.guild ? msg.member.displayName : msg.author.username} is getting dere-dere~ =>`;
         const image = await fetchNeko("baka");
-        const emb = defaultImageEmbed(msg, image, title);
+        const emb = defaultImageEmbed(msg, image); emb.setAuthor(title, msg.author.displayAvatarURL({ size: 128, format: "png", dynamic: true }));
         return trySend(this.client, msg, emb);
     }
 };

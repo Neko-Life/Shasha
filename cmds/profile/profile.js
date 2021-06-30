@@ -31,9 +31,7 @@ module.exports = class profile extends commando.Command {
             .setThumbnail(TM.displayAvatarURL({ format: "png", size: 4096, dynamic: true }))
             .addField("Registered", TM.createdAt.toUTCString().slice(0, -4), true)
             .addField("ID", TM.id, true);
-        if (TM.description) {
-            emb.setDescription(TM.description);
-        }
+        if (TM.description) emb.setDescription(TM.description);
         if (MEM) {
             const RI = MEM.roles.cache.sort((a, b) => b.position - a.position).map(r => r.id).slice(0, -1),
                 RFS = splitOnLength(RI, 1010, ">, <@&");
