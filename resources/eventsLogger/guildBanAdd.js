@@ -1,5 +1,8 @@
 'use strict';
 
+const { getChannel, defaultEventLogEmbed, trySend } = require("../functions");
+const getColor = require("../getColor");
+
 module.exports = async (GUILD, USER) => {
     if (GUILD.eventChannels?.ban) {
         if (USER.partial) USER = await USER.fetch();
