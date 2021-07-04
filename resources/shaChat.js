@@ -1,6 +1,7 @@
 'use strict';
 
-const axios = require("axios").default;
+const axios = require("axios").default,
+	U = ["Yo", "Yyo", "Hello my friend", "Hey cutie <3", "What", "Wat", "Watchu want", "Hewwo", "UwU hwee", "OwO whats this", "Yoooooooooo", "Supp", "Whats good mein frien", "Iyo", "Hows doin", "Wassup", "Whats good", "Wanna chat?"];
 
 //'4, 15, 10, 11, 14, 17, 18'
 
@@ -29,7 +30,7 @@ async function chatAnswer(message) {
 			text: u,
 			lang: "en"
 		}
-	}).then(r => r.data.success.replace(/Sim doesn't know what you are talking about. Please teach me/, "Sorry but i don't speak gibberish")).catch(() => { });
+	}).then(r => r.data.success.replace(/Sim doesn't know what you are talking about. Please teach me/, "Sorry but i don't speak gibberish").replace(/kemon acho babu/, U[Math.floor(Math.random() * U.length)])).catch(() => { });
 }
 
 module.exports = { chatAnswer }

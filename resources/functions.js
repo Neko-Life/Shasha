@@ -366,6 +366,7 @@ function getChannel(msg, key, exclude) {
   if (!key || key.length === 0 || !msg) return;
   const search = cleanMentionID(key);
   if (search.length === 0) return;
+  if ((msg instanceof Message) && search === "here") return msg.channel;
   let channel;
   if (/^\d{17,19}$/.test(search)) {
     channel = (msg.guild || msg).channels.cache.get(search);
@@ -382,10 +383,10 @@ function getChannel(msg, key, exclude) {
  * @returns {GuildMember[]}
  */
 function getMember(guild, key) {
-  if (!guild) return;
+  if (!(guild || key)) return;
   const use = cleanMentionID(key);
-  let found = [];
   if (!use || use.length === 0) return;
+  let found = [];
   if (/^\d{17,19}$/.test(use)) {
     found.push(guild.member(use));
   } else {
@@ -476,10 +477,9 @@ const reValidURL = /^https?:\/\/\w+\.\w\w/;
 function getUser(msg, key) {
   if (!(msg || key)) return;
   const use = cleanMentionID(key);
+  if (!use || use.length === 0) return;
   let u;
-  if (/^\d{17,19}$/.test(use)) u = msg.client.users.cache.get(use);
-  console.log(u);
-  if (!u) u = getMember(msg.guild, use)?.[0].user;
+  if (/^\d{17,19}$/.test(use)) u = msg.client.users.cache.get(use); else u = getMember(msg.guild, use)?.[0].user;
   return u;
 }
 

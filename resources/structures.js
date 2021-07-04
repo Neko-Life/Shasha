@@ -197,3 +197,15 @@ Structures.extend("Message", e => {
         };
     }
 });
+
+Structures.extend("GuildMember", e => {
+    return class GuildMember extends e {
+        constructor(client, data, guild) {
+            super(client, data, guild);
+        }
+
+        async getInfractions() {
+            return this.guild.getInfractions(this.id);
+        }
+    }
+})

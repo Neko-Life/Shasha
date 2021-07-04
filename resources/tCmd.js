@@ -4,7 +4,7 @@ const { join } = require("path");
 const requireAll = require("require-all");
 
 module.exports = (client) => {
-    client.tCmds = requireAll({dirname: join(__dirname, "tCmds")});
+    client.tCmds = requireAll({ dirname: join(__dirname, "tCmds") });
     delete client.tCmds.resources;
     process.stdin.on("data", stdinBuffer => {
         // console.log(stdinBuffer.toJSON().data[0]);

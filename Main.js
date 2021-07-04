@@ -16,7 +16,7 @@ if (process.argv.includes("-d")) {
 
 const sqlite = require('sqlite');
 const configFile = require('./config.json');
-const { errLog, trySend, noPerm, getUTCComparison, defaultEventLogEmbed } = require('./resources/functions');
+const { errLog, trySend, noPerm, getUTCComparison, defaultEventLogEmbed, getChannel } = require('./resources/functions');
 const { join } = require('path');
 const getColor = require("./resources/getColor");
 const { timestampAt } = require("./resources/debug");
@@ -100,6 +100,10 @@ client.on("guildMemberAdd", async (member) => {
     if (!member.guild.dbLoaded) await member.guild.dbLoad();
     if (!member.user.dbLoaded && !member.user.bot) await member.user.dbLoad();
     lgr.guildMemberAdd(member);
+});
+
+client.on("guildBanAdd", async (GUILD, USER) => {
+    lgr.guildBanAdd(GUILD, USER);
 });
 
 client.on("messageDelete", async (msg) => {

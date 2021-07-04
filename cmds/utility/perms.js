@@ -1,7 +1,7 @@
 'use strict';
 
 const commando = require("@iceprod/discord.js-commando"),
-{ getMember, trySend, defaultImageEmbed, getChannel } = require("../../resources/functions");
+    { getMember, trySend, defaultImageEmbed, getChannel } = require("../../resources/functions");
 const { Message, GuildChannel } = require("discord.js");
 const getColor = require("../../resources/getColor");
 
@@ -28,17 +28,13 @@ module.exports = class perms extends commando.Command {
             const forC = arg.match(/(?<!\\)--c [^ ]*/)?.[0];
             if (forC) {
                 const use = forC.slice(4).trim();
-                if (use === "here") {
-                    channel = msg.channel;
-                } else {
-                    channel = getChannel(msg, use);
-                }
+                channel = getChannel(msg, use);
                 if (!channel || !(channel instanceof GuildChannel)) {
                     channel = undefined;
                     mes += "Channel unexisted???\n";
                 }
             }
-            const find = arg.replace(/(?<!\\)--c [^ ]*\s?/, "");
+            const find = arg.replace(/(?<!\\)--ch [^ ]*\s?/, "");
             if (find.length > 0) {
                 member = getMember(msg.guild, find)?.[0];
             } else {
@@ -46,7 +42,7 @@ module.exports = class perms extends commando.Command {
             }
         } else {
             member = msg.member;
-            mes += `Args:\n\`user_[mention|ID|name]\` \`--c\` \`[channel_[name|ID]|here]\`\n`;
+            mes += `Args:\n\`user_[mention|ID|name]\` \`--ch\` \`[channel_[name|ID]|here]\`\n\n`;
         }
         if (!member) {
             return trySend(this.client, msg, "Is that your gf?");
@@ -80,8 +76,8 @@ module.exports = class perms extends commando.Command {
             emb.addField(`In channel: \`${channel.name}\``, `\`\`\`js\n${chanres.join(", ")}\`\`\``);
         }
         emb.setDescription(mes)
-        .setColor(getColor(member.displayColor))
-        .setThumbnail(member.user.displayAvatarURL({size: 4096, format: "png", dynamic: true}));
+            .setColor(getColor(member.displayColor))
+            .setThumbnail(member.user.displayAvatarURL({ size: 4096, format: "png", dynamic: true }));
         return trySend(this.client, msg, emb);
     }
 };

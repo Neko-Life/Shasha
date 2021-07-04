@@ -16,6 +16,7 @@ module.exports = class EvalCommand extends Command {
 			description: 'Executes JavaScript code.',
 			details: 'Only the bot owner(s) may use this command.',
 			ownerOnly: true,
+			hidden: true,
 
 			args: [
 				{
@@ -30,7 +31,7 @@ module.exports = class EvalCommand extends Command {
 		Object.defineProperty(this, '_sensitivePattern', { value: null, configurable: true });
 	}
 
-	run(msg, args) {
+	async run(msg, args) {
 		// Make a bunch of helpers
 		/* eslint-disable no-unused-vars */
 		const message = msg;
@@ -59,7 +60,7 @@ module.exports = class EvalCommand extends Command {
 		let hrDiff;
 		try {
 			const hrStart = process.hrtime();
-			this.lastResult = eval(args.script);
+			this.lastResult = await eval(args.script);
 			hrDiff = process.hrtime(hrStart);
 		} catch (err) {
 			return msg.reply(`Error while evaluating: \`${err}\``);

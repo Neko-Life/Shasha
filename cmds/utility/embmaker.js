@@ -319,20 +319,16 @@ module.exports = class embmaker extends commando.Command {
                 }
                 if (value.startsWith("ch ")) {
                     let ID = cleanMentionID(value.slice("ch ".length).trim());
-                    if (ID === "here") {
-                        channel = msg.channel;
+                    channel = getChannel(msg, ID, ["category", "voice"])
+                    if (!channel) {
+                        reportMessage += "**[CHANNEL]** Unknown channel.\n";
                     } else {
-                        channel = getChannel(msg, ID, ["category", "voice"])
-                        if (!channel) {
-                            reportMessage += "**[CHANNEL]** Unknown channel.\n";
-                        } else {
-                            if ((channel instanceof GuildChannel) && !this.client.owners.includes(msg.author)) {
-                                const p = channel.permissionsFor(msg.author).serialize(),
-                                    f = channel.permissionsFor(this.client.user).serialize();
-                                if (!p.EMBED_LINKS || !p.SEND_MESSAGES || !p.VIEW_CHANNEL || !f.EMBED_LINKS || !f.SEND_MESSAGES) {
-                                    channel = undefined;
-                                    reportMessage += "**[CHANNEL]** Missing permission.\n";
-                                }
+                        if ((channel instanceof GuildChannel) && !this.client.owners.includes(msg.author)) {
+                            const p = channel.permissionsFor(msg.author).serialize(),
+                                f = channel.permissionsFor(this.client.user).serialize();
+                            if (!p.EMBED_LINKS || !p.SEND_MESSAGES || !p.VIEW_CHANNEL || !f.EMBED_LINKS || !f.SEND_MESSAGES) {
+                                channel = undefined;
+                                reportMessage += "**[CHANNEL]** Missing permission.\n";
                             }
                         }
                     }
