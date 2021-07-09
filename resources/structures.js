@@ -12,8 +12,8 @@ Structures.extend("Guild", g => {
         }
 
         async dbLoad() {
-            return database.collection("Guild").findOne({ document: this.id }).then((r, j) => {
-                if (j) return errLog(j, null, this.client);
+            return database.collection("Guild").findOne({ document: this.id }).then((r, e) => {
+                if (e) return errLog(e, null, this.client);
                 this.infractions = r?.moderation?.infractions || [];
                 this.moderation = r?.moderation?.settings || {};
                 this.defaultEmbed = r?.settings?.defaultEmbed || {};
@@ -46,14 +46,6 @@ Structures.extend("Guild", g => {
                 }
                 return found;
             } catch (e) { }
-        }
-
-        async setDescription(set) {
-            return database.collection("Guild").updateOne({ document: this.id }, { $set: { description: set }, $setOnInsert: { document: this.id } }, { upsert: true }, (e, r) => {
-                if (e) return errLog(e, null, this.client);
-                this.description = set;
-                return true;
-            });
         }
 
         async addInfraction(add) {
@@ -195,7 +187,11 @@ Structures.extend("Message", e => {
             super(client, data, channel);
             this.previousMessageID = channel.lastMessageID;
         };
-    }
+
+        setInvoker(user) {
+            return this.invoker = user;
+        };
+    };
 });
 
 Structures.extend("GuildMember", e => {
@@ -204,8 +200,8 @@ Structures.extend("GuildMember", e => {
             super(client, data, guild);
         }
 
-        async getInfractions() {
+        async infractions() {
             return this.guild.getInfractions(this.id);
         }
     }
-})
+});

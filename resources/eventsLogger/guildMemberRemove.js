@@ -18,7 +18,7 @@ module.exports = (member) => {
         const RO = member.roles.cache.sort((a, b) => b.position - a.position).map(r => r.id).slice(0, -1),
             RU = splitOnLength(RO, 1010, ">, <@&");
         emb
-            .setTitle("Member `" + member.user.tag + "` left")
+            .setTitle("`" + member.user.tag + "` left")
             .setThumbnail(member.user.displayAvatarURL({ format: "png", size: 4096, dynamic: true }))
             .setColor(getColor("yellow"))
             .addField("Registered", "**" + member.user.createdAt.toUTCString().slice(0, -4) + "**", true)

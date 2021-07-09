@@ -3,7 +3,7 @@
 const emoteMessage = require("../emoteMessage");
 const { getChannel, parseDash, cleanMentionID, trySend } = require("../functions");
 const { getGuild } = require("./resources/functions");
-let a, G, C = [], last = 0, nO = "Args: [`-g` Guild: `[name|ID]`] `-c` Channel: `[name|ID]` [`-q` End current session | `-r` Resume previous session]";
+let a, G, C = [], last = 0, nO = "Args: [`-g` Guild: `[name|ID]` | `-u` Remove channel: `[index]`] `-c` Channel: `[name|ID]` [`-q` End current session | `-r` Resume previous session]";
 //const p = require("child_process");
 
 module.exports = {
@@ -98,7 +98,7 @@ module.exports = {
             }
             console.log("Session:");
             for (let i = 0; i < C.length; i++) console.log(C[i].guild.name, C[i].guild.id, i + ":", C[i].name, C[i].id);
-        } else if (C[num]) return C[num].send(emoteMessage(client, sl ? arg.slice(num?.toString().length).trim() : arg)).catch(console.error); else {
+        } else if (C[num]) return C[num].send(emoteMessage(client, sl ? arg.slice(num?.toString().length).trim() ?? "hi" : arg)).catch(console.error); else {
             console.log('No session. Available sessions:');
             for (let i = 0; i < C.length; i++) console.log(C[i].guild.name, C[i].guild.id, i + ":", C[i].name, C[i].id);
             return;

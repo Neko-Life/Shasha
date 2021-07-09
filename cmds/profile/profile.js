@@ -23,7 +23,7 @@ module.exports = class profile extends commando.Command {
      */
     async run(msg, arg) {
         let TM;
-        if (!arg) TM = msg.author; else TM = getUser(msg, arg);
+        if (!arg) TM = msg.author; else TM = getUser(msg, arg, true);
         if (!TM) return trySend(msg.client, msg, "Bro stop lookin for yo imaginary gf");
         const MEM = msg.guild.member(TM),
             emb = defaultImageEmbed(msg, null, `\`${TM.tag}\`'s Profile`);

@@ -17,7 +17,7 @@ function giveNickHeart(msg) {
             .then(r => {
                 if (r) return trySend(msg.client, msg, "okay <3");
             })
-            .catch(e => noPerm(msg));
+            .catch(() => noPerm(msg));
     }
 }
 

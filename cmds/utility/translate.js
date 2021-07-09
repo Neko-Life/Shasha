@@ -3,7 +3,7 @@
 const commando = require("@iceprod/discord.js-commando");
 const { default: axios } = require("axios");
 const { Message } = require("discord.js");
-const { trySend, getChannelMessage, defaultImageEmbed } = require("../../resources/functions");
+const { trySend, getChannelMessage, defaultImageEmbed, wait } = require("../../resources/functions");
 const SPLG = [
     "en",
     "ar",
@@ -24,6 +24,10 @@ const SPLG = [
     "vi"
 ],
     REG = /(?<!\\)--m +[^\s\n]+( +\d{17,19})?/;
+let rl = 0, ex = 0;
+setInterval(() => {
+    if (rl > 0) rl--;
+}, 100);
 
 module.exports = class translate extends commando.Command {
     constructor(client) {
@@ -32,7 +36,7 @@ module.exports = class translate extends commando.Command {
             aliases: ["t", "trans"],
             memberName: "translate",
             group: "utility",
-            description: "Translate some alien languages.",
+            description: "Translate some alien languages. `--h` for help.",
             details: "**Supported languages:**\n" +
                 `\`en\` English\n` +
                 `\`ar\` Arabic\n` +
@@ -50,8 +54,7 @@ module.exports = class translate extends commando.Command {
                 `\`ru\` Russian\n` +
                 `\`es\` Spanish\n` +
                 `\`tr\` Turkish\n` +
-                `\`vi\` Vietnamese\n\n` +
-                `\`--h\` for help`
+                `\`vi\` Vietnamese`
         });
     }
     /**
@@ -79,7 +82,6 @@ module.exports = class translate extends commando.Command {
             const A = MA[0].slice(4).trim().split(/ +/);
             console.log(A);
             const C = await getChannelMessage(msg, A[0], A[1]);
-            console.log(C);
             if (C) tmes = C;
         };
         arg = arg.replace(REG, "").trim();
@@ -95,6 +97,10 @@ module.exports = class translate extends commando.Command {
         if (!trans || trans.length === 0) {
             return trySend(msg.client, msg, "Nothing to translate. `--h` for help <:nekohmLife:846371737644957786>");
         }
+        ex++;
+        if (ex > 1) rl += 6;
+        const t = rl * 100;
+        await wait(t);
         const res = await axios.post("https://translate.mentality.rip/translate", {
             q: trans.replace(/\./g, ","),
             source: "auto",
@@ -102,7 +108,8 @@ module.exports = class translate extends commando.Command {
         }).then(r => {
             console.log(r.data);
             return r.data.translatedText;
-        }).catch(console.error);
+        }).catch(console.error)
+            .finally(() => ex--);
         return trySend(msg.client, msg, res);
     }
 };

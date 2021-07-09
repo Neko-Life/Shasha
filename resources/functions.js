@@ -62,12 +62,12 @@ async function getChannelMessage(msg, MainID, SecondID) {
   if (SecondID && !/\D/.test(SecondID)) {
     try {
       const meschannel = (msg.client.owners.includes(msg.author) ? msg.client : msg.guild).channels.cache.get(MainID);
-      return meschannel.messages.fetch(SecondID);
+      return meschannel.messages.fetch(SecondID, true);
     } catch {
       return;
     }
   } else {
-    return msg.channel.messages.fetch(MainID).catch(() => { });
+    return msg.channel.messages.fetch(MainID, true).catch(() => { });
   }
 }
 
@@ -81,17 +81,18 @@ function execCB(error, stdout, stderr) {
 
 /**
  * Command usage logger
- * @param {CommandoMessage} msg 
+ * @param {CommandoMessage} msg
  * @param {String} addition 
  */
 async function ranLog(msg, addition) {
+  if (typeof addition != "string") return console.log(`[RANLOG] Not a string:`, addition);
   const channel = msg.client.channels.cache.get(ranLogger),
-    ifCode = addition.startsWith("```") && addition.endsWith("```");
-  const addSplit = splitOnLength((addition.substr(ifCode ? 2045 : 2049)).split(","), 1010, ",");
+    ifCode = addition?.startsWith("```") && addition.endsWith("```");
+  const addSplit = splitOnLength((addition?.substr(ifCode ? 2045 : 2049)).split(","), 1010, ",");
   const embed = defaultImageEmbed(msg, null, msg.command.name.toLocaleUpperCase() + ` ${msg.id}`);
   embed.setAuthor(msg.author.tag + ` (${msg.author.id})`, msg.author.displayAvatarURL({ format: "png", size: 128, dynamic: true }))
-    .setURL(msg.url)
-    .setDescription(addition.slice(0, ifCode && addSplit[0]?.[0].length > 0 ? 2044 : 2048) + (ifCode && addSplit[0]?.[0].length > 0 ? "```" : ""));
+    .setURL(msg.url);
+  if (addition && addition.length > 0) embed.setDescription(addition.slice(0, ifCode && addSplit[0]?.[0].length > 0 ? 2044 : 2048) + (ifCode && addSplit[0]?.[0].length > 0 ? "```" : ""));
   if (addSplit[0]?.[0].length > 0) for (const add of addSplit) embed.addField("​", "```js\n" + add.join(",") + (embed.fields.length < (addSplit.length - 1) ? ",```" : ""));
   embed.setFooter(timestampAt(msg.client), msg.guild?.iconURL({ format: "png", size: 128, dynamic: true }));
   if (msg.guild) embed.addField("Guild", `\`${msg.guild?.name}\`\n(${msg.guild?.id})`, true);
@@ -283,14 +284,14 @@ function findChannelRegEx(msg, name, exclude) {
 
 /**
  * Get role object with RegExp
- * @param {Message | GuildMember} msg Object of the guild being searched
+ * @param {Message | GuildMember | Guild} msg Object of the guild being searched
  * @param {String} name Keyword
  * @returns {Role[]} Roles object found
  */
 function findRoleRegEx(msg, name) {
-  if (!msg.guild || !name) return;
+  if (!msg || !name) return;
   const re = new RegExp(name, "i");
-  return msg.guild.roles.cache.map(r => r).filter(r => re.test(r.name));
+  return (msg.guild || msg).roles.cache.map(r => r).filter(r => re.test(r.name));
 }
 
 /**
@@ -454,7 +455,7 @@ function parseComa(content) {
  * @returns {String[]}
  */
 function parseDoubleDash(content) {
-  return content.trim().split(/(?<!\\)(--)+/);
+  return content.trim().split(/(?<!https?:\/\/[^\s\n]+)(?<!\\)(--)+/);
 }
 
 /**
@@ -463,25 +464,33 @@ function parseDoubleDash(content) {
  * @returns {String[]}
  */
 function parseDash(content) {
-  return content.trim().split(/(?<!\\)-(?!-)/);
+  return content.trim().split(/(?<!https?:\/\/[^\s\n]+)(?<!\\)-(?!-)/);
 }
 
-const reValidURL = /^https?:\/\/\w+\.\w\w/;
+const reValidURL = /^https?:\/\/[^\s\n]+\.[^\s\n][^\s\n]/;
 
 /**
  * Get user
  * @param {Message} msg 
  * @param {String} key 
+ * @param {Boolean} nonID
  * @returns {User}
  */
-function getUser(msg, key) {
+function getUser(msg, key, nonID) {
   if (!(msg || key)) return;
   const use = cleanMentionID(key);
   if (!use || use.length === 0) return;
-  let u;
-  if (/^\d{17,19}$/.test(use)) u = msg.client.users.cache.get(use); else u = getMember(msg.guild, use)?.[0].user;
-  return u;
+  if (/^\d{17,19}$/.test(use)) return msg.client.users.cache.get(use); else if (nonID) return getMember(msg.guild, use)?.[0].user;
 }
+
+function getRole(guild, key) {
+  if (!(guild || key)) return;
+  const use = cleanMentionID(key);
+  if (!use || use.length === 0) return;
+  if (/^\d{17,19}$/.test(use)) return guild.roles.cache.get(use); else return findRoleRegEx(guild, use)?.[0];
+}
+
+function wait(ms) { return new Promise(r => setTimeout(() => r(), ms)) }
 
 module.exports = {
   cleanMentionID, defaultEventLogEmbed,
@@ -492,5 +501,5 @@ module.exports = {
   trySend, tryDelete, tryReact,
   adCheck, defaultImageEmbed, getChannel,
   splitOnLength, parseComa, parseDoubleDash, getMember,
-  parseDash, reValidURL, getUser
+  parseDash, reValidURL, getUser, getRole, wait
 }
