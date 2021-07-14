@@ -4,8 +4,8 @@ const { Structures } = require("discord.js"),
     { database } = require("../database/mongo"),
     { errLog } = require("./functions");
 
-Structures.extend("Guild", g => {
-    return class Guild extends g {
+Structures.extend("Guild", u => {
+    return class Guild extends u {
         constructor(client, data) {
             super(client, data);
         }
@@ -30,7 +30,7 @@ Structures.extend("Guild", g => {
         /**
          * Get user infractions
          * @param {String} get - User ID
-         * @returns {Promise<Object[]>} Infractions object
+         * @returns {Promise<Object[]>} Array of infractions objects
          */
         async getInfractions(get) {
             try {
@@ -136,8 +136,8 @@ Structures.extend("User", u => {
     }
 });
 
-Structures.extend("TextChannel", e => {
-    return class TextChannel extends e {
+Structures.extend("TextChannel", u => {
+    return class TextChannel extends u {
         constructor(guild, data) {
             super(guild, data);
             this.lastMessagesID = [];
@@ -152,8 +152,8 @@ Structures.extend("TextChannel", e => {
     }
 });
 
-Structures.extend("DMChannel", e => {
-    return class DMChannel extends e {
+Structures.extend("DMChannel", u => {
+    return class DMChannel extends u {
         constructor(client, data) {
             super(client, data);
             this.lastMessagesID = [];
@@ -181,8 +181,8 @@ Structures.extend("Message", e => {
     };
 });
 
-Structures.extend("GuildMember", e => {
-    return class GuildMember extends e {
+Structures.extend("GuildMember", u => {
+    return class GuildMember extends u {
         constructor(client, data, guild) {
             super(client, data, guild);
         }
@@ -208,8 +208,48 @@ Structures.extend("GuildMember", e => {
             return this.guild.getInfractions(this.id);
         }
 
-        async mute() {
+        /**
+         * @param {Date | number} until 
+         * @returns 
+         */
+        async mute(until) {
+            if (!this.DB) await this.dbLoad();
+            if (!this.guild.DB) await this.guild.dbLoad();
+            this.DB.takenRoles = this.roles.cache.map(r => r.id);
+            this.DB.muteRole = this.guild.DB.moderation.settings.mute.role;
+            if ((typeof until) === "number") until = new Date(until);
+            try {
+                const RM = await this.roles.remove(this.DB.takenRoles);
+                await RM.roles.add(this.DB.muteRole);
+                this.DB.muted = {
+                    state: true,
+                    until: until
+                };
+                return this.setDb(this.DB);
+            } catch (e) {
+                if (this.DB.takenRoles?.length > 0) this.roles.add(this.DB.takenRoles).catch(() => { });
+                this.DB.takenRoles = [];
+                this.DB.muteRole = undefined;
+                this.DB.muted = { state: false };
+                const R = await this.setDb(this.DB);
+                if (e) throw e;
+                return R;
+            }
+        }
 
+        async unmute() {
+            if (!this.DB) await this.dbLoad();
+            try {
+                const RM = await this.roles.add(this.DB.takenRoles);
+                await RM.roles.remove(this.DB.muteRole);
+                this.DB.takenRoles = [];
+                this.DB.muteRole = undefined;
+                this.DB.muted = { state: false };
+                return this.setDb(this.DB);
+            } catch (e) {
+                if (e) throw e;
+                return;
+            }
         }
     }
 });
