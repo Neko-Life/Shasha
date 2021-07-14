@@ -57,8 +57,8 @@ module.exports = class mute extends commando.Command {
      */
     async run(msg, arg) {
         if (!msg.guild.dbLoaded) msg.guild.dbLoad();
-        const muteSettingsDoc = msg.guild.moderation.mute,
-            defaultDurationDoc = muteSettingsDoc.defaultDuration,
+        const MOD = msg.guild.moderation,
+            MUTE = MOD.mute || { defaultDuration: {} },
             args = parseDoubleDash(arg),
             mentions = parseComa(args.shift()),
             durationRegExp = /\d+(?![^ymwdhs])[ymwdhs]?o?/gi,
@@ -71,14 +71,7 @@ module.exports = class mute extends commando.Command {
                 minute: invokedAt.getMinutes(),
                 second: invokedAt.getSeconds()
             };
-        let theSettingUp = {
-            role: undefined,
-            defaultDuration: {
-                date: undefined,
-                string: undefined
-            }
-        },
-            durationHasSet = false,
+        let durationHasSet = false,
             settingUp = false,
             settingRole = false,
             settingRoleHasSet = false,
@@ -141,7 +134,7 @@ module.exports = class mute extends commando.Command {
                         const key = cleanMentionID(argument);
                         let role = getRole(msg.guild, key)?.id;
                         if (role || /^none$/i.test(key)) {
-                            theSettingUp.role = role;
+                            MUTE.role = role;
                         } else {
                             resultMsg += `No role found for: **${argument}**\n`;
                         }
@@ -149,15 +142,15 @@ module.exports = class mute extends commando.Command {
                 }
             }
         }
-        const roleConfCheck = msg.guild.roles.cache.get(muteSettingsDoc?.role);
+        const roleConfCheck = msg.guild.roles.cache.get(MUTE?.role);
         if (!roleConfCheck && !settingUp) {
             resultMsg += `No mute role configured! Run \`${msg.guild.commandPrefix}${this.name} --settings <--role --<role_[name | ID]>> [--duration --<duration>\` to set it up.`;
         }
         let untilDate = new Date(String(duration.year), String(duration.month), String(duration.date), String(duration.hour), String(duration.minute), String(duration.second));
         if (untilDate.toString() === "Invalid Date") untilDate = "Indefinite";
-        if (untilDate?.toUTCString() === invokedAt.toUTCString() && !settingDuration) {
-            if (defaultDurationDoc?.date?.valueOf() > 0) {
-                untilDate = new Date(invokedAt.valueOf() + defaultDurationDoc.date.valueOf() - 1000);
+        if (untilDate?.toUTCString?.() === invokedAt.toUTCString() && !settingDuration) {
+            if (MUTE.defaultDuration.date?.valueOf() > 0) {
+                untilDate = new Date(invokedAt.valueOf() + MUTE.defaultDuration.date.valueOf() - 1000);
             } else {
                 untilDate = "Indefinite";
             }
@@ -196,19 +189,14 @@ module.exports = class mute extends commando.Command {
             }
             if (settingDuration && !settingDurationHasSet && timeForMessage.length > 0) {
                 settingDurationHasSet = true;
-                theSettingUp.defaultDuration.date = elapsedTime,
-                    theSettingUp.defaultDuration.string = timeForMessage.join(" ");
+                MUTE.defaultDuration.date = elapsedTime,
+                    MUTE.defaultDuration.string = timeForMessage.join(" ");
             }
         }
         if (settingUp || !roleConfCheck && !settingUp) {
-            if (settingRoleHasSet) {
-                await col.updateOne({ document: msg.guild.id }, { $set: { "moderation.settings.mute.role": theSettingUp.role } }, { upsert: true }).catch(e => { return trySend(this.client, msg, "```js\n" + e.stack + "```") });
+            if (settingDurationHasSet || settingRoleHasSet) {
+                MOD.mute = MUTE;
             }
-            if (durationHasSet) {
-                await col.updateOne({ document: msg.guild.id }, { $set: { "moderation.settings.mute.defaultDuration": theSettingUp.defaultDuration } }, { upsert: true }).catch(e => { return trySend(this.client, msg, "```js\n" + e.stack + "```") });
-            }
-            const defaultDurationDoc = muteSettingsDoc?.defaultDuration,
-                roleDoc = muteSettingsDoc?.role;
             let settings = defaultImageEmbed(msg);
             settings
                 .setTitle("Mute Configuration")

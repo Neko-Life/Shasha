@@ -8,20 +8,23 @@ Structures.extend("Guild", g => {
     return class Guild extends g {
         constructor(client, data) {
             super(client, data);
-            this.dbLoaded = false;
         }
 
         async dbLoad() {
-            return database.collection("Guild").findOne({ document: this.id }).then((r, e) => {
+            return database.collection("Guild").findOne({ document: this.id }, (e, r) => {
                 if (e) return errLog(e, null, this.client);
-                this.infractions = r?.moderation?.infractions || [];
-                this.moderation = r?.moderation?.settings || {};
-                this.defaultEmbed = r?.settings?.defaultEmbed || {};
-                this.quoteOTD = r?.settings?.quoteOTD || {};
-                this.eventChannels = r?.settings?.eventChannels || {};
-
-                return this.dbLoaded = true;
+                return this.DB = r || {};
             });
+        }
+
+        async setDb(Db, empty = false) {
+            if (typeof Db !== "object") throw new TypeError("Expected 'object'; Got '" + typeof Db + "'");
+            if (Db === {} && !empty) throw new Error("Empty!");
+            return database.collection("Guild").updateOne({ document: this.id }, { $set: Db, $setOnInsert: { document: this.id } },
+                { upsert: true }, (e) => {
+                    if (e) return errLog(e, null, this.client);
+                    return this.DB = Db;
+                });
         }
 
         /**
@@ -31,11 +34,10 @@ Structures.extend("Guild", g => {
          */
         async getInfractions(get) {
             try {
-                const r = await database.collection("Guild").findOne({ document: this.id });
-                this.infractions = r?.moderation?.infractions;
+                if (!this.DB) await this.dbLoad();
                 let found = [];
-                if (this.infractions.length > 0) {
-                    for (const inf of this.infractions) {
+                if (this.DB.moderation?.infractions?.length > 0) {
+                    for (const inf of this.DB.moderation.infractions) {
                         for (const user of inf.by) {
                             if (user.id === get) {
                                 found.push(inf);
@@ -50,46 +52,35 @@ Structures.extend("Guild", g => {
 
         async addInfraction(add) {
             try {
-                const r = await database.collection("Guild").findOne({ document: this.id });
-                this.infractions = r?.moderation?.infractions;
-                return database.collection("Guild").updateOne({ document: this.id }, { $push: { "moderation.infractions": add } }, (e) => {
-                    if (e) return errLog(e, null, this.client);
-                    this.infractions.push(add);
-                    return true;
-                });
+                if (!this.DB) await this.dbLoad();
+                if (!this.DB.moderation?.infractions) this.DB.moderation.infractions = [];
+                this.DB.moderation.infractions.push(add);
+                return this.setDb(this.DB);
             } catch (e) { }
         }
 
         async setQuoteOTD(set) {
-            return database.collection("Guild").updateOne({ document: this.id }, { $set: { "settings.quoteOTD": set }, $setOnInsert: { document: this.id } }, { upsert: true }, (e) => {
-                if (e) return errLog(e, null, this.client);
-                this.quoteOTD = set;
-                return true;
-            });
+            if (!this.DB) await this.dbLoad();
+            this.DB.settings.quoteOTD = set;
+            return this.setDb(this.DB);
         }
 
         async setEventChannels(set) {
-            return database.collection("Guild").updateOne({ document: this.id }, { $set: { "settings.eventChannels": set }, $setOnInsert: { document: this.id } }, { upsert: true }, (e) => {
-                if (e) return errLog(e, null, this.client);
-                this.eventChannels = set;
-                return true;
-            });
+            if (!this.DB) await this.dbLoad();
+            this.DB.settings.eventChannels = set;
+            return this.setDb(this.DB);
         }
 
         async setDefaultEmbed(set) {
-            return database.collection("Guild").updateOne({ document: this.id }, { $set: { "settings.defaultEmbed": set }, $setOnInsert: { document: this.id } }, { upsert: true }, (e) => {
-                if (e) return errLog(e, null, this.client);
-                this.defaultEmbed = set;
-                return true;
-            });
+            if (!this.DB) await this.dbLoad();
+            this.DB.settings.defaultEmbed = set;
+            return this.setDb(this.DB);
         }
 
         async setModerationSettings(set) {
-            return database.collection("Guild").updateOne({ document: this.id }, { $set: { "moderation.settings": set }, $setOnInsert: { document: this.id } }, { upsert: true }, (e) => {
-                if (e) return errLog(e, null, this.client);
-                this.moderation = set;
-                return true;
-            });
+            if (!this.DB) await this.dbLoad();
+            this.DB.moderation.settings = set;
+            return this.setDb(this.DB);
         }
     }
 });
@@ -98,53 +89,49 @@ Structures.extend("User", u => {
     return class User extends u {
         constructor(client, data) {
             super(client, data);
-            this.dbLoaded = false;
             this.cutie = true;
-            this.F = "F";
-        }
-
-        async setF(string) {
-            return database.collection("User").updateOne({ document: this.id }, { $set: { F: string }, $setOnInsert: { document: this.id } }, { upsert: true }, (e, r) => {
-                if (e) return errLog(e, null, this.client);
-                this.F = string;
-                return true;
-            });
         }
 
         async dbLoad() {
-            return database.collection("User").findOne({ document: this.id }).then((r, e) => {
+            return database.collection("User").findOne({ document: this.id }, (e, r) => {
                 if (e) return errLog(e, null, this.client);
-                this.defaultEmbed = r?.settings?.defaultEmbed || {};
-                this.cachedAvatarURL = this.displayAvatarURL({ format: "png", size: 4096, dynamic: true });
-                this.interactions = r?.interactions || {};
-                this.description = r?.description;
-                this.F = r?.F;
-                return this.dbLoaded = true;
+                if (!r.F) r.F = "F";
+                return this.DB = r || {};
             });
+        }
+
+        async setDb(Db, empty = false) {
+            if (typeof Db !== "object") throw new TypeError("Expected 'object'; Got '" + typeof Db + "'");
+            if (Db === {} && !empty) throw new Error("Empty!");
+            return database.collection("User").updateOne({ document: this.id }, { $set: Db, $setOnInsert: { document: this.id } },
+                { upsert: true }, (e) => {
+                    if (e) return errLog(e, null, this.client);
+                    return this.DB = Db;
+                });
+        }
+
+        async setF(string) {
+            if (!this.DB) await this.dbLoad();
+            this.DB.F = string;
+            return this.setDb(this.DB);
         }
 
         async setInteractions(count) {
-            return database.collection("User").updateOne({ document: this.id }, { $set: { interactions: count }, $setOnInsert: { document: this.id } }, { upsert: true }, (e, r) => {
-                if (e) return errLog(e, null, this.client);
-                this.interactions = count;
-                return true;
-            });
+            if (!this.DB) await this.dbLoad();
+            this.DB.interactions = count;
+            return this.setDb(this.DB);
         }
 
         async setDescription(set) {
-            return database.collection("User").updateOne({ document: this.id }, { $set: { description: set }, $setOnInsert: { document: this.id } }, { upsert: true }, (e, r) => {
-                if (e) return errLog(e, null, this.client);
-                this.description = set;
-                return true;
-            });
+            if (!this.DB) await this.dbLoad();
+            this.DB.description = set;
+            return this.setDb(this.DB);
         }
 
         async setDefaultEmbed(set) {
-            return database.collection("User").updateOne({ document: this.id }, { $set: { "settings.defaultEmbed": set }, $setOnInsert: { document: this.id } }, { upsert: true }, (e) => {
-                if (e) return errLog(e, null, this.client);
-                this.defaultEmbed = set;
-                return true;
-            });
+            if (!this.DB) await this.dbLoad();
+            this.DB.defaultEmbed = set;
+            return this.setDb(this.DB);
         }
     }
 });
@@ -200,8 +187,29 @@ Structures.extend("GuildMember", e => {
             super(client, data, guild);
         }
 
+        async dbLoad() {
+            return database.collection("GuildMember").findOne({ document: this.id }, (e, r) => {
+                if (e) return errLog(e, null, this.client);
+                return this.DB = r || {};
+            });
+        }
+
+        async setDb(Db, empty = false) {
+            if (typeof Db !== "object") throw new TypeError("Expected 'object'; Got '" + typeof Db + "'");
+            if (Db === {} && !empty) throw new Error("Empty!");
+            return database.collection("GuildMember").updateOne({ document: this.id }, { $set: Db, $setOnInsert: { document: this.id } },
+                { upsert: true }, (e) => {
+                    if (e) return errLog(e, null, this.client);
+                    return this.DB = Db;
+                });
+        }
+
         async infractions() {
             return this.guild.getInfractions(this.id);
+        }
+
+        async mute() {
+
         }
     }
 });
