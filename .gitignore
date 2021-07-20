@@ -1,6 +1,8 @@
 config.json
 package-lock.json
 *.sqlite3
+pnpm-lock.yaml
+config-live.json
 
 # Logs
 logs
