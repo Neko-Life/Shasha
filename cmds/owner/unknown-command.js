@@ -17,7 +17,8 @@ module.exports = class UnknownCommandCommand extends Command {
 
 	// eslint-disable-next-line
 	async run(msg) {
-		if (/^<@\!?\d{17,19}>\s.+/.test(msg.content)) {
+		if (msg.guild && !msg.member.hasPermission("MANAGE_MESSAGES")) return;
+		if (new RegExp("^<@\!?" + msg.client.user.id + ">\s").test(msg.content)) {
 			msg.channel.startTyping();
 			const s = msg.cleanContent.slice((msg.guild ? msg.guild.member(msg.client.user).displayName.length : msg.client.user.username.length) + 2).trim();
 			return trySend(msg.client, msg, await chatAnswer(s));
