@@ -36,9 +36,7 @@ module.exports = class embmaker extends commando.Command {
     }
     async run(msg, arg) {
         let isAdmin = true;
-        if (msg.guild && !this.client.owners.includes(msg.author)) {
-            if (!msg.member.hasPermission("ADMINISTRATOR")) isAdmin = false;
-        }
+        if (msg.guild) isAdmin = msg.member.isAdmin;
         const args = parseDoubleDash(arg);
         let embed = new MessageEmbed();
         let autName, footertext, autIcon, autUrl, footericon, content, channel, editSrc, newAttach = [], reportMessage = "";

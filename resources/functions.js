@@ -12,9 +12,9 @@ const { CommandoMessage, CommandoClient } = require('@iceprod/discord.js-command
  * @param {Error} theError - Catched error (error)
  * @param {CommandoMessage} msg - Message object (msg)
  * @param {CommandoClient} client - This client (this.client)
- * @param {Boolean} sendTheError - Add error content to notify message (true | false)
- * @param {String} errorMessage - Error message ("You don't have enough permission to use that command!")
- * @param {Boolean} notify - Send error to user who ran the command
+ * @param {boolean} sendTheError - Add error content to notify message (true | false)
+ * @param {string} errorMessage - Error message ("You don't have enough permission to use that command!")
+ * @param {boolean} notify - Send error to user who ran the command
  */
 async function errLog(theError, msg, client, sendTheError, errorMessage, notify) {
   if (!client && msg) client = msg.client;
@@ -22,7 +22,8 @@ async function errLog(theError, msg, client, sendTheError, errorMessage, notify)
   let [ret, logThis, inLogChannel, sendErr] = [undefined, '', '', ''];
   if (msg instanceof Message) {
     // client.emit("commandError", msg.command, theError, msg);
-    logThis = `\`${msg.command?.name}\` (${msg.id}) ${msg.url} in ${msg.guild ? `**${msg.channel.name}** (${msg.channel.id}) of **${msg.guild.name}** (${msg.guild.id})` : `**DM**`} ran by **${msg.author.tag}** (${msg.author.id}) \n\n`;
+    logThis = `\`${msg.command?.name}\` (${msg.id}) ${msg.url} in ${msg.guild ? `**${msg.channel.name}**` +
+      ` (${msg.channel.id}) of **${msg.guild.name}** (${msg.guild.id})` : `**DM**`} ran by **${msg.author.tag}** (${msg.author.id}) \n\n`;
     if (errorMessage) {
       if (errorMessage.length > 0) {
         sendErr = sendErr + errorMessage + '\n';
@@ -30,13 +31,23 @@ async function errLog(theError, msg, client, sendTheError, errorMessage, notify)
       }
     }
     if (sendTheError) sendErr = sendErr + '```js\n' + theError.stack + '```';
-    if (notify) ret = await msg.channel.send(sendErr.trim(), { split: true }).catch(noPerm(msg));
+    if (notify) ret = await msg.channel.send(sendErr.trim(), {
+      split: {
+        maxLength: 2000, char: "\n",
+        append: '```', prepend: '```js\n'
+      }
+    }).catch(noPerm(msg).sfskdufsdgsd);
   }
   if (client) {
     inLogChannel = inLogChannel + '```js\n' + theError.stack + '```';
     try {
       const sendAt = client.channels.cache.get(defaultErrorLogChannel);
-      sendAt.send(logThis + inLogChannel.trim() + timestampAt(client), { split: { maxLength: 2000, char: "\n", append: '```', prepend: '```js\n' } });
+      sendAt.send(logThis + inLogChannel.trim() + timestampAt(client), {
+        split: {
+          maxLength: 2000, char: "\n",
+          append: '```', prepend: '```js\n'
+        }
+      });
     } catch {
       return console.error("Can't log to error channel or not configured.", timestampAt() + ":", theError);
     }
@@ -47,8 +58,8 @@ async function errLog(theError, msg, client, sendTheError, errorMessage, notify)
 /**
  * Get message object from the message channel or provided channel
  * @param {Message} msg - Message object (msg)
- * @param {String} MainID - Message ID | Channel_[mention|ID] | Message link
- * @param {String} SecondID - Message ID
+ * @param {string} MainID - Message ID | Channel_[mention|ID] | Message link
+ * @param {string} SecondID - Message ID
  * @returns {Promise<Message>} Message object | undefined
  */
 async function getChannelMessage(msg, MainID, SecondID) {
@@ -82,7 +93,7 @@ function execCB(error, stdout, stderr) {
 /**
  * Command usage logger
  * @param {CommandoMessage} msg
- * @param {String} addition 
+ * @param {string} addition 
  */
 async function ranLog(msg, addition) {
   if (typeof addition != "string") return console.log(`[RANLOG] Not a string:`, addition);
@@ -95,8 +106,8 @@ async function ranLog(msg, addition) {
   if (addition && addition.length > 0) embed.setDescription(addition.slice(0, ifCode && addSplit[0]?.[0].length > 0 ? 2044 : 2048) + (ifCode && addSplit[0]?.[0].length > 0 ? "```" : ""));
   if (addSplit[0]?.[0].length > 0) for (const add of addSplit) embed.addField("​", "```js\n" + add.join(",") + (embed.fields.length < (addSplit.length - 1) ? ",```" : ""));
   embed.setFooter(timestampAt(msg.client), msg.guild?.iconURL({ format: "png", size: 128, dynamic: true }));
-  if (msg.guild) embed.addField("Guild", `\`${msg.guild?.name}\`\n(${msg.guild?.id})`, true);
-  embed.addField("Channel", (msg.guild ? `<#${msg.channel.id}>\n\`${msg.channel?.name}\`` : `**DM**\n\`${msg.channel.recipient.tag}\``) + `\n(${msg.channel.id})`, true)
+  if (msg.guild) embed.addField("Guild", `\`${msg.guild.name}\`\n(${msg.guild.id})`, true);
+  embed.addField("Channel", (msg.guild ? `<#${msg.channel.id}>\n\`${msg.channel.name}\`` : `**DM**\n\`${msg.channel.recipient.tag}\``) + `\n(${msg.channel.id})`, true)
     .addField("User", `<@!${msg.author.id}>`, true);
   trySend(msg.client, channel, { embed: embed });
 }
@@ -105,10 +116,10 @@ async function ranLog(msg, addition) {
  * Notify when more than one member found when looking in the member list
  * @param {Message} msg - Message object
  * @param {GuildMember[]} arr - Test array
- * @param {String} key - Keyword
- * @param {Number} max - Max length
- * @param {Boolean} withID - Include user_ID
- * @returns {String}
+ * @param {string} key - Keyword
+ * @param {number} max - Max length
+ * @param {boolean} withID - Include user_ID
+ * @returns {string}
  */
 function multipleMembersFound(msg, arr, key, max = 4, withID) {
   if (msg && arr.length > 1) {
@@ -136,7 +147,7 @@ function multipleMembersFound(msg, arr, key, max = 4, withID) {
 /**
  * Get member object with RegExp
  * @param {Message | GuildMember | Guild} base Object of the guild being searched
- * @param {String} key Keyword
+ * @param {string} key Keyword
  * @returns {GuildMember[]} Member object found
  */
 function findMemberRegEx(base, key) {
@@ -161,7 +172,7 @@ async function noPerm(msg) {
  * @param {CommandoClient} client - (this.client)
  * @param {Message | String | TextChannel | DMChannel} msgOrChannel Message object | channel_ID
  * @param {MessageOptions} content - ({content:content,optionblabla})
- * @param {Boolean} checkAd - Check source for Discord invite link (true)
+ * @param {boolean} checkAd - Check source for Discord invite link (true)
  * @returns {Promise<Message>} Sent message object
  */
 async function trySend(client, msgOrChannel, content, checkAd = true) {
@@ -206,7 +217,7 @@ async function tryDelete(msg) {
 /**
  * React message
  * @param {Message} msg - Message to react (msg)
- * @param {String} reaction - Emote ("name:ID")
+ * @param {string} reaction - Emote ("name:ID")
  */
 async function tryReact(msg, reaction) {
   if (!msg || !reaction || reaction.length === 0) return;
@@ -219,7 +230,7 @@ async function tryReact(msg, reaction) {
 
 /**
  * Check message's content for ads
- * @param {String} content - Content to check
+ * @param {string} content - Content to check
  */
 function adCheck(content) {
   if (content.length > 5) {
@@ -232,14 +243,14 @@ function adCheck(content) {
 /**
  * Make default image embed
  * @param {Message | GuildMember} msg 
- * @param {String} image 
+ * @param {string} image 
  * @param {GuildMember | User} author 
- * @param {String} title 
- * @param {String} footerQuote
+ * @param {string} title 
+ * @param {string} footerQuote
  * @returns {MessageEmbed}
  */
 function defaultImageEmbed(msg, image, title, footerQuote) {
-  if (!footerQuote) footerQuote = (msg.guild ?? msg.author).defaultEmbed?.footerQuote || "";
+  if (!footerQuote) footerQuote = (msg.guild ?? msg.author).DB.defaultEmbed?.footerQuote || "";
   const emb = new MessageEmbed()
     .setImage(image)
     .setColor(msg.guild ? getColor(msg.member?.displayColor) : randomColors[Math.floor(Math.random() * randomColors.length)])
@@ -250,8 +261,8 @@ function defaultImageEmbed(msg, image, title, footerQuote) {
 
 /**
  * Return clean ID of provided key
- * @param {String} key - Mention | Channel Name | Username | Rolename
- * @returns {String} Clean ID
+ * @param {string} key - Mention | Channel Name | Username | Rolename
+ * @returns {string} Clean ID
  */
 function cleanMentionID(key) {
   if (!key || (typeof key !== "string")) return;
@@ -266,7 +277,7 @@ function cleanMentionID(key) {
 /**
  * Get channel object wit RegExp
  * @param {Message | GuildMember | Guild} msg Object of the guild being searched
- * @param {String} name Keyword
+ * @param {string} name Keyword
  * @param {ChannelType[]} exclude Exclude channel type
  * @returns {GuildChannel[]} Channels object found
  */
@@ -285,7 +296,7 @@ function findChannelRegEx(msg, name, exclude) {
 /**
  * Get role object with RegExp
  * @param {Message | GuildMember | Guild} msg Object of the guild being searched
- * @param {String} name Keyword
+ * @param {string} name Keyword
  * @returns {Role[]} Roles object found
  */
 function findRoleRegEx(msg, name) {
@@ -298,10 +309,10 @@ function findRoleRegEx(msg, name) {
  * Notify when more than one channel found when looking in the channel list
  * @param {Message} msg - Message object
  * @param {GuildChannel[]} arr - Test array
- * @param {String} key - Keyword
- * @param {Number} max - Max length
- * @param {Boolean} withID - Include channel_ID
- * @returns {String}
+ * @param {string} key - Keyword
+ * @param {number} max - Max length
+ * @param {boolean} withID - Include channel_ID
+ * @returns {string}
  */
 function multipleChannelsFound(msg, arr, key, max = 4, withID) {
   if (msg && arr.length > 1) {
@@ -329,10 +340,10 @@ function multipleChannelsFound(msg, arr, key, max = 4, withID) {
  * Notify when more than one role found when looking in the role list
  * @param {Message} msg - Message object
  * @param {Role[]} arr - Test array
- * @param {String} key - Keyword
- * @param {Number} max - Max length
- * @param {Boolean} withID - Include role_ID
- * @returns {String}
+ * @param {string} key - Keyword
+ * @param {number} max - Max length
+ * @param {boolean} withID - Include role_ID
+ * @returns {string}
  */
 function multipleRolesFound(msg, arr, key, max = 4, withID) {
   if (msg && arr.length > 1) {
@@ -359,7 +370,7 @@ function multipleRolesFound(msg, arr, key, max = 4, withID) {
 /**
  * Standard
  * @param {Message | Guild} msg - Message object
- * @param {String} key - Channel ID | Mention | Name
+ * @param {string} key - Channel ID | Mention | Name
  * @param {ChannelType[]} exclude - Exclude channel type
  * @returns {GuildChannel | Channel} Channel object
  */
@@ -380,7 +391,7 @@ function getChannel(msg, key, exclude) {
 /**
  * Get guild member using name || tag || ID
  * @param {Guild} guild 
- * @param {String} key - name || tag || ID
+ * @param {string} key - name || tag || ID
  * @returns {GuildMember[]}
  */
 function getMember(guild, key) {
@@ -398,8 +409,8 @@ function getMember(guild, key) {
 
 /**
  * Compare 2 different timestamp
- * @param {Number} compare - Number to compare
- * @returns {Number} Result
+ * @param {number} compare - Number to compare
+ * @returns {number} Result
  */
 function getUTCComparison(compare) {
   return compare - new Date().valueOf();
@@ -412,17 +423,20 @@ function getUTCComparison(compare) {
  */
 function defaultEventLogEmbed(guild) {
   if (!guild) return;
+  const C = guild.member(guild.client.user);
   return new MessageEmbed()
+    .setColor(getColor(C.displayColor))
     .setAuthor(guild.name)
-    .setFooter((guild.defaultEmbed?.footerQuote ? guild.defaultEmbed.footerQuote : ""), guild.iconURL({ format: "png", size: 128, dynamic: true }))
+    .setFooter((guild.DB?.settings?.defaultEmbed?.footerQuote ?
+      guild.DB.settings.defaultEmbed.footerQuote : ""), guild.iconURL({ format: "png", size: 128, dynamic: true }))
     .setTimestamp(new Date());
 }
 
 /**
  * Split on Length
  * @param {Array<String>} arr
- * @param {Number} maxLength - Max character length per split
- * @param {String} joiner
+ * @param {number} maxLength - Max character length per split
+ * @param {string} joiner
  * @returns {Array<String[]>}
  */
 function splitOnLength(arr, maxLength, joiner = "\n") {
@@ -442,29 +456,32 @@ function splitOnLength(arr, maxLength, joiner = "\n") {
 
 /**
  * Parse string (split ",")
- * @param {String} content
+ * @param {string} content
  * @returns {String[]}
  */
 function parseComa(content) {
-  return content.trim().split(/(?<!\\),+(?!\d*})/);
+  if (!content) return;
+  return content.split(/(?<!\\),+(?!\d*})/);
 }
 
 /**
  * Parse string (split "--")
- * @param {String} content
+ * @param {string} content
  * @returns {String[]}
  */
 function parseDoubleDash(content) {
-  return content.trim().split(/(?<!https?:\/\/[^\s\n]+)(?<!\\)(--)+/);
+  if (!content) return;
+  return content.split(/(?<!https?:\/\/[^\s\n]+)(?<!\\)(--)+/);
 }
 
 /**
  * Parse string (split "-")
- * @param {String} content
+ * @param {string} content
  * @returns {String[]}
  */
 function parseDash(content) {
-  return content.trim().split(/(?<!https?:\/\/[^\s\n]+)(?<!\\)-(?!-)/);
+  if (!content) return;
+  return content.split(/(?<!https?:\/\/[^\s\n]+)(?<!\\)-(?!-)/);
 }
 
 const reValidURL = /^https?:\/\/[^\s\n]+\.[^\s\n][^\s\n]/;
@@ -472,8 +489,8 @@ const reValidURL = /^https?:\/\/[^\s\n]+\.[^\s\n][^\s\n]/;
 /**
  * Get user
  * @param {Message} msg 
- * @param {String} key 
- * @param {Boolean} nonID
+ * @param {string} key 
+ * @param {boolean} nonID
  * @returns {User}
  */
 function getUser(msg, key, nonID) {
@@ -492,6 +509,7 @@ function getRole(guild, key) {
 
 function wait(ms) { return new Promise(r => setTimeout(() => r(), ms)) }
 
+const defaultSplitMessage = { maxLength: 2000, char: ",", append: ',```', prepend: '```js\n' };
 module.exports = {
   cleanMentionID, defaultEventLogEmbed,
   multipleMembersFound, multipleRolesFound, multipleChannelsFound,
@@ -501,5 +519,5 @@ module.exports = {
   trySend, tryDelete, tryReact,
   adCheck, defaultImageEmbed, getChannel,
   splitOnLength, parseComa, parseDoubleDash, getMember,
-  parseDash, reValidURL, getUser, getRole, wait
+  parseDash, reValidURL, getUser, getRole, wait, defaultSplitMessage
 }

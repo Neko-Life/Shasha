@@ -10,8 +10,8 @@ const getColor = require("../getColor");
  * @returns 
  */
 module.exports = (member) => {
-    if (member.guild.eventChannels?.leave) {
-        const log = getChannel(member, member.guild.eventChannels.leave);
+    if (member.guild.DB.settings.eventChannels?.leave) {
+        const log = getChannel(member, member.guild.DB.settings.eventChannels.leave);
         if (!log) return;
         const days = Math.floor(new Date(new Date().valueOf() + member.client.matchTimestamp - member.joinedAt.valueOf()).valueOf() / 86400000),
             emb = defaultEventLogEmbed(member.guild);

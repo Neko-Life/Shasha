@@ -56,7 +56,7 @@ client.on('ready', async () => {
 
 client.on("message", async msg => {
     if (!client.matchTimestamp) client.matchTimestamp = 0;//getUTCComparison(msg.createdTimestamp);
-    if (!msg.author.dbLoaded && !msg.author.bot) await msg.author.dbLoad();
+    if (!msg.author.DB) await msg.author.dbLoad();
     lgr.message.letsChat(msg);
 
     if (msg.mentions.has(client.user) && !msg.isCommand && msg.channel.id != configFile.chatChannel) {
@@ -72,7 +72,7 @@ client.on("message", async msg => {
     if (!msg.guild) {
         //console.log(`(${msg.channel.recipient.id}) ${msg.channel.recipient.tag}: (${msg.author.id}) ${msg.author.tag}: ${msg.content}`);
     } else {
-        if (!msg.guild.dbLoaded) await msg.guild.dbLoad();
+        if (!msg.guild.DB) await msg.guild.dbLoad();
         lgr.message.giveNickHeart(msg);
     }
 
@@ -81,7 +81,7 @@ client.on("message", async msg => {
 
 client.on("guildMemberRemove", async (member) => {
     //console.log(`User ${memberLeave.displayName} (${memberLeave.user.tag}) (${memberLeave.id}) left ${memberLeave.guild.name} (${memberLeave.guild.id}). Now it has ${memberLeave.guild.memberCount} total members count.`);
-    if (!member.guild.dbLoaded) await member.guild.dbLoad();
+    if (!member.guild.DB) await member.guild.dbLoad();
     lgr.guildMemberRemove(member);
 });
 
@@ -97,8 +97,8 @@ client.on("guildDelete", leaveShaGuild => {
 
 client.on("guildMemberAdd", async (member) => {
     //console.log(`New member ${newMember.displayName} (${newMember.user.tag}) (${newMember.id}) joined ${newMember.guild.name} (${newMember.guild.id})! Now it has ${newMember.guild.memberCount} total members count.`);
-    if (!member.guild.dbLoaded) await member.guild.dbLoad();
-    if (!member.user.dbLoaded && !member.user.bot) await member.user.dbLoad();
+    if (!member.guild.DB) await member.guild.dbLoad();
+    if (!member.user.DB && !member.user.bot) await member.user.dbLoad();
     lgr.guildMemberAdd(member);
 });
 
@@ -107,49 +107,52 @@ client.on("guildBanAdd", async (GUILD, USER) => {
 });
 
 client.on("messageDelete", async (msg) => {
-    if (msg.author && !msg.author.dbLoaded && !msg.author.bot) await msg.author.dbLoad();
+    if (msg.author && !msg.author.DB) await msg.author.dbLoad();
     if (msg.guild) {
-        if (!msg.guild.dbLoaded) await msg.guild.dbLoad();
+        if (!msg.guild.DB) await msg.guild.dbLoad();
         lgr.messageDelete(msg);
     }
 });
 
 client.on("messageUpdate", async (msgold, msgnew) => {
-    if (msgnew.author && !msgnew.author.dbLoaded && !msgnew.author.bot) await msgnew.author.dbLoad();
+    if (!msgnew.author?.DB) await msgnew.author?.dbLoad();
     if (msgnew.guild) {
-        if (!msgnew.guild.dbLoaded) await msgnew.guild.dbLoad();
+        if (!msgnew.guild.DB) await msgnew.guild.dbLoad();
         lgr.messageUpdate(msgold, msgnew);
     }
 });
 
 client.on("guildMemberUpdate", async (memberold, membernew) => {
     //console.log(memberold.toJSON(), "\n\n", membernew.toJSON());
-    if (!membernew.user.dbLoaded && !membernew.user.bot) await membernew.user.dbLoad();
-    if (!membernew.guild.dbLoaded) await membernew.guild.dbLoad();
+    if (!membernew.user.DB) await membernew.user.dbLoad();
+    if (!membernew.guild.DB) await membernew.guild.dbLoad();
     lgr.guildMemberUpdate(memberold, membernew);
 });
 
-client.on("shardReady", (shard) => {
+client.on("shardReady", async (shard) => {
     const log = client.channels.cache.get(configFile.shardChannel);
-    const emb = defaultEventLogEmbed(client.guilds.cache.get(configFile.home));
+    if (!log.guild.DB) await log.guild.dbLoad();
+    const emb = defaultEventLogEmbed(log.guild);
     emb.setTitle("Shard #" + shard)
         .setDescription("**CONNECTED**")
         .setColor(getColor("blue"));
     trySend(client, log, emb);
 });
 
-client.on("shardReconnecting", (shard) => {
+client.on("shardReconnecting", async (shard) => {
     const log = client.channels.cache.get(configFile.shardChannel);
-    const emb = defaultEventLogEmbed(client.guilds.cache.get(configFile.home));
+    if (!log.guild.DB) await log.guild.dbLoad();
+    const emb = defaultEventLogEmbed(log.guild);
     emb.setTitle("Shard #" + shard)
         .setDescription("**RECONNECTING**")
         .setColor(getColor("cyan"));
     trySend(client, log, emb);
 });
 
-client.on("shardDisconnect", (e, shard) => {
+client.on("shardDisconnect", async (e, shard) => {
     const log = client.channels.cache.get(configFile.shardChannel);
-    const emb = defaultEventLogEmbed(client.guilds.cache.get(configFile.home));
+    if (!log.guild.DB) await log.guild.dbLoad();
+    const emb = defaultEventLogEmbed(log.guild);
     emb.setTitle("Shard #" + shard)
         .setDescription("**DISCONNECTED\n\nTARGET:**```js\n" + JSON.stringify(e.target, (k, v) => v ?? undefined, 2) + "```")
         .addField("CODE", e.code, true)
@@ -159,18 +162,20 @@ client.on("shardDisconnect", (e, shard) => {
     trySend(client, log, emb);
 });
 
-client.on("shardResume", (shard) => {
+client.on("shardResume", async (shard) => {
     const log = client.channels.cache.get(configFile.shardChannel);
-    const emb = defaultEventLogEmbed(client.guilds.cache.get(configFile.home));
+    if (!log.guild.DB) await log.guild.dbLoad();
+    const emb = defaultEventLogEmbed(log.guild);
     emb.setTitle("Shard #" + shard)
         .setDescription("**RESUMED**")
         .setColor(getColor("green"));
     trySend(client, log, emb);
 });
 
-client.on("shardError", (e, shard) => {
+client.on("shardError", async (e, shard) => {
     const log = client.channels.cache.get(configFile.shardChannel);
-    const emb = defaultEventLogEmbed(client.guilds.cache.get(configFile.home));
+    if (!log.guild.DB) await log.guild.dbLoad();
+    const emb = defaultEventLogEmbed(log.guild);
     emb.setTitle("Shard #" + shard)
         .setDescription("**ERROR**")
         .setColor(getColor("red"));
@@ -179,8 +184,8 @@ client.on("shardError", (e, shard) => {
 });
 
 client.on("commandRun", async (c, u, msg) => {
-    if (!msg.author.dbLoaded) await msg.author.dbLoad();
-    if (msg.guild && !msg.guild.dbLoaded) await msg.guild.dbLoad();
+    if (!msg.author.DB) await msg.author.dbLoad();
+    if (msg.guild && !msg.guild.DB) await msg.guild.dbLoad();
 });
 
 client.on("warn", a => console.log("warn", typeof a, a));

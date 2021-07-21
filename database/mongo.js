@@ -2,7 +2,7 @@
 
 const { mongoServer } = require("../config.json");
 const { MongoClient, Db } = require("mongodb");
-const dbClient = new MongoClient(mongoServer, {
+const dbClient = new MongoClient(process.env.MONGO_HOST || mongoServer, {
     useUnifiedTopology: true
 });
 

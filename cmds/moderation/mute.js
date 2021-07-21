@@ -1,11 +1,19 @@
 'use strict';
 
 const commando = require("@iceprod/discord.js-commando");
-const { trySend, findMemberRegEx, cleanMentionID, findChannelRegEx, findRoleRegEx, defaultImageEmbed, parseDoubleDash, parseComa, getRole } = require("../../resources/functions");
+const { trySend, findMemberRegEx, cleanMentionID, findChannelRegEx, findRoleRegEx, defaultImageEmbed, parseDoubleDash, parseComa, getRole, defaultEventLogEmbed } = require("../../resources/functions");
 const { database } = require("../../database/mongo");
 const col = database.collection("Guild");
 const schedule = database.collection("Schedule");
 const { scheduler } = require("../../resources/scheduler");
+const { DateTime, Settings, Interval } = require("luxon");
+const muteSetting = require("./src/muteSetting");
+const fn = require("./src/duration");
+const durationFn = fn.duration;
+const targetUser = require("./src/targetUser");
+const configureMuteRole = require("./src/configureMuteRole");
+const { makeJSONMessage } = require("../../resources/debug");
+Settings.defaultZone = "utc";
 
 /*{
                 footer: {
@@ -46,8 +54,14 @@ module.exports = class mute extends commando.Command {
             memberName: "mute",
             group: "moderation",
             description: "Mute.",
+            details: `Run \`${client.commandPrefix}mute --s -r role_[name|ID|mention] -d [duration]\` to set up a mute role.\n` +
+                `Or if you're too lazy you can run \`${client.commandPrefix}mute --cmr -n [name] -c color_[name|hex|number]\` to make a new mute role and let me set it up for you. ` +
+                `You can view server as the newly created mute role and override my default settings later.\n` +
+                `Example:\`\`\`\n--s -r muted -d 69y420mo36w49d69h4m420s\n` +
+                `--s -r none -d 0\n--cmr -n Muted -c black\`\`\``,
             guildOnly: true,
-            userPermissions: ['MANAGE_ROLES']
+            userPermissions: ['MANAGE_ROLES'],
+            clientPermissions: ['MANAGE_ROLES']
         });
     }
     /**
@@ -56,217 +70,85 @@ module.exports = class mute extends commando.Command {
      * @returns 
      */
     async run(msg, arg) {
-        if (!msg.guild.dbLoaded) msg.guild.dbLoad();
-        const MOD = msg.guild.moderation,
-            MUTE = MOD.mute || { defaultDuration: {} },
+        msg.channel.startTyping();
+        if (!msg.guild.DB) await msg.guild.dbLoad();
+        const MOD = msg.guild.DB.moderation.settings,
+            MUTE = MOD.mute || {},
             args = parseDoubleDash(arg),
-            mentions = parseComa(args.shift()),
-            durationRegExp = /\d+(?![^ymwdhs])[ymwdhs]?o?/gi,
-            invokedAt = msg.createdAt,
-            duration = {
-                year: invokedAt.getFullYear(),
-                month: invokedAt.getMonth(),
-                date: invokedAt.getDate(),
-                hour: invokedAt.getHours(),
-                minute: invokedAt.getMinutes(),
-                second: invokedAt.getSeconds()
-            };
-        let durationHasSet = false,
-            settingUp = false,
-            settingRole = false,
-            settingRoleHasSet = false,
-            settingDuration = false,
-            settingDurationHasSet = false,
-            [timeForMessage, targetUser] = [["Indefinite"], []],
-            reason = "No reason provided.",
-            resultMsg = "";
-        for (const argument of args) {
-            const setArg = argument.toLowerCase().trim();
-            if (/^settings?$/i.test(setArg)) {
-                settingUp = true;
-            }
-            if (settingUp && /^durations?$/i.test(setArg)) {
-                settingDuration = true;
-            }
-            if (settingUp && /^role$/i.test(setArg)) {
-                settingRole = true;
-            }
-            if (/^\d{1,16}(?![^ymwdhs])[ymwdhs]?o?/i.test(argument.trim()) && !durationHasSet) {
-                const durationArg = argument.match(durationRegExp);
-                for (const value of durationArg) {
-                    const val = parseInt(value.match(/\d+/)[0], 10);
-                    if (value.endsWith("h") || value.endsWith("ho")) {
-                        duration.hour = duration.hour + val;
-                        continue;
-                    }
-                    if (value.endsWith("y")) {
-                        duration.year = duration.year + val;
-                        continue;
-                    }
-                    if (value.endsWith("mo")) {
-                        duration.month = duration.month + val;
-                        continue;
-                    }
-                    if (value.endsWith("w")) {
-                        duration.date = duration.date + 7 * val;
-                        continue;
-                    }
-                    if (value.endsWith("d")) {
-                        duration.date = duration.date + val;
-                        continue;
-                    }
-                    if (value.endsWith("m") || !/\D/.test(value)) {
-                        duration.minute = duration.minute + val;
-                        continue;
-                    }
-                    if (value.endsWith("s")) {
-                        duration.second = duration.second + val;
-                        continue;
-                    }
-                }
-                durationHasSet = true;
-            } else {
-                if (!settingRole && argument.length > 0 && argument !== "--") {
-                    reason = argument.trim();
-                } else {
-                    if (settingRole && !settingRoleHasSet && argument.length > 0 && argument !== "--" && setArg !== "role") {
-                        settingRoleHasSet = true;
-                        const key = cleanMentionID(argument);
-                        let role = getRole(msg.guild, key)?.id;
-                        if (role || /^none$/i.test(key)) {
-                            MUTE.role = role;
-                        } else {
-                            resultMsg += `No role found for: **${argument}**\n`;
-                        }
-                    }
-                }
-            }
-        }
-        const roleConfCheck = msg.guild.roles.cache.get(MUTE?.role);
-        if (!roleConfCheck && !settingUp) {
-            resultMsg += `No mute role configured! Run \`${msg.guild.commandPrefix}${this.name} --settings <--role --<role_[name | ID]>> [--duration --<duration>\` to set it up.`;
-        }
-        let untilDate = new Date(String(duration.year), String(duration.month), String(duration.date), String(duration.hour), String(duration.minute), String(duration.second));
-        if (untilDate.toString() === "Invalid Date") untilDate = "Indefinite";
-        if (untilDate?.toUTCString?.() === invokedAt.toUTCString() && !settingDuration) {
-            if (MUTE.defaultDuration.date?.valueOf() > 0) {
-                untilDate = new Date(invokedAt.valueOf() + MUTE.defaultDuration.date.valueOf() - 1000);
-            } else {
-                untilDate = "Indefinite";
-            }
-        }
-        if (untilDate instanceof Date) {
-            timeForMessage = [];
-            const elapsedTime = new Date(untilDate.valueOf() - invokedAt.valueOf() + 1000),
-                elapsed = [
-                    elapsedTime.getFullYear() - 1970,
-                    elapsedTime.getMonth(),
-                    elapsedTime.getDate() - 1,
-                    elapsedTime.getHours(),
-                    elapsedTime.getMinutes(),
-                    elapsedTime.getSeconds()
-                ],
-                elapsedName = [
-                    "year",
-                    "month",
-                    "day",
-                    "hour",
-                    "minute",
-                    "second"
-                ];
+            mentions = parseComa(args?.shift());
 
-            for (let index = 0; index < elapsed.length; index++) {
-                if (elapsed[index] > 0) {
-                    let mes = `${elapsed[index]} ${elapsedName[index]}`;
-                    if (elapsed[index] > 1) {
-                        mes += "s";
-                    } else { }
-                    timeForMessage.push(mes);
-                } else { }
+        if (!MOD.mute) msg.guild.DB.moderation.settings.mute = {};
+        let reason = "No reason provided", duration = {}, resultMsg = "", targetUsers = [];
+
+        if (args?.[1]) {
+            for (const ARG of args) {
+                const U = ARG.slice(2).trim();
+                if (/^cmr(\s|$)/.test(ARG)) return configureMuteRole(msg, ARG.slice(3).trim());
+                if (/^s(\s|$)/.test(ARG)) return muteSetting(msg, U);
+                if (/^[\-\+]?\d{1,16}(?![^ymwdhs])[ymwdhs]?o?/i.test(ARG.trim())) {
+                    duration = durationFn(msg.editedAt || msg.createdAt, ARG.trim());
+                } else if (!ARG || ARG === "--" || ARG.trim().length === 0) continue; else reason = ARG.trim();
             }
-            if (timeForMessage.length > 1) {
-                timeForMessage[timeForMessage.length - 2] += " and";
-            }
-            if (settingDuration && !settingDurationHasSet && timeForMessage.length > 0) {
-                settingDurationHasSet = true;
-                MUTE.defaultDuration.date = elapsedTime,
-                    MUTE.defaultDuration.string = timeForMessage.join(" ");
-            }
+        } else if (!MUTE.role || !msg.guild.roles.cache.get(MUTE.role)) {
+            return trySend(this.client, msg, `No mute role configured!\n\n**[ADMINISTRATOR]**\nRun \`${msg.guild.commandPrefix + this.name} --s -r role_[name|ID|mention] -d [duration]\` to set it up.\n` +
+                `Or if you're too lazy you can run \`${msg.guild.commandPrefix + this.name} --cmr -n [name] -c color_[name|hex|number]\` to make a new mute role and let me set it up for you. ` +
+                `You can view server as the new mute role and override my default settings later.\n` +
+                `Example:\`\`\`\n--s -r muted -d 69y420mo36w49d69h4m420s\n` +
+                `--s -r none -d 0\n--cmr -n Muted -c black\`\`\``);
         }
-        if (settingUp || !roleConfCheck && !settingUp) {
-            if (settingDurationHasSet || settingRoleHasSet) {
-                MOD.mute = MUTE;
-            }
-            let settings = defaultImageEmbed(msg);
-            settings
-                .setTitle("Mute Configuration")
-                .addField("Role", roleDoc ? "<@&" + roleDoc + ">" : "Not set")
-                .addField("Duration", defaultDurationDoc?.string ?? "Not set");
-            return trySend(this.client, msg, { content: resultMsg, embed: settings });
+
+        if (!duration.invoked) duration.invoked = DateTime.fromJSDate(msg.editedAt || msg.createdAt);
+        if (!duration.until && MUTE.defaultDuration?.duration) duration.until = duration.invoked.plus(MUTE.defaultDuration.duration.object);
+        if (duration.until?.invalid) duration.until = undefined; else if (duration.until && !duration.duration) {
+            duration.interval = Interval.fromDateTimes(duration.invoked, duration.until);
+            duration.duration = fn.intervalToDuration(duration.interval);
         }
-        for (const usermention of mentions) {
-            if (usermention.length > 0) {
-                let found = [],
-                    nameid = cleanMentionID(usermention);
-                if (/^\d{17,19}$/.test(nameid)) {
-                    const findmem = msg.guild.member(nameid);
-                    if (findmem) {
-                        found.push(findmem.user);
-                    } else {
-                        await this.client.users.fetch(nameid).then(fetchUser => found.push(fetchUser)).catch(() => { });
-                    }
-                } else {
-                    found = findMemberRegEx(msg, nameid).map(r => r.user);
-                }
-                if (found.length > 0 && found[0] !== null) {
-                    const foundDupli = targetUser.findIndex(r => r === found[0]);
-                    if (foundDupli !== -1) {
-                        resultMsg += `**[WARNING]** Duplicate for user **${targetUser[foundDupli].tag}** with keyword: **${usermention.trim()}**\n`;
-                    } else {
-                        targetUser.push(found[0]);
-                        if (found.length > 1) {
-                            resultMsg += `**[WARNING]** Multiple users found for: **${usermention.trim()}**\n`;
-                        }
-                    }
-                } else {
-                    resultMsg += `Can't find user: **${usermention.trim()}**\n`;
-                }
-            } else {
-                if (!settingUp && mentions[0].length === 0) {
-                    return trySend(this.client, msg, "Args: `<[user_[mention|ID|name]]> -- [reason] -- [duration]`. Use `,` to provide multiple user.\nExample:```js\n" + `${msg.guild.commandPrefix}${this.name} 580703409934696449, @Shasha#1234, ur mom,#6969,^fuck\\s(ur)?\\s.{5}#\\d+69$--69y69mo69w420d420h420m420s -- Saying "joe"\`\`\``);
-                }
-            }
-        }
+
+        if (mentions?.length > 0) {
+            const FR = await targetUser(msg, mentions, targetUsers, resultMsg);
+            targetUsers = FR.targetUser;
+            resultMsg = FR.resultMsg;
+        } else return trySend(this.client, msg, "Args: `<[user_[mention|ID|name]]> -- [reason] -- [duration]`. Use `,` to provide multiple user. `--s` to view settings.\nExample:```js\n" + `${msg.guild.commandPrefix + this.name} 580703409934696449, @Shasha#1234, ur mom,#6969,^yuck\\s(ur)?\\s.{5}#\\d+69$--69y69mo69w420d420h420m420s -- Saying "joe"\`\`\``);
+
         let infractionToDoc;
-        if (targetUser.length > 0) {
-            let targetMember = [],
-                notInServer = [];
-            for (const user of targetUser) {
-                const member = msg.guild.member(user);
-                if (member) {
-                    const pushIt = member.toJSON();
-                    pushIt.rolesID = member.roles.cache.map(r => r.id);
-                    targetMember.push(pushIt);
-                } else {
-                    const pushIt = user.toJSON();
-                    notInServer.push(pushIt);
-                }
-            }
-            const infractionCase = msg.guild.infractions?.length;
+        if (targetUsers.length > 0) {
+            let infractionCase = msg.guild.DB.moderation.infractions?.length,
+                muted = [], cant = [], already = [], infractionN = [];
+
             infractionToDoc = {
-                infraction: infractionCase ? infractionCase + 1 : 1,
-                by: targetUser,
+                infraction: infractionCase ? infractionCase++ : 1,
+                by: targetUsers,
                 moderator: msg.author,
                 punishment: "mute",
-                at: invokedAt,
-                for: timeForMessage,
-                until: untilDate,
                 reason: reason,
-                msg: msg.toJSON(),
-                members: targetMember,
-                users: notInServer
+                msg: msg.toJSON()
             }
-            await col.updateOne({ document: msg.guild.id }, { $push: { "moderation.infractions": infractionToDoc } }, { upsert: true });
+
+            for (const EXEC of targetUsers) {
+                try {
+                    const RES = await EXEC.mute(msg.guild, { duration: duration, infraction: infractionToDoc.infraction, moderator: msg.member }, reason);
+                    if (RES.infraction) infractionN.push(RES.infraction);
+                    muted.push(EXEC.id);
+                } catch (e) {
+                    if (/Missing Permissions|someone with higher position/.test(e.message)) cant.push(EXEC.id);
+                    else if (/already muted/.test(e.message)) already.push(EXEC.id); else trySend(msg.client, msg, e.message); continue;
+                }
+                const emb = defaultEventLogEmbed(msg.guild);
+                emb.setTitle("You have been muted")
+                    .setDescription("**Reason**\n" + reason)
+                    .addField("At", duration.invoked.toFormat(fn.DT_PRINT_FORMAT), true)
+                    .addField("For", duration.duration?.strings.join(" ") || "Indefinite", true)
+                    .addField("Until", duration.until?.toFormat(fn.DT_PRINT_FORMAT) || "Never", true);
+                EXEC.createDM().then(r => trySend(msg.client, r, emb));
+            }
+
+            if (muted.length > 0) {
+                infractionToDoc.executed = muted;
+                infractionToDoc.aborted = already;
+                infractionToDoc.failed = cant;
+                msg.guild.addInfraction(infractionToDoc);
+            }
+
             const NAME = msg.guild.id + "/" + infractionToDoc.infraction,
                 newUnmuteSchedule = {
                     name: NAME,
@@ -274,35 +156,30 @@ module.exports = class mute extends commando.Command {
                     worker: {
                         argv: [NAME]
                     },
-                    date: untilDate
+                    date: duration.until?.toJSDate()
                 };
+
+            let emb = defaultImageEmbed(msg, null, "Infraction #" + infractionToDoc.infraction);
+
+            if (cant.length > 0) emb.addField("Can't mute", "<@" + cant.join(">, <@") + ">\n\n**You can't mute someone with higher position than you <:nekokekLife:852865942530949160>**");
+            if (already.length > 0) emb.addField("Already muted", "<@" + already.join(">, <@") + ">\n\nDuration updated for these users");
+            let mutedStr = "", mutedArr = [];
+            if (muted.length > 0) for (const U of muted) {
+                const tU = "<@" + U + ">\n";
+                if ((mutedStr + tU).length < 1000) mutedStr += tU; else mutedArr.push(U);
+            }
+            if (mutedArr.length > 0) mutedStr += `and ${mutedArr.length} more...`;
+            emb.setDescription("**Reason**\n" + reason)
+                .addField("Muted", mutedStr || "`[NONE]`")
+                .addField("At", duration.invoked.toFormat(fn.DT_PRINT_FORMAT), true)
+                .addField("For", duration.duration?.strings.join(" ") || "Indefinite", true)
+                .addField("Until", duration.until?.toFormat(fn.DT_PRINT_FORMAT) || "Never", true)
+                .addField("Reason", reason);
+
+            return trySend(msg.client, msg, { content: resultMsg, embed: emb });
         }
-        resultMsg += `Result:\`\`\`js\nUsers: ${targetUser.map(r => r?.tag).join(", ")}\nReason: ${reason}\nAt: ${invokedAt.toUTCString()}\nFor: ${timeForMessage.join(" ")}\nUntil: ${typeof untilDate !== "string" ? untilDate.toUTCString() : untilDate}\`\`\``;
+        return trySend(msg.client, msg, resultMsg);
+        resultMsg += `Result:\`\`\`js\nUsers: ${targetUsers.map(r => r?.tag).join(", ")}\nReason: ${reason}\nAt: ${duration.invoked.toFormat("DDD',' cccc',' tt")}\nFor: ${duration.duration?.strings?.join(" ")}\nUntil: ${duration.until?.toFormat("DDD',' cccc',' tt")}\`\`\``;
         return trySend(this.client, msg, { content: resultMsg + "```js\n" + JSON.stringify(infractionToDoc, null, 2) + "```", split: { maxLength: 2000, append: ",```", prepend: "```js\n", char: "," } });
     }
 };
-
-/* if (config.mute.role.length === 0) {
-    return msg.channel.send(`Mute role isn't set! Run \`${this.client.commandPrefix}mute --role <role_[mention, ID]>\`. If you insist i will just give them admin perms <:purifyLife:774102054046007298>`)
-}
-if (setArgs) {
-    for(let set of setArgs) {
-        set = set.toLowerCase();
-        switch(set) {
-            case startsWith('role'): {
-                let role = set.slice('role'.length).trim();
-                if (role.startsWith('<&')) {
-                    role = role.slice(2,-1);
-                }
-                //const foundRole =
-            }
-        }
-    }
-}*/
-                    //scheduler.add()
-/*const yearDate = dateDur.getFullYear();
-const monthDate = dateDur.getMonth();
-const dayDate = dateDur.getDay();
-const hourDate = dateDur.getHours();
-const minuteDate = dateDur.getMinutes();
-const secondDate = dateDur.getSeconds();*/
