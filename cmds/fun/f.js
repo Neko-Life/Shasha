@@ -13,16 +13,16 @@ module.exports = class f extends commando.Command {
         });
     }
     async run(msg, arg) {
-        if (!msg.author.dbLoaded) await msg.author.dbLoad();
+        if (!msg.author.DB) await msg.author.dbLoad();
         if (arg) {
-            msg.author.F = arg;
+            msg.author.DB.F = arg;
             await msg.author.setF(arg)
         };
         return trySend(msg.client, msg,
-            msg.author.F + msg.author.F + msg.author.F + "\n" +
-            msg.author.F + "\n" +
-            msg.author.F + msg.author.F + msg.author.F + "\n" +
-            msg.author.F + "\n" +
-            msg.author.F);
+            msg.author.DB.F + msg.author.DB.F + msg.author.DB.F + "\n" +
+            msg.author.DB.F + "\n" +
+            msg.author.DB.F + msg.author.DB.F + msg.author.DB.F + "\n" +
+            msg.author.DB.F + "\n" +
+            msg.author.DB.F);
     }
 };

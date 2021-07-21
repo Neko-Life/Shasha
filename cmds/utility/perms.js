@@ -66,6 +66,7 @@ module.exports = class perms extends commando.Command {
         }
         const title = `Permissions for: \`${member.user.tag}\``;
         mes += `**Default:**\`\`\`js\n`;
+        if (msg.member.isAdmin) mes += "'ADMINISTRATOR', ";
         if (res.length > 0) {
             mes += `${res.join(", ")}\`\`\``;
         } else {

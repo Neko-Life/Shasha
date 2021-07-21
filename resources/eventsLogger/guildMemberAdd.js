@@ -10,8 +10,8 @@ const getColor = require("../getColor");
  * @returns 
  */
 module.exports = (member) => {
-    if (member.guild.eventChannels?.join) {
-        const log = getChannel(member, member.guild.eventChannels.join);
+    if (member.guild.DB.settings.eventChannels?.join) {
+        const log = getChannel(member, member.guild.DB.settings.eventChannels.join);
         if (!log) return;
         const emb = defaultEventLogEmbed(member.guild);
         emb

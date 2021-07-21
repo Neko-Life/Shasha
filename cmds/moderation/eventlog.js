@@ -16,14 +16,14 @@ module.exports = class eventlog extends commando.Command {
         });
     }
     async run(msg, arg) {
-        if (!msg.guild.dbLoaded) await msg.guild.dbLoad();
+        if (!msg.guild.DB) await msg.guild.dbLoad();
         const set = parseDoubleDash(arg);
-        let eventChannels = msg.guild.eventChannels;
+        let eventChannels = msg.guild.DB.settings.eventChannels;
         if (set.length < 2 && set[0].length === 0) return trySend(this.client, msg, await resultEmbed(this));
         let report = "", joinlog, leavelog, channellog, banlog, unbanlog, mesEdlog = { channel: undefined, ignore: [] }, invitelog, rolelog,
             guildlog, membernicklog, emotelog, memberroleslog, remove = false, [setMesEdIgnore, setMesDelIgnore] = [false, false], mesDellog = { channel: undefined, ignore: [] };
         for (const args of set) {
-            if (args.startsWith("r ")) remove = true;
+            if (args.startsWith("rm ")) remove = true;
             if (args.startsWith("j ")) {
                 if (remove) eventChannels.join = undefined; else {
                     leavelog = getChannel(msg, args.slice("j".length).trim(), ["category", "voice"])?.id;
@@ -217,7 +217,7 @@ module.exports = class eventlog extends commando.Command {
         async function resultEmbed(the) {
             const emb = defaultImageEmbed(msg, null, "Event Log Channels Configuration");
             emb
-                .setDescription(`Set configuration using \`\`\`js\n${msg.guild.commandPrefix + the.name} [--remove] --<Category> <Channel_[Mention | Name | ID]>\`\`\`**Categories:** \`\`\`js\n[MESSAGE[EDIT, DELETE]: --[e, d] [IGNORE: -i <Channel_[Mention | Name | ID]>], JOIN: --j, LEAVE: --l, MEMBER: --p, MEMBERROLE: --mr, BAN: --b, UNBAN: --u, GUILD: --g, ROLE: --r, CHANNEL: --c, EMOJI: --em, INVITE: --i]\`\`\``)
+                .setDescription(`Set configuration using \`\`\`js\n${msg.guild.commandPrefix + the.name} [--rm] --<Category> <Channel_[Mention | Name | ID]>\`\`\`**Categories:** \`\`\`js\n[MESSAGE[EDIT, DELETE]: --[e, d] IGNORE: -i, JOIN: --j, LEAVE: --l, MEMBER: --p, MEMBERROLE: --mr, BAN: --b, UNBAN: --u, GUILD: --g, ROLE: --r, CHANNEL: --c, EMOJI: --em, INVITE: --i]\`\`\``)
                 .addField(`Message Edit`, eventChannels?.mesEd?.channel ? `<#${eventChannels?.mesEd.channel}>\n**Ignores:** ${eventChannels?.mesEd?.ignore?.length > 0 ?
                     "<#" + eventChannels?.mesEd.ignore.join(">, <#") + ">" : "None"}`
                     : "Not set", true)

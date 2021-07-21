@@ -2,7 +2,7 @@
 
 const commando = require("@iceprod/discord.js-commando");
 const { trySend } = require("../../resources/functions");
-const interactEmbed = require("./interactEmbed");
+const interactEmbed = require("./rsc/interactEmbed");
 
 module.exports = class pat extends commando.Command {
     constructor(client) {
