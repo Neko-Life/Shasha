@@ -263,7 +263,7 @@ function defaultImageEmbed(msg, image, title, footerQuote) {
   if (!footerQuote) footerQuote = (msg.guild ?? msg.author).DB.defaultEmbed?.footerQuote || "";
   const emb = new MessageEmbed()
     .setImage(image)
-    .setColor(msg.guild ? getColor(msg.member?.displayColor) : randomColors[Math.floor(Math.random() * randomColors.length)])
+    .setColor(msg.guild ? getColor((msg.member || msg).displayColor) : randomColors[Math.floor(Math.random() * randomColors.length)])
     .setFooter(footerQuote);
   if (title) emb.setTitle(title);
   return emb;
