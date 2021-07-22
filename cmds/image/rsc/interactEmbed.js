@@ -78,7 +78,7 @@ module.exports = async (msg, arg, name, endsaT = "") => {
                     target[d.i] += " twice";
                     break;
                 case 3:
-                    target[d.i] += " thrice XD";
+                    target[d.i] += " thrice!";
                     break;
                 default:
                     target[d.i] += ` ${d.l} times ❤️`;

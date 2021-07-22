@@ -1,9 +1,8 @@
 'use strict';
 
-const commando = require("@iceprod/discord.js-commando");
-const { trySend, ranLog, parseDoubleDash } = require("../../resources/functions");
-const { database } = require("../../database/mongo");
-const col = database.collection("Guild");
+const commando = require("@iceprod/discord.js-commando"),
+    { trySend, ranLog, parseDoubleDash, getChannel, reValidURL } = require("../../resources/functions"),
+    ARGS_TEXT = `Provide argument: \`--c channel_[mention|ID], --t text_[footer_text], --i [footer_icon_URL]\``;
 
 module.exports = class quoteotd extends commando.Command {
     constructor(client) {
@@ -12,52 +11,52 @@ module.exports = class quoteotd extends commando.Command {
             memberName: "quoteotd",
             group: "utility",
             description: "Set Quote of the day channel and settings.",
-            details:"```\n--channel\n--text\n--icon```",
+            details: "```\n--channel\n--text\n--icon```",
             guildOnly: true,
-            userPermissions:["ADMINISTRATOR"]
+            userPermissions: ["ADMINISTRATOR"]
         });
     }
     async run(msg, arg) {
+        if (!msg.guild.DB) await msg.guild.DB.dbLoad();
         const args = parseDoubleDash(arg);
-        if (args.length < 2) {
-            return trySend(this.client, msg, `Provide argument: \`--channel [mention, ID], --text [footer text], --icon [url footer icon]\``);
+        if (!args || args.length < 2) {
+            return trySend(this.client, msg, ARGS_TEXT);
         }
         let result = '';
-        for(const arr of args) {
+        for (const arr of args) {
             const startW = arr.toLowerCase();
             let data;
-            if (startW.startsWith('channel')) {
-                data = arr.slice('channel'.length).trim();
-                if (data.startsWith('<')) {
-                    data = data.slice(2,-1);
-                }
-                if (!this.client.channels.cache.get(data)) {
-                    return trySend(this.client, msg, 'Invalid/unknown channel provided! Try mentioning a channel or use `ChannelID`');
-                } else {
-                    col.updateOne({document: msg.guild.id}, {$set: {"settings.quoteOTD.channel": data}, $setOnInsert: { document: msg.guild.id }}, { upsert: true });
-                    result = result+`Channel set to \`${this.client.channels.cache.get(data).name}\`\n`;
-                }
+            if (startW.startsWith('c ')) {
+                data = arr.slice('c '.length).trim();
+                const CHAN = getChannel(msg, data, ["category", "voice"]);
+                msg.guild.DB.settings.quoteOTD.channel = CHAN.id;
+                result += `Channel set: **${CHAN.name}**\n`;
+                continue;
             }
-            if (startW.startsWith('text')) {
-                data = arr.slice('text'.length).trim();
-                col.updateOne({document: msg.guild.id}, {$set: {"settings.quoteOTD.footerText": data}, $setOnInsert: { document: msg.guild.id }}, { upsert: true });
-                result = result+`Footer text set to \`${data}\`\n`;
+            if (startW.startsWith('t ')) {
+                data = arr.slice('t '.length).trim();
+                msg.guild.DB.settings.quoteOTD.footerText = data;
+                result += `Footer text set: \`${data}\`\n`;
+                continue;
             }
             if (startW.startsWith('icon')) {
                 data = arr.slice('icon'.length).trim();
-                if (!/^http/.test(data)) {
-                    return trySend(this.client, msg, 'Invalid icon url provided!');
+                if (!reValidURL.test(data)) {
+                    result += 'Invalid icon URL provided!\n';
+                    continue;
                 } else {
-                    col.updateOne({document: msg.guild.id}, {$set: {"settings.quoteOTD.footerIcon": data}, $setOnInsert: { document: msg.guild.id }}, { upsert: true });
-                    result = result+`Footer icon set!\n`;
+                    msg.guild.DB.settings.quoteOTD.footerIcon = data;
+                    result += `Footer icon set!\n`;
+                    continue;
                 }
             }
         }
         if (result.length > 0) {
+            if (result !== 'Invalid icon URL provided!\n') msg.guild.DB.setDb(msg.guild.DB);
             ranLog(msg, result);
             return trySend(this.client, msg, result);
         } else {
-            return trySend(this.client, msg, `Provide argument: \`--channel [mention, ID], --text [footer text], --icon [url footer icon]\``);
+            return trySend(this.client, msg, ARGS_TEXT);
         }
     }
 };

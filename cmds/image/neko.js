@@ -10,12 +10,12 @@ module.exports = class neko extends commando.Command {
             name: "neko",
             memberName: "neko",
             group: "image",
-            description: "Neko."
+            description: "Neko"
         });
     }
     async run(msg) {
         msg.channel.startTyping();
-        const title = `${msg.guild ? msg.member.displayName : msg.author.username} ~Nyann~ (UwU) <3`;
+        const title = `${msg.guild ? msg.member.displayName : msg.author.username} ~Nyann~`;
         const image = await fetchNeko("nekos");
         const emb = defaultImageEmbed(msg, image); emb.setAuthor(title, msg.author.displayAvatarURL({ size: 128, format: "png", dynamic: true }));
         return trySend(this.client, msg, emb);

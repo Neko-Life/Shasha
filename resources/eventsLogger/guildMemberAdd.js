@@ -20,7 +20,7 @@ module.exports = (member) => {
             .setTitle("`" + member.user.tag + "` joined")
             .setThumbnail(member.user.displayAvatarURL({ format: "png", size: 4096, dynamic: true }))
             .setColor(getColor("cyan"))
-            .addField("Registered", "**" + DateTime.fromJSDate(member.user.createdAt).toFormat(DT_PRINT_FORMAT) + "**", true)
+            .addField("Registered", DateTime.fromJSDate(member.user.createdAt).toFormat(DT_PRINT_FORMAT), true)
             .setDescription(`<@!${member.id}> (${member.id}) just joined.\nWe have ${member.guild.memberCount} total members now.`);
         return trySend(member.client, log, emb);
     }

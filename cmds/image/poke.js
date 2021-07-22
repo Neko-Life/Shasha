@@ -15,6 +15,6 @@ module.exports = class poke extends commando.Command {
         });
     }
     async run(msg, arg) {
-        return trySend(this.client, msg, await interactEmbed(msg, arg, "poke", ":>"));
+        return trySend(this.client, msg, await interactEmbed(msg, arg, "poke", ""));
     }
 };

@@ -15,16 +15,18 @@ module.exports = (member) => {
     if (member.guild.DB.settings.eventChannels?.leave) {
         const log = getChannel(member, member.guild.DB.settings.eventChannels.leave);
         if (!log) return;
-        const days = intervalToDuration(Interval.fromDateTimes(DateTime.fromJSDate(member.joinedAt), DateTime.now())).strings.join(" "),
-            emb = defaultEventLogEmbed(member.guild),
+        const emb = defaultEventLogEmbed(member.guild),
             RO = member.roles.cache.sort((a, b) => b.position - a.position).map(r => r.id).slice(0, -1),
-            RU = splitOnLength(RO, 1010, ">, <@&");
+            RU = splitOnLength(RO, 1010, ">, <@&"),
+            JO = DateTime.fromJSDate(member.user.createdAt),
+            LE = DateTime.fromJSDate(member.joinedAt),
+            INT = Interval.fromDateTimes(LE, DateTime.now());
         emb
             .setTitle("`" + member.user.tag + "` left")
             .setThumbnail(member.user.displayAvatarURL({ format: "png", size: 4096, dynamic: true }))
             .setColor(getColor("yellow"))
-            .addField("Registered", "**" + DateTime.fromJSDate(member.user.createdAt).toFormat(DT_PRINT_FORMAT) + "**", true)
-            .addField("Joined", "**" + DateTime.fromJSDate(member.joinedAt).toFormat(DT_PRINT_FORMAT) + "**" + `\n(${days > 0 ? `${days} day${days > 1 ? "s" : ""} ago` : "Today"})`, true)
+            .addField("Registered", JO.toFormat(DT_PRINT_FORMAT), true)
+            .addField("Joined", LE.toFormat(DT_PRINT_FORMAT) + `\n(${intervalToDuration(INT).strings.join(" ")} ago)`, true)
             .addField("Nick", "`" + member.displayName + "`")
             .setDescription(`<@!${member.id}> (${member.id}) just left.\nWe have ${member.guild.memberCount} total members now.`);
         for (const U of RU) {

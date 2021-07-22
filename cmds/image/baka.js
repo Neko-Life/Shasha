@@ -10,12 +10,12 @@ module.exports = class baka extends commando.Command {
             name: "baka",
             memberName: "baka",
             group: "image",
-            description: "Say \"baka\" :/"
+            description: "Say \"baka\""
         });
     }
     async run(msg) {
         msg.channel.startTyping();
-        const title = `${msg.guild ? msg.member.displayName : msg.author.username} is getting dere-dere~ =>`;
+        const title = `${msg.guild ? msg.member.displayName : msg.author.username} is getting dere-dere~`;
         const image = await fetchNeko("baka");
         const emb = defaultImageEmbed(msg, image); emb.setAuthor(title, msg.author.displayAvatarURL({ size: 128, format: "png", dynamic: true }));
         return trySend(this.client, msg, emb);

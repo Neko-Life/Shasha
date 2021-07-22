@@ -15,6 +15,6 @@ module.exports = class tickle extends commando.Command {
         });
     }
     async run(msg, arg) {
-        return trySend(this.client, msg, await interactEmbed(msg, arg, "tickle", "XD"));
+        return trySend(this.client, msg, await interactEmbed(msg, arg, "tickle", ""));
     }
 };

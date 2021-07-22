@@ -15,6 +15,6 @@ module.exports = class feed extends commando.Command {
         });
     }
     async run(msg, arg) {
-        return trySend(this.client, msg, await interactEmbed(msg, arg, "feed", "^^"));
+        return trySend(this.client, msg, await interactEmbed(msg, arg, "feed", ""));
     }
 };

@@ -288,7 +288,7 @@ function cleanMentionID(key) {
  * Get channel object wit RegExp
  * @param {Message | GuildMember | Guild} msg Object of the guild being searched
  * @param {string} name Keyword
- * @param {ChannelType[]} exclude Exclude channel type
+ * @param {["text"|"dm"|"voice"|"group"|"category"|"news"|"store"|"unknown"]} exclude Exclude channel type
  * @returns {GuildChannel[]} Channels object found
  */
 function findChannelRegEx(msg, name, exclude) {
@@ -381,7 +381,7 @@ function multipleRolesFound(msg, arr, key, max = 4, withID) {
  * Standard
  * @param {Message | Guild} msg - Message object
  * @param {string} key - Channel ID | Mention | Name
- * @param {ChannelType[]} exclude - Exclude channel type
+ * @param {["text"|"voice"|"category"|"news"|"store"|"unknown"]} exclude - Exclude channel type
  * @returns {GuildChannel | Channel} Channel object
  */
 function getChannel(msg, key, exclude) {

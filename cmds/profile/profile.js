@@ -2,8 +2,10 @@
 
 const commando = require("@iceprod/discord.js-commando");
 const { MessageEmbed, User, Message } = require("discord.js");
+const { DateTime } = require("luxon");
 const { errLog, trySend, getUser, defaultImageEmbed, splitOnLength } = require("../../resources/functions");
 const getColor = require("../../resources/getColor");
+const { DT_PRINT_FORMAT } = require("../moderation/src/duration");
 
 module.exports = class profile extends commando.Command {
     constructor(client) {
@@ -29,13 +31,13 @@ module.exports = class profile extends commando.Command {
             emb = defaultImageEmbed(msg, null, `\`${TM.tag}\`'s Profile`);
         emb
             .setThumbnail(TM.displayAvatarURL({ format: "png", size: 4096, dynamic: true }))
-            .addField("Registered", TM.createdAt.toUTCString().slice(0, -4), true)
+            .addField("Registered", DateTime.fromJSDate(TM.createdAt).toFormat(DT_PRINT_FORMAT), true)
             .addField("ID", TM.id, true);
         if (TM.description) emb.setDescription(TM.description);
         if (MEM) {
             const RI = MEM.roles.cache.sort((a, b) => b.position - a.position).map(r => r.id).slice(0, -1),
                 RFS = splitOnLength(RI, 1010, ">, <@&");
-            emb.addField("Joined", MEM.joinedAt.toUTCString().slice(0, -4))
+            emb.addField("Joined", DateTime.fromJSDate(MEM.joinedAt).toFormat(DT_PRINT_FORMAT))
                 .addField("Nick", `\`${MEM.displayName}\``);
             if (RFS[0]?.length > 0) {
                 for (const p of RFS) {
