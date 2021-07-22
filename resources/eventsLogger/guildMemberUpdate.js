@@ -17,11 +17,11 @@ module.exports = (memberold, membernew) => {
         };
         return membernew.user.setDb(membernew.user.DB);
     }
-    let log;
-    const emb = defaultEventLogEmbed(membernew.guild);
+    let log, thumbMes = "";
+    const emb = defaultEventLogEmbed(membernew.guild), oldT = memberold.toJSON().displayAvatarURL;
     emb.setTitle("Profile `" + memberold.user.tag + "` updated")
-        .setThumbnail(membernew.user.DB.cachedAvatarURL ?? memberold.toJSON().displayAvatarURL)
         .setColor(getColor("blue"));
+    if (membernew.user.DB.cachedAvatarURL || oldT) thumbMes += "This embed's thumbnail is the user's old avatar.\n";
     if (membernew.guild.DB.settings.eventChannels?.memberRole) {
         log = getChannel(membernew, membernew.guild.DB.settings.eventChannels.memberRole);
         if (membernew.roles.cache.size > memberold.roles.cache.size) {
@@ -41,7 +41,7 @@ module.exports = (memberold, membernew) => {
         if (membernew.user.DB.cachedAvatarURL != membernew.user.displayAvatarURL({ format: "png", size: 4096, dynamic: true })) {
             emb
                 .setImage(membernew.user.displayAvatarURL({ format: "png", size: 4096, dynamic: true }))
-                .addField("Avatar", (emb.thumbnail ? "This embed's thumbnail is the user's old avatar.\n" : "") + "The image below is the user's new avatar.");
+                .addField("Avatar", thumbMes + "The image below is the user's new avatar.");
         }
     }
     membernew.user.refreshDb({ cachedAvatarURL: membernew.user.displayAvatarURL({ format: "png", size: "4096", dynamic: true }) });

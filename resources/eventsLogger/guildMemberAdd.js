@@ -1,8 +1,10 @@
 'use strict';
 
-const { GuildMember } = require("discord.js");
-const { getChannel, defaultEventLogEmbed, trySend } = require("../functions");
-const getColor = require("../getColor");
+const { GuildMember } = require("discord.js"),
+    { DateTime } = require("luxon"),
+    { getChannel, defaultEventLogEmbed, trySend } = require("../functions"),
+    getColor = require("../getColor"),
+    { DT_PRINT_FORMAT } = require("../../cmds/moderation/src/duration");
 
 /**
  * Log newly joined Guild Member
@@ -18,7 +20,7 @@ module.exports = (member) => {
             .setTitle("`" + member.user.tag + "` joined")
             .setThumbnail(member.user.displayAvatarURL({ format: "png", size: 4096, dynamic: true }))
             .setColor(getColor("cyan"))
-            .addField("Registered", "**" + member.user.createdAt.toUTCString().slice(0, -4) + "**", true)
+            .addField("Registered", "**" + DateTime.fromJSDate(member.user.createdAt).toFormat(DT_PRINT_FORMAT) + "**", true)
             .setDescription(`<@!${member.id}> (${member.id}) just joined.\nWe have ${member.guild.memberCount} total members now.`);
         return trySend(member.client, log, emb);
     }
