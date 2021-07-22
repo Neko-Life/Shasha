@@ -11,7 +11,7 @@ const getColor = require("../getColor");
  */
 module.exports = async (msg) => {
     if (msg.partial) return;
-    const ignored = msg.guild.DB.settings.eventChannels.mesDel?.ignore.includes(msg.channel.id) ?? false;
+    const ignored = msg.guild.DB.settings.eventChannels.mesDel?.ignore?.includes(msg.channel.id) ?? false;
     let check = false;
     if (msg.channel.id === msg.guild.DB.settings.eventChannels.mesDel?.channel && msg.author ? msg.author !== msg.client.user : false && ignored === false) check = true;
     if (msg.guild.DB.settings.eventChannels.mesDel?.channel !== msg.channel.id && ignored === false || check) {
