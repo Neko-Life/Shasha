@@ -32,7 +32,7 @@ module.exports = class lookup extends commando.Command {
         const args = arg.split(/ +/);
         let [fetchedMember, fetchedRoles, fetchedChannels, memMes] = [[], [], [], ""];
         const lowCaseArg0 = args[0];
-        if (lowCaseArg0.startsWith("--r ")) {
+        if (lowCaseArg0.startsWith("--r")) {
             if (args[1]) {
                 const cleanRoleID = cleanMentionID(arg.slice("--r ".length).trim());
                 if (/^\d{17,19}$/.test(cleanRoleID)) {
@@ -50,7 +50,7 @@ module.exports = class lookup extends commando.Command {
                 }
             }
         } else {
-            if (lowCaseArg0.startsWith("--c ")) {
+            if (lowCaseArg0.startsWith("--c")) {
                 if (args[1]) {
                     const cleanChannelID = cleanMentionID(arg.slice("--c ".length).trim());
                     if (/^\d{17,19}$/.test(cleanChannelID)) {
@@ -68,7 +68,7 @@ module.exports = class lookup extends commando.Command {
                     }
                 }
             } else {
-                if (arg.startsWith("--m ")) {
+                if (arg.startsWith("--m")) {
                     arg = arg.slice("--m ".length).trim();
                 }
                 arg = cleanMentionID(arg);

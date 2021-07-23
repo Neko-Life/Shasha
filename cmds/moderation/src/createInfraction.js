@@ -5,7 +5,7 @@ const { Message, User } = require("discord.js");
 /**
  * @param {Message} msg 
  * @param {User[]} targetUsers 
- * @param {["ban"|"mute"|"kick"|"strike"]} punishment 
+ * @param {"ban"|"mute"|"kick"|"strike"} punishment 
  * @param {string} reason 
  */
 module.exports = (msg, targetUsers, punishment, reason) => {

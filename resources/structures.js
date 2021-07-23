@@ -3,7 +3,7 @@
 const { Structures, Guild, GuildMember, BanOptions } = require("discord.js"),
     { database } = require("../database/mongo"),
     { errLog } = require("./functions");
-const { DateTime, Duration } = require("luxon");
+const { TimedPunishment } = require("./classes");
 
 Structures.extend("Guild", u => {
     return class Guild extends u {
@@ -20,8 +20,16 @@ Structures.extend("Guild", u => {
                 if (!r.moderation) r.moderation = {};
                 if (!r.settings.eventChannels) r.settings.eventChannels = {};
                 if (!r.moderation.settings) r.moderation.settings = {};
-                if (!r.moderation.infractions) r.moderation.infractions = new Map();
-                if (!r.moderation.timedPunishments) r.moderation.timedPunishments = new Map();
+                let infractions = new Map(),
+                    timedPunishments = new Map();
+                if (r.moderation.infractions)
+                    for (const U in r.moderation.infractions)
+                        infractions.set(U, r.moderation.infractions[U]);
+                if (r.moderation.timedPunishments)
+                    for (const U in r.moderation.timedPunishments)
+                        timedPunishments.set(U, new TimedPunishment(r.moderation.timedPunishments[U]));
+                r.moderation.infractions = infractions;
+                r.moderation.timedPunishments = timedPunishments;
                 return this.DB = r;
             });
         }
@@ -48,20 +56,20 @@ Structures.extend("Guild", u => {
 
         /**
          * Get user infractions
-         * @param {String} get - User ID
-         * @returns {Promise<Map>} Array of infractions objects
+         * @param {string} userID - User ID
+         * @returns {object[]} Array of infractions objects
          */
-        async getInfractions(get) {
-            try {
-                if (!this.DB) await this.dbLoad();
-                return this.DB.moderation.infractions.filter(r => r.map(u => u.id).includes(get));
-            } catch (e) { }
+        async getInfractions(userID) {
+            let ret = []
+            for (const [k, v] of this.DB.moderation.infractions)
+                if (v.by.map(r => r.id).includes(userID)) ret.push(v);
+            return ret;
         }
 
         async addInfraction(add) {
             try {
                 if (!this.DB) await this.dbLoad();
-                this.DB.moderation.infractions.push(add);
+                this.DB.moderation.infractions.set(add.infraction, add);
                 return this.setDb(this.DB);
             } catch (e) { }
         }
@@ -89,6 +97,47 @@ Structures.extend("Guild", u => {
             this.DB.moderation.settings = set;
             return this.setDb(this.DB);
         }
+
+        /**
+         * @param {TimedPunishment} Punishment
+         * @returns {Map}
+         */
+        setTimedPunishment(Punishment) {
+            const ret = this.DB.moderation.timedPunishments.set(Punishment.userID + "/" + Punishment.type, Punishment);
+            this.setDb(this.DB);
+            return ret;
+        }
+
+        /**
+         * @param {string} userID
+         * @param {"mute"|"ban"} type
+         * @returns
+         */
+        getTimedPunishment(userID, type) {
+            return this.DB.moderation.timedPunishments.get(userID + "/" + type);
+        }
+
+        /**
+         * @param {string} userID
+         * @returns {object[]}
+         */
+        searchTimedPunishment(userID) {
+            let ret = [];
+            for (const [k, v] of this.DB.moderation.timedPunishments) if (v.userID === userID) ret.push(v);
+            return ret;
+        }
+
+        /**
+         * 
+         * @param {string} userID 
+         * @param {"mute"|"ban"} type 
+         * @returns {boolean}
+         */
+        removeTimedPunishment(userID, type) {
+            const ret = this.DB.moderation.timedPunishments.delete(userID + "/" + type)
+            this.setDb(this.DB);
+            return ret;
+        }
     }
 });
 
@@ -106,7 +155,6 @@ Structures.extend("User", u => {
                 if (!r) r = {};
                 if (!r.F) r.F = "<:pepewhysobLife:853237646666891274>";
                 if (!r.cachedAvatarURL) r.cachedAvatarURL = this.displayAvatarURL({ format: "png", size: 4096, dynamic: true });
-                if (!r.mutedIn) r.mutedIn = [];
                 if (!r.interactions) r.interactions = {};
                 return this.DB = r;
             });
@@ -157,103 +205,35 @@ Structures.extend("User", u => {
         }
 
         /**
-         * @param {string} guildID
-         * @param {{state: boolean, duration: object, infraction: number}} state
-         * @returns {number}
-         */
-        pushMutedIn(guildID, { state: state = true, duration: duration, infraction: infraction }) {
-            const push = {
-                guildID: guildID,
-                state: state,
-                duration: duration,
-                infraction: infraction
-            }
-            return this.DB.mutedIn.push(push);
-        }
-
-        removeMutedIn(guildID) {
-            return this.DB.mutedIn = this.DB.mutedIn.filter((r) => r.guildID !== guildID);
-        }
-
-        /**
-         * @param {string} guildID 
-         * @returns {{data: {state: boolean, duration: duration, infraction: number, guildID: string}, index: number, count: number}}
-         */
-        getMutedIn(guildID) {
-            let index = -1;
-            const hmm = this.DB.mutedIn.filter((r, i) => {
-                if (r.guildID === guildID) {
-                    index = i;
-                    return true;
-                } else return false;
-            }),
-                data = hmm?.[0],
-                count = hmm?.length || 0;
-            const D = { data, index, count };
-            console.log(D);
-            return D;
-        }
-
-        /**
-         * @param {string} guildID
-         * @param {{state: boolean, duration: object, infraction: number}} state
-         * @returns {{state: boolean, duration: object, infraction: number, guildID: string}}
-         */
-        updateMutedIn(guildID, { state: state = true, duration: duration, infraction: infraction }) {
-            const I = this.getMutedIn(guildID)?.index;
-            if (I === -1) return false;
-            const push = {
-                guildID: guildID,
-                state: state,
-                duration: duration,
-                infraction: infraction
-            };
-            this.DB.mutedIn[I] = push;
-            return this.DB.mutedIn[I];
-        }
-
-        /**
          * @param {Guild} guild 
          * @param {string} reason
-         * @param {{duration: object, saveTakenRoles: boolean, infraction: number, moderator: GuildMember}} data
+         * @param {{duration: object, saveTakenRoles: boolean, infraction: number, moderator: User}} data
          */
         async mute(guild, data, reason) {
             if (!guild || !(guild instanceof Guild)) throw new TypeError("Guild is " + typeof guild);
             if (!data?.infraction) throw new Error("Missing infraction id");
-            if (!this.DB) await this.dbLoad();
             if (!guild.DB) await guild.dbLoad();
             const MEM = guild.member(this);
             if (MEM) {
                 if (data.moderator.roles.highest.position < MEM.roles.highest.position) throw new Error("You can't mute someone with higher position than you <:nekokekLife:852865942530949160>");
-                return MEM.mute(data, reason)
-            } else {
-                const MC = this.getMutedIn(guild.id);
-                if (MC?.index > -1) {
-                    if (data.duration && MC.data) {
-                        const ret = this.updateMutedIn(guild.id, { state: true, duration: data.duration, infraction: MC.data.infraction });
-                        this.setDb(this.DB);
-                        return ret;
-                    };
-                    throw new Error("This member is already muted. Provide `[duration]` to set new duration.");
-                }
-                const ret = this.pushMutedIn(guild.id, { state: true, duration: data.duration, infraction: data.infraction });
-                this.setDb(this.DB);
-                return ret;
-            };
+                await MEM.mute(data, reason);
+            }
+            const MC = guild.getTimedPunishment(this.id, "mute"),
+                TP = new TimedPunishment({ userID: this.id, duration: data.duration, infraction: data.infraction, type: "mute" });
+            return { set: guild.setTimedPunishment(TP), existing: MC }
         }
 
         async unmute(guild, moderator, reason) {
             if (!guild || !(guild instanceof Guild)) throw new TypeError("Guild is " + typeof guild);
-            if (!this.DB) await this.dbLoad();
+            if (!guild.DB) await guild.dbLoad();
+            const MC = suild.getTimedPunishment(this.id, "mute");
+            if (!MC) throw new Error(this.tag + " isn't muted in " + guild.name);
             const MEM = guild.member(this);
             if (MEM) {
                 if (moderator.roles.highest.position < MEM.roles.highest.position) throw new Error("You can't mute someone with higher position than you <:nekokekLife:852865942530949160>");
-                return MEM.unmute(reason)
-            } else {
-                const ret = this.removeMutedIn(guild.id);
-                this.setDb(this.DB);
-                return ret;
+                await MEM.unmute(reason)
             }
+            return guild.removeTimedPunishment(this.id, "mute");
         }
 
         /**
@@ -357,22 +337,9 @@ Structures.extend("GuildMember", u => {
          */
         async mute(data, reason) {
             if (!this.DB) await this.dbLoad();
-            if (!this.user.DB) await this.user.dbLoad();
-            if (!this.guild.DB) await this.guild.dbLoad();
-            if (!data) throw new Error("Missing infraction id");
-
-            const MC = this.user.getMutedIn(this.guild.id);
-            if (!data.infraction && !MC?.data) throw new Error("Missing infraction id");
-
-            if (MC?.index > -1) {
-                if (data.duration && MC.data) {
-                    const ret = this.user.updateMutedIn(this.guild.id, { state: true, duration: data.duration, infraction: MC.data.infraction });
-                    this.user.setDb(this.user.DB);
-                    return ret;
-                }
-                throw new Error("This member is already muted. Provide `[duration]` to set new duration.");
-            }
+            if (!data || !data.infraction) throw new Error("Missing infraction id");
             if (data.saveTakenRoles === undefined) data.saveTakenRoles = true;
+
             const ROLES = this.roles.cache.filter((r) => !r.managed).map(r => r.id);
             if (data.saveTakenRoles && ROLES?.length > 0) {
                 console.log("populating takenRoles M");

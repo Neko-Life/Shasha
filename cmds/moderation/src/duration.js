@@ -1,6 +1,6 @@
 'use strict';
 
-const { DateTime, Settings, Interval } = require("luxon"),
+const { DateTime, Settings, Interval, DurationObject } = require("luxon"),
     DURATION_REGEXP = /[\-]?\d+(?![^ymwdhs])[ymwdhs]?o?/gi,
     DT_PRINT_FORMAT = "DDD'\n'cccc',' tt",
     CHECK_FOR_DURATION_REGEXP = /^[\-\+]?\d{1,16}(?![^ymwdhs])[ymwdhs]?o?/i;
@@ -9,7 +9,7 @@ Settings.defaultZone = "utc";
 /**
  * 
  * @param {Interval} interval 
- * @returns {{ "object": {years: number, months: number,days: number,hours: number,minutes: number,seconds: number}, strings: string[] }}
+ * @returns {{ "object": DurationObject, strings: string[] }}
  */
 function intervalToDuration(interval) {
     if (!(interval instanceof Interval)) return;
