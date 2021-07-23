@@ -16,7 +16,7 @@ module.exports = class avatar extends commando.Command {
     });
   }
   async run(msg, arg) {
-    const doc = msg.guild ?? msg.author;
+    const doc = msg.guild.DB.settings || msg.author.DB;
     const footerQuote = doc.defaultEmbed?.footerQuote;
     const option = "";// || arg.match(/(?<!\\)--s +\d+/)?.[0];
     let user, avatar, member, show, notFound = "";

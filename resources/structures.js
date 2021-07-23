@@ -1,6 +1,6 @@
 'use strict';
 
-const { Structures, Guild, GuildMember } = require("discord.js"),
+const { Structures, Guild, GuildMember, BanOptions } = require("discord.js"),
     { database } = require("../database/mongo"),
     { errLog } = require("./functions");
 const { DateTime, Duration } = require("luxon");
@@ -20,7 +20,8 @@ Structures.extend("Guild", u => {
                 if (!r.moderation) r.moderation = {};
                 if (!r.settings.eventChannels) r.settings.eventChannels = {};
                 if (!r.moderation.settings) r.moderation.settings = {};
-                if (!r.moderation.infractions) r.moderation.infractions = [];
+                if (!r.moderation.infractions) r.moderation.infractions = new Map();
+                if (!r.moderation.timedPunishments) r.moderation.timedPunishments = new Map();
                 return this.DB = r;
             });
         }
@@ -48,23 +49,12 @@ Structures.extend("Guild", u => {
         /**
          * Get user infractions
          * @param {String} get - User ID
-         * @returns {Promise<Object[]>} Array of infractions objects
+         * @returns {Promise<Map>} Array of infractions objects
          */
         async getInfractions(get) {
             try {
                 if (!this.DB) await this.dbLoad();
-                let found = [];
-                if (this.DB.moderation.infractions.length > 0) {
-                    for (const inf of this.DB.moderation.infractions) {
-                        for (const user of inf.by) {
-                            if (user.id === get) {
-                                found.push(inf);
-                                break;
-                            }
-                        }
-                    }
-                }
-                return found;
+                return this.DB.moderation.infractions.filter(r => r.map(u => u.id).includes(get));
             } catch (e) { }
         }
 
@@ -264,6 +254,14 @@ Structures.extend("User", u => {
                 this.setDb(this.DB);
                 return ret;
             }
+        }
+
+        /**
+         * @param {Guild} guild
+         * @param {BanOptions} option
+         */
+        async ban(guild, option) {
+            guild.members.ban(this, option);
         }
     }
 });

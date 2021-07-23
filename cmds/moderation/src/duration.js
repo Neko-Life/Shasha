@@ -2,7 +2,8 @@
 
 const { DateTime, Settings, Interval } = require("luxon"),
     DURATION_REGEXP = /[\-]?\d+(?![^ymwdhs])[ymwdhs]?o?/gi,
-    DT_PRINT_FORMAT = "DDD'\n'cccc',' tt";
+    DT_PRINT_FORMAT = "DDD'\n'cccc',' tt",
+    CHECK_FOR_DURATION_REGEXP = /^[\-\+]?\d{1,16}(?![^ymwdhs])[ymwdhs]?o?/i;
 
 Settings.defaultZone = "utc";
 /**
@@ -90,4 +91,4 @@ function duration(base, string) {
     return { invoked: DT_INVOKED, until: DT_END, interval: DT_INTERVAL, duration: intervalToDuration(DT_INTERVAL) }
 }
 
-module.exports = { duration, DT_PRINT_FORMAT, intervalToDuration }
+module.exports = { duration, DT_PRINT_FORMAT, intervalToDuration, DURATION_REGEXP, CHECK_FOR_DURATION_REGEXP }

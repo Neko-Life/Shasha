@@ -9,8 +9,8 @@ const getColor = require("../../resources/getColor");
 module.exports = class servav extends commando.Command {
     constructor(client) {
         super(client, {
-            name: "serv-av",
-            memberName: "serv-av",
+            name: "servav",
+            memberName: "servav",
             aliases: ["server-avatar", "serv-avatar", "server-av"],
             group: "profile",
             description: "Show server avatar."
@@ -20,7 +20,7 @@ module.exports = class servav extends commando.Command {
         const server_ID = arg.split(/ +/)[0];
         const doc = msg.guild?.id ?? msg.author.id;
         const col = database.collection(msg.guild ? "Guild" : "User");
-        col.findOne({document: doc}, (err, res) => {
+        col.findOne({ document: doc }, (err, res) => {
             if (err) {
                 errLog(err, msg, this.client);
             }
@@ -36,15 +36,15 @@ module.exports = class servav extends commando.Command {
                 target = msg.guild;
             }
             if (target) {
-                icon = target.iconURL({size:4096, dynamic:true});
+                icon = target.iconURL({ size: 4096, dynamic: true });
             } else {
                 return trySend(this.client, msg, "I'm not in that server...");
             }
             if (icon) {
                 let embed = new MessageEmbed()
-                .setImage(icon)
-                .setTitle(target.name)
-                .setFooter(footerQuote ?? "");
+                    .setImage(icon)
+                    .setTitle(target.name)
+                    .setFooter(footerQuote ?? "");
                 if (target.owner.displayColor) {
                     const color = getColor(target.owner.displayColor)
                     embed.setColor(color);

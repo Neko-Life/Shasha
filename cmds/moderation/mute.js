@@ -13,6 +13,7 @@ const durationFn = fn.duration;
 const targetUser = require("./src/targetUser");
 const configureMuteRole = require("./src/configureMuteRole");
 const { makeJSONMessage } = require("../../resources/debug");
+const createInfraction = require("./src/createInfraction");
 Settings.defaultZone = "utc";
 
 /*{
@@ -82,12 +83,13 @@ module.exports = class mute extends commando.Command {
 
         if (args?.[1]) {
             for (const ARG of args) {
+                if (ARG === "--" || ARG.trim().length < 1) continue;
                 const U = ARG.slice(2).trim();
                 if (/^cmr(\s|$)/.test(ARG)) return configureMuteRole(msg, ARG.slice(3).trim());
                 if (/^s(\s|$)/.test(ARG)) return muteSetting(msg, U);
-                if (/^[\-\+]?\d{1,16}(?![^ymwdhs])[ymwdhs]?o?/i.test(ARG.trim())) {
+                if (fn.CHECK_FOR_DURATION_REGEXP.test(ARG.trim())) {
                     duration = durationFn(msg.editedAt || msg.createdAt, ARG.trim());
-                } else if (!ARG || ARG === "--" || ARG.trim().length === 0) continue; else reason = ARG.trim();
+                } else reason = ARG.trim();
             }
         } else if (!MUTE.role || !msg.guild.roles.cache.get(MUTE.role)) {
             return trySend(this.client, msg, `No mute role configured!\n\n**[ADMINISTRATOR]**\nRun \`${msg.guild.commandPrefix + this.name} --s -r role_[name|ID|mention] -d [duration]\` to set it up.\n` +
@@ -110,19 +112,8 @@ module.exports = class mute extends commando.Command {
             resultMsg = FR.resultMsg;
         } else return trySend(this.client, msg, "Args: `<[user_[mention|ID|name]]> -- [reason] -- [duration]`. Use `,` to provide multiple user. `--s` to view settings.\nExample:```js\n" + `${msg.guild.commandPrefix + this.name} 580703409934696449, @Shasha#1234, ur mom,#6969,^yuck\\s(ur)?\\s.{5}#\\d+69$--69y69mo69w420d420h420m420s -- Saying "joe"\`\`\``);
 
-        let infractionToDoc;
         if (targetUsers.length > 0) {
-            let infractionCase = msg.guild.DB.moderation.infractions?.length,
-                muted = [], cant = [], already = [], infractionN = [];
-
-            infractionToDoc = {
-                infraction: infractionCase ? infractionCase++ : 1,
-                by: targetUsers,
-                moderator: msg.author,
-                punishment: "mute",
-                reason: reason,
-                msg: msg.toJSON()
-            }
+            let muted = [], cant = [], already = [], infractionN = [];
 
             for (const EXEC of targetUsers) {
                 try {
@@ -142,12 +133,13 @@ module.exports = class mute extends commando.Command {
                 EXEC.createDM().then(r => trySend(msg.client, r, emb));
             }
 
-            if (muted.length > 0) {
-                infractionToDoc.executed = muted;
-                infractionToDoc.aborted = already;
-                infractionToDoc.failed = cant;
-                msg.guild.addInfraction(infractionToDoc);
-            }
+            let infractionToDoc = createInfraction(msg, targetUsers, "mute", reason);
+
+            infractionToDoc.executed = muted;
+            infractionToDoc.aborted = already;
+            infractionToDoc.failed = cant;
+
+            if (muted.length > 0) msg.guild.addInfraction(infractionToDoc);
 
             const NAME = msg.guild.id + "/" + infractionToDoc.infraction,
                 newUnmuteSchedule = {

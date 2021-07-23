@@ -8,22 +8,17 @@ module.exports = class setfootq extends commando.Command {
     constructor(client) {
         super(client, {
             name: "setfootq",
-            aliases:["setfooterquote"],
+            aliases: ["setfooterquote"],
             memberName: "setfootq",
             group: "utility",
             description: "Set server embed footer text.",
-            userPermissions: ["ADMINISTRATOR"]
+            userPermissions: ["MANAGE_GUILD"]
         });
     }
     async run(msg, args) {
         try {
-            if (msg.guild ? !msg.guild.member(msg.author).hasPermission("MANAGE_GUILD") : false && !this.client.owners.includes(msg.author)) {
-                return trySend(this.client, msg, 'No lol');
-            }
-            let oldQ = msg.guild?.defaultEmbed ?? msg.author.defaultEmbed;
-            if (!oldQ) {
-                oldQ = {};
-            }
+            let oldQ = msg.guild ? msg.guild.DB.settings.defaultEmbed : msg.author.DB.defaultEmbed;
+            if (!oldQ) oldQ = {};
             const newQ = oldQ?.footerQuote;
             oldQ.footerQuote = args.trim();
             const r = msg.guild ? msg.guild.setDefaultEmbed(oldQ) : msg.author.setDefaultEmbed(oldQ);
