@@ -25,6 +25,7 @@ Structures.extend("Guild", u => {
                 if (r.timedPunishments)
                     for (const U in r.timedPunishments) {
                         const tr = new TimedPunishment(r.timedPunishments[U]);
+                        tr.setDataDuration(tr.duration.invoked, tr.duration.until);
                         console.log(timedPunishments.set(U, tr));
                     }
                 r.infractions = infractions;
