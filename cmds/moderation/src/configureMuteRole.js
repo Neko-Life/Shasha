@@ -45,6 +45,6 @@ async function detonate(msg, data) {
         split.prepend = "";
         trySend(msg.client, msg, { content: mes + "<#" + cant.join(">,\n<#") + ">", split: split });
     }
-    msg.guild.setDb(msg.guild.DB);
+    msg.guild.setDb("settings", msg.guild.DB.settings);
     return pleaseWait.edit(`Create Mute Role: ${ROLE} **Done**`);
 }

@@ -52,7 +52,7 @@ module.exports = class quoteotd extends commando.Command {
             }
         }
         if (result.length > 0) {
-            if (result !== 'Invalid icon URL provided!\n') msg.guild.DB.setDb(msg.guild.DB);
+            if (result !== 'Invalid icon URL provided!\n') msg.guild.DB.setDb("quoteOTD", msg.guild.DB.quoteOTD);
             ranLog(msg, result);
             return trySend(this.client, msg, result);
         } else {

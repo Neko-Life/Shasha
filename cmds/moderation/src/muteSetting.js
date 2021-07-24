@@ -34,7 +34,7 @@ module.exports = (msg, arg) => {
             }
         }
         MUTE = msg.guild.DB.settings.mute;
-        msg.guild.setDb(msg.guild.DB);
+        msg.guild.setDb("settings", msg.guild.DB.settings);
     }
 
     setEmb

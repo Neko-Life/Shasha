@@ -14,7 +14,7 @@ module.exports = (memberold, membernew) => {
         if (membernew.user.DB.cachedAvatarURL != membernew.user.displayAvatarURL({ format: "png", size: 4096, dynamic: true })) {
             membernew.user.DB.cachedAvatarURL = membernew.user.displayAvatarURL({ format: "png", size: 4096, dynamic: true });
         };
-        return membernew.user.setDb(membernew.user.DB);
+        return membernew.user.setDb("cachedAvatarURL", membernew.user.DB.cachedAvatarURL);
     }
     let log, thumbMes = "";
     const emb = defaultEventLogEmbed(membernew.guild), oldT = memberold.toJSON().displayAvatarURL;
@@ -46,7 +46,7 @@ module.exports = (memberold, membernew) => {
         }
     }
     membernew.user.DB.cachedAvatarURL = membernew.user.displayAvatarURL({ format: "png", size: 4096, dynamic: true });
-    membernew.user.setDb(membernew.user.DB);
+    membernew.user.setDb("cachedAvatarURL", membernew.user.DB.cachedAvatarURL);
     if (!emb.fields || emb.fields.length === 0) return;
     return trySend(membernew.client, log, emb);
 }
