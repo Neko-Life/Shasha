@@ -13,33 +13,32 @@ const { cleanMentionID, findMemberRegEx } = require("../../../resources/function
 module.exports = async (msg, mentions = [], targetUser = [], resultMsg = "") => {
     if (mentions.length === 0) throw new TypeError("Mentions has no length");
     for (const usermention of mentions) {
-        if (usermention.length > 0) {
-            let found = [],
-                nameid = cleanMentionID(usermention);
-            if (/^\d{17,19}$/.test(nameid)) {
-                const findmem = msg.guild.member(nameid);
-                if (findmem) {
-                    found.push(findmem.user);
-                } else {
-                    await msg.client.users.fetch(nameid).then(fetchUser => found.push(fetchUser)).catch(() => { });
-                }
+        if (usermention.trim().length < 1) continue;
+        let found = [],
+            nameid = cleanMentionID(usermention);
+        if (/^\d{17,19}$/.test(nameid)) {
+            const findmem = msg.guild.member(nameid);
+            if (findmem) {
+                found.push(findmem.user);
             } else {
-                found = findMemberRegEx(msg, nameid).map(r => r.user);
+                await msg.client.users.fetch(nameid).then(fetchUser => found.push(fetchUser)).catch(() => { });
             }
-            if (found.length > 0 && found[0] !== null) {
-                const foundDupli = targetUser.findIndex(r => r === found[0]);
-                if (foundDupli !== -1) {
-                    resultMsg += `**[WARNING]** Duplicate for user **${targetUser[foundDupli].tag}** with keyword: **${usermention.trim()}**\n`;
-                } else {
-                    targetUser.push(found[0]);
-                    if (found.length > 1) {
-                        resultMsg += `**[WARNING]** Multiple users found for: **${usermention.trim()}**\n`;
-                    }
-                }
+        } else {
+            found = findMemberRegEx(msg, nameid)?.map(r => r.user);
+        }
+        if (found?.length > 0 && found[0] !== null) {
+            const foundDupli = targetUser.findIndex(r => r === found[0]);
+            if (foundDupli !== -1) {
+                resultMsg += `**[WARNING]** Duplicate for user **${targetUser[foundDupli].tag}** with keyword: **${usermention.trim()}**\n`;
             } else {
-                resultMsg += `Can't find user: **${usermention.trim()}**\n`;
+                targetUser.push(found[0]);
+                if (found.length > 1) {
+                    resultMsg += `**[WARNING]** Multiple users found for: **${usermention.trim()}**\n`;
+                }
             }
-        } else continue;
+        } else {
+            resultMsg += `Can't find user: **${usermention.trim()}**\n`;
+        }
     }
     return { targetUser, resultMsg };
 }

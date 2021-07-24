@@ -11,7 +11,7 @@ const { Message, User } = require("discord.js");
 module.exports = (msg, targetUsers, punishment, reason) => {
     let infractionCase = msg.guild.DB.infractions.size;
     return {
-        infraction: infractionCase ? infractionCase++ : 1,
+        infraction: infractionCase ? ++infractionCase : 1,
         by: targetUsers,
         moderator: msg.author,
         punishment: punishment,

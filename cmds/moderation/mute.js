@@ -124,15 +124,15 @@ module.exports = class mute extends commando.Command {
                     muted.push(EXEC.id);
                 } catch (e) {
                     if (/Missing Permissions|someone with higher position/.test(e.message)) cant.push(EXEC.id);
-                    else if (/already muted/.test(e.message)) already.push(EXEC.id); else trySend(msg.client, msg, e.message); continue;
+                    else if (/already muted/.test(e.message)) already.push(EXEC.id); else console.log(e); continue;
                 }
                 if (!EXEC.bot) {
                     const emb = defaultEventLogEmbed(msg.guild);
                     emb.setTitle("You have been muted")
                         .setDescription("**Reason**\n" + reason)
                         .addField("At", defaultDateFormat(duration.invoked), true)
-                        .addField("For", duration.duration?.strings.join(" ") || "Indefinite", true)
-                        .addField("Until", duration.until ? defaultDateFormat(duration.until) : "Never", true);
+                        .addField("Until", duration.until ? defaultDateFormat(duration.until) : "Never", true)
+                        .addField("For", duration.duration?.strings.join(" ") || "Indefinite", true);
                     EXEC.createDM().then(r => trySend(msg.client, r, emb));
                 }
             }
@@ -154,9 +154,6 @@ module.exports = class mute extends commando.Command {
                 };
 
             let emb = defaultImageEmbed(msg, null, "Infraction #" + infractionToDoc.infraction);
-
-            if (cant.length > 0) emb.addField("Can't mute", "<@" + cant.join(">, <@") + ">\n\n**You can't mute someone with higher position than you <:nekokekLife:852865942530949160>**");
-            if (already.length > 0) emb.addField("Already muted", "<@" + already.join(">, <@") + ">\n\nDuration updated for these users");
             let mutedStr = "", mutedArr = [];
             if (muted.length > 0) for (const U of muted) {
                 const tU = "<@" + U + ">\n";
@@ -166,8 +163,11 @@ module.exports = class mute extends commando.Command {
             emb.setDescription("**Reason**\n" + reason)
                 .addField("Muted", mutedStr || "`[NONE]`")
                 .addField("At", defaultDateFormat(duration.invoked), true)
-                .addField("For", duration.duration?.strings.join(" ") || "Indefinite", true)
-                .addField("Until", duration.until ? defaultDateFormat(duration.until) : "Never", true);
+                .addField("Until", duration.until ? defaultDateFormat(duration.until) : "Never", true)
+                .addField("For", duration.duration?.strings.join(" ") || "Indefinite");
+
+            if (cant.length > 0) emb.addField("Can't mute", "<@" + cant.join(">, <@") + ">\n\n**You can't mute someone with higher position than you <:nekokekLife:852865942530949160>**");
+            if (already.length > 0) emb.addField("Already muted", "<@" + already.join(">, <@") + ">\n\nDuration updated for these users");
 
             return trySend(msg.client, msg, { content: resultMsg, embed: emb });
         }

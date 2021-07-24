@@ -14,14 +14,17 @@ Structures.extend("Guild", u => {
         async dbLoad() {
             return database.collection("Guild").findOne({ document: this.id }).then((r, e) => {
                 if (e) return errLog(e, null, this.client);
+                console.log(r);
                 if (!r) r = {};
                 if (!r.eventChannels) r.eventChannels = {};
                 if (!r.settings) r.settings = {};
                 let infractions = new Map(),
                     timedPunishments = new Map();
                 if (r.infractions)
-                    for (const U in r.infractions)
+                    for (const U in r.infractions) {
+                        console.log(r.infractions[U]);
                         infractions.set(U, r.infractions[U]);
+                    }
                 if (r.timedPunishments)
                     for (const U in r.timedPunishments) {
                         const tr = new TimedPunishment(r.timedPunishments[U]);
@@ -58,9 +61,10 @@ Structures.extend("Guild", u => {
             try {
                 if (!this.DB) await this.dbLoad();
                 console.log("SETTING INF");
-                const ret = this.DB.infractions.set(add.infraction, add);
+                const ret = this.DB.infractions.set(add.moderator.id + "/" + add.infraction, add);
                 console.log(ret);
                 await this.setDb("infractions", this.DB.infractions);
+                console.log(ret);
                 return ret;
             } catch (e) { }
         }
@@ -187,7 +191,7 @@ Structures.extend("User", u => {
         }
 
         /**
-         * @param {Guild} guild 
+         * @param {Guild} guild
          * @param {string} reason
          * @param {{duration: object, saveTakenRoles: boolean, infraction: number, moderator: User}} data
          */
@@ -197,7 +201,7 @@ Structures.extend("User", u => {
             if (!guild.DB) await guild.dbLoad();
             const MEM = guild.member(this);
             if (MEM) {
-                if (data.moderator.roles.highest.position < MEM.roles.highest.position) throw new Error("You can't mute someone with higher position than you <:nekokekLife:852865942530949160>");
+                if (data.moderator.roles.highest.position < MEM.roles.highest.position || MEM.roles.highest.position > guild.member(this.client.user).roles.highest.position) throw new Error("You can't mute someone with higher position than you <:nekokekLife:852865942530949160>");
                 await MEM.mute(data, reason);
             }
             const MC = guild.getTimedPunishment(this.id, "mute"),
@@ -212,7 +216,7 @@ Structures.extend("User", u => {
             if (!MC) throw new Error(this.tag + " isn't muted in " + guild.name);
             const MEM = guild.member(this);
             if (MEM) {
-                if (moderator.roles.highest.position < MEM.roles.highest.position) throw new Error("You can't mute someone with higher position than you <:nekokekLife:852865942530949160>");
+                if (moderator.roles.highest.position < MEM.roles.highest.position || MEM.roles.highest.position > guild.member(this.client.user).roles.highest.position) throw new Error("You can't mute someone with higher position than you <:nekokekLife:852865942530949160>");
                 await MEM.unmute(reason);
             }
             return guild.removeTimedPunishment(this.id, "mute");
@@ -308,14 +312,15 @@ Structures.extend("GuildMember", u => {
         async mute(data, reason) {
             if (!this.DB) await this.dbLoad();
             if (!data || !data.infraction) throw new Error("Missing infraction id");
-            if (data.saveTakenRoles === undefined) data.saveTakenRoles = true;
+            if (!this.DB.muted) this.DB.muted = {};
+            if (data.saveTakenRoles === undefined) data.saveTakenRoles = !(this.DB.muted.takenRoles?.length > 0);
 
             const ROLES = this.roles.cache.filter((r) => !r.managed).map(r => r.id);
             if (data.saveTakenRoles && ROLES?.length > 0) {
                 console.log("populating takenRoles M");
                 this.DB.muted.takenRoles = ROLES;
             }
-            this.DB.muted.muteRole = this.guild.DB.mute.role;
+            this.DB.muted.muteRole = this.guild.DB.settings.mute.role;
 
             try {
                 if (ROLES?.length > 0) await this.roles.remove(ROLES, reason);
