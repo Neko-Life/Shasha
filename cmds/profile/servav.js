@@ -20,7 +20,7 @@ module.exports = class servav extends commando.Command {
         if (!msg.author.DB) await msg.author.dbLoad();
         if (msg.guild && !msg.guild.DB) await msg.guild.dbLoad();
         const server_ID = arg.split(/ +/)[0];
-        const footerQuote = (msg.guild?.DB.settings || msg.author.DB).defaultEmbed?.footerQuote || "";
+        const footerQuote = (msg.guild?.DB || msg.author.DB).defaultEmbed?.footerQuote || "";
         let icon, target;
         if (server_ID && this.client.owners.includes(msg.author)) {
             if (!/\D/.test(server_ID)) {

@@ -261,7 +261,7 @@ function adCheck(content) {
  * @returns {MessageEmbed}
  */
 function defaultImageEmbed(msg, image, title, footerQuote) {
-  if (!footerQuote) footerQuote = (msg.guild?.DB.settings || msg.author.DB).defaultEmbed?.footerQuote || "";
+  if (!footerQuote) footerQuote = (msg.guild?.DB || msg.author.DB).defaultEmbed?.footerQuote || "";
   const emb = new MessageEmbed()
     .setImage(image)
     .setColor(msg.guild ? getColor((msg.member || msg).displayColor) : randomColors[Math.floor(Math.random() * randomColors.length)])
@@ -438,7 +438,7 @@ function defaultEventLogEmbed(guild) {
   return new MessageEmbed()
     .setColor(getColor(C.displayColor))
     .setAuthor(guild.name)
-    .setFooter((guild.DB?.settings?.defaultEmbed?.footerQuote ?
+    .setFooter((guild.DB?.defaultEmbed?.footerQuote ?
       guild.DB.defaultEmbed.footerQuote : ""), guild.iconURL({ format: "png", size: 128, dynamic: true }))
     .setTimestamp(new Date());
 }

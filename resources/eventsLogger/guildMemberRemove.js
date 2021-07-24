@@ -24,8 +24,8 @@ module.exports = (member) => {
             .setTitle("`" + member.user.tag + "` left")
             .setThumbnail(member.user.displayAvatarURL({ format: "png", size: 4096, dynamic: true }))
             .setColor(getColor("yellow"))
-            .addField("Registered", defaultDateFormat(member.user.createdAt), true)
-            .addField("Joined", defaultDateFormat(member.joinedAt) + `\n(${intervalToDuration(INT).strings.join(" ")} ago)`, true)
+            .addField("Registered", defaultDateFormat(member.user.createdAt))
+            .addField("Joined", defaultDateFormat(member.joinedAt) + `\n(${intervalToDuration(INT).strings.join(" ")} ago)`)
             .addField("Nick", "`" + member.displayName + "`")
             .setDescription(`<@!${member.id}> (${member.id}) just left.\nWe have ${member.guild.memberCount} total members now.`);
         for (const U of RU) {
