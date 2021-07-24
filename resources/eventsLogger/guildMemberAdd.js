@@ -2,7 +2,7 @@
 
 const { GuildMember } = require("discord.js"),
     { DateTime } = require("luxon"),
-    { getChannel, defaultEventLogEmbed, trySend } = require("../functions"),
+    { getChannel, defaultEventLogEmbed, trySend, defaultDateFormat } = require("../functions"),
     getColor = require("../getColor"),
     { DT_PRINT_FORMAT } = require("../../cmds/moderation/src/duration");
 
@@ -20,7 +20,7 @@ module.exports = (member) => {
             .setTitle("`" + member.user.tag + "` joined")
             .setThumbnail(member.user.displayAvatarURL({ format: "png", size: 4096, dynamic: true }))
             .setColor(getColor("cyan"))
-            .addField("Registered", "<t:" + (Math.floor(member.user.createdAt.valueOf() / 1000)) + ":F>", true)
+            .addField("Registered", defaultDateFormat(member.user.createdAt), true)
             .setDescription(`<@!${member.id}> (${member.id}) just joined.\nWe have ${member.guild.memberCount} total members now.`);
         return trySend(member.client, log, emb);
     }

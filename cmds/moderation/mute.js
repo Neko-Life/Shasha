@@ -1,7 +1,7 @@
 'use strict';
 
 const commando = require("@iceprod/discord.js-commando");
-const { trySend, findMemberRegEx, cleanMentionID, findChannelRegEx, findRoleRegEx, defaultImageEmbed, parseDoubleDash, parseComa, getRole, defaultEventLogEmbed } = require("../../resources/functions");
+const { trySend, findMemberRegEx, cleanMentionID, findChannelRegEx, findRoleRegEx, defaultImageEmbed, parseDoubleDash, parseComa, getRole, defaultEventLogEmbed, defaultDateFormat } = require("../../resources/functions");
 const { database } = require("../../database/mongo");
 const col = database.collection("Guild");
 const schedule = database.collection("Schedule");
@@ -113,7 +113,8 @@ module.exports = class mute extends commando.Command {
         } else return trySend(this.client, msg, "Args: `<[user_[mention|ID|name]]> -- [reason] -- [duration]`. Use `,` to provide multiple user. `--s` to view settings.\nExample:```js\n" + `${msg.guild.commandPrefix + this.name} 580703409934696449, @Shasha#1234, ur mom,#6969,^yuck\\s(ur)?\\s.{5}#\\d+69$--69y69mo69w420d420h420m420s -- Saying "joe"\`\`\``);
 
         if (targetUsers.length > 0) {
-            let muted = [], cant = [], already = [], infractionN = [];
+            let muted = [], cant = [], already = [], infractionN = [],
+                infractionToDoc = createInfraction(msg, targetUsers, "mute", reason);
 
             for (const EXEC of targetUsers) {
                 try {
@@ -127,13 +128,11 @@ module.exports = class mute extends commando.Command {
                 const emb = defaultEventLogEmbed(msg.guild);
                 emb.setTitle("You have been muted")
                     .setDescription("**Reason**\n" + reason)
-                    .addField("At", duration.invoked.toFormat(fn.DT_PRINT_FORMAT), true)
+                    .addField("At", defaultDateFormat(duration.invoked), true)
                     .addField("For", duration.duration?.strings.join(" ") || "Indefinite", true)
-                    .addField("Until", duration.until?.toFormat(fn.DT_PRINT_FORMAT) || "Never", true);
+                    .addField("Until", duration.until ? defaultDateFormat(duration.until) : "Never", true);
                 EXEC.createDM().then(r => trySend(msg.client, r, emb));
             }
-
-            let infractionToDoc = createInfraction(msg, targetUsers, "mute", reason);
 
             infractionToDoc.executed = muted;
             infractionToDoc.aborted = already;
@@ -163,10 +162,9 @@ module.exports = class mute extends commando.Command {
             if (mutedArr.length > 0) mutedStr += `and ${mutedArr.length} more...`;
             emb.setDescription("**Reason**\n" + reason)
                 .addField("Muted", mutedStr || "`[NONE]`")
-                .addField("At", duration.invoked.toFormat(fn.DT_PRINT_FORMAT), true)
+                .addField("At", defaultDateFormat(duration.invoked), true)
                 .addField("For", duration.duration?.strings.join(" ") || "Indefinite", true)
-                .addField("Until", duration.until?.toFormat(fn.DT_PRINT_FORMAT) || "Never", true)
-                .addField("Reason", reason);
+                .addField("Until", duration.until ? defaultDateFormat(duration.until) : "Never", true);
 
             return trySend(msg.client, msg, { content: resultMsg, embed: emb });
         }

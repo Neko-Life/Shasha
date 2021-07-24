@@ -231,7 +231,7 @@ Structures.extend("User", u => {
             const MEM = guild.member(this);
             if (MEM) {
                 if (moderator.roles.highest.position < MEM.roles.highest.position) throw new Error("You can't mute someone with higher position than you <:nekokekLife:852865942530949160>");
-                await MEM.unmute(reason)
+                await MEM.unmute(reason);
             }
             return guild.removeTimedPunishment(this.id, "mute");
         }
@@ -350,18 +350,11 @@ Structures.extend("GuildMember", u => {
             try {
                 if (ROLES?.length > 0) await this.roles.remove(ROLES, reason);
                 await this.roles.add(this.DB.muteRole, reason);
-                const ret = this.user.pushMutedIn(this.guild.id, {
-                    state: true,
-                    duration: data.duration,
-                    infraction: data.infraction
-                });
                 this.setDb(this.DB);
-                this.user.setDb(this.user.DB);
-                return ret;
+                return true;
             } catch (e) {
                 if (this.DB.takenRoles?.length > 0) await this.roles.add(this.DB.takenRoles, reason).catch(() => { });
                 if (this.DB.muteRole) await this.roles.remove(this.DB.muteRole, reason).catch(() => { });
-                this.user.removeMutedIn(this.guild.id);
                 console.log("clear takenRoles M");
                 this.DB.takenRoles = [];
                 this.DB.muteRole = undefined;
@@ -371,17 +364,14 @@ Structures.extend("GuildMember", u => {
 
         async unmute(reason) {
             if (!this.DB) await this.dbLoad();
-            if (!this.user.DB) await this.user.dbLoad();
             try {
                 if (this.DB.takenRoles.length > 0) await this.roles.add(this.DB.takenRoles, reason);
                 if (this.DB.muteRole) await this.roles.remove(this.DB.muteRole, reason);
-                const ret = this.user.removeMutedIn(this.guild.id);
                 console.log("clear takenRoles UM");
                 this.DB.takenRoles = [];
                 this.DB.muteRole = undefined;
                 this.setDb(this.DB);
-                this.user.setDb(this.user.DB)
-                return ret;
+                return true;
             } catch (e) {
                 throw e;
             }

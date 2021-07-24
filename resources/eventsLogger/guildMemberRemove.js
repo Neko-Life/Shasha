@@ -3,7 +3,7 @@
 const { GuildMember } = require("discord.js");
 const { DateTime, Interval, Settings } = require("luxon");
 const { DT_PRINT_FORMAT, intervalToDuration } = require("../../cmds/moderation/src/duration");
-const { getChannel, defaultEventLogEmbed, trySend, splitOnLength } = require("../functions");
+const { getChannel, defaultEventLogEmbed, trySend, splitOnLength, defaultDateFormat } = require("../functions");
 const getColor = require("../getColor");
 Settings.defaultZone = "utc";
 
@@ -24,8 +24,8 @@ module.exports = (member) => {
             .setTitle("`" + member.user.tag + "` left")
             .setThumbnail(member.user.displayAvatarURL({ format: "png", size: 4096, dynamic: true }))
             .setColor(getColor("yellow"))
-            .addField("Registered", "<t:" + (Math.floor(member.user.createdAt.valueOf() / 1000)) + ":F>", true)
-            .addField("Joined", "<t:" + (Math.floor(member.joinedAt.valueOf() / 1000)) + `:F>\n(${intervalToDuration(INT).strings.join(" ")} ago)`, true)
+            .addField("Registered", defaultDateFormat(member.user.createdAt), true)
+            .addField("Joined", defaultDateFormat(member.joinedAt) + `\n(${intervalToDuration(INT).strings.join(" ")} ago)`, true)
             .addField("Nick", "`" + member.displayName + "`")
             .setDescription(`<@!${member.id}> (${member.id}) just left.\nWe have ${member.guild.memberCount} total members now.`);
         for (const U of RU) {

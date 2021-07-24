@@ -6,6 +6,7 @@ const { timestampAt } = require('./debug');
 const getColor = require('./getColor');
 const { randomColors } = require("../config.json");
 const { CommandoMessage, CommandoClient } = require('@iceprod/discord.js-commando');
+const { DateTime } = require('luxon');
 
 /**
  * Log an error. Second or third argument is required
@@ -519,6 +520,18 @@ function getRole(guild, key) {
 
 function wait(ms) { return new Promise(r => setTimeout(() => r(), ms)) }
 
+/**
+ * @param {Date|DateTime|number|string} date - Number | String must be in miliseconds
+ * @returns {string} - Discord format ready to use
+ */
+function defaultDateFormat(date) {
+  let use;
+  if ((date instanceof Date) || date instanceof DateTime) use = date.valueOf();
+  else if (typeof date === "string") use = parseInt(date, 10);
+  else use = date;
+  return "<t:" + (Math.floor(use / 1000)) + ":F>";
+}
+
 const defaultSplitMessage = { maxLength: 2000, char: ",", append: ',```', prepend: '```js\n' };
 module.exports = {
   cleanMentionID, defaultEventLogEmbed,
@@ -526,7 +539,7 @@ module.exports = {
   findMemberRegEx, findChannelRegEx, findRoleRegEx,
   getChannelMessage, errLog,
   execCB, ranLog, noPerm, getUTCComparison,
-  trySend, tryDelete, tryReact,
+  trySend, tryDelete, tryReact, defaultDateFormat,
   adCheck, defaultImageEmbed, getChannel,
   splitOnLength, parseComa, parseDoubleDash, getMember,
   parseDash, reValidURL, getUser, getRole, wait, defaultSplitMessage
