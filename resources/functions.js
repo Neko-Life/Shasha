@@ -261,7 +261,7 @@ function adCheck(content) {
  * @returns {MessageEmbed}
  */
 function defaultImageEmbed(msg, image, title, footerQuote) {
-  if (!footerQuote) footerQuote = (msg.guild ?? msg.author).DB.defaultEmbed?.footerQuote || "";
+  if (!footerQuote) footerQuote = (msg.guild?.DB.settings || msg.author.DB).defaultEmbed?.footerQuote || "";
   const emb = new MessageEmbed()
     .setImage(image)
     .setColor(msg.guild ? getColor((msg.member || msg).displayColor) : randomColors[Math.floor(Math.random() * randomColors.length)])
@@ -501,14 +501,17 @@ const reValidURL = /^https?:\/\/[^\s\n]+\.[^\s\n][^\s\n]/;
  * Get user
  * @param {Message} msg 
  * @param {string} key 
- * @param {boolean} nonID
+ * @param {boolean} inGuild
  * @returns {User}
  */
-function getUser(msg, key, nonID) {
+async function getUser(msg, key, inGuild = false) {
   if (!(msg || key)) return;
   const use = cleanMentionID(key);
   if (!use || use.length === 0) return;
-  if (/^\d{17,19}$/.test(use)) return msg.client.users.cache.get(use); else if (nonID) return getMember(msg.guild, use)?.[0].user;
+  if (/^\d{17,19}$/.test(use)) {
+    const ret = msg.client.users.cache.get(use);
+    if (ret) return ret; else return msg.client.users.fetch(use);
+  } else if (inGuild) return getMember(msg.guild, use)?.[0].user;
 }
 
 function getRole(guild, key) {

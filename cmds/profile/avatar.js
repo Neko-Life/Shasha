@@ -17,7 +17,7 @@ module.exports = class avatar extends commando.Command {
   }
   async run(msg, arg) {
     const doc = msg.guild.DB.settings || msg.author.DB;
-    const footerQuote = doc.defaultEmbed?.footerQuote;
+    const footerQuote = doc.defaultEmbed?.footerQuote || "";
     const option = "";// || arg.match(/(?<!\\)--s +\d+/)?.[0];
     let user, avatar, member, show, notFound = "";
     let [allEmb, multipleMemMes, dupliCheck] = [[], [], []];
@@ -65,7 +65,7 @@ module.exports = class avatar extends commando.Command {
             avatar = user.displayAvatarURL({ format: "png", size: 4096, dynamic: true });
             let emb = new MessageEmbed()
               .setImage(avatar)
-              .setFooter(footerQuote ?? "");
+              .setFooter(footerQuote);
             member = msg.guild ? msg.guild.member(user) : undefined;
             if (member) {
               emb.setTitle(member.displayName);
@@ -82,7 +82,7 @@ module.exports = class avatar extends commando.Command {
       let emb = new MessageEmbed()
         .setTitle(user.displayName ?? user.username)
         .setImage(avatar)
-        .setFooter(footerQuote ?? "");
+        .setFooter(footerQuote);
       if (user.displayColor) emb.setColor(user.displayColor);
       if (!msg.guild) emb.setColor(randomColors[Math.floor(Math.random() * randomColors.length)]);
       if (emb.color === 16777215) emb.setColor(16777214);
