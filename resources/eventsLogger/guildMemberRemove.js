@@ -12,8 +12,8 @@ Settings.defaultZone = "utc";
  * @returns 
  */
 module.exports = (member) => {
-    if (member.guild.DB.settings.eventChannels?.leave) {
-        const log = getChannel(member, member.guild.DB.settings.eventChannels.leave);
+    if (member.guild.DB.eventChannels?.leave) {
+        const log = getChannel(member, member.guild.DB.eventChannels.leave);
         if (!log) return;
         const emb = defaultEventLogEmbed(member.guild),
             RO = member.roles.cache.sort((a, b) => b.position - a.position).map(r => r.id).slice(0, -1),

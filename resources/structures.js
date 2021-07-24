@@ -14,44 +14,31 @@ Structures.extend("Guild", u => {
         async dbLoad() {
             return database.collection("Guild").findOne({ document: this.id }).then((r, e) => {
                 if (e) return errLog(e, null, this.client);
-                r = r?.DB;
                 if (!r) r = {};
+                if (!r.eventChannels) r.eventChannels = {};
                 if (!r.settings) r.settings = {};
-                if (!r.moderation) r.moderation = {};
-                if (!r.settings.eventChannels) r.settings.eventChannels = {};
-                if (!r.moderation.settings) r.moderation.settings = {};
                 let infractions = new Map(),
                     timedPunishments = new Map();
-                if (r.moderation.infractions)
-                    for (const U in r.moderation.infractions)
-                        infractions.set(U, r.moderation.infractions[U]);
-                if (r.moderation.timedPunishments)
-                    for (const U in r.moderation.timedPunishments)
-                        timedPunishments.set(U, new TimedPunishment(r.moderation.timedPunishments[U]));
-                r.moderation.infractions = infractions;
-                r.moderation.timedPunishments = timedPunishments;
+                if (r.infractions)
+                    for (const U in r.infractions)
+                        infractions.set(U, r.infractions[U]);
+                if (r.timedPunishments)
+                    for (const U in r.timedPunishments) {
+                        const tr = new TimedPunishment(r.timedPunishments[U]);
+                        console.log(timedPunishments.set(U, tr));
+                    }
+                r.infractions = infractions;
+                r.timedPunishments = timedPunishments;
                 return this.DB = r;
             });
         }
 
-        async setDb(Db, empty = false) {
-            if (typeof Db !== "object") throw new TypeError("Expected 'object'; Got '" + typeof Db + "'");
-            if (Db === {} && !empty) throw new TypeError("Empty!");
-            return database.collection("Guild").updateOne({ document: this.id }, { $set: { DB: Db }, $setOnInsert: { document: this.id } },
+        async setDb(query, set) {
+            return database.collection("Guild").updateOne({ document: this.id }, { $set: { [query]: set }, $setOnInsert: { document: this.id } },
                 { upsert: true }).then((r, e) => {
                     if (e) return errLog(e, null, this.client);
-                    return this.DB = Db;
+                    return this.DB[query] = set;
                 });
-        }
-
-        /**
-         * @param {object} data - Data to set
-         * @returns 
-         */
-        async refreshDb(data) {
-            if (!this.DB) await this.dbLoad();
-            if (data) for (const D in data) if (this.DB[D]) this.DB[D] = data[D];
-            return this.setDb(this.DB);
         }
 
         /**
@@ -61,7 +48,7 @@ Structures.extend("Guild", u => {
          */
         async getInfractions(userID) {
             let ret = []
-            for (const [k, v] of this.DB.moderation.infractions)
+            for (const [k, v] of this.DB.infractions)
                 if (v.by.map(r => r.id).includes(userID)) ret.push(v);
             return ret;
         }
@@ -69,42 +56,46 @@ Structures.extend("Guild", u => {
         async addInfraction(add) {
             try {
                 if (!this.DB) await this.dbLoad();
-                this.DB.moderation.infractions.set(add.infraction, add);
-                return this.setDb(this.DB);
+                console.log("SETTING INF");
+                const ret = this.DB.infractions.set(add.infraction, add);
+                console.log(ret);
+                await this.setDb("infractions", this.DB.infractions);
+                return ret;
             } catch (e) { }
         }
 
         async setQuoteOTD(set) {
             if (!this.DB) await this.dbLoad();
-            this.DB.settings.quoteOTD = set;
-            return this.setDb(this.DB);
+            this.DB.quoteOTD = set;
+            return this.setDb("quoteOTD", this.DB.quoteOTD);
         }
 
         async setEventChannels(set) {
             if (!this.DB) await this.dbLoad();
-            this.DB.settings.eventChannels = set;
-            return this.setDb(this.DB);
+            this.DB.eventChannels = set;
+            return this.setDb("eventChannels", this.DB.eventChannels);
         }
 
         async setDefaultEmbed(set) {
             if (!this.DB) await this.dbLoad();
-            this.DB.settings.defaultEmbed = set;
-            return this.setDb(this.DB);
+            this.DB.defaultEmbed = set;
+            return this.setDb("defaultEmbed", this.DB.defaultEmbed);
         }
 
         async setModerationSettings(set) {
             if (!this.DB) await this.dbLoad();
-            this.DB.moderation.settings = set;
-            return this.setDb(this.DB);
+            this.DB.settings = set;
+            return this.setDb("settings", this.DB.settings);
         }
 
         /**
          * @param {TimedPunishment} Punishment
          * @returns {Map}
          */
-        setTimedPunishment(Punishment) {
-            const ret = this.DB.moderation.timedPunishments.set(Punishment.userID + "/" + Punishment.type, Punishment);
-            this.setDb(this.DB);
+        async setTimedPunishment(Punishment) {
+            console.log("SET TIMED PUNISHMENT");
+            const ret = this.DB.timedPunishments.set(Punishment.userID + "/" + Punishment.type, Punishment);
+            await this.setDb("timedPunishments", this.DB.timedPunishments);
             return ret;
         }
 
@@ -114,7 +105,8 @@ Structures.extend("Guild", u => {
          * @returns
          */
         getTimedPunishment(userID, type) {
-            return this.DB.moderation.timedPunishments.get(userID + "/" + type);
+            console.log("GET TIMEDPUNISHMENT");
+            return this.DB.timedPunishments.get(userID + "/" + type);
         }
 
         /**
@@ -123,7 +115,7 @@ Structures.extend("Guild", u => {
          */
         searchTimedPunishment(userID) {
             let ret = [];
-            for (const [k, v] of this.DB.moderation.timedPunishments) if (v.userID === userID) ret.push(v);
+            for (const [k, v] of this.DB.timedPunishments) if (v.userID === userID) ret.push(v);
             return ret;
         }
 
@@ -133,9 +125,11 @@ Structures.extend("Guild", u => {
          * @param {"mute"|"ban"} type 
          * @returns {boolean}
          */
-        removeTimedPunishment(userID, type) {
-            const ret = this.DB.moderation.timedPunishments.delete(userID + "/" + type)
-            this.setDb(this.DB);
+        async removeTimedPunishment(userID, type) {
+            console.log("REMOVE TIMEDPUNISHMENT");
+            const ret = this.DB.timedPunishments.delete(userID + "/" + type);
+            console.log(ret);
+            await this.setDb("timedPunishments", this.DB.timedPunishments);
             return ret;
         }
     }
@@ -151,7 +145,6 @@ Structures.extend("User", u => {
         async dbLoad() {
             return database.collection("User").findOne({ document: this.id }).then((r, e) => {
                 if (e) return errLog(e, null, this.client);
-                r = r?.DB;
                 if (!r) r = {};
                 if (!r.F) r.F = "<:pepewhysobLife:853237646666891274>";
                 if (!r.cachedAvatarURL) r.cachedAvatarURL = this.displayAvatarURL({ format: "png", size: 4096, dynamic: true });
@@ -160,48 +153,36 @@ Structures.extend("User", u => {
             });
         }
 
-        async setDb(Db, empty = false) {
-            if (typeof Db !== "object") throw new TypeError("Expected 'object'; Got '" + typeof Db + "'");
-            if (Db === {} && !empty) throw new TypeError("Empty!");
-            return database.collection("User").updateOne({ document: this.id }, { $set: { DB: Db }, $setOnInsert: { document: this.id } },
+        async setDb(query, set) {
+            return database.collection("User").updateOne({ document: this.id }, { $set: { [query]: set }, $setOnInsert: { document: this.id } },
                 { upsert: true }).then((r, e) => {
                     if (e) return errLog(e, null, this.client);
-                    return this.DB = Db;
+                    return this.DB[query] = set;
                 });
-        }
-
-        /**
-         * @param {object} data - Data to set
-         * @returns 
-         */
-        async refreshDb(data) {
-            if (!this.DB) await this.dbLoad();
-            if (data) for (const D in data) if (this.DB[D]) this.DB[D] = data[D];
-            return this.setDb(this.DB);
         }
 
         async setF(string) {
             if (!this.DB) await this.dbLoad();
             this.DB.F = string;
-            return this.setDb(this.DB);
+            return this.setDb("F", this.DB.F);
         }
 
         async setInteractions(count) {
             if (!this.DB) await this.dbLoad();
             this.DB.interactions = count;
-            return this.setDb(this.DB);
+            return this.setDb("interactions", this.DB.interactions);
         }
 
         async setDescription(set) {
             if (!this.DB) await this.dbLoad();
             this.DB.description = set;
-            return this.setDb(this.DB);
+            return this.setDb("description", this.DB.description);
         }
 
         async setDefaultEmbed(set) {
             if (!this.DB) await this.dbLoad();
             this.DB.defaultEmbed = set;
-            return this.setDb(this.DB);
+            return this.setDb("defaultEmbed", this.DB.defaultEmbed);
         }
 
         /**
@@ -220,13 +201,13 @@ Structures.extend("User", u => {
             }
             const MC = guild.getTimedPunishment(this.id, "mute"),
                 TP = new TimedPunishment({ userID: this.id, duration: data.duration, infraction: data.infraction, type: "mute" });
-            return { set: guild.setTimedPunishment(TP), existing: MC }
+            return { set: await guild.setTimedPunishment(TP), existing: MC }
         }
 
         async unmute(guild, moderator, reason) {
             if (!guild || !(guild instanceof Guild)) throw new TypeError("Guild is " + typeof guild);
             if (!guild.DB) await guild.dbLoad();
-            const MC = suild.getTimedPunishment(this.id, "mute");
+            const MC = guild.getTimedPunishment(this.id, "mute");
             if (!MC) throw new Error(this.tag + " isn't muted in " + guild.name);
             const MEM = guild.member(this);
             if (MEM) {
@@ -306,24 +287,12 @@ Structures.extend("GuildMember", u => {
             });
         }
 
-        async setDb(Db, empty = false) {
-            if (typeof Db !== "object") throw new TypeError("Expected 'object'; Got '" + typeof Db + "'");
-            if (Db === {} && !empty) throw new TypeError("Empty!");
-            return database.collection("GuildMember").updateOne({ document: this.id }, { $set: { DB: Db }, $setOnInsert: { document: this.id } },
+        async setDb(query, set) {
+            return database.collection("GuildMember").updateOne({ document: this.id }, { $set: { [query]: set }, $setOnInsert: { document: this.id } },
                 { upsert: true }).then((r, e) => {
                     if (e) return errLog(e, null, this.client);
-                    return this.DB = Db;
+                    return this.DB[query] = set;
                 });
-        }
-
-        /**
-         * @param {object} data - Data to set
-         * @returns 
-         */
-        async refreshDb(data) {
-            if (!this.DB) await this.dbLoad();
-            if (data) for (const D in data) if (this.DB[D]) this.DB[D] = data[D];
-            return this.setDb(this.DB);
         }
 
         async infractions() {
@@ -343,21 +312,21 @@ Structures.extend("GuildMember", u => {
             const ROLES = this.roles.cache.filter((r) => !r.managed).map(r => r.id);
             if (data.saveTakenRoles && ROLES?.length > 0) {
                 console.log("populating takenRoles M");
-                this.DB.takenRoles = ROLES;
+                this.DB.muted.takenRoles = ROLES;
             }
-            this.DB.muteRole = this.guild.DB.moderation.settings.mute.role;
+            this.DB.muted.muteRole = this.guild.DB.mute.role;
 
             try {
                 if (ROLES?.length > 0) await this.roles.remove(ROLES, reason);
-                await this.roles.add(this.DB.muteRole, reason);
-                this.setDb(this.DB);
+                await this.roles.add(this.DB.muted.muteRole, reason);
+                await this.setDb("muted", this.DB.muted);
                 return true;
             } catch (e) {
-                if (this.DB.takenRoles?.length > 0) await this.roles.add(this.DB.takenRoles, reason).catch(() => { });
-                if (this.DB.muteRole) await this.roles.remove(this.DB.muteRole, reason).catch(() => { });
+                if (this.DB.muted.takenRoles?.length > 0) await this.roles.add(this.DB.muted.takenRoles, reason).catch(() => { });
+                if (this.DB.muted.muteRole) await this.roles.remove(this.DB.muted.muteRole, reason).catch(() => { });
                 console.log("clear takenRoles M");
-                this.DB.takenRoles = [];
-                this.DB.muteRole = undefined;
+                this.DB.muted.takenRoles = [];
+                this.DB.muted.muteRole = undefined;
                 throw e;
             }
         }
@@ -365,12 +334,12 @@ Structures.extend("GuildMember", u => {
         async unmute(reason) {
             if (!this.DB) await this.dbLoad();
             try {
-                if (this.DB.takenRoles.length > 0) await this.roles.add(this.DB.takenRoles, reason);
-                if (this.DB.muteRole) await this.roles.remove(this.DB.muteRole, reason);
+                if (this.DB.muted.takenRoles.length > 0) await this.roles.add(this.DB.muted.takenRoles, reason);
+                if (this.DB.muted.muteRole) await this.roles.remove(this.DB.muted.muteRole, reason);
                 console.log("clear takenRoles UM");
-                this.DB.takenRoles = [];
-                this.DB.muteRole = undefined;
-                this.setDb(this.DB);
+                this.DB.muted.takenRoles = [];
+                this.DB.muted.muteRole = undefined;
+                await this.setDb("muted", this.DB.muted);
                 return true;
             } catch (e) {
                 throw e;

@@ -31,7 +31,7 @@ async function detonate(msg, data) {
     const pleaseWait = await trySend(msg.client, msg, `Setting up for ${map.length} channel${map.length < 2 ? "" : "s"}... This message will be edited when done.`);
     data.permissions = 0;
     const ROLE = await msg.guild.roles.create({ data: data, reason: "Create Mute Role" }).catch(() => { });
-    msg.guild.DB.moderation.settings.mute.role = ROLE.id;
+    msg.guild.DB.settings.mute.role = ROLE.id;
     let cant = [];
     if (ROLE) {
         for (const U of map) {

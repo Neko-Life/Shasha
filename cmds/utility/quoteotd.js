@@ -29,13 +29,13 @@ module.exports = class quoteotd extends commando.Command {
             if (startW.startsWith('c ')) {
                 data = arr.slice('c '.length).trim();
                 const CHAN = getChannel(msg, data, ["category", "voice"]);
-                msg.guild.DB.settings.quoteOTD.channel = CHAN.id;
+                msg.guild.DB.quoteOTD.channel = CHAN.id;
                 result += `Channel set: **${CHAN.name}**\n`;
                 continue;
             }
             if (startW.startsWith('t ')) {
                 data = arr.slice('t '.length).trim();
-                msg.guild.DB.settings.quoteOTD.footerText = data;
+                msg.guild.DB.quoteOTD.footerText = data;
                 result += `Footer text set: \`${data}\`\n`;
                 continue;
             }
@@ -45,7 +45,7 @@ module.exports = class quoteotd extends commando.Command {
                     result += 'Invalid icon URL provided!\n';
                     continue;
                 } else {
-                    msg.guild.DB.settings.quoteOTD.footerIcon = data;
+                    msg.guild.DB.quoteOTD.footerIcon = data;
                     result += `Footer icon set!\n`;
                     continue;
                 }

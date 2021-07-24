@@ -12,8 +12,8 @@ const { GuildMember } = require("discord.js"),
  * @returns 
  */
 module.exports = (member) => {
-    if (member.guild.DB.settings.eventChannels?.join) {
-        const log = getChannel(member, member.guild.DB.settings.eventChannels.join);
+    if (member.guild.DB.eventChannels?.join) {
+        const log = getChannel(member, member.guild.DB.eventChannels.join);
         if (!log) return;
         const emb = defaultEventLogEmbed(member.guild);
         emb

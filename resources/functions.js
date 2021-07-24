@@ -439,7 +439,7 @@ function defaultEventLogEmbed(guild) {
     .setColor(getColor(C.displayColor))
     .setAuthor(guild.name)
     .setFooter((guild.DB?.settings?.defaultEmbed?.footerQuote ?
-      guild.DB.settings.defaultEmbed.footerQuote : ""), guild.iconURL({ format: "png", size: 128, dynamic: true }))
+      guild.DB.defaultEmbed.footerQuote : ""), guild.iconURL({ format: "png", size: 128, dynamic: true }))
     .setTimestamp(new Date());
 }
 
@@ -511,7 +511,7 @@ async function getUser(msg, key, inGuild = false) {
   if (/^\d{17,19}$/.test(use)) {
     const ret = msg.client.users.cache.get(use);
     if (ret) return ret; else return msg.client.users.fetch(use);
-  } else if (inGuild) return getMember(msg.guild, use)?.[0].user;
+  } else if (inGuild) return getMember(msg.guild, use)[0]?.user;
 }
 
 function getRole(guild, key) {

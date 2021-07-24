@@ -9,10 +9,13 @@ class TimedPunishment {
      * @param {{userID: string, duration: { invoked: DateTime, interval: Interval, until: DateTime, duration: { "object": DurationObject, strings: string[] } }, infraction: number, type: "ban" | "mute"}} data 
      */
     constructor(data = {}) {
-        this.userID = data.userID;
-        this.duration = data.duration || {};
-        this.infraction = data.infraction;
-        this.type = data.type;
+        this.userID = data?.userID;
+        /**
+         * @type {{ invoked: DateTime, interval: Interval, until: DateTime, duration: { "object": DurationObject, strings: string[] } }}
+         */
+        this.duration = data?.duration || {};
+        this.infraction = data?.infraction;
+        this.type = data?.type;
     }
 
     setUserID(ID) {

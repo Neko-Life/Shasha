@@ -19,6 +19,7 @@ module.exports = class unmute extends commando.Command {
     }
 
     async run(msg, arg) {
+        if (!msg.guild.DB) await msg.guild.dbLoad();
         msg.channel.startTyping();
         if (!arg) return trySend(msg.client, msg, this.details);
         const args = parseDoubleDash(arg),
@@ -38,23 +39,24 @@ module.exports = class unmute extends commando.Command {
 
         for (const USER of targetUsers) {
             if (!USER.DB) await USER.dbLoad();
-            const L = USER.getMutedIn(msg.guild.id);
 
-            if (!L.data) { notMuted.push(USER.id); continue } else {
-                await USER.unmute(msg.guild, msg.member, reason)
-                    .then(() => {
-                        success.push(USER.id);
+            await USER.unmute(msg.guild, msg.member, reason)
+                .then(() => {
+                    success.push(USER.id);
+                    if (!USER.bot) {
                         const emb = defaultEventLogEmbed(msg.guild);
 
                         emb.setTitle("You have been unmuted")
                             .setDescription("**Reason**\n" + reason);
 
                         USER.createDM().then(r => trySend(msg.client, r, emb));
-                    })
-                    .catch((e) => {
-                        console.log(e); cant.push(USER.id)
-                    });
-            }
+                    }
+                })
+                .catch((e) => {
+                    console.log(e);
+                    if (/isn't muted in/.test(e.message)) return notMuted.push(USER.id);
+                    cant.push(USER.id)
+                });
         }
 
         let emb = defaultImageEmbed(msg, null, "Unmute");

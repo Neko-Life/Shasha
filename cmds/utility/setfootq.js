@@ -17,7 +17,7 @@ module.exports = class setfootq extends commando.Command {
     }
     async run(msg, args) {
         try {
-            let oldQ = msg.guild ? msg.guild.DB.settings.defaultEmbed : msg.author.DB.defaultEmbed;
+            let oldQ = msg.guild ? msg.guild.DB.defaultEmbed : msg.author.DB.defaultEmbed;
             if (!oldQ) oldQ = {};
             const newQ = oldQ?.footerQuote;
             oldQ.footerQuote = args.trim();

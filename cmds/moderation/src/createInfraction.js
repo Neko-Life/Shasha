@@ -9,7 +9,7 @@ const { Message, User } = require("discord.js");
  * @param {string} reason 
  */
 module.exports = (msg, targetUsers, punishment, reason) => {
-    let infractionCase = msg.guild.DB.moderation.infractions?.length;
+    let infractionCase = msg.guild.DB.infractions.size;
     return {
         infraction: infractionCase ? infractionCase++ : 1,
         by: targetUsers,

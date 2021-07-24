@@ -73,12 +73,12 @@ module.exports = class mute extends commando.Command {
     async run(msg, arg) {
         msg.channel.startTyping();
         if (!msg.guild.DB) await msg.guild.dbLoad();
-        const MOD = msg.guild.DB.moderation.settings,
+        const MOD = msg.guild.DB.settings,
             MUTE = MOD.mute || {},
             args = parseDoubleDash(arg),
             mentions = parseComa(args?.shift());
 
-        if (!MOD.mute) msg.guild.DB.moderation.settings.mute = {};
+        if (!MOD.mute) msg.guild.DB.settings.mute = {};
         let reason = "No reason provided", duration = {}, resultMsg = "", targetUsers = [];
 
         if (args?.[1]) {
@@ -120,25 +120,28 @@ module.exports = class mute extends commando.Command {
                 try {
                     const RES = await EXEC.mute(msg.guild, { duration: duration, infraction: infractionToDoc.infraction, moderator: msg.member }, reason);
                     if (RES.infraction) infractionN.push(RES.infraction);
+                    console.log(RES);
                     muted.push(EXEC.id);
                 } catch (e) {
                     if (/Missing Permissions|someone with higher position/.test(e.message)) cant.push(EXEC.id);
                     else if (/already muted/.test(e.message)) already.push(EXEC.id); else trySend(msg.client, msg, e.message); continue;
                 }
-                const emb = defaultEventLogEmbed(msg.guild);
-                emb.setTitle("You have been muted")
-                    .setDescription("**Reason**\n" + reason)
-                    .addField("At", defaultDateFormat(duration.invoked), true)
-                    .addField("For", duration.duration?.strings.join(" ") || "Indefinite", true)
-                    .addField("Until", duration.until ? defaultDateFormat(duration.until) : "Never", true);
-                EXEC.createDM().then(r => trySend(msg.client, r, emb));
+                if (!EXEC.bot) {
+                    const emb = defaultEventLogEmbed(msg.guild);
+                    emb.setTitle("You have been muted")
+                        .setDescription("**Reason**\n" + reason)
+                        .addField("At", defaultDateFormat(duration.invoked), true)
+                        .addField("For", duration.duration?.strings.join(" ") || "Indefinite", true)
+                        .addField("Until", duration.until ? defaultDateFormat(duration.until) : "Never", true);
+                    EXEC.createDM().then(r => trySend(msg.client, r, emb));
+                }
             }
 
             infractionToDoc.executed = muted;
             infractionToDoc.aborted = already;
             infractionToDoc.failed = cant;
 
-            if (muted.length > 0) msg.guild.addInfraction(infractionToDoc);
+            if (muted.length > 0) await msg.guild.addInfraction(infractionToDoc);
 
             const NAME = msg.guild.id + "/" + infractionToDoc.infraction,
                 newUnmuteSchedule = {

@@ -18,7 +18,7 @@ module.exports = class eventlog extends commando.Command {
     async run(msg, arg) {
         if (!msg.guild.DB) await msg.guild.dbLoad();
         const set = parseDoubleDash(arg);
-        let eventChannels = msg.guild.DB.settings.eventChannels;
+        let eventChannels = msg.guild.DB.eventChannels;
         if (!set || set.length < 2 && set[0].length === 0) return trySend(this.client, msg, await resultEmbed(this));
         let report = "", joinlog, leavelog, channellog, banlog, unbanlog, mesEdlog = { channel: undefined, ignore: [] }, invitelog, rolelog,
             guildlog, membernicklog, emotelog, memberroleslog, remove = false, [setMesEdIgnore, setMesDelIgnore] = [false, false], mesDellog = { channel: undefined, ignore: [] };

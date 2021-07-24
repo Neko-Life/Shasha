@@ -16,7 +16,7 @@ module.exports = class servav extends commando.Command {
             description: "Show server avatar."
         });
     }
-    run(msg, arg) {
+    async run(msg, arg) {
         if (!msg.author.DB) await msg.author.dbLoad();
         if (msg.guild && !msg.guild.DB) await msg.guild.dbLoad();
         const server_ID = arg.split(/ +/)[0];
