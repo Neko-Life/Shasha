@@ -126,15 +126,6 @@ module.exports = class mute extends commando.Command {
                     if (/Missing Permissions|someone with higher position/.test(e.message)) cant.push(EXEC.id);
                     else if (/already muted/.test(e.message)) already.push(EXEC.id); else console.log(e); continue;
                 }
-                if (!EXEC.bot) {
-                    const emb = defaultEventLogEmbed(msg.guild);
-                    emb.setTitle("You have been muted")
-                        .setDescription("**Reason**\n" + reason)
-                        .addField("At", defaultDateFormat(duration.invoked), true)
-                        .addField("Until", duration.until ? defaultDateFormat(duration.until) : "Never", true)
-                        .addField("For", duration.duration?.strings.join(" ") || "Indefinite", true);
-                    EXEC.createDM().then(r => trySend(msg.client, r, emb));
-                }
             }
 
             infractionToDoc.executed = muted;
@@ -143,23 +134,16 @@ module.exports = class mute extends commando.Command {
 
             if (muted.length > 0) await msg.guild.addInfraction(infractionToDoc);
 
-            const NAME = msg.guild.id + "/" + infractionToDoc.infraction,
-                newUnmuteSchedule = {
-                    name: NAME,
-                    path: "./scheduler/unmute.js",
-                    worker: {
-                        argv: [NAME]
-                    },
-                    date: duration.until?.toJSDate()
-                };
-
-            let emb = defaultImageEmbed(msg, null, "Infraction #" + infractionToDoc.infraction);
+            const emb = defaultImageEmbed(msg, null, "Infraction #" + infractionToDoc.infraction);
             let mutedStr = "", mutedArr = [];
+
             if (muted.length > 0) for (const U of muted) {
                 const tU = "<@" + U + ">\n";
                 if ((mutedStr + tU).length < 1000) mutedStr += tU; else mutedArr.push(U);
             }
+
             if (mutedArr.length > 0) mutedStr += `and ${mutedArr.length} more...`;
+
             emb.setDescription("**Reason**\n" + reason)
                 .addField("Muted", mutedStr || "`[NONE]`")
                 .addField("At", defaultDateFormat(duration.invoked), true)

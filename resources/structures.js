@@ -2,7 +2,7 @@
 
 const { Structures, Guild, GuildMember, BanOptions } = require("discord.js"),
     { database } = require("../database/mongo"),
-    { errLog } = require("./functions");
+    { errLog, defaultEventLogEmbed, defaultDateFormat, trySend } = require("./functions");
 const { TimedPunishment } = require("./classes");
 
 Structures.extend("Guild", u => {
@@ -193,30 +193,70 @@ Structures.extend("User", u => {
         /**
          * @param {Guild} guild
          * @param {string} reason
-         * @param {{duration: object, saveTakenRoles: boolean, infraction: number, moderator: User}} data
+         * @param {{duration: object, saveTakenRoles: boolean, infraction: number, moderator: GuildMember}} data
          */
         async mute(guild, data, reason) {
-            if (!guild || !(guild instanceof Guild)) throw new TypeError("Guild is " + typeof guild);
+            if (!guild || !(guild instanceof Guild)) throw new TypeError("Guild is: " + guild);
             if (!data?.infraction) throw new Error("Missing infraction id");
-            if (!guild.DB) await guild.dbLoad();
+
             const MEM = guild.member(this);
+            const CL = guild.member(this.client.user);
+
+            if (!CL.hasPermission("MANAGE_ROLES") ||
+                !data.moderator.hasPermission("MANAGE_ROLES")) throw new Error("Missing Permissions");
+
             if (MEM) {
                 if (data.moderator.roles.highest.position < MEM.roles.highest.position || MEM.roles.highest.position > guild.member(this.client.user).roles.highest.position) throw new Error("You can't mute someone with higher position than you <:nekokekLife:852865942530949160>");
                 await MEM.mute(data, reason);
             }
+
+            if (!guild.DB) await guild.dbLoad();
+
+            if (!this.bot) {
+                const emb = defaultEventLogEmbed(guild);
+                emb.setTitle("You have been muted")
+                    .setDescription("**Reason**\n" + reason)
+                    .addField("At", defaultDateFormat(data.duration.invoked), true)
+                    .addField("Until", data.duration.until ? defaultDateFormat(data.duration.until) : "Never", true)
+                    .addField("For", data.duration.duration?.strings.join(" ") || "Indefinite");
+                this.createDM().then(r => trySend(this.client, r, emb));
+            }
+
             const MC = guild.getTimedPunishment(this.id, "mute"),
                 TP = new TimedPunishment({ userID: this.id, duration: data.duration, infraction: data.infraction, type: "mute" });
+
             return { set: await guild.setTimedPunishment(TP), existing: MC }
         }
 
+        /**
+         * @param {Guild} guild
+         * @param {GuildMember} moderator
+         * @param {string} reason
+         * @returns 
+         */
         async unmute(guild, moderator, reason) {
-            if (!guild || !(guild instanceof Guild)) throw new TypeError("Guild is " + typeof guild);
+            if (!guild || !(guild instanceof Guild)) throw new TypeError("Guild is: " + guild);
+            const MEM = guild.member(this);
+            const CL = guild.member(this.client.user);
+            if (!CL.hasPermission("MANAGE_ROLES") ||
+                !moderator.hasPermission("MANAGE_ROLES")) throw new Error("Missing Permissions");
             if (!guild.DB) await guild.dbLoad();
+
+            if (!this.bot) {
+                const emb = defaultEventLogEmbed(guild);
+
+                emb.setTitle("You have been unmuted")
+                    .setDescription("**Reason**\n" + reason);
+
+                this.createDM().then(r => trySend(this.client, r, emb));
+            }
+
             const MC = guild.getTimedPunishment(this.id, "mute");
             if (!MC) throw new Error(this.tag + " isn't muted in " + guild.name);
-            const MEM = guild.member(this);
             if (MEM) {
-                if (moderator.roles.highest.position < MEM.roles.highest.position || MEM.roles.highest.position > guild.member(this.client.user).roles.highest.position) throw new Error("You can't mute someone with higher position than you <:nekokekLife:852865942530949160>");
+                if (moderator.roles.highest.position < MEM.roles.highest.position ||
+                    MEM.roles.highest.position > CL.roles.highest.position)
+                    throw new Error("You can't mute someone with higher position than you <:nekokekLife:852865942530949160>");
                 await MEM.unmute(reason);
             }
             return guild.removeTimedPunishment(this.id, "mute");
@@ -224,10 +264,56 @@ Structures.extend("User", u => {
 
         /**
          * @param {Guild} guild
+         * @param {{duration: object, infraction: number, moderator: GuildMember}} data
          * @param {BanOptions} option
          */
-        async ban(guild, option) {
-            guild.members.ban(this, option);
+        async ban(guild, data, option) {
+            if (!guild || !(guild instanceof Guild)) throw new TypeError("Guild is: " + guild);
+            if (!data?.infraction) throw new Error("Missing infraction id");
+            const MEM = guild.member(this);
+            const CL = guild.member(this.client.user);
+            if (!CL.hasPermission("BAN_MEMBERS") ||
+                !data.moderator.hasPermission("BAN_MEMBERS")) throw new Error("Missing Permissions");
+            if (MEM) {
+                if (moderator.roles.highest.position < MEM.roles.highest.position ||
+                    MEM.roles.highest.position > CL.roles.highest.position)
+                    throw new Error("You can't mute someone with higher position than you <:nekokekLife:852865942530949160>");
+            }
+            await guild.members.ban(this, option);
+            if (!guild.DB) await guild.dbLoad();
+
+            if (!this.bot) {
+                const emb = defaultEventLogEmbed(guild);
+                emb.setTitle("You have been banned")
+                    .setDescription("**Reason**\n" + option.reason)
+                    .addField("At", defaultDateFormat(data.duration.invoked), true)
+                    .addField("Until", data.duration.until ? defaultDateFormat(data.duration.until) : "Never", true)
+                    .addField("For", data.duration.duration?.strings.join(" ") || "Indefinite");
+                this.createDM().then(r => trySend(this.client, r, emb));
+            }
+
+            const MC = guild.getTimedPunishment(this.id, "ban"),
+                TP = new TimedPunishment({ userID: this.id, duration: data.duration, infraction: data.infraction, type: "ban" });
+            return { set: await guild.setTimedPunishment(TP), existing: MC }
+        }
+
+        async unban(guild, moderator, reason) {
+            if (!guild || !(guild instanceof Guild)) throw new TypeError("Guild is: " + guild);
+            const CL = guild.member(this.client.user);
+            if (!moderator.isAdmin || !CL.isAdmin) throw new Error("Missing permissions");
+            await guild.members.unban(this, reason);
+            if (!guild.DB) await guild.DB.dbLoad();
+
+            if (!this.bot) {
+                const emb = defaultEventLogEmbed(guild);
+
+                emb.setTitle("You have been unbanned")
+                    .setDescription("**Reason**\n" + reason);
+
+                this.createDM().then(r => trySend(this.client, r, emb));
+            }
+
+            return guild.removeTimedPunishment(this.id, "ban");
         }
     }
 });

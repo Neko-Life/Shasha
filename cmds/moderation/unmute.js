@@ -43,23 +43,15 @@ module.exports = class unmute extends commando.Command {
             await USER.unmute(msg.guild, msg.member, reason)
                 .then(() => {
                     success.push(USER.id);
-                    if (!USER.bot) {
-                        const emb = defaultEventLogEmbed(msg.guild);
-
-                        emb.setTitle("You have been unmuted")
-                            .setDescription("**Reason**\n" + reason);
-
-                        USER.createDM().then(r => trySend(msg.client, r, emb));
-                    }
                 })
                 .catch((e) => {
                     console.log(e);
                     if (/isn't muted in/.test(e.message)) return notMuted.push(USER.id);
-                    cant.push(USER.id)
+                    cant.push(USER.id);
                 });
         }
 
-        let emb = defaultImageEmbed(msg, null, "Unmute");
+        const emb = defaultImageEmbed(msg, null, "Unmute");
         emb.setDescription("**Reason**\n" + reason)
             .addField("Unmuted", (success.length > 0 ? "<@" + success.join(">, <@") + ">" : "`[NONE]`"));
         if (cant.length > 0) emb.addField("Can't unmute", "<@" + cant.join(">, <@") + ">");

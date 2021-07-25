@@ -31,7 +31,7 @@ module.exports = class ban extends commando.Command {
     async run(msg, arg) {
         const args = parseDoubleDash(arg),
             target = args?.shift();
-        let reason = "No reason provided", pDuration = {}, execTarget = [], resultMsg = "", daysToDeleteMessage = 0;
+        let reason = "No reason provided", pDuration = {}, execTarget = [], resultMsg = "", daysToDeleteMessages = 0;
 
         if (!target || target.length < 1) return trySend(msg.client, msg, this.description); else {
             const ET = await targetUser(msg, target);
@@ -44,7 +44,7 @@ module.exports = class ban extends commando.Command {
                 if (ARG === "--" || ARG.trim().length < 1) continue;
                 if (ARG.startsWith("d ")) {
                     const U = ARG.slice(2).trim();
-                    if (U.length > 0 && !/\D/.test(U)) daysToDeleteMessage = parseInt(U, 10); else return trySend(msg.client, msg, "Invalid number of days to delete messages!");
+                    if (U.length > 0 && !/\D/.test(U)) daysToDeleteMessages = parseInt(U, 10); else return trySend(msg.client, msg, "Invalid number of days to delete messages!");
                     continue;
                 }
                 else if (CHECK_FOR_DURATION_REGEXP.test(ARG.trim()))

@@ -24,12 +24,11 @@ module.exports = (member) => {
             .setTitle("`" + member.user.tag + "` left")
             .setThumbnail(member.user.displayAvatarURL({ format: "png", size: 4096, dynamic: true }))
             .setColor(getColor("yellow"))
-            .addField("Registered", defaultDateFormat(member.user.createdAt))
-            .addField("Joined", defaultDateFormat(member.joinedAt) + `\n(${intervalToDuration(INT).strings.join(" ")} ago)`)
             .addField("Nick", "`" + member.displayName + "`")
+            .addField("Joined", defaultDateFormat(member.joinedAt) + `\n(${intervalToDuration(INT).strings.join(" ")} ago)`)
             .setDescription(`<@!${member.id}> (${member.id}) just left.\nWe have ${member.guild.memberCount} total members now.`);
         for (const U of RU) {
-            emb.addField(emb.fields.length === 3 ? "Roles" : "", U.length > 0 ? "<@&" + U.join(">, <@&") + ">" : "`[NONE]`");
+            emb.addField(emb.fields.length === 2 ? "Roles" : "​", U.length > 0 ? "<@&" + U.join(">, <@&") + ">" : "`[NONE]`");
         }
         return trySend(member.client, log, emb);
     }

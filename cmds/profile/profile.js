@@ -4,6 +4,7 @@ const commando = require("@iceprod/discord.js-commando");
 const { Message } = require("discord.js");
 const { DateTime, Interval } = require("luxon");
 const { trySend, getUser, defaultImageEmbed, splitOnLength, defaultDateFormat } = require("../../resources/functions");
+const getColor = require("../../resources/getColor");
 const { intervalToDuration } = require("../moderation/src/duration");
 
 module.exports = class profile extends commando.Command {
@@ -42,7 +43,8 @@ module.exports = class profile extends commando.Command {
                 RFS = splitOnLength(RI, 1010, ">, <@&"), INT = Interval.fromDateTimes(DateTime.fromJSDate(MEM.joinedAt), DateTime.now());
 
             emb.addField("Joined", defaultDateFormat(MEM.joinedAt) + `\n(${intervalToDuration(INT).strings.join(" ")} ago)`)
-                .addField("Nick", `\`${MEM.displayName}\``);
+                .addField("Nick", `\`${MEM.displayName}\``)
+                .setColor(getColor(MEM.displayColor));
 
             if (RFS[0]?.length > 0) {
                 for (const p of RFS) {

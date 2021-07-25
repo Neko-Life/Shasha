@@ -1,10 +1,10 @@
 'use strict';
 
 const { GuildMember } = require("discord.js"),
-    { DateTime } = require("luxon"),
+    { DateTime, Interval } = require("luxon"),
     { getChannel, defaultEventLogEmbed, trySend, defaultDateFormat } = require("../functions"),
     getColor = require("../getColor"),
-    { DT_PRINT_FORMAT } = require("../../cmds/moderation/src/duration");
+    { DT_PRINT_FORMAT, intervalToDuration } = require("../../cmds/moderation/src/duration");
 
 /**
  * Log newly joined Guild Member
@@ -20,7 +20,8 @@ module.exports = (member) => {
             .setTitle("`" + member.user.tag + "` joined")
             .setThumbnail(member.user.displayAvatarURL({ format: "png", size: 4096, dynamic: true }))
             .setColor(getColor("cyan"))
-            .addField("Registered", defaultDateFormat(member.user.createdAt))
+            .addField("Registered", defaultDateFormat(member.user.createdAt) +
+                `\n(${intervalToDuration(Interval.fromDateTimes(DateTime.fromJSDate(member.user.createdAt), DateTime.now())).strings.join(" ")} ago)`)
             .setDescription(`<@!${member.id}> (${member.id}) just joined.\nWe have ${member.guild.memberCount} total members now.`);
         return trySend(member.client, log, emb);
     }
