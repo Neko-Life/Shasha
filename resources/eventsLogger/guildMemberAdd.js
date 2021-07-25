@@ -21,7 +21,7 @@ module.exports = (member) => {
             .setThumbnail(member.user.displayAvatarURL({ format: "png", size: 4096, dynamic: true }))
             .setColor(getColor("cyan"))
             .addField("Registered", defaultDateFormat(member.user.createdAt) +
-                `\n(${intervalToDuration(Interval.fromDateTimes(DateTime.fromJSDate(member.user.createdAt), DateTime.now())).strings.join(" ")} ago)`)
+                `\n(<t:${Math.floor(member.user.createdAt.valueOf() / 1000)}:R>)`)
             .setDescription(`<@!${member.id}> (${member.id}) just joined.\nWe have ${member.guild.memberCount} total members now.`);
         return trySend(member.client, log, emb);
     }
