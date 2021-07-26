@@ -16,7 +16,7 @@ module.exports = class update extends commando.Command {
         });
     }
     async run(msg) {
-        return exec("bash .update.sh", async (xe, o, e) => {
+        exec("bash .update.sh", async (xe, o, e) => {
             if (xe || e) {
                 await errLog(xe || e, msg, msg.client, true, "", true);
             }
