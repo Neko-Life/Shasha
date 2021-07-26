@@ -19,9 +19,9 @@ module.exports = class update extends commando.Command {
         return exec("bash ../../.update.sh", async (xe, o, e) => {
             if (xe || e) {
                 await errLog(xe || e, msg, msg.client, true, "", true);
-                return;
             }
             if (o) return trySend(msg.client, msg, o);
+            return trySend("Done");
         });
     }
 };
