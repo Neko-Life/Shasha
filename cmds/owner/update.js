@@ -1,6 +1,8 @@
 'use strict';
 
-const commando = require("@iceprod/discord.js-commando");
+const commando = require("@iceprod/discord.js-commando"),
+    { exec } = require("child_process"),
+    { errLog, trySend } = require("../../resources/functions");
 
 module.exports = class update extends commando.Command {
     constructor(client) {
@@ -14,6 +16,12 @@ module.exports = class update extends commando.Command {
         });
     }
     run(msg) {
-
+        return exec("bash ../../.update.sh", (xe, o, e) => {
+            if (xe || e) {
+                await errLog(xe || e, msg, msg.client, true, "", true);
+                return;
+            }
+            if (o) return trySend(msg.client, msg, o);
+        });
     }
 };
