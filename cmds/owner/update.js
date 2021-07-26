@@ -21,7 +21,7 @@ module.exports = class update extends commando.Command {
                 await errLog(xe || e, msg, msg.client, true, "", true);
             }
             if (o) return trySend(msg.client, msg, o);
-            return trySend("Done");
+            return trySend(msg.client, msg, "Done");
         });
     }
 };
