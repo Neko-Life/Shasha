@@ -202,8 +202,8 @@ Structures.extend("User", u => {
             const MEM = guild.member(this);
             const CL = guild.member(this.client.user);
 
-            if (!CL.hasPermission("MANAGE_ROLES") ||
-                !data.moderator.hasPermission("MANAGE_ROLES")) throw new Error("Missing Permissions");
+            if (!(CL.isAdmin || CL.hasPermission("MANAGE_ROLES")) ||
+                !(data.moderator.idAdmin || data.moderator.hasPermission("MANAGE_ROLES"))) throw new Error("Missing Permissions");
 
             if (MEM) {
                 if (data.moderator.roles.highest.position < MEM.roles.highest.position || MEM.roles.highest.position > guild.member(this.client.user).roles.highest.position) throw new Error("You can't mute someone with higher position than you <:nekokekLife:852865942530949160>");
@@ -238,8 +238,8 @@ Structures.extend("User", u => {
             if (!guild || !(guild instanceof Guild)) throw new TypeError("Guild is: " + guild);
             const MEM = guild.member(this);
             const CL = guild.member(this.client.user);
-            if (!CL.hasPermission("MANAGE_ROLES") ||
-                !moderator.hasPermission("MANAGE_ROLES")) throw new Error("Missing Permissions");
+            if (!(CL.isAdmin || CL.hasPermission("MANAGE_ROLES")) ||
+                !(moderator.idAdmin || moderator.hasPermission("MANAGE_ROLES"))) throw new Error("Missing Permissions");
             if (!guild.DB) await guild.dbLoad();
 
             if (!this.bot) {
@@ -272,8 +272,8 @@ Structures.extend("User", u => {
             if (!data?.infraction) throw new Error("Missing infraction id");
             const MEM = guild.member(this);
             const CL = guild.member(this.client.user);
-            if (!CL.hasPermission("BAN_MEMBERS") ||
-                !data.moderator.hasPermission("BAN_MEMBERS")) throw new Error("Missing Permissions");
+            if (!(CL.isAdmin || CL.hasPermission("BAN_MEMBERS")) ||
+                !(data.moderation.isAdmin || data.moderator.hasPermission("BAN_MEMBERS"))) throw new Error("Missing Permissions");
             if (MEM) {
                 if (moderator.roles.highest.position < MEM.roles.highest.position ||
                     MEM.roles.highest.position > CL.roles.highest.position)

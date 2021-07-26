@@ -51,11 +51,13 @@ module.exports = class unmute extends commando.Command {
                 });
         }
 
-        const emb = defaultImageEmbed(msg, null, "Unmute");
-        emb.setDescription("**Reason**\n" + reason)
+        const emb = defaultEventLogEmbed(msg.guild);
+        if (notMuted.length > 0) emb.addField("Wasn't muted", "<@" + notMuted.join(">, <@") + ">");
+
+        emb.setTitle("Unmute")
+            .setDescription("**Reason**\n" + reason)
             .addField("Unmuted", (success.length > 0 ? "<@" + success.join(">, <@") + ">" : "`[NONE]`"));
         if (cant.length > 0) emb.addField("Can't unmute", "<@" + cant.join(">, <@") + ">");
-        if (notMuted.length > 0) emb.addField("Wasn't muted", "<@" + notMuted.join(">, <@") + ">");
         return trySend(msg.client, msg, { content: resultMsg, embed: emb });
     }
 }

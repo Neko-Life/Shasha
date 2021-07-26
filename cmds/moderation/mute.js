@@ -134,24 +134,25 @@ module.exports = class mute extends commando.Command {
 
             if (muted.length > 0) await msg.guild.addInfraction(infractionToDoc);
 
-            const emb = defaultImageEmbed(msg, null, "Infraction #" + infractionToDoc.infraction);
+            const emb = defaultEventLogEmbed(msg.guild);
             let mutedStr = "", mutedArr = [];
 
             if (muted.length > 0) for (const U of muted) {
-                const tU = "<@" + U + ">\n";
+                const tU = "<@" + U + ">, ";
                 if ((mutedStr + tU).length < 1000) mutedStr += tU; else mutedArr.push(U);
             }
 
             if (mutedArr.length > 0) mutedStr += `and ${mutedArr.length} more...`;
+            if (already.length > 0) emb.addField("Already muted", "<@" + already.join(">, <@") + ">\n\nDuration updated for these users");
 
-            emb.setDescription("**Reason**\n" + reason)
+            emb.setTitle("Infraction #" + infractionToDoc.infraction)
+                .setDescription("**Reason**\n" + reason)
                 .addField("Muted", mutedStr || "`[NONE]`")
                 .addField("At", defaultDateFormat(duration.invoked), true)
                 .addField("Until", duration.until ? defaultDateFormat(duration.until) : "Never", true)
                 .addField("For", duration.duration?.strings.join(" ") || "Indefinite");
 
             if (cant.length > 0) emb.addField("Can't mute", "<@" + cant.join(">, <@") + ">\n\n**You can't mute someone with higher position than you <:nekokekLife:852865942530949160>**");
-            if (already.length > 0) emb.addField("Already muted", "<@" + already.join(">, <@") + ">\n\nDuration updated for these users");
 
             return trySend(msg.client, msg, { content: resultMsg, embed: emb });
         }
