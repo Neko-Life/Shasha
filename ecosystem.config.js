@@ -1,5 +1,6 @@
 module.exports = {
   apps: [{
+    name: "shasha",
     script: 'Main.js',
     watch: '.'
   }, {
