@@ -5,7 +5,6 @@ const { Structures, Guild, GuildMember, BanOptions } = require("discord.js"),
     { errLog, defaultEventLogEmbed, defaultDateFormat, trySend } = require("./functions");
 const { createSchedule } = require("../cmds/moderation/src/createSchedule");
 const { TimedPunishment } = require("./classes");
-const { database } = require("../database/mongo");
 const col = database.collection("Schedule");
 
 Structures.extend("Guild", u => {
