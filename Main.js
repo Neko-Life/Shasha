@@ -21,6 +21,7 @@ const { join } = require('path');
 const getColor = require("./resources/getColor");
 const requireAll = require("require-all");
 const { chatAnswer } = require("./resources/shaChat");
+const { init } = require("./cmds/moderation/src/createSchedule");
 
 const lgr = requireAll({ dirname: join(__dirname, "resources/eventsLogger"), recursive: true });
 client.functions = requireAll({ dirname: join(__dirname, "resources"), recursive: true });
@@ -51,6 +52,7 @@ client.on('ready', async () => {
     //console.log(`Member in ${shaGuild.length} guilds.`);
     //const statusChannel = client.channels.cache.get(configFile.statusChannel);
     console.log(client.user.tag + ' logged in!');
+    init(client);
 });
 
 client.on("message", async msg => {

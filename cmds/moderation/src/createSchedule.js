@@ -52,4 +52,4 @@ async function init(client) {
     jobManager.start();
 }
 
-module.exports = { createSchedule }
+module.exports = { createSchedule, init }

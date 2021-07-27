@@ -3,8 +3,7 @@
 const Bree = require("bree");
 const cabin = require("cabin");
 const { Client } = require("discord.js");
-const { errLog, trySend } = require("./functions"),
-    { schedulerLog } = require("../config.json");
+const { errLog } = require("./functions");
 
 /**
  * @param {Client} client
@@ -13,9 +12,7 @@ const { errLog, trySend } = require("./functions"),
  */
 function scheduler(client, jobs = []) {
     return new Bree({
-        logger: (data) => {
-            return trySend(client, schedulerLog, data);
-        },
+        // logger: new cabin,
         root: false,
         jobs: jobs,
         workerMessageHandler: ({ message }) => {
