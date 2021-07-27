@@ -23,7 +23,6 @@ module.exports = class ban extends commando.Command {
     }
 
     /**
-     * 
      * @param {Message} msg 
      * @param {*} arg 
      * @returns 

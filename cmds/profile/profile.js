@@ -35,7 +35,8 @@ module.exports = class profile extends commando.Command {
 
         emb.setThumbnail(TM.displayAvatarURL({ format: "png", size: 4096, dynamic: true }))
             .addField("ID", TM.id)
-            .addField("Registered", defaultDateFormat(TM.createdAt));
+            .addField("Registered", defaultDateFormat(TM.createdAt) +
+                `\n(<t:${Math.floor(TM.createdAt.valueOf() / 1000)}:R>)`);
         if (TM.description) emb.setDescription(TM.description);
 
         if (MEM) {
