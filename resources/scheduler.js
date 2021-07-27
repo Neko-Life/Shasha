@@ -17,7 +17,6 @@ function scheduler(client, jobs = []) {
         jobs: jobs,
         workerMessageHandler: ({ message }) => {
             const NAME = message;
-            console.log(NAME);
             if (!NAME[0] || !NAME[1] || !NAME[2]) throw new Error("Value undefined!");
             return execPunishmentSchedule(client, NAME[0], NAME[1], NAME[2]);
         },

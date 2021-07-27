@@ -5,6 +5,8 @@ const { Structures, Guild, GuildMember, BanOptions } = require("discord.js"),
     { errLog, defaultEventLogEmbed, defaultDateFormat, trySend } = require("./functions");
 const { createSchedule } = require("../cmds/moderation/src/createSchedule");
 const { TimedPunishment } = require("./classes");
+const { database } = require("../database/mongo");
+const col = database.collection("Schedule");
 
 Structures.extend("Guild", u => {
     return class Guild extends u {
@@ -26,10 +28,9 @@ Structures.extend("Guild", u => {
                     }
                 if (r.timedPunishments)
                     for (const U in r.timedPunishments) {
-                        console.log(r.timedPunishments[U]);
                         const tr = new TimedPunishment(r.timedPunishments[U]);
                         tr.setDataDuration(tr.duration.invoked, tr.duration.until);
-                        timedPunishments.set(this.id + "/" + tr.userID + "/" + tr.type);
+                        timedPunishments.set(tr.userID + "/" + tr.type, tr);
                     }
                 r.infractions = infractions;
                 r.timedPunishments = timedPunishments;
@@ -98,7 +99,7 @@ Structures.extend("Guild", u => {
         async setTimedPunishment(Punishment) {
             console.log("SET TIMED PUNISHMENT");
             const ret = this.DB.timedPunishments.set(Punishment.userID + "/" + Punishment.type, Punishment);
-            console.log(await this.setDb("timedPunishments", this.DB.timedPunishments));
+            await this.setDb("timedPunishments", this.DB.timedPunishments);
             return ret;
         }
 
@@ -159,7 +160,6 @@ Structures.extend("User", u => {
             return database.collection("User").updateOne({ document: this.id }, { $set: { [query]: set }, $setOnInsert: { document: this.id } },
                 { upsert: true }).then((r, e) => {
                     if (e) return errLog(e, null, this.client);
-                    console.log(set);
                     return this.DB[query] = set;
                 });
         }
@@ -259,6 +259,7 @@ Structures.extend("User", u => {
                     throw new Error("You can't mute someone with higher position than you <:nekokekLife:852865942530949160>");
                 await MEM.unmute(reason);
             }
+            await col.deleteOne({ document: [guild.id, this.id, "mute"].join("/") }).then(() => console.log("DELETED")).catch(e => errLog(e, null, client));
             return guild.removeTimedPunishment(this.id, "mute");
         }
 
@@ -315,6 +316,7 @@ Structures.extend("User", u => {
 
                 this.createDM().then(r => trySend(this.client, r, emb));
             }
+            await col.deleteOne({ document: [guild.id, this.id, "ban"].join("/") }).then(() => console.log("DELETED")).catch(e => errLog(e, null, client));
 
             return guild.removeTimedPunishment(this.id, "ban");
         }
@@ -375,7 +377,6 @@ Structures.extend("GuildMember", u => {
         async dbLoad() {
             return database.collection("GuildMember").findOne({ document: this.id }).then((r, e) => {
                 if (e) return errLog(e, null, this.client);
-                r = r?.DB;
                 if (!r) r = {};
                 return this.DB = r;
             });
@@ -385,7 +386,6 @@ Structures.extend("GuildMember", u => {
             return database.collection("GuildMember").updateOne({ document: this.id }, { $set: { [query]: set }, $setOnInsert: { document: this.id } },
                 { upsert: true }).then((r, e) => {
                     if (e) return errLog(e, null, this.client);
-                    console.log(set);
                     return this.DB[query] = set;
                 });
         }
@@ -411,11 +411,14 @@ Structures.extend("GuildMember", u => {
                 this.DB.muted.takenRoles = ROLES;
             }
             this.DB.muted.muteRole = this.guild.DB.settings.mute.role;
+            console.log(this.DB.muted.takenRoles);
 
             try {
                 if (ROLES?.length > 0) await this.roles.remove(ROLES, reason);
                 await this.roles.add(this.DB.muted.muteRole, reason);
+                if (!this.DB.muted.takenRoles) this.DB.muted.takenRoles = [];
                 await this.setDb("muted", this.DB.muted);
+                console.log(this.DB);
                 return true;
             } catch (e) {
                 if (this.DB.muted.takenRoles?.length > 0) await this.roles.add(this.DB.muted.takenRoles, reason).catch(() => { });
@@ -430,6 +433,7 @@ Structures.extend("GuildMember", u => {
         async unmute(reason) {
             if (!this.DB) await this.dbLoad();
             try {
+                console.log(this.DB);
                 if (this.DB.muted.takenRoles.length > 0) await this.roles.add(this.DB.muted.takenRoles, reason);
                 if (this.DB.muted.muteRole) await this.roles.remove(this.DB.muted.muteRole, reason);
                 console.log("clear takenRoles UM");

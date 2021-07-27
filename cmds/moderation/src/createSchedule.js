@@ -21,7 +21,7 @@ async function createSchedule(client, { guildID, userID, type, until }) {
     else if (type === "ban") path = "./unbanSc.js";
     else throw new TypeError("Invalid type: " + type);
     if (typeof until === "string") until = new Date(until);
-    const NAME = guildID + "/" + userID + "/" + type,
+    const NAME = [guildID, userID, type].join("/"),
         SC = {
             name: NAME,
             path: join(__dirname, path),
@@ -47,9 +47,11 @@ async function createSchedule(client, { guildID, userID, type, until }) {
 
 async function init(client) {
     const jobs = await col.find({}).toArray();
-    console.log(jobs);
     jobManager = scheduler(client, jobs);
     jobManager.start();
+    jobs.forEach((v) => {
+        if (v.date.valueOf() < new Date().valueOf()) jobManager.run(v.name);
+    });
 }
 
 module.exports = { createSchedule, init }
