@@ -11,12 +11,41 @@ const { errLog, trySend } = require("./functions"),
  * @param {object[]} jobs
  * @returns {Bree}
  */
-module.exports = (client, jobs = []) => {
+function scheduler(client, jobs = []) {
     return new Bree({
-        // logger: new cabin(),
+        logger: (data) => {
+            return trySend(client, schedulerLog, data);
+        },
         root: false,
         jobs: jobs,
-        workerMessageHandler: (a) => trySend(client, schedulerLog, a),
-        errorHandler: (e, m) => errLog(e, null, client, false, `\`${m?.threadId}\` \`${m?.name}\``)
+        workerMessageHandler: ({ message }) => {
+            const NAME = message;
+            console.log(NAME);
+            if (!NAME[0] || !NAME[1] || !NAME[2]) throw new Error("Value undefined!");
+            return execPunishmentSchedule(client, NAME[0], NAME[1], NAME[2]);
+        },
+        errorHandler: (e, m) => {
+            return errLog(e, null, client, false, `\`${m?.threadId}\` \`${m?.name}\``)
+        }
     });
 }
+
+async function execPunishmentSchedule(client, guildID, userID, type) {
+    if (!guildID || !userID || !type || !client) throw new TypeError("Undefined param!");
+    const USER = await client.users.fetch(userID);
+    if (!USER) throw new Error("Unknown user");
+    if (!USER.DB) await USER.dbLoad();
+    const GUILD = await client.guilds.fetch(guildID);
+    if (!GUILD) throw new Error("Unknown guild");
+    if (!GUILD.DB) await GUILD.dbLoad();
+    const CL = GUILD.member(client.user);
+    let ret;
+    if (type === "mute") {
+        ret = await USER.unmute(GUILD, CL, "Punishment expired");
+    } else {
+        ret = await USER.unban(GUILD, CL, "Punishment expired");
+    }
+    return ret;
+}
+
+module.exports = { scheduler, execPunishmentSchedule }

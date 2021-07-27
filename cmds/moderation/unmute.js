@@ -30,7 +30,6 @@ module.exports = class unmute extends commando.Command {
         }
         if (mentions?.length > 0) {
             const FR = await targetUser(msg, mentions, targetUsers, resultMsg);
-            console.log(FR);
             targetUsers = FR.targetUser;
             resultMsg = FR.resultMsg;
         }

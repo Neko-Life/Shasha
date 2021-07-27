@@ -4,7 +4,7 @@ const Bree = require("bree");
 const { errLog } = require("../../../resources/functions");
 
 const { join } = require("path"),
-    scheduler = require("../../../resources/scheduler"),
+    { scheduler } = require("../../../resources/scheduler"),
     { database } = require("../../../database/mongo"),
     col = database.collection("Schedule");
 
@@ -36,10 +36,10 @@ async function createSchedule(client, { guildID, userID, type, until }) {
         };
 
     try {
-        await col.updateOne({ document: NAME }, { $set: SC, $setOnInsert: { document: NAME } }, { upsert: true });
-        await jobManager.remove(NAME).catch(() => { })
+        await jobManager.remove(NAME).catch(() => { });
         jobManager.add(SC);
         jobManager.start(NAME);
+        return col.updateOne({ document: NAME }, { $set: SC, $setOnInsert: { document: NAME } }, { upsert: true });
     } catch (e) {
         return errLog(e, null, client);
     }
@@ -47,6 +47,9 @@ async function createSchedule(client, { guildID, userID, type, until }) {
 
 async function init(client) {
     const jobs = await col.find({}).toArray();
+    console.log(jobs);
     jobManager = scheduler(client, jobs);
     jobManager.start();
 }
+
+module.exports = { createSchedule }

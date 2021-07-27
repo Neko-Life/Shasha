@@ -3,6 +3,7 @@
 const { Structures, Guild, GuildMember, BanOptions } = require("discord.js"),
     { database } = require("../database/mongo"),
     { errLog, defaultEventLogEmbed, defaultDateFormat, trySend } = require("./functions");
+const { createSchedule } = require("../cmds/moderation/src/createSchedule");
 const { TimedPunishment } = require("./classes");
 
 Structures.extend("Guild", u => {
@@ -14,7 +15,6 @@ Structures.extend("Guild", u => {
         async dbLoad() {
             return database.collection("Guild").findOne({ document: this.id }).then((r, e) => {
                 if (e) return errLog(e, null, this.client);
-                console.log(r);
                 if (!r) r = {};
                 if (!r.eventChannels) r.eventChannels = {};
                 if (!r.settings) r.settings = {};
@@ -22,14 +22,13 @@ Structures.extend("Guild", u => {
                     timedPunishments = new Map();
                 if (r.infractions)
                     for (const U in r.infractions) {
-                        console.log(r.infractions[U]);
                         infractions.set(U, r.infractions[U]);
                     }
                 if (r.timedPunishments)
                     for (const U in r.timedPunishments) {
+                        console.log(r.timedPunishments[U]);
                         const tr = new TimedPunishment(r.timedPunishments[U]);
                         tr.setDataDuration(tr.duration.invoked, tr.duration.until);
-                        console.log(timedPunishments.set(U, tr));
                     }
                 r.infractions = infractions;
                 r.timedPunishments = timedPunishments;
@@ -62,9 +61,7 @@ Structures.extend("Guild", u => {
                 if (!this.DB) await this.dbLoad();
                 console.log("SETTING INF");
                 const ret = this.DB.infractions.set(add.moderator.id + "/" + add.infraction, add);
-                console.log(ret);
                 await this.setDb("infractions", this.DB.infractions);
-                console.log(ret);
                 return ret;
             } catch (e) { }
         }
@@ -100,7 +97,7 @@ Structures.extend("Guild", u => {
         async setTimedPunishment(Punishment) {
             console.log("SET TIMED PUNISHMENT");
             const ret = this.DB.timedPunishments.set(Punishment.userID + "/" + Punishment.type, Punishment);
-            await this.setDb("timedPunishments", this.DB.timedPunishments);
+            console.log(await this.setDb("timedPunishments", this.DB.timedPunishments));
             return ret;
         }
 
@@ -133,7 +130,6 @@ Structures.extend("Guild", u => {
         async removeTimedPunishment(userID, type) {
             console.log("REMOVE TIMEDPUNISHMENT");
             const ret = this.DB.timedPunishments.delete(userID + "/" + type);
-            console.log(ret);
             await this.setDb("timedPunishments", this.DB.timedPunishments);
             return ret;
         }
@@ -162,6 +158,7 @@ Structures.extend("User", u => {
             return database.collection("User").updateOne({ document: this.id }, { $set: { [query]: set }, $setOnInsert: { document: this.id } },
                 { upsert: true }).then((r, e) => {
                     if (e) return errLog(e, null, this.client);
+                    console.log(set);
                     return this.DB[query] = set;
                 });
         }
@@ -224,6 +221,8 @@ Structures.extend("User", u => {
 
             const MC = guild.getTimedPunishment(this.id, "mute"),
                 TP = new TimedPunishment({ userID: this.id, duration: data.duration, infraction: data.infraction, type: "mute" });
+
+            if (data.duration.until) await createSchedule(guild.client, { guildID: guild.id, userID: this.id, type: "mute", until: data.duration.until?.toJSDate() });
 
             return { set: await guild.setTimedPunishment(TP), existing: MC }
         }
@@ -294,6 +293,9 @@ Structures.extend("User", u => {
 
             const MC = guild.getTimedPunishment(this.id, "ban"),
                 TP = new TimedPunishment({ userID: this.id, duration: data.duration, infraction: data.infraction, type: "ban" });
+
+            if (data.duration.until) await createSchedule(guild.client, { guildID: guild.id, userID: this.id, type: "ban", until: data.duration.until?.toJSDate() });
+
             return { set: await guild.setTimedPunishment(TP), existing: MC }
         }
 
@@ -382,6 +384,7 @@ Structures.extend("GuildMember", u => {
             return database.collection("GuildMember").updateOne({ document: this.id }, { $set: { [query]: set }, $setOnInsert: { document: this.id } },
                 { upsert: true }).then((r, e) => {
                     if (e) return errLog(e, null, this.client);
+                    console.log(set);
                     return this.DB[query] = set;
                 });
         }

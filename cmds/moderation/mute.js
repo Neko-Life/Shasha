@@ -120,7 +120,6 @@ module.exports = class mute extends commando.Command {
                 try {
                     const RES = await EXEC.mute(msg.guild, { duration: duration, infraction: infractionToDoc.infraction, moderator: msg.member }, reason);
                     if (RES.infraction) infractionN.push(RES.infraction);
-                    console.log(RES);
                     muted.push(EXEC.id);
                 } catch (e) {
                     if (/Missing Permissions|someone with higher position/.test(e.message)) cant.push(EXEC.id);

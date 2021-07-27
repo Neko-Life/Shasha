@@ -16,10 +16,9 @@ if (process.argv.includes("-d")) {
 
 const sqlite = require('sqlite');
 const configFile = require('./config.json');
-const { errLog, trySend, noPerm, getUTCComparison, defaultEventLogEmbed, getChannel, getUser } = require('./resources/functions');
+const { errLog, trySend, defaultEventLogEmbed } = require('./resources/functions');
 const { join } = require('path');
 const getColor = require("./resources/getColor");
-const { timestampAt } = require("./resources/debug");
 const requireAll = require("require-all");
 const { chatAnswer } = require("./resources/shaChat");
 
@@ -198,23 +197,5 @@ client.on("commandError", (c, e, m) => {
 process.on("uncaughtException", e => errLog(e, null, client));
 process.on("unhandledRejection", e => errLog(e, null, client));
 process.on("warning", e => errLog(e, null, client));
-
-async function execPunishmentSchedule([guildID, userID, type]) {
-    if (!guildID || !userID || !type) throw new TypeError("Undefined param!");
-    let USER = client.users.resolve(userID);
-    if (!USER) USER = await client.users.fetch(userID);
-    if (!USER) throw new Error("Unknown user");
-    const GUILD = client.guilds.resolve(guildID);
-    if (!GUILD) throw new Error("Unknown guild");
-    if (!GUILD.DB) GUILD.dbLoad();
-    const CL = GUILD.member(client.user);
-    let ret;
-    if (type === "mute") {
-        ret = await USER.unmute(GUILD, CL, "Punishment expired");
-    } else {
-        ret = await USER.unban(GUILD, CL, "Punishment expired");
-    }
-    return ret;
-}
 
 client.login(configFile.token);
