@@ -145,11 +145,13 @@ module.exports = class mute extends commando.Command {
             if (already.length > 0) emb.addField("Already muted", "<@" + already.join(">, <@") + ">\n\nDuration updated for these users");
 
             emb.setTitle("Infraction #" + infractionToDoc.infraction)
-                .setDescription("**Reason**\n" + reason)
-                .addField("Muted", mutedStr || "`[NONE]`")
-                .addField("At", defaultDateFormat(duration.invoked), true)
-                .addField("Until", duration.until ? defaultDateFormat(duration.until) : "Never", true)
-                .addField("For", duration.duration?.strings.join(" ") || "Indefinite");
+                .setDescription("**Reason**\n" + reason);
+            if (muted.length > 0) {
+                emb.addField("Muted", mutedStr || "`[NONE]`")
+                    .addField("At", defaultDateFormat(duration.invoked), true)
+                    .addField("Until", duration.until ? defaultDateFormat(duration.until) : "Never", true)
+            }
+            emb.addField("For", duration.duration?.strings.join(" ") || "Indefinite");
 
             if (cant.length > 0) emb.addField("Can't mute", "<@" + cant.join(">, <@") + ">\n\n**You can't mute someone with higher position than you <:nekokekLife:852865942530949160>**");
 
