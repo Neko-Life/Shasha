@@ -36,7 +36,7 @@ async function createSchedule(client, { guildID, userID, type, until }) {
 
     try {
         await jobManager.remove(NAME).catch(() => { });
-        if ((until.valueOf() - CHK) < new Date(0, 0, 0, 24, 0, 0, 0)) {
+        if ((until.valueOf() - CHK) < new Date(24 * 60 * 60 * 1000)) {
             jobManager.add(SC);
             jobManager.start(NAME);
         }
@@ -68,10 +68,10 @@ async function reset() {
 
 async function jobLoad() {
     const CHK = new Date().valueOf();
-    const CHK2 = new Date(0, 0, 0, 24, 0, 0, 0).valueOf();
+    const CHK2 = new Date(24 * 60 * 60 * 1000).valueOf();
     jobs = (await col.find({}).toArray()).filter((v) => (v.date.valueOf() - CHK) < CHK2);
 
-    const rstjb = new Date(0, 0, 0, 23, 30, 0, 0).valueOf();
+    const rstjb = new Date((23 * 60 * 60 * 1000) + (30 * 60 * 1000)).valueOf();
     const rsttm = {
         name: "rsttm",
         path: join(__dirname, "./execSc.js"),
@@ -89,7 +89,7 @@ function jobStart() {
     const CHK = new Date().valueOf();
     jobManager.start();
     jobs.forEach((v) => {
-        if (v.date.valueOf() < CHK) jobManager.run(v.name);
+        if (v.date?.valueOf() < CHK) jobManager.run(v.name);
     });
     console.log("SCHEDULER STARTED");
     return 1;
