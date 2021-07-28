@@ -91,7 +91,9 @@ module.exports = class mute extends commando.Command {
                     duration = durationFn(msg.editedAt || msg.createdAt, ARG.trim());
                 } else reason = ARG.trim();
             }
-        } else if (!MUTE.role || !msg.guild.roles.cache.get(MUTE.role)) {
+        }
+
+        if (!MUTE.role || !msg.guild.roles.cache.get(MUTE.role)) {
             return trySend(this.client, msg, `No mute role configured!\n\n**[ADMINISTRATOR]**\nRun \`${msg.guild.commandPrefix + this.name} --s -r role_[name|ID|mention] -d [duration]\` to set it up.\n` +
                 `Or if you're too lazy you can run \`${msg.guild.commandPrefix + this.name} --cmr -n [name] -c color_[name|hex|number]\` to make a new mute role and let me set it up for you. ` +
                 `You can view server as the new mute role and override my default settings later.\n` +
