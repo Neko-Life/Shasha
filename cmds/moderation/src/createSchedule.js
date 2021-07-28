@@ -58,7 +58,10 @@ async function init(client) {
 
 async function reset() {
     await jobManager.stop().catch(console.error);
-    await jobManager.remove().catch(console.error);
+    for (const job of jobs) {
+        await jobManager.remove(job.name).catch(console.error);
+        console.log("REMOVED " + job.name);
+    }
 
     await jobLoad();
     jobManager.add(jobs);
@@ -73,15 +76,15 @@ async function jobLoad() {
 
     const rstjb = new Date((23 * 60 * 60 * 1000) + (30 * 60 * 1000)).valueOf();
     const rsttm = {
-        name: "rsttm",
+        name: "REFRESH JOBS",
         path: join(__dirname, "./execSc.js"),
         worker: {
-            argv: ["rsttm"]
+            argv: ["REFRESH JOBS"]
         },
         timeout: rstjb
     };
     jobs.push(rsttm);
-    console.log(jobs.length + " JOBS LOADED");
+    console.log((jobs.length - 1) + " JOBS LOADED");
     return 1;
 }
 

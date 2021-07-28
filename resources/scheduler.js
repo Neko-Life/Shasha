@@ -16,8 +16,9 @@ function scheduler(client, jobs = []) {
         root: false,
         jobs: jobs,
         workerMessageHandler: ({ message }) => {
-            if (!message[0] || !message[1] || !message[2]) throw new Error("Value undefined!");
-            if (message === "rsttm") return require("../cmds/moderation/src/createSchedule").reset();
+            if (!message[0]) throw new Error("Value undefined!");
+            if (message[0] === "REFRESH JOBS") return require("../cmds/moderation/src/createSchedule").reset();
+            if (!message[1] || !message[2]) throw new Error("Name undefined!");
             return execPunishmentSchedule(client, message[0], message[1], message[2]);
         },
         errorHandler: (e, m) => {

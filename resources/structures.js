@@ -410,14 +410,12 @@ Structures.extend("GuildMember", u => {
                 this.DB.muted.takenRoles = ROLES;
             }
             this.DB.muted.muteRole = this.guild.DB.settings.mute.role;
-            console.log(this.DB.muted.takenRoles);
 
             try {
                 if (ROLES?.length > 0) await this.roles.remove(ROLES, reason);
                 await this.roles.add(this.DB.muted.muteRole, reason);
                 if (!this.DB.muted.takenRoles) this.DB.muted.takenRoles = [];
                 await this.setDb("muted", this.DB.muted);
-                console.log(this.DB);
                 return true;
             } catch (e) {
                 if (this.DB.muted.takenRoles?.length > 0) await this.roles.add(this.DB.muted.takenRoles, reason).catch(() => { });
@@ -432,7 +430,6 @@ Structures.extend("GuildMember", u => {
         async unmute(reason) {
             if (!this.DB) await this.dbLoad();
             try {
-                console.log(this.DB);
                 if (this.DB.muted.takenRoles.length > 0) await this.roles.add(this.DB.muted.takenRoles, reason);
                 if (this.DB.muted.muteRole) await this.roles.remove(this.DB.muted.muteRole, reason);
                 console.log("clear takenRoles UM");
