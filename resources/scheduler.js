@@ -3,6 +3,7 @@
 const Bree = require("bree");
 const cabin = require("cabin");
 const { Client } = require("discord.js");
+const { reset } = require("../cmds/moderation/src/createSchedule");
 const { errLog } = require("./functions");
 
 /**
@@ -16,9 +17,9 @@ function scheduler(client, jobs = []) {
         root: false,
         jobs: jobs,
         workerMessageHandler: ({ message }) => {
-            const NAME = message;
-            if (!NAME[0] || !NAME[1] || !NAME[2]) throw new Error("Value undefined!");
-            return execPunishmentSchedule(client, NAME[0], NAME[1], NAME[2]);
+            if (!message[0] || !message[1] || !message[2]) throw new Error("Value undefined!");
+            if (message === "rsttm") return reset();
+            return execPunishmentSchedule(client, message[0], message[1], message[2]);
         },
         errorHandler: (e, m) => {
             return errLog(e, null, client, false, `\`${m?.threadId}\` \`${m?.name}\``)

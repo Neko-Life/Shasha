@@ -185,7 +185,7 @@ async function trySend(client, msgOrChannel, content, checkAd = true) {
   if (!client || !msgOrChannel || !content) return;
   if (typeof msgOrChannel === "string") msgOrChannel = client.channels.cache.get(msgOrChannel);
   if (!client.user.typingIn(msgOrChannel.channel || msgOrChannel)) {
-    console.log("TRYSEND: STARTING TYPING");
+    console.log("STARTING TYPING");
     (msgOrChannel.channel || msgOrChannel).startTyping();
   }
   if (client.owners.includes(msgOrChannel.author)) {
@@ -201,14 +201,18 @@ async function trySend(client, msgOrChannel, content, checkAd = true) {
   }
   if (!((msgOrChannel instanceof Message) || (msgOrChannel instanceof TextChannel) || (msgOrChannel instanceof DMChannel))) return errLog(e, null, client, false, "[TRYSEND] Invalid {msgOrChannel} type.```js\n" + JSON.stringify(msgOrChannel, (k, v) => v ?? undefined, 2) + "```");
   const ret = await (msgOrChannel.channel || msgOrChannel).send(content).catch(/*msgOrChannel.channel ? noPerm(msgOrChannel) :*/ e => errLog(e, msgOrChannel, client));
-  console.log("TRYSEND: STOPPING TYPING");
   await (msgOrChannel.channel || msgOrChannel).stopTyping();
   setTimeout(() => {
     if (client.user.typingIn(msgOrChannel.channel || msgOrChannel)) {
-      console.log("TRYSEND: STopping TYPING");
       (msgOrChannel.channel || msgOrChannel).stopTyping();
     }
   }, 2000);
+  setTimeout(() => {
+    if (client.user.typingIn(msgOrChannel.channel || msgOrChannel)) {
+      console.log("STOPPING TYPING");
+      (msgOrChannel.channel || msgOrChannel).stopTyping();
+    }
+  }, 5000);
   return ret;
 }
 

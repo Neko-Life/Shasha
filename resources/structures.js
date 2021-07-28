@@ -258,7 +258,7 @@ Structures.extend("User", u => {
                     throw new Error("You can't mute someone with higher position than you <:nekokekLife:852865942530949160>");
                 await MEM.unmute(reason);
             }
-            await col.deleteOne({ document: [guild.id, this.id, "mute"].join("/") }).then(() => console.log("DELETED")).catch(e => errLog(e, null, client));
+            await col.deleteOne({ document: [guild.id, this.id, "mute"].join("/") }).then(() => console.log("SCHEDULE " + [guild.id, this.id, "mute"].join("/") + " DELETED")).catch(e => errLog(e, null, client));
             return guild.removeTimedPunishment(this.id, "mute");
         }
 
@@ -315,7 +315,7 @@ Structures.extend("User", u => {
 
                 this.createDM().then(r => trySend(this.client, r, emb));
             }
-            await col.deleteOne({ document: [guild.id, this.id, "ban"].join("/") }).then(() => console.log("DELETED")).catch(e => errLog(e, null, client));
+            await col.deleteOne({ document: [guild.id, this.id, "ban"].join("/") }).then(() => console.log("SCHEDULE " + [guild.id, this.id, "ban"].join("/") + " DELETED")).catch(e => errLog(e, null, client));
 
             return guild.removeTimedPunishment(this.id, "ban");
         }
