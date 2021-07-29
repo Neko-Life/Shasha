@@ -120,16 +120,18 @@ async function ranLog(msg, addition) {
  * @param {string} key - Keyword
  * @param {number} max - Max length
  * @param {boolean} withID - Include user_ID
+ * @param {string} withNick
  * @returns {string}
  */
-function multipleMembersFound(msg, arr, key, max = 4, withID) {
+function multipleMembersFound(msg, arr, key, max = 4, withID, withNick) {
   if (msg && arr.length > 1) {
     try {
       let multipleFound = [];
       for (const one of arr) {
-        const user = one.user ?? one;
+        const user = one.user || one;
         let mes = user.tag;
-        if (withID) mes = mes + ` (${user.id})`;
+        if (withNick) mes += ` (${one.displayName})`
+        if (withID) mes += ` (${user.id})`;
         multipleFound.push(mes);
       }
       let multi = [];
