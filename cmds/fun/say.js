@@ -21,7 +21,7 @@ module.exports = class say extends commando.Command {
             sendThis.disableMentions = "none";
         }
         const sent = await trySend(this.client, msg, sendThis);
-        if (args != '​' && msg.channel.guild && msg.member.hasPermission("MANAGE_MESSAGES") && !(new RegExp("^<@\!?" + msg.client.user.id + ">\s")).test(msg.content)) {
+        if (args != '​' && msg.guild && !(new RegExp("^<@\!?" + msg.client.user.id + ">\s")).test(msg.content) && msg.member.hasPermission("MANAGE_MESSAGES") && msg.guild.member(this.client.user).hasPermission("MANAGE_MESSAGES")) {
             tryDelete(msg);
         }
         ranLog(msg, sent.content);

@@ -10,16 +10,18 @@ const getColor = require("../getColor");
  * @returns 
  */
 module.exports = (memberold, membernew) => {
+    const NEWAV = membernew.user.displayAvatarURL({ format: "png", size: 4096, dynamic: true });
     if (!membernew.guild.DB.eventChannels?.memberRole && !membernew.guild.DB.eventChannels?.member) {
-        if (membernew.user.DB.cachedAvatarURL != membernew.user.displayAvatarURL({ format: "png", size: 4096, dynamic: true })) {
-            membernew.user.DB.cachedAvatarURL = membernew.user.displayAvatarURL({ format: "png", size: 4096, dynamic: true });
+        if (membernew.user.DB.cachedAvatarURL != NEWAV) {
+            membernew.user.DB.cachedAvatarURL = NEWAV;
         };
         return membernew.user.setDb("cachedAvatarURL", membernew.user.DB.cachedAvatarURL);
     }
     let log, thumbMes = "";
     const emb = defaultEventLogEmbed(membernew.guild), oldT = memberold.toJSON().displayAvatarURL;
     const oldAV = membernew.user.DB.cachedAvatarURL || oldT;
-    emb.setTitle("Profile `" + memberold.user.tag + "` updated")
+    emb.setAuthor(emb.author.name, NEWAV)
+        .setTitle("Profile `" + memberold.user.tag + "` updated")
         .setColor(getColor("blue"));
     if (oldAV) thumbMes += "This embed's thumbnail is the user's old avatar.\n";
     if (membernew.guild.DB.eventChannels?.memberRole) {
@@ -38,14 +40,14 @@ module.exports = (memberold, membernew) => {
         if (membernew.displayName !== memberold.displayName) {
             emb.addField("Nickname", "Changed from `" + memberold.displayName + "` to `" + membernew.displayName + "`");
         }
-        if (membernew.user.DB.cachedAvatarURL !== membernew.user.displayAvatarURL({ format: "png", size: 4096, dynamic: true })) {
+        if (membernew.user.DB.cachedAvatarURL !== NEWAV) {
             emb
-                .setImage(membernew.user.displayAvatarURL({ format: "png", size: 4096, dynamic: true }))
+                .setImage(NEWAV)
                 .addField("Avatar", thumbMes + "The image below is the user's new avatar.");
             if (oldAV) emb.setThumbnail(oldAV);
         }
     }
-    membernew.user.DB.cachedAvatarURL = membernew.user.displayAvatarURL({ format: "png", size: 4096, dynamic: true });
+    membernew.user.DB.cachedAvatarURL = NEWAV;
     membernew.user.setDb("cachedAvatarURL", membernew.user.DB.cachedAvatarURL);
     if (!emb.fields || emb.fields.length === 0) return;
     return trySend(membernew.client, log, emb);
