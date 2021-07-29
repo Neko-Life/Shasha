@@ -30,13 +30,10 @@ module.exports = class lookup extends commando.Command {
         }
         arg = arg.replace(/(?<!\\)--s +\d+/, "").trim();
         const args = arg.split(/ +/);
-        console.log(args);
         let [fetchedMember, fetchedRoles, fetchedChannels, memMes] = [[], [], [], ""];
         const lowCaseArg0 = args[0];
         if (lowCaseArg0.startsWith("--hr")) {
-            console.log("HR");
             if (args[1]) {
-                console.log("ARGS[1]");
                 const cleanRoleID = cleanMentionID(arg.slice("--hr ".length).trim());
                 if (/^\d{17,19}$/.test(cleanRoleID)) {
                     fetchedRoles.push(msg.guild.roles.cache.get(cleanRoleID));

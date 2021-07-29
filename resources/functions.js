@@ -186,10 +186,8 @@ async function trySend(client, msgOrChannel, content, checkAd = true) {
   }*/
   if (!client || !msgOrChannel || !content) return;
   if (typeof msgOrChannel === "string") msgOrChannel = client.channels.cache.get(msgOrChannel);
-  if (!client.user.typingIn(msgOrChannel.channel || msgOrChannel)) {
-    console.log("STARTING TYPING");
+  if (!client.user.typingIn(msgOrChannel.channel || msgOrChannel))
     (msgOrChannel.channel || msgOrChannel).startTyping();
-  }
   if (client.owners.includes(msgOrChannel.author)) {
     checkAd = false;
     if (content.disableMentions) content.disableMentions = "none";
@@ -210,10 +208,8 @@ async function trySend(client, msgOrChannel, content, checkAd = true) {
     }
   }, 2000);
   setTimeout(() => {
-    if (client.user.typingIn(msgOrChannel.channel || msgOrChannel)) {
-      console.log("STOPPING TYPING");
+    if (client.user.typingIn(msgOrChannel.channel || msgOrChannel))
       (msgOrChannel.channel || msgOrChannel).stopTyping();
-    }
   }, 5000);
   return ret;
 }
