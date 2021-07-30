@@ -43,7 +43,7 @@ module.exports = class lookup extends commando.Command {
                 if (!fetchedRoles[0]) return trySend(this.client, msg, `No role found for: **${cleanRoleID}**`);
                 const HR = fetchedRoles[0].members.map(r => r);
                 if (!HR.length) return trySend(this.client, msg, `No member with role \`${fetchedRoles[0].name}\` found`)
-                if (HR.length === 1) memMes = `Member with role: **${fetchedRoles[0].name}**\`\`\`js\n' ${HR[0].displayName} (${HR[0].tag})\`\`\``;
+                if (HR.length === 1) memMes = `Member with role: **${fetchedRoles[0].name}**\`\`\`js\n' ${HR[0].user.tag} (${HR[0].displayName})\`\`\``;
                 else memMes = multipleMembersFound(msg, HR, fetchedRoles[0].name, show, false, true).replace("Multiple members found for", "Multiple members found with role");
             }
         } else if (lowCaseArg0.startsWith("--r")) {
