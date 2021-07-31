@@ -110,8 +110,8 @@ module.exports = class mute extends commando.Command {
         } else return trySend(this.client, msg, "Args: `<[user_[mention|ID|name]]> -- [reason] -- [duration]`. Use `,` to provide multiple user. `--s` to view settings.\nExample:```js\n" + `${msg.guild.commandPrefix + this.name} 580703409934696449, @Shasha#1234, ur mom,#6969,^yuck\\s(ur)?\\s.{5}#\\d+69$--69y69mo69w420d420h420m420s -- Saying "joe"\`\`\``);
 
         if (targetUsers.length > 0) {
-            let muted = [], cant = [], already = [],
-                infractionToDoc = createInfraction(msg, targetUsers, "mute", reason);
+            let muted = [], cant = [], already = [];
+            const infractionToDoc = createInfraction(msg, targetUsers, "mute", reason);
 
             for (const EXEC of targetUsers) {
                 try {
@@ -154,7 +154,5 @@ module.exports = class mute extends commando.Command {
             return trySend(msg.client, msg, { content: resultMsg, embed: emb });
         }
         return trySend(msg.client, msg, resultMsg);
-        resultMsg += `Result:\`\`\`js\nUsers: ${targetUsers.map(r => r?.tag).join(", ")}\nReason: ${reason}\nAt: ${duration.invoked.toFormat("DDD',' cccc',' tt")}\nFor: ${duration.duration?.strings?.join(" ")}\nUntil: ${duration.until?.toFormat("DDD',' cccc',' tt")}\`\`\``;
-        return trySend(this.client, msg, { content: resultMsg + "```js\n" + JSON.stringify(infractionToDoc, null, 2) + "```", split: { maxLength: 2000, append: ",```", prepend: "```js\n", char: "," } });
     }
 };
