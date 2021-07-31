@@ -18,8 +18,12 @@ module.exports = async (msg) => {
         const log = getChannel(msg, msg.guild.DB.eventChannels.mesDel?.channel);
         if (!log || !msg.author) return;
         const emb = defaultEventLogEmbed(msg.guild);
+        let audit;
+        if (msg.guild.member(msg.client.user).hasPermission("VIEW_AUDIT_LOG")) {
+            audit = (await msg.guild.fetchAuditLogs({ limit: 1, type: "MESSAGE_DELETE" })).entries.first().executor;
+        }
         emb.setColor(getColor("yellow"))
-            .setTitle((!msg.webhookID ? "Message " + msg.id : "Webhook " + msg.webhookID) + " deleted")
+            .setTitle((!msg.webhookID ? "Message " + msg.id : "Webhook " + msg.webhookID) + " deleted" + (audit ? ` by \`${audit.tag}\`` : ""))
             .setDescription(msg.content.length > 0 ? msg.content : "`[EMPTY]`")
             .setAuthor(emb.author.name, msg.author?.displayAvatarURL({ format: "png", size: 128, dynamic: true }))
             .addField("Author", `<@!${msg.author?.id}>\n\`${msg.author?.tag}\`\n(${msg.author?.id})`, true)

@@ -11,7 +11,7 @@ const { cleanMentionID, findMemberRegEx } = require("../../../resources/function
  * @returns {Promise<{ targetUser: User[], resultMsg: string }>}
  */
 module.exports = async (msg, mentions = [], targetUser = [], resultMsg = "") => {
-    if (mentions.length === 0) throw new TypeError("Mentions has no length");
+    if (!mentions.length) return { targetUser, resultMsg };
     for (const usermention of mentions) {
         if (usermention.trim().length < 1) continue;
         let found = [],

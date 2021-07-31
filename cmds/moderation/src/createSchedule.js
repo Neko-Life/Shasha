@@ -17,7 +17,6 @@ let jobManager,
 async function createSchedule(client, { guildID, userID, type, until }) {
     if (!client || !guildID || !userID || !type || !until) throw new TypeError("Undefined params!");
     const CHK = new Date().valueOf();
-    if (until.valueOf() < CHK) throw new RangeError("Schedule should be in the future! Not in the past!");
     if (!jobManager) await init(client);
     if (typeof until === "string") until = new Date(until);
     const NAME = [guildID, userID, type].join("/"),
@@ -39,6 +38,10 @@ async function createSchedule(client, { guildID, userID, type, until }) {
         if ((until.valueOf() - CHK) < new Date(24 * 60 * 60 * 1000)) {
             jobManager.add(SC);
             jobManager.start(NAME);
+            if (until.valueOf() < CHK) {
+                console.log("RUNNING IMMEDIATELY");
+                jobManager.run(NAME);
+            }
         }
         await col.updateOne({ document: NAME }, { $set: SC, $setOnInsert: { document: NAME } }, { upsert: true });
         return console.log("SCHEDULE " + NAME + " CREATED");
