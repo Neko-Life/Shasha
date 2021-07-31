@@ -32,12 +32,12 @@ async function createSchedule(client, { guildID, userID, type, until }) {
             },
             date: until
         };
-    jobs.push(SC);
 
     try {
         await jobManager.remove(NAME).catch(() => { });
         if ((until.valueOf() - CHK) < new Date(24 * 60 * 60 * 1000)) {
             jobManager.add(SC);
+            jobs.push(SC);
             jobManager.start(NAME);
             if (until.valueOf() < CHK) {
                 console.log("RUNNING IMMEDIATELY");
