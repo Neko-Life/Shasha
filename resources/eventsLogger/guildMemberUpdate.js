@@ -34,14 +34,14 @@ module.exports = async (memberold, membernew) => {
             emb.addField(`Role${membernew.roles.cache.size > 2 ? "s" : ""} added`,
                 ("<@&" + use.slice(0, 39).join(">, <@&") + ">" + (use.length > 39 ? ` and ${use.slice(39).length} more...` : "")))
 
-                .setDescription(`**Old role${memberold.roles.cache.size > 2 ? "s" : ""}**\n` + (memberold.roles.cache.size > 1 ? "<@&" +
+                .setDescription(`**Old role${use2.length > 2 ? "s" : ""}**\n` + (memberold.roles.cache.size > 1 ? "<@&" +
                     use2.slice(0, 82).join(">, <@&") + ">" + (use2.length > 82 ? ` and ${use2.slice(82).length} more...` : "") : "`[NONE]`"));
         }
         if (membernew.roles.cache.size < memberold.roles.cache.size) {
             const use = memberold.roles.cache.difference(membernew.roles.cache).sort((a, b) => b.position - a.position).map(r => r.id);
             const use2 = membernew.roles.cache.sort((a, b) => b.position - a.position).map(r => r.id).slice(0, -1);
 
-            emb.addField(`Role${memberold.roles.cache.size > 2 ? "s" : ""} removed`,
+            emb.addField(`Role${use.length > 2 ? "s" : ""} removed`,
                 ("<@&" + use.slice(0, 39).join(">, <@&") + ">" + (use.length > 39 ? ` and ${use.slice(39).length} more...` : "")))
 
                 .setDescription(`**Current role${membernew.roles.cache.size > 2 ? "s" : ""}**\n` + (membernew.roles.cache.size > 1 ? "<@&" +
