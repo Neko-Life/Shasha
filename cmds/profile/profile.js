@@ -31,12 +31,13 @@ module.exports = class profile extends commando.Command {
         title += `\`${TM.tag}\`'s Profile`;
 
         const MEM = msg.guild.member(TM),
-            emb = defaultImageEmbed(msg, null, title);
+            emb = defaultImageEmbed(msg, null, title),
+            INT2 = Interval.fromDateTimes(DateTime.fromJSDate(TM.createdAt), DateTime.now());
 
         emb.setThumbnail(TM.displayAvatarURL({ format: "png", size: 4096, dynamic: true }))
             .addField("ID", TM.id)
             .addField("Registered", defaultDateFormat(TM.createdAt) +
-                `\n(<t:${Math.floor(TM.createdAt.valueOf() / 1000)}:R>)`);
+                `\n(${intervalToDuration(INT2).strings.join(" ")} ago)`);
         if (TM.description) emb.setDescription(TM.description);
 
         if (MEM) {

@@ -15,13 +15,14 @@ module.exports = (member) => {
     if (member.guild.DB.eventChannels?.join) {
         const log = getChannel(member, member.guild.DB.eventChannels.join);
         if (!log) return;
-        const emb = defaultEventLogEmbed(member.guild);
+        const emb = defaultEventLogEmbed(member.guild),
+            INT2 = Interval.fromDateTimes(DateTime.fromJSDate(member.user.createdAt), DateTime.now());
         emb
             .setTitle("`" + member.user.tag + "` joined")
             .setThumbnail(member.user.displayAvatarURL({ format: "png", size: 4096, dynamic: true }))
             .setColor(getColor("cyan"))
             .addField("Registered", defaultDateFormat(member.user.createdAt) +
-                `\n(<t:${Math.floor(member.user.createdAt.valueOf() / 1000)}:R>)`)
+                `\n(${intervalToDuration(INT2).strings.join(" ")} ago)`)
             .setDescription(`<@!${member.id}> (${member.id}) just joined.\nWe have ${member.guild.memberCount} total members now.`);
         return trySend(member.client, log, emb);
     }
