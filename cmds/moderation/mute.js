@@ -1,18 +1,13 @@
 'use strict';
 
 const commando = require("@iceprod/discord.js-commando");
-const { trySend, findMemberRegEx, cleanMentionID, findChannelRegEx, findRoleRegEx, defaultImageEmbed, parseDoubleDash, parseComa, getRole, defaultEventLogEmbed, defaultDateFormat } = require("../../resources/functions");
-const { database } = require("../../database/mongo");
-const col = database.collection("Guild");
-const schedule = database.collection("Schedule");
-const { scheduler } = require("../../resources/scheduler");
+const { trySend, parseDoubleDash, parseComa, defaultEventLogEmbed, defaultDateFormat } = require("../../resources/functions");
 const { DateTime, Settings, Interval } = require("luxon");
 const muteSetting = require("./src/muteSetting");
 const fn = require("./src/duration");
 const durationFn = fn.duration;
 const targetUser = require("./src/targetUser");
 const configureMuteRole = require("./src/configureMuteRole");
-const { makeJSONMessage } = require("../../resources/debug");
 const createInfraction = require("./src/createInfraction");
 Settings.defaultZone = "utc";
 
@@ -115,13 +110,12 @@ module.exports = class mute extends commando.Command {
         } else return trySend(this.client, msg, "Args: `<[user_[mention|ID|name]]> -- [reason] -- [duration]`. Use `,` to provide multiple user. `--s` to view settings.\nExample:```js\n" + `${msg.guild.commandPrefix + this.name} 580703409934696449, @Shasha#1234, ur mom,#6969,^yuck\\s(ur)?\\s.{5}#\\d+69$--69y69mo69w420d420h420m420s -- Saying "joe"\`\`\``);
 
         if (targetUsers.length > 0) {
-            let muted = [], cant = [], already = [], infractionN = [],
+            let muted = [], cant = [], already = [],
                 infractionToDoc = createInfraction(msg, targetUsers, "mute", reason);
 
             for (const EXEC of targetUsers) {
                 try {
-                    const RES = await EXEC.mute(msg.guild, { duration: duration, infraction: infractionToDoc.infraction, moderator: msg.member }, reason);
-                    if (RES.infraction) infractionN.push(RES.infraction);
+                    await EXEC.mute(msg.guild, { duration: duration, infraction: infractionToDoc.infraction, moderator: msg.member }, reason);
                     muted.push(EXEC.id);
                 } catch (e) {
                     if (/Missing Permissions|someone with higher position/.test(e.message)) cant.push(EXEC.id);
