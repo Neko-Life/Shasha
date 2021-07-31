@@ -2,6 +2,13 @@
 
 const commando = require("@iceprod/discord.js-commando");
 const { getChannel, trySend, defaultImageEmbed, parseDoubleDash, parseDash, parseComa } = require("../../resources/functions");
+const ARGS_TEXT = `**Set configuration using**` +
+    `\`\`\`js\n<category> <channel_[mention|name|ID]>\`\`\`\`--rm\` to remove setting.\n\n**Categories:**\n` +
+    `\`--[e|d]\` Message [edit|delete],\n\`  -i\` Ignore channel,\n\`--j\` Member Join,\n\`--l\` Member Leave,\n` +
+    `\`--p\` Member Profile Update,\n\`--mr\` Member Roles Update,\n\`--b\` Ban,\n\`--u\` Unban,\n` +
+    `\`--g\` Server Update,\n\`--r\` Role Update,\n` +
+    `\`--c\` Channel Update,\n\`--em\` Emote Update,\n\`--i\` Server Invites.\n` +
+    `\n**Examples:**\n\`\`\`\n--e #message-edited-log -i #admin, #staff --p #member-profile --b #ban-logs\`\`\` \`\`\`\n--rm --e --p --b\`\`\``;
 
 module.exports = class eventlog extends commando.Command {
     constructor(client) {
@@ -23,52 +30,52 @@ module.exports = class eventlog extends commando.Command {
         let report = "", joinlog, leavelog, channellog, banlog, unbanlog, mesEdlog = { channel: undefined, ignore: [] }, invitelog, rolelog,
             guildlog, membernicklog, emotelog, memberroleslog, remove = false, [setMesEdIgnore, setMesDelIgnore] = [false, false], mesDellog = { channel: undefined, ignore: [] };
         for (const args of set) {
+            if (!args.length) continue;
+            if (/^h\s?/.test(args)) {
+                const emb = defaultImageEmbed(msg, null, "Event Log Channels Configuration");
+                emb.setDescription(ARGS_TEXT);
+                return trySend(msg.client, msg, emb);
+            }
             if (args.startsWith("rm ")) remove = true;
-            if (args.startsWith("j ")) {
+            if (args.startsWith("j" + (remove ? "" : " "))) {
                 if (remove) eventChannels.join = undefined; else {
                     joinlog = getChannel(msg, args.slice("j ".length).trim(), ["category", "voice"])?.id;
                     if (!joinlog) report += "**[JOIN]** Unknown channel.\n";
                 }
             }
-            if (args.startsWith("l ")) {
+            if (args.startsWith("l" + (remove ? "" : " "))) {
                 if (remove) eventChannels.leave = undefined; else {
                     leavelog = getChannel(msg, args.slice("l ".length).trim(), ["category", "voice"])?.id;
                     if (!leavelog) report += "**[LEAVE]** Unknown channel.\n";
                 }
             }
-            if (args.startsWith("c ")) {
+            if (args.startsWith("c" + (remove ? "" : " "))) {
                 if (remove) eventChannels.channel = undefined; else {
                     channellog = getChannel(msg, args.slice("c ".length).trim(), ["category", "voice"])?.id;
                     if (!channellog) report += "**[CHANNEL]** Unknown channel.\n";
                 }
             }
-            if (args.startsWith("b ")) {
-                if (remove) {
-                    eventChannels.ban = undefined;
-                } else {
+            if (args.startsWith("b" + (remove ? "" : " "))) {
+                if (remove) eventChannels.ban = undefined; else {
                     banlog = getChannel(msg, args.slice("b ".length).trim(), ["category", "voice"])?.id;
                     if (!banlog) {
                         report += "**[BAN]** Unknown channel.\n";
                     }
                 }
             }
-            if (args.startsWith("u ")) {
-                if (remove) {
-                    eventChannels.unban = undefined;
-                } else {
+            if (args.startsWith("u" + (remove ? "" : " "))) {
+                if (remove) eventChannels.unban = undefined; else {
                     unbanlog = getChannel(msg, args.slice("u ".length).trim(), ["category", "voice"])?.id;
                     if (!unbanlog) {
                         report += "**[UNBAN]** Unknown channel.\n";
                     }
                 }
             }
-            if (args.startsWith("e ")) {
-                if (remove) {
-                    eventChannels.mesEd = {
-                        channel: undefined,
-                        ignore: []
-                    }
-                } else {
+            if (args.startsWith("e" + (remove ? "" : " "))) {
+                if (remove) eventChannels.mesEd = {
+                    channel: undefined,
+                    ignore: []
+                }; else {
                     const mesArgs = parseDash(args.slice("e ").trim());
                     if (mesArgs.length > 0 && /(?<!\\)-i /.test(args)) {
                         setMesEdIgnore = true;
@@ -107,7 +114,7 @@ module.exports = class eventlog extends commando.Command {
                     }
                 }
             }
-            if (args.startsWith("d ")) {
+            if (args.startsWith("d" + (remove ? "" : " "))) {
                 if (remove) {
                     eventChannels.mesDel = {
                         channel: undefined,
@@ -152,40 +159,32 @@ module.exports = class eventlog extends commando.Command {
                     }
                 }
             }
-            if (args.startsWith("i ")) {
-                if (remove) {
-                    eventChannels.invite = undefined;
-                } else {
+            if (args.startsWith("i" + (remove ? "" : " "))) {
+                if (remove) eventChannels.invite = undefined; else {
                     invitelog = getChannel(msg, args.slice("i ".length).trim(), ["category", "voice"])?.id;
                     if (!invitelog) {
                         report += "**[INVITE]** Unknown channel.\n";
                     }
                 }
             }
-            if (args.startsWith("r ")) {
-                if (remove) {
-                    eventChannels.role = undefined;
-                } else {
+            if (args.startsWith("r" + (remove ? "" : " "))) {
+                if (remove) eventChannels.role = undefined; else {
                     rolelog = getChannel(msg, args.slice("r ".length).trim(), ["category", "voice"])?.id;
                     if (!rolelog) {
                         report += "**[GUILD_ROLE]** Unknown channel.\n";
                     }
                 }
             }
-            if (args.startsWith("g ")) {
-                if (remove) {
-                    eventChannels.guild = undefined;
-                } else {
+            if (args.startsWith("g" + (remove ? "" : " "))) {
+                if (remove) eventChannels.guild = undefined; else {
                     guildlog = getChannel(msg, args.slice("g ".length).trim(), ["category", "voice"])?.id;
                     if (!guildlog) {
                         report += "**[GUILD]** Unknown channel.\n";
                     }
                 }
             }
-            if (args.startsWith("p ")) {
-                if (remove) {
-                    eventChannels.member = undefined;
-                } else {
+            if (args.startsWith("p" + (remove ? "" : " "))) {
+                if (remove) eventChannels.member = undefined; else {
                     console.log(args);
                     membernicklog = getChannel(msg, args.slice("p ".length).trim(), ["category", "voice"])?.id;
                     if (!membernicklog) {
@@ -193,20 +192,16 @@ module.exports = class eventlog extends commando.Command {
                     }
                 }
             }
-            if (args.startsWith("em ")) {
-                if (remove) {
-                    eventChannels.emote = undefined;
-                } else {
+            if (args.startsWith("em" + (remove ? "" : " "))) {
+                if (remove) eventChannels.emote = undefined; else {
                     emotelog = getChannel(msg, args.slice("em ".length).trim(), ["category", "voice"])?.id;
                     if (!emotelog) {
                         report += "**[EMOJI]** Unknown channel.\n";
                     }
                 }
             }
-            if (args.startsWith("mr ")) {
-                if (remove) {
-                    eventChannels.memberRole = undefined;
-                } else {
+            if (args.startsWith("mr" + (remove ? "" : " "))) {
+                if (remove) eventChannels.memberRole = undefined; else {
                     memberroleslog = getChannel(msg, args.slice("mr ".length).trim(), ["category", "voice"])?.id;
                     if (!memberroleslog) {
                         report += "**[MEMBER_ROLE]** Unknown channel.\n";
@@ -214,26 +209,27 @@ module.exports = class eventlog extends commando.Command {
                 }
             }
         }
+
         eventChannels = {
-            join: joinlog ?? eventChannels?.join,
-            leave: leavelog ?? eventChannels?.leave,
-            channel: channellog ?? eventChannels?.channel,
-            unban: unbanlog ?? eventChannels?.unban,
-            ban: banlog ?? eventChannels?.ban,
+            join: joinlog || eventChannels?.join,
+            leave: leavelog || eventChannels?.leave,
+            channel: channellog || eventChannels?.channel,
+            unban: unbanlog || eventChannels?.unban,
+            ban: banlog || eventChannels?.ban,
             mesEd: {
-                channel: mesEdlog.channel ?? eventChannels?.mesEd?.channel,
+                channel: mesEdlog.channel || eventChannels?.mesEd?.channel,
                 ignore: setMesEdIgnore ? mesEdlog.ignore : eventChannels?.mesEd?.ignore
             },
             mesDel: {
-                channel: mesDellog.channel ?? eventChannels?.mesDel?.channel,
+                channel: mesDellog.channel || eventChannels?.mesDel?.channel,
                 ignore: setMesDelIgnore ? mesDellog.ignore : eventChannels?.mesDel?.ignore
             },
-            invite: invitelog ?? eventChannels?.invite,
-            role: rolelog ?? eventChannels?.role,
-            guild: guildlog ?? eventChannels?.guild,
-            member: membernicklog ?? eventChannels?.member,
-            emote: emotelog ?? eventChannels?.emote,
-            memberRole: memberroleslog ?? eventChannels?.memberRole
+            invite: invitelog || eventChannels?.invite,
+            role: rolelog || eventChannels?.role,
+            guild: guildlog || eventChannels?.guild,
+            member: membernicklog || eventChannels?.member,
+            emote: emotelog || eventChannels?.emote,
+            memberRole: memberroleslog || eventChannels?.memberRole
         }
         const r = await msg.guild.setEventChannels(eventChannels);
         if (r) {
@@ -245,7 +241,7 @@ module.exports = class eventlog extends commando.Command {
         async function resultEmbed(the) {
             const emb = defaultImageEmbed(msg, null, "Event Log Channels Configuration");
             emb
-                .setDescription(`Set configuration using \`\`\`js\n${msg.guild.commandPrefix + the.name} [--rm] --<Category> <Channel_[Mention | Name | ID]>\`\`\`**Categories:** \`\`\`js\n[MESSAGE[EDIT, DELETE]: --[e, d] IGNORE: -i [none], JOIN: --j, LEAVE: --l, MEMBER: --p, MEMBERROLE: --mr, BAN: --b, UNBAN: --u, GUILD: --g, ROLE: --r, CHANNEL: --c, EMOJI: --em, INVITE: --i]\`\`\``)
+                .setDescription("`--h` for help")
                 .addField(`Message Edit`, eventChannels?.mesEd?.channel ? `<#${eventChannels?.mesEd.channel}>\n**Ignores:** ${eventChannels?.mesEd?.ignore?.length > 0 ?
                     "<#" + eventChannels?.mesEd.ignore.join(">, <#") + ">" : "None"}`
                     : "Not set", true)
