@@ -32,6 +32,7 @@ async function createSchedule(client, { guildID, userID, type, until }) {
             },
             date: until
         };
+    jobs.push(SC);
 
     try {
         await jobManager.remove(NAME).catch(() => { });
