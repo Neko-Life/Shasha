@@ -17,8 +17,9 @@ module.exports = async (GUILD, USER) => {
         const emb = defaultEventLogEmbed(GUILD);
         let audit;
         if (GUILD.member(GUILD.client.user).hasPermission("VIEW_AUDIT_LOG")) {
-            audit = (await GUILD.fetchAuditLogs({ limit: 1, type: "MEMBER_BAN_ADD" })).entries.first();
-            console.log(audit);
+            const the = (await GUILD.fetchAuditLogs({ limit: 1, type: "MEMBER_BAN_ADD" })).entries.first();
+            console.log(the);
+            if (the.target.id === USER.id) audit = the;
             emb.setDescription(audit?.reason || "No reason provided");
         } else emb.setDescription("Unknown reason");
 

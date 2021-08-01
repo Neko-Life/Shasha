@@ -20,10 +20,11 @@ module.exports = async (msg) => {
         const emb = defaultEventLogEmbed(msg.guild);
         let audit;
         if (msg.guild.member(msg.client.user).hasPermission("VIEW_AUDIT_LOG")) {
-            audit = (await msg.guild.fetchAuditLogs({ limit: 1, type: "MESSAGE_DELETE" })).entries.first().executor;
+            const the = (await msg.guild.fetchAuditLogs({ limit: 1, type: "MESSAGE_DELETE" })).entries.first();
+            if (the.target.id === msg.id) audit = the;
         }
         emb.setColor(getColor("yellow"))
-            .setTitle((!msg.webhookID ? "Message " + msg.id : "Webhook " + msg.webhookID) + " deleted" + (audit ? ` by \`${audit.tag}\`` : ""))
+            .setTitle((!msg.webhookID ? "Message " + msg.id : "Webhook " + msg.webhookID) + " deleted" + (audit?.executor ? ` by \`${audit.executor.tag}\`` : ""))
             .setDescription(msg.content.length > 0 ? msg.content : "`[EMPTY]`")
             .setAuthor(emb.author.name, msg.author?.displayAvatarURL({ format: "png", size: 128, dynamic: true }))
             .addField("Author", `<@!${msg.author?.id}>\n\`${msg.author?.tag}\`\n(${msg.author?.id})`, true)
