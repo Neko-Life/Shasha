@@ -239,8 +239,7 @@ module.exports = class eventlog extends commando.Command {
         return trySend(this.client, msg, (await resultEmbed(this)).setDescription(report.slice(0, 2048)));
 
         async function resultEmbed(the) {
-            const emb = defaultImageEmbed(msg, null, "Event Log Channels Configuration");
-            emb
+            const emb = defaultImageEmbed(msg, null, "Event Log Channels Configuration")
                 .setDescription("`--h` for help")
                 .addField(`Message Edit`, eventChannels?.mesEd?.channel ? `<#${eventChannels?.mesEd.channel}>\n**Ignores:** ${eventChannels?.mesEd?.ignore?.length > 0 ?
                     "<#" + eventChannels?.mesEd.ignore.join(">, <#") + ">" : "None"}`

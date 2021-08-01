@@ -21,11 +21,12 @@ module.exports = async (memberold, membernew) => {
     const emb = defaultEventLogEmbed(membernew.guild), oldT = memberold.toJSON().displayAvatarURL;
     const oldAV = membernew.user.DB.cachedAvatarURL || oldT;
     if (oldAV) thumbMes += "This embed's thumbnail is the user's old avatar.\n";
-    let audit;
+    let audit, auditPerm;
     if (membernew.guild.DB.eventChannels?.memberRole) {
         log = getChannel(membernew, membernew.guild.DB.eventChannels.memberRole);
         if (membernew.guild.member(membernew.client.user).hasPermission("VIEW_AUDIT_LOG")) {
-            audit = (await membernew.guild.fetchAuditLogs({ limit: 1, type: "MEMBER_ROLE_UPDATE" })).entries.first().executor;
+            audit = (await membernew.guild.fetchAuditLogs({ limit: 1, type: "MEMBER_ROLE_UPDATE" })).entries.first();
+            auditPerm = true;
         }
         if (membernew.roles.cache.size > memberold.roles.cache.size) {
             const use = membernew.roles.cache.difference(memberold.roles.cache).sort((a, b) => b.position - a.position).map(r => r.id);
@@ -35,7 +36,7 @@ module.exports = async (memberold, membernew) => {
                 ("<@&" + use.slice(0, 39).join(">, <@&") + ">" + (use.length > 39 ? ` and ${use.slice(39).length} more...` : "")))
 
                 .setDescription(`**Old role${use2.length > 2 ? "s" : ""}**\n` + (memberold.roles.cache.size > 1 ? "<@&" +
-                    use2.slice(0, 82).join(">, <@&") + ">" + (use2.length > 82 ? ` and ${use2.slice(82).length} more...` : "") : "`[NONE]`"));
+                    use2.slice(0, 80).join(">, <@&") + ">" + (use2.length > 80 ? ` and ${use2.slice(80).length} more...` : "") : "`[NONE]`"));
         }
         if (membernew.roles.cache.size < memberold.roles.cache.size) {
             const use = memberold.roles.cache.difference(membernew.roles.cache).sort((a, b) => b.position - a.position).map(r => r.id);
@@ -45,14 +46,15 @@ module.exports = async (memberold, membernew) => {
                 ("<@&" + use.slice(0, 39).join(">, <@&") + ">" + (use.length > 39 ? ` and ${use.slice(39).length} more...` : "")))
 
                 .setDescription(`**Current role${membernew.roles.cache.size > 2 ? "s" : ""}**\n` + (membernew.roles.cache.size > 1 ? "<@&" +
-                    use2.slice(0, 82).join(">, <@&") + ">" + (use2.length > 82 ? ` and ${use2.slice(82).length} more...` : "") : "`[NONE]`"));
+                    use2.slice(0, 80).join(">, <@&") + ">" + (use2.length > 80 ? ` and ${use2.slice(80).length} more...` : "") : "`[NONE]`"));
         }
     }
     if (membernew.guild.DB.eventChannels?.member && membernew.roles.cache.size === memberold.roles.cache.size) {
         log = getChannel(membernew, membernew.guild.DB.eventChannels.member);
         if (membernew.displayName !== memberold.displayName) {
             if (membernew.guild.member(membernew.client.user).hasPermission("VIEW_AUDIT_LOG")) {
-                audit = (await membernew.guild.fetchAuditLogs({ limit: 1, type: "MEMBER_UPDATE" })).entries.first().executor;
+                audit = (await membernew.guild.fetchAuditLogs({ limit: 1, type: "MEMBER_UPDATE" })).entries.first();
+                auditPerm = true;
             }
             emb.addField("Current Nickname", "`" + membernew.displayName + "`")
                 .addField("Original Nickname", "`" + memberold.displayName + "`")
@@ -66,8 +68,11 @@ module.exports = async (memberold, membernew) => {
     }
     emb.setAuthor(emb.author.name, NEWAV)
         .setTitle("Profile `" + memberold.user.tag + "` updated" +
-            (audit ? ` by \`${audit.tag}\`` : ""))
+            (audit?.executor ? ` by \`${audit.executor.tag}\`` : ""))
         .setColor(getColor("blue"));
+    if (auditPerm) {
+        emb.setDescription((audit?.reason || "No reason provided") + (emb.description ? "\n\n" + emb.description : ""));
+    } else emb.setDescription("Unknown reason\n\n" + emb.description);
     membernew.user.DB.cachedAvatarURL = NEWAV;
     membernew.user.setDb("cachedAvatarURL", membernew.user.DB.cachedAvatarURL);
     if (!emb.fields || emb.fields.length === 0) return;

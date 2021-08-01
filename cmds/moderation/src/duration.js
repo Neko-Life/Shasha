@@ -42,11 +42,9 @@ function duration(base, string) {
         DURATION_ARGS = string.match(DURATION_REGEXP);
 
     let changed = false;
-    console.log(DURATION_ARGS, DT_INVOKED.toFormat(DT_PRINT_FORMAT));
 
     for (const value of DURATION_ARGS) {
         const val = parseInt(value.match(/[\-]?\d+/)[0], 10);
-        console.log(val);
         if (!val) continue;
         if (value.endsWith("h") || value.endsWith("ho")) {
             DURATION.hour = DURATION.hour + val;

@@ -20,8 +20,7 @@ module.exports = async (msgold, msgnew) => {
     if (msgnew.guild.DB.eventChannels.mesEd?.channel !== msgnew.channel.id && ignored === false || check) {
         const log = getChannel(msgnew, msgnew.guild.DB.eventChannels.mesEd?.channel);
         if (!log || !msgnew.author) return;
-        const emb = defaultEventLogEmbed(msgnew.guild);
-        emb
+        const emb = defaultEventLogEmbed(msgnew.guild)
             .setColor(getColor("blue"))
             .setDescription(msgnew.content.length > 0 ? msgnew.content : "`[EMPTY]`")
             .addField("Original content", msgold.content?.length > 0 ? (msgold.content.slice(0, msgold.content.length < 1025 ? 1024 : 1021) + (msgold.content.length < 1025 ? "" : "...")) : "`[EMPTY]`")

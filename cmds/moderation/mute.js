@@ -127,22 +127,22 @@ module.exports = class mute extends commando.Command {
             infractionToDoc.aborted = already;
             infractionToDoc.failed = cant;
 
-            if (muted.length > 0) await msg.guild.addInfraction(infractionToDoc);
 
-            const emb = defaultEventLogEmbed(msg.guild);
-            let mutedStr = "", mutedArr = [];
-
-            if (muted.length > 0) for (const U of muted) {
-                const tU = "<@" + U + ">, ";
-                if ((mutedStr + tU).length < 1000) mutedStr += tU; else mutedArr.push(U);
-            }
-
-            if (mutedArr.length > 0) mutedStr += `and ${mutedArr.length} more...`;
-            if (already.length > 0) emb.addField("Already muted", "<@" + already.join(">, <@") + ">\n\nDuration updated for these users");
-
-            emb.setTitle("Infraction #" + infractionToDoc.infraction)
-                .setDescription("**Reason**\n" + reason);
+            const emb = defaultEventLogEmbed(msg.guild)
+                .setTitle("Infraction #" + infractionToDoc.infraction)
+                .setDescription(reason);
             if (muted.length > 0) {
+                let mutedStr = "", mutedArr = [];
+                await msg.guild.addInfraction(infractionToDoc);
+                for (const U of muted) {
+                    const tU = "<@" + U + ">, ";
+                    if ((mutedStr + tU).length < 1000) mutedStr += tU; else mutedArr.push(U);
+                }
+                mutedStr = mutedStr.slice(0, -2);
+
+                if (mutedArr.length > 0) mutedStr += ` and ${mutedArr.length} more...`;
+                if (already.length > 0) emb.addField("Already muted", "<@" + already.join(">, <@") + ">\n\nDuration updated for these users");
+
                 emb.addField("Muted", mutedStr || "`[NONE]`")
                     .addField("At", defaultDateFormat(duration.invoked), true)
                     .addField("Until", duration.until ? defaultDateFormat(duration.until) : "Never", true)

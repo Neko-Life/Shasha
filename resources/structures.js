@@ -1,6 +1,6 @@
 'use strict';
 
-const { Structures, Guild, GuildMember, BanOptions } = require("discord.js"),
+const { Structures, Guild, GuildMember, BanOptions, Role } = require("discord.js"),
     { database } = require("../database/mongo"),
     { errLog, defaultEventLogEmbed, defaultDateFormat, trySend } = require("./functions");
 const { createSchedule } = require("../cmds/moderation/src/createSchedule");
@@ -50,7 +50,7 @@ Structures.extend("Guild", u => {
          * @param {string} userID - User ID
          * @returns {object[]} Array of infractions objects
          */
-        async getInfractions(userID) {
+        getInfractions(userID) {
             let ret = []
             for (const [k, v] of this.DB.infractions)
                 if (v.by.map(r => r.id).includes(userID)) ret.push(v);
@@ -194,7 +194,7 @@ Structures.extend("User", u => {
          */
         async mute(guild, data, reason) {
             if (!guild || !(guild instanceof Guild)) throw new TypeError("Guild is: " + guild);
-            if (!data?.infraction) throw new Error("Missing infraction id");
+            if (!data || !data.infraction) throw new Error("Missing infraction id");
 
             const MEM = guild.member(this);
             const CL = guild.member(this.client.user);
@@ -269,17 +269,16 @@ Structures.extend("User", u => {
          */
         async ban(guild, data, option) {
             if (!guild || !(guild instanceof Guild)) throw new TypeError("Guild is: " + guild);
-            if (!data?.infraction) throw new Error("Missing infraction id");
+            if (!data || !data.infraction) throw new Error("Missing infraction id");
             const MEM = guild.member(this);
             const CL = guild.member(this.client.user);
             if (!(CL.isAdmin || CL.hasPermission("BAN_MEMBERS")) ||
-                !(data.moderation.isAdmin || data.moderator.hasPermission("BAN_MEMBERS"))) throw new Error("Missing Permissions");
+                !(data.moderator.isAdmin || data.moderator.hasPermission("BAN_MEMBERS"))) throw new Error("Missing Permissions");
             if (MEM) {
-                if (moderator.roles.highest.position < MEM.roles.highest.position ||
+                if (data.moderator.roles.highest.position < MEM.roles.highest.position ||
                     MEM.roles.highest.position > CL.roles.highest.position)
-                    throw new Error("You can't mute someone with higher position than you <:nekokekLife:852865942530949160>");
+                    throw new Error("You can't ban someone with higher position than you <:nekokekLife:852865942530949160>");
             }
-            await guild.members.ban(this, option);
             if (!guild.DB) await guild.dbLoad();
 
             if (!this.bot) {
@@ -289,8 +288,9 @@ Structures.extend("User", u => {
                     .addField("At", defaultDateFormat(data.duration.invoked), true)
                     .addField("Until", data.duration.until ? defaultDateFormat(data.duration.until) : "Never", true)
                     .addField("For", data.duration.duration?.strings.join(" ") || "Indefinite");
-                this.createDM().then(r => trySend(this.client, r, emb));
+                await this.createDM().then(r => trySend(this.client, r, emb));
             }
+            await guild.members.ban(this, option);
 
             const MC = guild.getTimedPunishment(this.id, "ban"),
                 TP = new TimedPunishment({ userID: this.id, duration: data.duration, infraction: data.infraction, type: "ban" });
@@ -312,11 +312,9 @@ Structures.extend("User", u => {
 
                 emb.setTitle("You have been unbanned")
                     .setDescription("**Reason**\n" + reason);
-
                 this.createDM().then(r => trySend(this.client, r, emb));
             }
             await col.deleteOne({ document: [guild.id, this.id, "ban"].join("/") }).then(() => console.log("SCHEDULE " + [guild.id, this.id, "ban"].join("/") + " DELETED")).catch(e => errLog(e, null, client));
-
             return guild.removeTimedPunishment(this.id, "ban");
         }
     }
@@ -374,7 +372,7 @@ Structures.extend("GuildMember", u => {
         }
 
         async dbLoad() {
-            return database.collection("GuildMember").findOne({ document: this.id }).then((r, e) => {
+            return database.collection("GuildMember").findOne({ document: this.guild.id + "/" + this.id }).then((r, e) => {
                 if (e) return errLog(e, null, this.client);
                 if (!r) r = {};
                 return this.DB = r;
@@ -382,14 +380,14 @@ Structures.extend("GuildMember", u => {
         }
 
         async setDb(query, set) {
-            return database.collection("GuildMember").updateOne({ document: this.id }, { $set: { [query]: set }, $setOnInsert: { document: this.id } },
+            return database.collection("GuildMember").updateOne({ document: this.guild.id + "/" + this.id }, { $set: { [query]: set }, $setOnInsert: { document: this.id } },
                 { upsert: true }).then((r, e) => {
                     if (e) return errLog(e, null, this.client);
                     return this.DB[query] = set;
                 });
         }
 
-        async infractions() {
+        get infractions() {
             return this.guild.getInfractions(this.id);
         }
 
@@ -440,6 +438,13 @@ Structures.extend("GuildMember", u => {
             } catch (e) {
                 throw e;
             }
+        }
+
+        /**
+         * @param {string[]} roles
+         */
+        async setLeaveRoles(roles = []) {
+            return this.setDb("leaveRoles", roles);
         }
 
         get isAdmin() { if (!this.client.owners.includes(this.user)) return this.hasPermission("ADMINISTRATOR"); else return true }
