@@ -77,12 +77,12 @@ module.exports = class eventlog extends commando.Command {
                     ignore: []
                 }; else {
                     const mesArgs = parseDash(args.slice("e ").trim());
-                    if (mesArgs.length > 0 && /(?<!\\)-i /.test(args)) {
+                    if (mesArgs.length && /(?<!\\)-i /.test(args)) {
                         setMesEdIgnore = true;
                         for (const mesArg of mesArgs) {
                             if (mesArg.startsWith("i ")) {
                                 const ignoreArgs = parseComa(mesArg.slice("i ".length).trim());
-                                if (ignoreArgs.length > 0) {
+                                if (ignoreArgs.length) {
                                     for (const ign of ignoreArgs) {
                                         if (ign.length === 0) {
                                             continue;
@@ -122,12 +122,12 @@ module.exports = class eventlog extends commando.Command {
                     }
                 } else {
                     const mesArgs = parseDash(args.slice("d ").trim());
-                    if (mesArgs.length > 0 && /(?<!\\)-i /.test(args)) {
+                    if (mesArgs.length && /(?<!\\)-i /.test(args)) {
                         setMesDelIgnore = true;
                         for (const mesArg of mesArgs) {
                             if (mesArg.startsWith("i ")) {
                                 const ignoreArgs = parseComa(mesArg.slice("i ".length).trim());
-                                if (ignoreArgs.length > 0) {
+                                if (ignoreArgs.length) {
                                     for (const ign of ignoreArgs) {
                                         if (ign.length === 0) {
                                             continue;
@@ -241,10 +241,10 @@ module.exports = class eventlog extends commando.Command {
         async function resultEmbed(the) {
             const emb = defaultImageEmbed(msg, null, "Event Log Channels Configuration")
                 .setDescription("`--h` for help")
-                .addField(`Message Edit`, eventChannels?.mesEd?.channel ? `<#${eventChannels?.mesEd.channel}>\n**Ignores:** ${eventChannels?.mesEd?.ignore?.length > 0 ?
+                .addField(`Message Edit`, eventChannels?.mesEd?.channel ? `<#${eventChannels?.mesEd.channel}>\n**Ignores:** ${eventChannels?.mesEd?.ignore?.length ?
                     "<#" + eventChannels?.mesEd.ignore.join(">, <#") + ">" : "None"}`
                     : "Not set", true)
-                .addField(`Message Delete`, eventChannels?.mesDel?.channel ? `<#${eventChannels?.mesDel.channel}>\n**Ignores:** ${eventChannels?.mesDel?.ignore?.length > 0 ?
+                .addField(`Message Delete`, eventChannels?.mesDel?.channel ? `<#${eventChannels?.mesDel.channel}>\n**Ignores:** ${eventChannels?.mesDel?.ignore?.length ?
                     "<#" + eventChannels?.mesDel.ignore.join(">, <#") + ">" : "None"}`
                     : "Not set", true)
                 .addField(`Member Join`, eventChannels?.join ? `<#${eventChannels.join}>` : "Not set", true)

@@ -107,6 +107,10 @@ client.on("guildBanAdd", async (GUILD, USER) => {
     lgr.guildBanAdd(GUILD, USER);
 });
 
+client.on("guildBanRemove", async (GUILD, USER) => {
+    lgr.guildBanRemove(GUILD, USER);
+})
+
 client.on("messageDelete", async (msg) => {
     if (msg.author && !msg.author.DB) await msg.author.dbLoad();
     if (msg.guild) {
@@ -186,6 +190,7 @@ client.on("shardError", async (e, shard) => {
 
 client.on("commandRun", async (c, u, msg) => {
     if (!msg.author.DB) await msg.author.dbLoad();
+    if (msg.member) if (!msg.member.DB) await msg.member.dbLoad();
     if (msg.guild && !msg.guild.DB) await msg.guild.dbLoad();
 });
 

@@ -103,13 +103,16 @@ module.exports = class mute extends commando.Command {
             duration.duration = fn.intervalToDuration(duration.interval);
         }
 
-        if (mentions?.length > 0) {
+        if (mentions?.length) {
             const FR = await targetUser(msg, mentions, targetUsers, resultMsg);
             targetUsers = FR.targetUser;
             resultMsg = FR.resultMsg;
-        } else return trySend(this.client, msg, "Args: `<[user_[mention|ID|name]]> -- [reason] -- [duration]`. Use `,` to provide multiple user. `--s` to view settings.\nExample:```js\n" + `${msg.guild.commandPrefix + this.name} 580703409934696449, @Shasha#1234, ur mom,#6969,^yuck\\s(ur)?\\s.{5}#\\d+69$--69y69mo69w420d420h420m420s -- Saying "joe"\`\`\``);
+        } else return trySend(this.client, msg, "Args: `<[user_[mention|ID|name]]> -- [reason] -- [duration]`. " +
+            "Separate `user` with `,`. `--s` to view settings.\nExample:```js\n" +
+            `${msg.guild.commandPrefix + this.name} 580703409934696449, @Shasha#1234, ` +
+            `ur mom,#6969,^yuck\\s(ur)?\\s.{5}#\\d+69$ -- 69y69mo69w420d420h420m420s -- Saying "joe"\`\`\``);
 
-        if (targetUsers.length > 0) {
+        if (targetUsers.length) {
             let muted = [], cant = [], already = [];
             const infractionToDoc = createInfraction(msg, targetUsers, "mute", reason);
 
@@ -131,7 +134,7 @@ module.exports = class mute extends commando.Command {
             const emb = defaultEventLogEmbed(msg.guild)
                 .setTitle("Infraction #" + infractionToDoc.infraction)
                 .setDescription(reason);
-            if (muted.length > 0) {
+            if (muted.length) {
                 let mutedStr = "", mutedArr = [];
                 await msg.guild.addInfraction(infractionToDoc);
                 for (const U of muted) {
@@ -140,8 +143,8 @@ module.exports = class mute extends commando.Command {
                 }
                 mutedStr = mutedStr.slice(0, -2);
 
-                if (mutedArr.length > 0) mutedStr += ` and ${mutedArr.length} more...`;
-                if (already.length > 0) emb.addField("Already muted", "<@" + already.join(">, <@") + ">\n\nDuration updated for these users");
+                if (mutedArr.length) mutedStr += ` and ${mutedArr.length} more...`;
+                if (already.length) emb.addField("Already muted", "<@" + already.join(">, <@") + ">\n\nDuration updated for these users");
 
                 emb.addField("Muted", mutedStr || "`[NONE]`")
                     .addField("At", defaultDateFormat(duration.invoked), true)
@@ -149,7 +152,7 @@ module.exports = class mute extends commando.Command {
             }
             emb.addField("For", duration.duration?.strings.join(" ") || "Indefinite");
 
-            if (cant.length > 0) emb.addField("Can't mute", "<@" + cant.join(">, <@") + ">\n\n**You can't mute someone with higher position than you <:nekokekLife:852865942530949160>**");
+            if (cant.length) emb.addField("Can't mute", "<@" + cant.join(">, <@") + ">\n\n**You can't mute someone with higher position than you <:nekokekLife:852865942530949160>**");
 
             return trySend(msg.client, msg, { content: resultMsg, embed: emb });
         }

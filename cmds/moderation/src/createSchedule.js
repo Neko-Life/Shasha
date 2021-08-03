@@ -55,6 +55,7 @@ async function init(client) {
     await jobLoad();
 
     jobManager = scheduler(client, jobs);
+    module.exports.jobManager = jobManager;
 
     console.log("SCHEDULER INITIALIZED");
     return jobStart();

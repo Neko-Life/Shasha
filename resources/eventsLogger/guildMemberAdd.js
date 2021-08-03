@@ -11,7 +11,13 @@ const { GuildMember } = require("discord.js"),
  * @param {GuildMember} member 
  * @returns 
  */
-module.exports = (member) => {
+module.exports = async (member) => {
+    if (!member.DB) await member.dbLoad();
+    if (member.DB.leaveRoles?.length && member.guild.member(member.client.user).hasPermission("MANAGE_ROLES")) {
+        await member.roles.add(member.DB.leaveRoles, "Automatic roles recovery").then(() => console.log("AUTO ROLES RECOVERY:",
+            member.user.tag, member.guild.name)).catch(() => { });
+        await member.setDb("leaveRoles", []);
+    }
     if (member.guild.DB.eventChannels?.join) {
         const log = getChannel(member, member.guild.DB.eventChannels.join);
         if (!log) return;

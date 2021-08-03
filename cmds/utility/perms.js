@@ -66,7 +66,6 @@ module.exports = class perms extends commando.Command {
         }
         const title = `Permissions for: \`${member.user.tag}\``;
         mes += `**Default:**\`\`\`js\n`;
-        if (member.isAdmin) mes += "'ADMINISTRATOR', ";
         if (res.length > 0) {
             mes += `${res.join(", ")}\`\`\``;
         } else {
@@ -76,7 +75,7 @@ module.exports = class perms extends commando.Command {
         if (chanres.length > 0) {
             emb.addField(`In channel: \`${channel.name}\``, `\`\`\`js\n${chanres.join(", ")}\`\`\``);
         }
-        emb.setDescription(mes)
+        emb.setDescription(mes.replace("ADMINISTRATOR", "'ADMINISTRATOR'"))
             .setColor(getColor(member.displayColor))
             .setThumbnail(member.user.displayAvatarURL({ size: 4096, format: "png", dynamic: true }));
         return trySend(this.client, msg, emb);

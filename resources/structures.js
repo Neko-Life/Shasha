@@ -33,6 +33,7 @@ Structures.extend("Guild", u => {
                     }
                 r.infractions = infractions;
                 r.timedPunishments = timedPunishments;
+                console.log("DB LOADED FOR GUILD:", this.name, this.id);
                 return this.DB = r;
             });
         }
@@ -129,9 +130,11 @@ Structures.extend("Guild", u => {
          * @returns {boolean}
          */
         async removeTimedPunishment(userID, type) {
-            console.log("REMOVE TIMEDPUNISHMENT");
             const ret = this.DB.timedPunishments.delete(userID + "/" + type);
             await this.setDb("timedPunishments", this.DB.timedPunishments);
+            await require("../cmds/moderation/src/createSchedule").jobManager?.stop([this.id, userID, type].join("/")).catch(() => { });
+            await require("../cmds/moderation/src/createSchedule").jobManager?.remove([this.id, userID, type].join("/")).catch(() => { });
+            console.log("REMOVED TIMEDPUNISHMENT");
             return ret;
         }
     }
@@ -151,6 +154,7 @@ Structures.extend("User", u => {
                 if (!r.F) r.F = "<:pepewhysobLife:853237646666891274>";
                 if (!r.cachedAvatarURL) r.cachedAvatarURL = this.displayAvatarURL({ format: "png", size: 4096, dynamic: true });
                 if (!r.interactions) r.interactions = {};
+                console.log("DB LOADED FOR USER:", this.tag, this.id);
                 return this.DB = r;
             });
         }
@@ -212,7 +216,7 @@ Structures.extend("User", u => {
             if (!this.bot) {
                 const emb = defaultEventLogEmbed(guild);
                 emb.setTitle("You have been muted")
-                    .setDescription("**Reason**\n" + reason)
+                    .setDescription(reason || "No reason provided")
                     .addField("At", defaultDateFormat(data.duration.invoked), true)
                     .addField("Until", data.duration.until ? defaultDateFormat(data.duration.until) : "Never", true)
                     .addField("For", data.duration.duration?.strings.join(" ") || "Indefinite");
@@ -245,7 +249,7 @@ Structures.extend("User", u => {
                 const emb = defaultEventLogEmbed(guild);
 
                 emb.setTitle("You have been unmuted")
-                    .setDescription("**Reason**\n" + reason);
+                    .setDescription(reason || "No reason provided");
 
                 this.createDM().then(r => trySend(this.client, r, emb));
             }
@@ -284,38 +288,46 @@ Structures.extend("User", u => {
             if (!this.bot) {
                 const emb = defaultEventLogEmbed(guild);
                 emb.setTitle("You have been banned")
-                    .setDescription("**Reason**\n" + option.reason)
+                    .setDescription(option.reason || "No reason provided")
                     .addField("At", defaultDateFormat(data.duration.invoked), true)
                     .addField("Until", data.duration.until ? defaultDateFormat(data.duration.until) : "Never", true)
                     .addField("For", data.duration.duration?.strings.join(" ") || "Indefinite");
                 await this.createDM().then(r => trySend(this.client, r, emb));
             }
+            let already = false, cant = false;
+            if (option.days > 7) option.days = 7;
             await guild.members.ban(this, option);
+            //     .catch(e => {
+
+            // });
+            if (data.duration.until) await createSchedule(guild.client, { guildID: guild.id, userID: this.id, type: "ban", until: data.duration.until?.toJSDate() });
 
             const MC = guild.getTimedPunishment(this.id, "ban"),
                 TP = new TimedPunishment({ userID: this.id, duration: data.duration, infraction: data.infraction, type: "ban" });
 
-            if (data.duration.until) await createSchedule(guild.client, { guildID: guild.id, userID: this.id, type: "ban", until: data.duration.until?.toJSDate() });
-
-            return { set: await guild.setTimedPunishment(TP), existing: MC }
+            return { set: await guild.setTimedPunishment(TP), existing: MC, already: already, cant: cant }
         }
 
         async unban(guild, moderator, reason) {
             if (!guild || !(guild instanceof Guild)) throw new TypeError("Guild is: " + guild);
             const CL = guild.member(this.client.user);
             if (!moderator.isAdmin || !CL.isAdmin) throw new Error("Missing permissions");
+            let already = false, cant = false;
             await guild.members.unban(this, reason);
+            // .catch(e => {
+
+            // });
             if (!guild.DB) await guild.DB.dbLoad();
 
             if (!this.bot) {
                 const emb = defaultEventLogEmbed(guild);
 
                 emb.setTitle("You have been unbanned")
-                    .setDescription("**Reason**\n" + reason);
+                    .setDescription(reason || "No reason provided");
                 this.createDM().then(r => trySend(this.client, r, emb));
             }
             await col.deleteOne({ document: [guild.id, this.id, "ban"].join("/") }).then(() => console.log("SCHEDULE " + [guild.id, this.id, "ban"].join("/") + " DELETED")).catch(e => errLog(e, null, client));
-            return guild.removeTimedPunishment(this.id, "ban");
+            return { set: await guild.removeTimedPunishment(this.id, "ban"), already: already, cant: cant };
         }
     }
 });
@@ -375,12 +387,13 @@ Structures.extend("GuildMember", u => {
             return database.collection("GuildMember").findOne({ document: this.guild.id + "/" + this.id }).then((r, e) => {
                 if (e) return errLog(e, null, this.client);
                 if (!r) r = {};
+                console.log("DB LOADED FOR MEMBER:", this.user.tag, this.id, this.guild.name, this.guild.id);
                 return this.DB = r;
             });
         }
 
         async setDb(query, set) {
-            return database.collection("GuildMember").updateOne({ document: this.guild.id + "/" + this.id }, { $set: { [query]: set }, $setOnInsert: { document: this.id } },
+            return database.collection("GuildMember").updateOne({ document: this.guild.id + "/" + this.id }, { $set: { [query]: set }, $setOnInsert: { document: this.guild.id + "/" + this.id } },
                 { upsert: true }).then((r, e) => {
                     if (e) return errLog(e, null, this.client);
                     return this.DB[query] = set;
@@ -400,23 +413,23 @@ Structures.extend("GuildMember", u => {
             if (!this.DB) await this.dbLoad();
             if (!data || !data.infraction) throw new Error("Missing infraction id");
             if (!this.DB.muted) this.DB.muted = {};
-            if (data.saveTakenRoles === undefined) data.saveTakenRoles = !(this.DB.muted.takenRoles?.length > 0);
+            if (data.saveTakenRoles === undefined) data.saveTakenRoles = !(this.DB.muted.takenRoles?.length);
 
             const ROLES = this.roles.cache.filter((r) => !r.managed).map(r => r.id);
-            if (data.saveTakenRoles && ROLES?.length > 0) {
+            if (data.saveTakenRoles && ROLES?.length) {
                 console.log("populating takenRoles M");
                 this.DB.muted.takenRoles = ROLES;
             }
             this.DB.muted.muteRole = this.guild.DB.settings.mute.role;
 
             try {
-                if (ROLES?.length > 0) await this.roles.remove(ROLES, reason);
+                if (ROLES?.length) await this.roles.remove(ROLES, reason);
                 await this.roles.add(this.DB.muted.muteRole, reason);
                 if (!this.DB.muted.takenRoles) this.DB.muted.takenRoles = [];
                 await this.setDb("muted", this.DB.muted);
                 return true;
             } catch (e) {
-                if (this.DB.muted.takenRoles?.length > 0) await this.roles.add(this.DB.muted.takenRoles, reason).catch(() => { });
+                if (this.DB.muted.takenRoles?.length) await this.roles.add(this.DB.muted.takenRoles, reason).catch(() => { });
                 if (this.DB.muted.muteRole) await this.roles.remove(this.DB.muted.muteRole, reason).catch(() => { });
                 console.log("clear takenRoles M");
                 this.DB.muted.takenRoles = [];
@@ -428,7 +441,7 @@ Structures.extend("GuildMember", u => {
         async unmute(reason) {
             if (!this.DB) await this.dbLoad();
             try {
-                if (this.DB.muted.takenRoles.length > 0) await this.roles.add(this.DB.muted.takenRoles, reason);
+                if (this.DB.muted.takenRoles.length) await this.roles.add(this.DB.muted.takenRoles, reason);
                 if (this.DB.muted.muteRole) await this.roles.remove(this.DB.muted.muteRole, reason);
                 console.log("clear takenRoles UM");
                 this.DB.muted.takenRoles = [];
@@ -444,6 +457,15 @@ Structures.extend("GuildMember", u => {
          * @param {string[]} roles
          */
         async setLeaveRoles(roles = []) {
+            if (!this.DB) await this.dbLoad();
+            const banned = await this.guild.fetchBan(this.user).catch(() => { });
+            console.log("BANNED:", banned ? true : false);
+            if (banned) return;
+            const kicked = (await this.guild.fetchAuditLogs({ "limit": 1, "type": "MEMBER_KICK" }).catch(() => { }))?.entries?.first();
+            if (kicked?.target.id === this.id) {
+                console.log("KICKED:", true);
+                return;
+            }
             return this.setDb("leaveRoles", roles);
         }
 
