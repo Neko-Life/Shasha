@@ -108,9 +108,10 @@ module.exports = class mute extends commando.Command {
             targetUsers = FR.targetUser;
             resultMsg = FR.resultMsg;
         } else return trySend(this.client, msg, "Args: `<[user_[mention|ID|name]]> -- [reason] -- [duration]`. " +
-            "Separate `user` with `,`. `--s` to view settings.\nExample:```js\n" +
+            "Separate `user` with `,`. `--s` to view settings.Example:```js\n" +
             `${msg.guild.commandPrefix + this.name} 580703409934696449, @Shasha#1234, ` +
-            `ur mom,#6969,^yuck\\s(ur)?\\s.{5}#\\d+69$ -- 69y69mo69w420d420h420m420s -- Saying "joe"\`\`\``);
+            `ur mom,#6969,^yuck\\s(ur)?\\s.{5}#\\d+69$ -- 69y69mo69w420d420h420m420s -- Saying "joe"\n` +
+            `${msg.guild.commandPrefix + this.name} --s\`\`\``);
 
         if (targetUsers.length) {
             let muted = [], cant = [], already = [];

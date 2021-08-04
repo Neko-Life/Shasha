@@ -12,8 +12,7 @@ module.exports = (msg, arg) => {
         duration,
         role,
         resultMsg = "";
-    console.log(args);
-    if (arg && !args[1]) setEmb.setDescription(ARGS_TEXT); else if (args?.[1]) {
+    if (!args?.[1]) setEmb.setDescription(ARGS_TEXT); else {
         for (const ARG of args) {
             if (ARG.startsWith("r ")) {
                 const key = cleanMentionID(ARG.slice(2));
