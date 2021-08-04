@@ -1,7 +1,7 @@
 'use strict';
 
 const commando = require("@iceprod/discord.js-commando");
-const { parseDoubleDash, trySend, defaultImageEmbed, parseComa, defaultEventLogEmbed } = require("../../resources/functions");
+const { parseDoubleDash, trySend, parseComa, defaultEventLogEmbed } = require("../../resources/functions");
 const targetUser = require("./src/targetUser");
 
 module.exports = class unmute extends commando.Command {
@@ -11,13 +11,14 @@ module.exports = class unmute extends commando.Command {
             memberName: "unmute",
             group: "moderation",
             description: "Mute.",
-            guildOnly: true,
-            userPermissions: ['MANAGE_ROLES'],
-            clientPermissions: ['MANAGE_ROLES']
+            guildOnly: true
         });
     }
 
     async run(msg, arg) {
+        const CL = msg.guild.member(msg.client.user);
+        if (!(msg.member.idAdmin || msg.member.hasPermission("MANAGE_ROLES"))) return trySend(msg.client, msg, "no <:nekohmLife:846371737644957786>");
+        if (!(CL.idAdmin || CL.hasPermission("MANAGE_ROLES"))) return trySend(msg.client, msg, "I don't have the power to do that <:pepewhysobLife:853237646666891274>");
         if (!msg.guild.DB) await msg.guild.dbLoad();
         msg.channel.startTyping();
         if (!arg) return trySend(msg.client, msg, "Provide `user_ID` to unmute. Separate `user` with `,`. Example:```js\n" +

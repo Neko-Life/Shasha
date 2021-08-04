@@ -55,9 +55,7 @@ module.exports = class mute extends commando.Command {
                 `You can view server as the newly created mute role and override my default settings later.\n` +
                 `Example:\`\`\`\n--s -r muted -d 69y420mo36w49d69h4m420s\n` +
                 `--s -r none -d 0\n--cmr -n Muted -c black\`\`\``,
-            guildOnly: true,
-            userPermissions: ['MANAGE_ROLES'],
-            clientPermissions: ['MANAGE_ROLES']
+            guildOnly: true
         });
     }
     /**
@@ -66,6 +64,9 @@ module.exports = class mute extends commando.Command {
      * @returns 
      */
     async run(msg, arg) {
+        const CL = msg.guild.member(msg.client.user);
+        if (!(msg.member.idAdmin || msg.member.hasPermission("MANAGE_ROLES"))) return trySend(msg.client, msg, "Who are you <:nekohmLife:846371737644957786>");
+        if (!(CL.idAdmin || CL.hasPermission("MANAGE_ROLES"))) return trySend(msg.client, msg, "I don't have the power to do that <:pepewhysobLife:853237646666891274>");
         msg.channel.startTyping();
         if (!msg.guild.DB) await msg.guild.dbLoad();
         const MOD = msg.guild.DB.settings,
