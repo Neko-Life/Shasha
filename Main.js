@@ -109,6 +109,10 @@ client.on("guildBanAdd", async (GUILD, USER) => {
 
 client.on("guildBanRemove", async (GUILD, USER) => {
     lgr.guildBanRemove(GUILD, USER);
+});
+
+client.on("guildUpdate", async (oldGuild, newGuild) => {
+    lgr.guildUpdate(oldGuild, newGuild);
 })
 
 client.on("messageDelete", async (msg) => {
