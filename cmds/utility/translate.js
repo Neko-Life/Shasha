@@ -86,17 +86,19 @@ module.exports = class translate extends commando.Command {
         };
         arg = arg.replace(REG, "").trim();
         const TP = arg.split(/ +/, 1)?.[0].trim();
+        const CLEANCONT = msg.cleanContent.slice(msg.guild.commandPrefix.length);
         let trans, tar, ic = SPLG.includes(TP);
         if (tmes) trans = tmes.cleanContent || tmes.content;
         if (ic) tar = TP; else tar = "en";
         if (ic) {
-            if (!tmes) trans = msg.cleanContent.slice((msg.guild.commandPrefix + msg.alias + TP).length + 2).trim() || msg.channel.messages.cache.get(msg.previousMessageID)?.cleanContent;
+            if (!tmes) trans = CLEANCONT.slice(((CLEANCONT.match(/^[^\s\n]+(\s|\n|$)+/)?.[0] || "") + TP).length).trim() || msg.channel.messages.cache.get(msg.previousMessageID)?.cleanContent;
         } else {
-            if (!tmes) trans = msg.cleanContent.slice((msg.guild.commandPrefix + msg.alias).length + 1).trim() || msg.channel.messages.cache.get(msg.previousMessageID)?.cleanContent;
+            if (!tmes) trans = CLEANCONT.slice((CLEANCONT.match(/^[^\s\n]+(\s|\n|$)+/)?.[0] || "").length).trim() || msg.channel.messages.cache.get(msg.previousMessageID)?.cleanContent;
         };
         if (!trans || trans.length === 0) {
             return trySend(msg.client, msg, "Nothing to translate. `--h` for help <:nekohmLife:846371737644957786>");
         }
+        console.log(trans);
         ex++;
         if (ex > 1) rl += 6;
         const t = rl * 100;
