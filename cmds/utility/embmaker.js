@@ -41,7 +41,12 @@ module.exports = class embmaker extends commando.Command {
         let embed = new MessageEmbed();
         let autName, footertext, autIcon, autUrl, footericon, content, channel, editSrc, newAttach = [], reportMessage = "";
         try {
-            for (const value of args) {
+            if (!args?.length) {
+                content = `<@${msg.author.id}>`;
+                embed = defaultImageEmbed(msg, null, "Usage");
+                embed.setDescription(HELP.desc);
+                if (HELP.fields.length > 0) for (const u of HELP.fields) embed.addField(u.name, u.value, u.inline);
+            } else for (const value of args) {
                 if (value.startsWith("j ")) {
                     embed = new MessageEmbed(JSON.parse(value.slice("j ".length).trim()));
                     continue;
