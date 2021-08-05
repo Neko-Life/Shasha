@@ -33,7 +33,7 @@ Structures.extend("Guild", u => {
                     }
                 r.infractions = infractions;
                 r.timedPunishments = timedPunishments;
-                console.log("DB LOADED FOR GUILD:", this.name, this.id);
+                // console.log("DB LOADED FOR GUILD:", this.name, this.id);
                 return this.DB = r;
             });
         }
@@ -154,7 +154,7 @@ Structures.extend("User", u => {
                 if (!r.F) r.F = "<:pepewhysobLife:853237646666891274>";
                 if (!r.cachedAvatarURL) r.cachedAvatarURL = this.displayAvatarURL({ format: "png", size: 4096, dynamic: true });
                 if (!r.interactions) r.interactions = {};
-                console.log("DB LOADED FOR USER:", this.tag, this.id);
+                // console.log("DB LOADED FOR USER:", this.tag, this.id);
                 return this.DB = r;
             });
         }
@@ -387,7 +387,7 @@ Structures.extend("GuildMember", u => {
             return database.collection("GuildMember").findOne({ document: this.guild.id + "/" + this.id }).then((r, e) => {
                 if (e) return errLog(e, null, this.client);
                 if (!r) r = {};
-                console.log("DB LOADED FOR MEMBER:", this.user.tag, this.id, this.guild.name, this.guild.id);
+                // console.log("DB LOADED FOR MEMBER:", this.user.tag, this.id, this.guild.name, this.guild.id);
                 return this.DB = r;
             });
         }
@@ -417,7 +417,7 @@ Structures.extend("GuildMember", u => {
 
             const ROLES = this.roles.cache.filter((r) => !r.managed).map(r => r.id);
             if (data.saveTakenRoles && ROLES?.length) {
-                console.log("populating takenRoles M");
+                console.log("POPULATING TAKEN ROLES BEFORE MUTE");
                 this.DB.muted.takenRoles = ROLES;
             }
             this.DB.muted.muteRole = this.guild.DB.settings.mute.role;
@@ -431,7 +431,7 @@ Structures.extend("GuildMember", u => {
             } catch (e) {
                 if (this.DB.muted.takenRoles?.length) await this.roles.add(this.DB.muted.takenRoles, reason).catch(() => { });
                 if (this.DB.muted.muteRole) await this.roles.remove(this.DB.muted.muteRole, reason).catch(() => { });
-                console.log("clear takenRoles M");
+                console.log("CLEAR TAKEN ROLES MUTE ERROR");
                 this.DB.muted.takenRoles = [];
                 this.DB.muted.muteRole = undefined;
                 throw e;
@@ -443,7 +443,7 @@ Structures.extend("GuildMember", u => {
             try {
                 if (this.DB.muted.takenRoles.length) await this.roles.add(this.DB.muted.takenRoles, reason);
                 if (this.DB.muted.muteRole) await this.roles.remove(this.DB.muted.muteRole, reason);
-                console.log("clear takenRoles UM");
+                console.log("CLEAR TAKEN ROLES UNMUTE");
                 this.DB.muted.takenRoles = [];
                 this.DB.muted.muteRole = undefined;
                 await this.setDb("muted", this.DB.muted);
@@ -459,11 +459,11 @@ Structures.extend("GuildMember", u => {
         async setLeaveRoles(roles = []) {
             if (!this.DB) await this.dbLoad();
             const banned = await this.guild.fetchBan(this.user).catch(() => { });
-            console.log("BANNED:", banned ? true : false);
+            // console.log("BANNED:", banned ? true : false);
             if (banned) return;
             const kicked = (await this.guild.fetchAuditLogs({ "limit": 1, "type": "MEMBER_KICK" }).catch(() => { }))?.entries?.first();
             if (kicked?.target.id === this.id) {
-                console.log("KICKED:", true);
+                // console.log("KICKED:", true);
                 return;
             }
             return this.setDb("leaveRoles", roles);
