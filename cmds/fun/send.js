@@ -1,7 +1,7 @@
 'use strict';
 const commando = require("@iceprod/discord.js-commando");
 const emoteMessage = require("../../resources/emoteMessage");
-const { ranLog, errLog, trySend, tryReact, findChannelRegEx, cleanMentionID, getChannel } = require("../../resources/functions");
+const { ranLog, errLog, trySend, tryReact, cleanMentionID, getChannel } = require("../../resources/functions");
 
 module.exports = class send extends commando.Command {
   constructor(client) {
@@ -33,7 +33,7 @@ module.exports = class send extends commando.Command {
       }
       const sendThis = { content: sendTheMes, disableMentions: "all" };
       if (msg.member?.hasPermission("MENTION_EVERYONE")) sendThis.disableMentions = "none";
-      const send = await trySend(this.client, channel, sendThis);
+      const send = await trySend(this.client, channel, sendThis, !msg.client.owners.includes(msg.author));
       const filter = () => true,
         collector = send.createReactionCollector(filter, { time: 15 * 6 * 1000 });
       collector.on('collect', r => {
