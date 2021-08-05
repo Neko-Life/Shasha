@@ -24,7 +24,7 @@ module.exports = async (memberold, membernew) => {
     if (membernew.guild.DB.eventChannels?.memberRole) {
         log = getChannel(membernew, membernew.guild.DB.eventChannels.memberRole);
         if (membernew.guild.member(membernew.client.user).hasPermission("VIEW_AUDIT_LOG")) {
-            console.log("FETCH UPDATE LOG", membernew.user.tag);
+            // console.log("FETCH UPDATE LOG", membernew.user.tag);
             const the = (await membernew.guild.fetchAuditLogs({ limit: 1, type: "MEMBER_ROLE_UPDATE" })).entries.first();
             if (the.target.id === memberold.id) audit = the;
             auditPerm = true;
@@ -54,7 +54,7 @@ module.exports = async (memberold, membernew) => {
         log = getChannel(membernew, membernew.guild.DB.eventChannels.member);
         if (membernew.displayName !== memberold.displayName) {
             if (membernew.guild.member(membernew.client.user).hasPermission("VIEW_AUDIT_LOG")) {
-                console.log("FETCH NICK LOG", membernew.user.tag);
+                // console.log("FETCH NICK LOG", membernew.user.tag);
                 const the = (await membernew.guild.fetchAuditLogs({ limit: 1, type: "MEMBER_UPDATE" })).entries.first();
                 if (the.target.id === memberold.id) audit = the;
                 if (the.executor.id === memberold.id) nullReason = true;
@@ -70,7 +70,7 @@ module.exports = async (memberold, membernew) => {
             if (oldAV) emb.setThumbnail(oldAV);
         }
     }
-    console.log(audit);
+    // console.log(audit);
     emb.setAuthor(emb.author.name, NEWAV)
         .setTitle("Profile `" + memberold.user.tag + "` updated" +
             (audit?.executor ? ` by \`${audit.executor.tag}\`` : ""))
