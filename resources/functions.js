@@ -97,7 +97,7 @@ function execCB(error, stdout, stderr) {
  * @param {string} addition 
  */
 async function ranLog(msg, addition) {
-  if (typeof addition != "string") return console.log(`[RANLOG] Not a string:`, addition);
+  if (typeof addition !== "string") return console.error(`[RANLOG] Not a string:`, addition);
   const channel = msg.client.channels.cache.get(ranLogger),
     ifCode = addition?.startsWith("```") && addition.endsWith("```");
   const addSplit = splitOnLength((addition?.substr(ifCode ? 2045 : 2049)).split(","), 1010, ",");
@@ -200,7 +200,11 @@ async function trySend(client, msgOrChannel, content, checkAd = true) {
     }
   }
   if (!((msgOrChannel instanceof Message) || (msgOrChannel instanceof TextChannel) || (msgOrChannel instanceof DMChannel))) return errLog(e, null, client, false, "[TRYSEND] Invalid {msgOrChannel} type.```js\n" + JSON.stringify(msgOrChannel, (k, v) => v ?? undefined, 2) + "```");
-  const ret = await (msgOrChannel.channel || msgOrChannel).send(content).catch(/*msgOrChannel.channel ? noPerm(msgOrChannel) :*/ e => errLog(e, msgOrChannel, client));
+  let ret = await (msgOrChannel.channel || msgOrChannel).send(content).catch(/*msgOrChannel.channel ? noPerm(msgOrChannel) :*/ e => errLog(e, msgOrChannel, client));
+  if (ret?.[0] instanceof Message) {
+    // console.log(ret, typeof ret);
+    ret = ret[0];
+  }
   await (msgOrChannel.channel || msgOrChannel).stopTyping();
   setTimeout(() => {
     if (client.user.typingIn(msgOrChannel.channel || msgOrChannel)) {
