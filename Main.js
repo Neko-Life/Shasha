@@ -198,15 +198,31 @@ client.on("commandRun", async (c, u, msg) => {
     if (msg.guild && !msg.guild.DB) await msg.guild.dbLoad();
 });
 
-client.on("warn", a => console.log("warn", typeof a, a));
-client.on("error", e => errLog(e, null, client));
+client.on("warn", e => {
+    console.error(e);
+    errLog(e, null, client);
+});
+client.on("error", e => {
+    console.error(e);
+    errLog(e, null, client);
+});
 client.on("commandError", (c, e, m) => {
+    console.error(e);
     errLog(e, m, client);
     m?.channel.stopTyping();
 });
 
-process.on("uncaughtException", e => errLog(e, null, client));
-process.on("unhandledRejection", e => errLog(e, null, client));
-process.on("warning", e => errLog(e, null, client));
+process.on("uncaughtException", e => {
+    console.error(e);
+    errLog(e, null, client);
+});
+process.on("unhandledRejection", e => {
+    console.error(e);
+    errLog(e, null, client);
+});
+process.on("warning", e => {
+    console.error(e);
+    errLog(e, null, client);
+});
 
 client.login(configFile.token);
