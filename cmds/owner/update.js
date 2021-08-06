@@ -2,7 +2,7 @@
 
 const commando = require("@iceprod/discord.js-commando"),
     { exec } = require("child_process"),
-    { errLog, trySend } = require("../../resources/functions");
+    { trySend } = require("../../resources/functions");
 
 module.exports = class update extends commando.Command {
     constructor(client) {
@@ -16,12 +16,13 @@ module.exports = class update extends commando.Command {
         });
     }
     async run(msg) {
-        exec("bash .update.sh", async (xe, o, e) => {
-            if (xe || e) {
-                await errLog(xe || e, msg, msg.client, true, "", true);
-            }
-            if (o) return trySend(msg.client, msg, o);
-            return trySend(msg.client, msg, "Done");
+        let ret = [];
+        await exec("bash .update.sh", async (xe, o, e) => {
+            for (const M of [xe, o, e])
+                if (M)
+                    ret.push(await trySend(msg.client, msg, M));
+            ret.push(await trySend(msg.client, msg, "Done"));
         });
+        return ret;
     }
 };
