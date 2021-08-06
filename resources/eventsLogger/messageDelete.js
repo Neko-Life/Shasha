@@ -26,10 +26,12 @@ module.exports = async (msg) => {
         emb.setColor(getColor("yellow"))
             .setTitle((!msg.webhookID ? "Message " + msg.id : "Webhook " + msg.webhookID) + " deleted" + (audit?.executor ? ` by \`${audit.executor.tag}\`` : ""))
             .setDescription(msg.content.length > 0 ? msg.content : "`[EMPTY]`")
-            .setAuthor(emb.author.name, msg.author?.displayAvatarURL({ format: "png", size: 128, dynamic: true }))
             .addField("Author", `<@!${msg.author?.id}>\n\`${msg.author?.tag}\`\n(${msg.author?.id})`, true)
             .addField("Channel", `<#${msg.channel?.id}>\n\`${msg.channel?.name}\`\n(${msg.channel?.id})`, true)
-            .setURL(msg.url);
+            .setURL(msg.url)
+            .setFooter(emb.footer.text, msg.author.displayAvatarURL({ size: 128, format: "png", dynamic: true }));
+        if (audit.executor)
+            emb.setAuthor(emb.author.name, audit.executor.displayAvatarURL({ size: 128, format: "png", dynamic: true }));
         if (msg.attachments?.size > 0) {
             let arr = msg.attachments.map(r => r.proxyURL);
             const toField = splitOnLength(arr, 1024);

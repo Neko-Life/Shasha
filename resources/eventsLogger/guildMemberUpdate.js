@@ -17,7 +17,7 @@ module.exports = async (memberold, membernew) => {
         };
         return membernew.user.setDb("cachedAvatarURL", membernew.user.DB.cachedAvatarURL);
     }
-    let log, thumbMes = "", audit, auditPerm, nullReason = false;
+    let log, thumbMes = "", audit = {}, auditPerm, nullReason = false;
     const emb = defaultEventLogEmbed(membernew.guild), oldT = memberold.toJSON().displayAvatarURL;
     const oldAV = membernew.user.DB.cachedAvatarURL || oldT;
     if (oldAV) thumbMes += "This embed's thumbnail is the user's old avatar.\n";
@@ -49,6 +49,8 @@ module.exports = async (memberold, membernew) => {
                 .setDescription(`**Current role${use2.length > 2 ? "s" : ""}**\n` + (membernew.roles.cache.size > 1 ? "<@&" +
                     use2.slice(0, 80).join(">, <@&") + ">" + (use2.length > 80 ? ` and ${use2.slice(80).length} more...` : "") : "`[NONE]`"));
         }
+        if (audit.executor)
+            emb.setAuthor(emb.author.name, audit.executor.displayAvatarURL({ size: 128, format: "png", dynamic: true }));
     }
     if (membernew.guild.DB.eventChannels?.member && membernew.roles.cache.size === memberold.roles.cache.size) {
         log = getChannel(membernew, membernew.guild.DB.eventChannels.member);
@@ -61,20 +63,24 @@ module.exports = async (memberold, membernew) => {
                 auditPerm = true;
             }
             emb.addField("Current Nickname", "`" + membernew.displayName + "`")
-                .addField("Original Nickname", "`" + memberold.displayName + "`")
+                .addField("Original Nickname", "`" + memberold.displayName + "`");
+            if (audit.executor)
+                emb.setAuthor(emb.author.name, audit.executor.displayAvatarURL({ size: 128, format: "png", dynamic: true }));
         }
         if (membernew.user.DB.cachedAvatarURL !== NEWAV) {
             nullReason = true;
             emb.setImage(NEWAV)
+                .setAuthor(emb.author.name, NEWAV)
                 .addField("Avatar", thumbMes + "The image below is the user's new avatar.");
             if (oldAV) emb.setThumbnail(oldAV);
         }
     }
     // console.log(audit);
-    emb.setAuthor(emb.author.name, NEWAV)
-        .setTitle("Profile `" + memberold.user.tag + "` updated" +
-            (audit?.executor ? ` by \`${audit.executor.tag}\`` : ""))
+    emb.setTitle("Profile `" + memberold.user.tag + "` updated" +
+        (audit?.executor ? ` by \`${audit.executor.tag}\`` : ""))
         .setColor(getColor("blue"));
+    if (emb.fields?.[0].name !== "Avatar")
+        emb.setFooter(emb.footer.text, NEWAV);
     if (!nullReason) {
         if (auditPerm) {
             emb.setDescription((audit?.reason || "No reason provided") + (emb.description ? "\n\n" + emb.description : ""));
