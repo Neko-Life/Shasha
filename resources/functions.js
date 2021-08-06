@@ -156,7 +156,7 @@ function multipleMembersFound(msg, arr, key, max = 4, withID, withNick) {
 function findMemberRegEx(base, key) {
   if (!base || !key) return;
   const re = new RegExp(key, "i");
-  return (base.guild ?? base).members.cache.map(r => r).filter(r => re.test(r.displayName) || re.test(r.user.tag));
+  return (base.guild ?? base).members.cache.filter(r => re.test(r.displayName) || re.test(r.user.tag)).map(r => r);
 }
 
 /**
@@ -301,13 +301,13 @@ function cleanMentionID(key) {
 function findChannelRegEx(msg, name, exclude) {
   if (!msg || !name) return;
   const re = new RegExp(name, "i");
-  return (msg.guild || msg).channels.cache.map(r => r).filter(r => {
+  return (msg.guild || msg).channels.cache.filter(r => {
     if (exclude?.includes(r.type)) {
       return false;
     } else {
       return re.test(r.name);
     }
-  });
+  }).map(r => r);
 }
 
 /**
@@ -319,7 +319,7 @@ function findChannelRegEx(msg, name, exclude) {
 function findRoleRegEx(msg, name) {
   if (!msg || !name) return;
   const re = new RegExp(name, "i");
-  return (msg.guild || msg).roles.cache.map(r => r).filter(r => re.test(r.name));
+  return (msg.guild || msg).roles.cache.filter(r => re.test(r.name)).map(r => r);
 }
 
 /**
@@ -520,6 +520,11 @@ async function getUser(msg, key, inGuild = false) {
   } else if (inGuild) return getMember(msg.guild, use)[0]?.user;
 }
 
+/**
+ * @param {Guild} guild 
+ * @param {string} key 
+ * @returns {Role}
+ */
 function getRole(guild, key) {
   if (!(guild || key)) return;
   const use = cleanMentionID(key);
