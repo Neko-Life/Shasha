@@ -23,7 +23,7 @@ module.exports = async (memberold, membernew) => {
     if (oldAV) thumbMes += "This embed's thumbnail is the user's old avatar.\n";
     if (membernew.guild.DB.eventChannels?.memberRole) {
         log = getChannel(membernew, membernew.guild.DB.eventChannels.memberRole);
-        if (membernew.guild.member(membernew.client.user).hasPermission("VIEW_AUDIT_LOG")) {
+        if (membernew.guild.me.hasPermission("VIEW_AUDIT_LOG")) {
             // console.log("FETCH UPDATE LOG", membernew.user.tag);
             const the = (await membernew.guild.fetchAuditLogs({ limit: 1, type: "MEMBER_ROLE_UPDATE" })).entries.first();
             if (the.target.id === memberold.id) audit = the;
@@ -33,7 +33,7 @@ module.exports = async (memberold, membernew) => {
             const use = membernew.roles.cache.difference(memberold.roles.cache).sort((a, b) => b.position - a.position).map(r => r.id);
             const use2 = memberold.roles.cache.sort((a, b) => b.position - a.position).map(r => r.id).slice(0, -1);
 
-            emb.addField(`Role${membernew.roles.cache.size > 2 ? "s" : ""} added`,
+            emb.addField(`Role${use.length > 1 ? "s" : ""} added`,
                 ("<@&" + use.slice(0, 39).join(">, <@&") + ">" + (use.length > 39 ? ` and ${use.slice(39).length} more...` : "")))
 
                 .setDescription(`**Old role${use2.length > 2 ? "s" : ""}**\n` + (memberold.roles.cache.size > 1 ? "<@&" +
@@ -43,17 +43,17 @@ module.exports = async (memberold, membernew) => {
             const use = memberold.roles.cache.difference(membernew.roles.cache).sort((a, b) => b.position - a.position).map(r => r.id);
             const use2 = membernew.roles.cache.sort((a, b) => b.position - a.position).map(r => r.id).slice(0, -1);
 
-            emb.addField(`Role${use.length > 2 ? "s" : ""} removed`,
+            emb.addField(`Role${use.length > 1 ? "s" : ""} removed`,
                 ("<@&" + use.slice(0, 39).join(">, <@&") + ">" + (use.length > 39 ? ` and ${use.slice(39).length} more...` : "")))
 
-                .setDescription(`**Current role${membernew.roles.cache.size > 2 ? "s" : ""}**\n` + (membernew.roles.cache.size > 1 ? "<@&" +
+                .setDescription(`**Current role${use2.length > 2 ? "s" : ""}**\n` + (membernew.roles.cache.size > 1 ? "<@&" +
                     use2.slice(0, 80).join(">, <@&") + ">" + (use2.length > 80 ? ` and ${use2.slice(80).length} more...` : "") : "`[NONE]`"));
         }
     }
     if (membernew.guild.DB.eventChannels?.member && membernew.roles.cache.size === memberold.roles.cache.size) {
         log = getChannel(membernew, membernew.guild.DB.eventChannels.member);
         if (membernew.displayName !== memberold.displayName) {
-            if (membernew.guild.member(membernew.client.user).hasPermission("VIEW_AUDIT_LOG")) {
+            if (membernew.guild.me.hasPermission("VIEW_AUDIT_LOG")) {
                 // console.log("FETCH NICK LOG", membernew.user.tag);
                 const the = (await membernew.guild.fetchAuditLogs({ limit: 1, type: "MEMBER_UPDATE" })).entries.first();
                 if (the.target.id === memberold.id) audit = the;
