@@ -79,7 +79,7 @@ module.exports = async (memberold, membernew) => {
     emb.setTitle("Profile `" + memberold.user.tag + "` updated" +
         (audit?.executor ? ` by \`${audit.executor.tag}\`` : ""))
         .setColor(getColor("blue"));
-    if (emb.fields?.[0].name !== "Avatar")
+    if (emb.fields?.[0]?.name !== "Avatar")
         emb.setFooter(emb.footer.text, NEWAV);
     if (!nullReason) {
         if (auditPerm) {
