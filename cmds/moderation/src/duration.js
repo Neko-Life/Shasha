@@ -21,8 +21,8 @@ function intervalToDuration(interval) {
     }
     if (strings.length > 0) {
         if (strings.length > 1) strings[strings.length - 2] += " and";
-        return { object, strings };
     }
+    return { object, strings };
 };
 
 /**

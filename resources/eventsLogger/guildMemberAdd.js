@@ -4,7 +4,7 @@ const { GuildMember } = require("discord.js"),
     { DateTime, Interval } = require("luxon"),
     { getChannel, defaultEventLogEmbed, trySend, defaultDateFormat } = require("../functions"),
     getColor = require("../getColor"),
-    { DT_PRINT_FORMAT, intervalToDuration } = require("../../cmds/moderation/src/duration");
+    { intervalToDuration } = require("../../cmds/moderation/src/duration");
 
 /**
  * Log newly joined Guild Member
@@ -13,7 +13,7 @@ const { GuildMember } = require("discord.js"),
  */
 module.exports = async (member) => {
     if (!member.DB) await member.dbLoad();
-    if (member.DB.leaveRoles?.length && member.guild.member(member.client.user).hasPermission("MANAGE_ROLES")) {
+    if (member.DB.leaveRoles?.length && member.guild.me.hasPermission("MANAGE_ROLES")) {
         await member.roles.add(member.DB.leaveRoles, "Automatic roles recovery").then(() => console.log("AUTO ROLES RECOVERY:",
             member.user.tag, member.guild.name)).catch(() => { });
         await member.setDb("leaveRoles", []);
