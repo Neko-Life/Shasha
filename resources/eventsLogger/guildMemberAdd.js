@@ -12,6 +12,9 @@ const { GuildMember } = require("discord.js"),
  * @returns 
  */
 module.exports = async (member) => {
+    if (!member.guild.DB) await member.guild.dbLoad();
+    member.guild.updateCached("systemChannelID", member.guild.systemChannelID);
+    member.guild.updateCached("iconURL", member.guild.iconURL({ size: 4096, format: "png", dynamic: true }));
     if (!member.DB) await member.dbLoad();
     if (member.DB.leaveRoles?.length && member.guild.me.hasPermission("MANAGE_ROLES")) {
         await member.roles.add(member.DB.leaveRoles, "Automatic roles recovery").then(() => console.log("AUTO ROLES RECOVERY:",

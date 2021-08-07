@@ -12,6 +12,9 @@ Settings.defaultZone = "utc";
  * @returns 
  */
 module.exports = async (member) => {
+    if (!member.guild.DB) await member.guild.dbLoad();
+    member.guild.updateCached("systemChannelID", member.guild.systemChannelID);
+    member.guild.updateCached("iconURL", member.guild.iconURL({ size: 4096, format: "png", dynamic: true }));
     const RO = member.roles.cache.sort((a, b) => b.position - a.position).map(r => r.id).slice(0, -1);
     if (member.guild.DB.eventChannels?.leave) {
         const log = getChannel(member, member.guild.DB.eventChannels.leave);

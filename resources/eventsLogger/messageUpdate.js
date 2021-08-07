@@ -13,6 +13,11 @@ const getColor = require("../getColor");
 module.exports = async (msgold, msgnew) => {
     if (msgnew.partial) msgnew = await msgnew.fetch();
     if (msgnew.partial) return;
+    if (msgnew.guild) {
+        if (!msgnew.guild.DB) await msgnew.guild.dbLoad();
+        msgnew.guild.updateCached("systemChannelID", msgnew.guild.systemChannelID);
+        msgnew.guild.updateCached("iconURL", msgnew.guild.iconURL({ size: 4096, format: "png", dynamic: true }));
+    }
     if (msgnew.content === msgold.content) return;
     const ignored = msgnew.guild.DB.eventChannels.mesEd?.ignore?.includes(msgnew.channel.id) || false;
     let check = false;

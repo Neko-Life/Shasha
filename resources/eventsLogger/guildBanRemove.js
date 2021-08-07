@@ -10,6 +10,9 @@ const getColor = require("../getColor");
  * @returns
  */
 module.exports = async (GUILD, USER) => {
+    if (!GUILD.DB) await GUILD.dbLoad();
+    GUILD.updateCached("systemChannelID", GUILD.systemChannelID);
+    GUILD.updateCached("iconURL", GUILD.iconURL({ size: 4096, format: "png", dynamic: true }));
     if (GUILD.DB.eventChannels?.unban) {
         if (USER.partial) USER = await USER.fetch();
         const log = getChannel(GUILD, GUILD.DB.eventChannels.unban);

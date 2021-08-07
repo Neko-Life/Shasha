@@ -19,6 +19,7 @@ Structures.extend("Guild", u => {
                 if (!r) r = {};
                 if (!r.eventChannels) r.eventChannels = {};
                 if (!r.settings) r.settings = {};
+                if (!r.cached) r.cached = {};
                 let infractions = new Map(),
                     timedPunishments = new Map();
                 if (r.infractions)
@@ -136,6 +137,24 @@ Structures.extend("Guild", u => {
             await require("../cmds/moderation/src/createSchedule").jobManager?.remove([this.id, userID, type].join("/")).catch(() => { });
             console.log("REMOVED TIMEDPUNISHMENT");
             return ret;
+        }
+
+        async setCached(key, value) {
+            this.DB.cached[key] = value;
+            await this.setDb("cached", this.DB.cached);
+            console.log("SET CACHED", key, value);
+            return this.DB.cached;
+        }
+
+        getCached(key) {
+            return this.DB.cached[key];
+        }
+
+        async updateCached(key, value) {
+            const cached = this.getCached(key);
+            if (cached === value) return false;
+            console.log("UPDATE CACHED", key, cached);
+            return this.setCached(key, value);
         }
     }
 });

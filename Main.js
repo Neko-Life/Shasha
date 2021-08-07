@@ -22,6 +22,7 @@ const getColor = require("./resources/getColor");
 const requireAll = require("require-all");
 const { chatAnswer } = require("./resources/shaChat");
 const { init } = require("./cmds/moderation/src/createSchedule");
+const { dbClient } = require("./database/mongo");
 
 const lgr = requireAll({ dirname: join(__dirname, "resources/eventsLogger"), recursive: true });
 client.functions = requireAll({ dirname: join(__dirname, "resources"), recursive: true });
@@ -219,6 +220,10 @@ process.on("uncaughtException", e => {
 process.on("unhandledRejection", e => {
     console.error(e);
     errLog(e, null, client);
+    if (/MongoError: Topology is closed, please connect/.test(e.message)) {
+        console.log("Trying reconnecting...");
+        return dbClient.connect();
+    }
 });
 process.on("warning", e => {
     console.error(e);

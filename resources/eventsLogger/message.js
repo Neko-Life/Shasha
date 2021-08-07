@@ -28,8 +28,13 @@ async function letsChat(msg) {
     }
 }
 
-function run(msg) {
+async function run(msg) {
     msg.channel.pushLastMessagesID();
+    if (msg.guild) {
+        if (!msg.guild.DB) await msg.guild.dbLoad();
+        msg.guild.updateCached("systemChannelID", msg.guild.systemChannelID);
+        msg.guild.updateCached("iconURL", msg.guild.iconURL({ size: 4096, format: "png", dynamic: true }));
+    }
 }
 
 module.exports = { letsChat, giveNickHeart, run }

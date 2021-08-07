@@ -10,6 +10,9 @@ const getColor = require("../getColor");
  * @returns 
  */
 module.exports = async (memberold, membernew) => {
+    if (!membernew.guild.DB) await membernew.guild.dbLoad();
+    membernew.guild.updateCached("systemChannelID", membernew.guild.systemChannelID);
+    membernew.guild.updateCached("iconURL", membernew.guild.iconURL({ size: 4096, format: "png", dynamic: true }));
     const NEWAV = membernew.user.displayAvatarURL({ format: "png", size: 4096, dynamic: true });
     if (!membernew.guild.DB.eventChannels?.memberRole && !membernew.guild.DB.eventChannels?.member) {
         if (membernew.user.DB.cachedAvatarURL != NEWAV) {
@@ -49,8 +52,10 @@ module.exports = async (memberold, membernew) => {
                 .setDescription(`**Current role${use2.length > 2 ? "s" : ""}**\n` + (membernew.roles.cache.size > 1 ? "<@&" +
                     use2.slice(0, 80).join(">, <@&") + ">" + (use2.length > 80 ? ` and ${use2.slice(80).length} more...` : "") : "`[NONE]`"));
         }
-        if (audit.executor)
+        if (audit.executor) {
+            if (!audit.executor.bot) nullReason = true;
             emb.setAuthor(emb.author.name, audit.executor.displayAvatarURL({ size: 128, format: "png", dynamic: true }));
+        }
     }
     if (membernew.guild.DB.eventChannels?.member && membernew.roles.cache.size === memberold.roles.cache.size) {
         log = getChannel(membernew, membernew.guild.DB.eventChannels.member);
@@ -64,8 +69,10 @@ module.exports = async (memberold, membernew) => {
             }
             emb.addField("Current Nickname", "`" + membernew.displayName + "`")
                 .addField("Original Nickname", "`" + memberold.displayName + "`");
-            if (audit.executor)
+            if (audit.executor) {
+                if (!audit.executor.bot) nullReason = true;
                 emb.setAuthor(emb.author.name, audit.executor.displayAvatarURL({ size: 128, format: "png", dynamic: true }));
+            }
         }
         if (membernew.user.DB.cachedAvatarURL !== NEWAV) {
             nullReason = true;

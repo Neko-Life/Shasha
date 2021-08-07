@@ -74,7 +74,7 @@ async function getChannelMessage(msg, MainID, SecondID) {
   if (SecondID && !/\D/.test(SecondID)) {
     try {
       const meschannel = (msg.client.owners.includes(msg.author) ? msg.client : msg.guild).channels.cache.get(MainID);
-      return meschannel.messages.fetch(SecondID, true);
+      return meschannel.messages.fetch(SecondID, true).catch(() => { });
     } catch {
       return;
     }

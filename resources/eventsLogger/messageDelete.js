@@ -11,6 +11,11 @@ const getColor = require("../getColor");
  */
 module.exports = async (msg) => {
     if (msg.partial) return;
+    if (msg.guild) {
+        if (!msg.guild.DB) await msg.guild.dbLoad();
+        msg.guild.updateCached("systemChannelID", msg.guild.systemChannelID);
+        msg.guild.updateCached("iconURL", msg.guild.iconURL({ size: 4096, format: "png", dynamic: true }));
+    }
     const ignored = msg.guild.DB.eventChannels.mesDel?.ignore?.includes(msg.channel.id) ?? false;
     let check = false;
     if (msg.channel.id === msg.guild.DB.eventChannels.mesDel?.channel && msg.author ? msg.author !== msg.client.user : false && ignored === false) check = true;
@@ -18,7 +23,7 @@ module.exports = async (msg) => {
         const log = getChannel(msg, msg.guild.DB.eventChannels.mesDel?.channel);
         if (!log || !msg.author) return;
         const emb = defaultEventLogEmbed(msg.guild);
-        let audit;
+        let audit = {};
         if (msg.guild.member(msg.client.user).hasPermission("VIEW_AUDIT_LOG")) {
             const the = (await msg.guild.fetchAuditLogs({ limit: 1, type: "MESSAGE_DELETE" })).entries.first();
             if (the.target.id === msg.id) audit = the;
@@ -26,8 +31,6 @@ module.exports = async (msg) => {
         emb.setColor(getColor("yellow"))
             .setTitle((!msg.webhookID ? "Message " + msg.id : "Webhook " + msg.webhookID) + " deleted" + (audit?.executor ? ` by \`${audit.executor.tag}\`` : ""))
             .setDescription(msg.content.length > 0 ? msg.content : "`[EMPTY]`")
-            .addField("Author", `<@!${msg.author?.id}>\n\`${msg.author?.tag}\`\n(${msg.author?.id})`, true)
-            .addField("Channel", `<#${msg.channel?.id}>\n\`${msg.channel?.name}\`\n(${msg.channel?.id})`, true)
             .setURL(msg.url)
             .setFooter(emb.footer.text, msg.author.displayAvatarURL({ size: 128, format: "png", dynamic: true }));
         if (audit.executor)
@@ -42,6 +45,9 @@ module.exports = async (msg) => {
             const toField = splitOnLength(arr, 1010, ",\n");
             for (let i = 0; i < toField.length; i++) emb.addField(i === 0 ? "Embed" : "​", "```js\n" + toField[i].join(",") + ((i !== toField.length - 1) ? "," : "") + "```");
         }
+        emb.addField("Author", `<@!${msg.author?.id}>\n\`${msg.author?.tag}\`\n(${msg.author?.id})`, true)
+            .addField("Channel", `<#${msg.channel?.id}>\n\`${msg.channel?.name}\`\n(${msg.channel?.id})`, true);
+        if (audit.executor?.bot) emb.addField("Reason", audit.reason || "No reason provided");
         return trySend(msg.client, log, emb);
     }
 }
