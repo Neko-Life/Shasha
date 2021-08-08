@@ -67,8 +67,7 @@ module.exports = async (memberold, membernew) => {
                 if (the.executor.id === memberold.id) nullReason = true;
                 auditPerm = true;
             }
-            emb.addField("Current Nickname", "`" + membernew.displayName + "`")
-                .addField("Original Nickname", "`" + memberold.displayName + "`");
+            emb.addField("Nickname", "Changed from `" + memberold.displayName + "` to `" + membernew.displayName + "`");
             if (audit.executor) {
                 if (!audit.executor.bot) nullReason = true;
                 emb.setAuthor(emb.author.name, audit.executor.displayAvatarURL({ size: 128, format: "png", dynamic: true }));
@@ -86,8 +85,8 @@ module.exports = async (memberold, membernew) => {
     emb.setTitle("Profile `" + memberold.user.tag + "` updated" +
         (audit?.executor ? ` by \`${audit.executor.tag}\`` : ""))
         .setColor(getColor("blue"));
-    if (emb.fields?.[0]?.name !== "Avatar")
-        emb.setFooter(emb.footer.text, NEWAV);
+    if (emb.fields[0]?.name !== "Avatar")
+        emb.setFooter(emb.footer.text || "​", NEWAV);
     if (!nullReason) {
         if (auditPerm) {
             emb.setDescription((audit?.reason || "No reason provided") + (emb.description ? "\n\n" + emb.description : ""));

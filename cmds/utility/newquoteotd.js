@@ -13,7 +13,7 @@ module.exports = class newquoteotd extends commando.Command {
             group: "utility",
             description: "The Life exclusive command for Quote of the day.",
             guildOnly: true,
-            userPermissions:["ADMINISTRATOR"]
+            userPermissions: ["ADMINISTRATOR"]
         });
     }
     async run(msg, arg) {
@@ -33,21 +33,20 @@ module.exports = class newquoteotd extends commando.Command {
                 const author = mes.guild.member(mes.author);
                 let description = mes.content;
                 if (!description.endsWith('.')) {
-                    description = description+'.';
+                    description = description + '.';
                 }
-                const thumbnail = mes.author.displayAvatarURL({format: "png", size: 4096, dynamic: true});
+                const thumbnail = mes.author.displayAvatarURL({ format: "png", size: 4096, dynamic: true });
                 let name;
                 if (author.displayName) {
                     name = author.displayName;
                 } else {
                     name = author.username;
                 }
-                emb
-                .setTitle(name)
-                .setDescription(description)
-                .setThumbnail(thumbnail)
-                .setFooter(quoteOTD.footerText || "", quoteOTD.footerIcon)
-                .setColor(color[Math.floor(Math.random()*color.length)]);
+                emb.setTitle(name)
+                    .setDescription(description)
+                    .setThumbnail(thumbnail)
+                    .setFooter(quoteOTD.footerText || "​", quoteOTD.footerIcon)
+                    .setColor(color[Math.floor(Math.random() * color.length)]);
                 const sent = await trySend(this.client, quoteOTD.channel, emb);
                 if (sent) {
                     ranLog(msg, "New quote: " + sent.content + "\nBy: " + mes.author.tag + ` (${mes.author.id})`);

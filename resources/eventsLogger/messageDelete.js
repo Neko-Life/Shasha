@@ -37,7 +37,7 @@ module.exports = async (msg) => {
             .setTitle((!msg.webhookID ? "Message " + msg.id : "Webhook " + msg.webhookID) + " deleted" + (audit?.executor ? ` by \`${audit.executor.tag}\`` : ""))
             .setDescription(msg.content.length > 0 ? msg.content : "`[EMPTY]`")
             .setURL(msg.url)
-            .setFooter(emb.footer.text, msg.author.displayAvatarURL({ size: 128, format: "png", dynamic: true }));
+            .setFooter(emb.footer.text || "​", msg.author.displayAvatarURL({ size: 128, format: "png", dynamic: true }));
         if (audit.executor)
             emb.setAuthor(emb.author.name, audit.executor.displayAvatarURL({ size: 128, format: "png", dynamic: true }));
         if (msg.attachments?.size > 0) {

@@ -84,7 +84,49 @@ module.exports = async (oldGuild, newGuild) => {
         };
 
         if (newGuild.rulesChannelID !== oldGuild.rulesChannelID) {
-            emb.addField("Rules or Guidelines Channel", `Changed from <#${oldGuild.rulesChannelID}> to <#${newGuild.rulesChannelID}>`);
+            emb.addField("Rules or Guidelines Channel",
+                `Changed from ${oldGuild.rulesChannelID ?
+                    "<#" + oldGuild.rulesChannelID + ">" :
+                    "`[NONE]`"
+                } to ${newGuild.rulesChannelID ?
+                    "<#" + newGuild.rulesChannelID + ">" :
+                    "`[NONE]`"}`);
+        };
+
+        if (oldGuild.publicUpdatesChannelID !== newGuild.publicUpdatesChannelID) {
+            emb.addField("Community Updates Channel",
+                `Changed from ${oldGuild.publicUpdatesChannelID ?
+                    "<#" + oldGuild.publicUpdatesChannelID + ">" :
+                    "`[NONE]`"
+                } to ${newGuild.publicUpdatesChannelID ?
+                    "<#" + newGuild.publicUpdatesChannelID + ">" :
+                    "`[NONE]`"}`);
+        };
+
+        if (oldGuild.description !== newGuild.description) {
+            emb.addField("Current Description", newGuild.description || "`[NONE]`")
+                .addField("Original Description", oldGuild.description || "`[NONE]`");
+        };
+
+        if (oldGuild.mfaLevel !== newGuild.mfaLevel) {
+            const level = ["None", "Low", "Medium", "High", "Highest"];
+            emb.addField("Verification Level", `Changed from \`${level[oldGuild.mfaLevel]
+                }\` to \`${level[newGuild.mfaLevel]}\``);
+        }
+
+        if (oldGuild.explicitContentFilter !== newGuild.explicitContentFilter) {
+            emb.addField("Explicit Media Content Filter",
+                `Changed from \`${oldGuild.explicitContentFilter}\` to \`${newGuild.explicitContentFilter}\``);
+        };
+
+        if (oldGuild.vanityURLCode !== newGuild.vanityURLCode) {
+            emb.addField("Vanity URL Code", `Changed from \`${oldGuild.vanityURLCode
+                }\` to \`${newGuild.vanityURLCode}\``);
+        };
+
+        if (oldGuild.ownerID !== newGuild.ownerID) {
+            emb.addField("Ownership", `<@${oldGuild.ownerID}> (\`${oldGuild.owner.user.tag}\` ${oldGuild.ownerID
+                }) have transferred Server Ownership to <@${newGuild.ownerID}> (\`${newGuild.owner.user.tag})\` ${newGuild.ownerID})`);
         };
 
         if (oldGuild.banner !== newGuild.banner) {
@@ -110,23 +152,19 @@ module.exports = async (oldGuild, newGuild) => {
         };
 
         if (cached.iconURL && cached.iconURL !== newIcon) {
-            const newEmb = new MessageEmbed(emb);
-            await elseImageEmbed(logChannel, newEmb, "Icon", "This embed's thumbnail is the server's old icon.\nThe image below is the server's new icon.", cached.iconURL, newIcon);
+            await imageLogEmbed(logChannel, newEmb, "Icon", "This embed's thumbnail is the server's old icon.\nThe image below is the server's new icon.", cached.iconURL, newIcon);
         };
 
         if (oldBanner || newBanner) {
-            const newEmb = new MessageEmbed(emb);
-            await elseImageEmbed(logChannel, newEmb, "Banner", "This embed's thumbnail is the server's old banner.\nThe image below is the server's new banner.", oldBanner, newBanner);
+            await imageLogEmbed(logChannel, newEmb, "Banner", "This embed's thumbnail is the server's old banner.\nThe image below is the server's new banner.", oldBanner, newBanner);
         };
 
         if (oldSplash || newSplash) {
-            const newEmb = new MessageEmbed(emb);
-            await elseImageEmbed(logChannel, newEmb, "Splash Invite", "This embed's thumbnail is the server's old splash invite.\nThe image below is the server's new splash invite.", oldSplash, newSplash);
+            await imageLogEmbed(logChannel, newEmb, "Splash Invite", "This embed's thumbnail is the server's old splash invite.\nThe image below is the server's new splash invite.", oldSplash, newSplash);
         };
 
         if (oldSDisc || newSDisc) {
-            const newEmb = new MessageEmbed(emb);
-            await elseImageEmbed(logChannel, newEmb, "Splash Discovery", "This embed's thumbnail is the server's old splash discovery.\nThe image below is the server's new splash discovery.", oldSDisc, newSDisc);
+            await imageLogEmbed(logChannel, newEmb, "Splash Discovery", "This embed's thumbnail is the server's old splash discovery.\nThe image below is the server's new splash discovery.", oldSDisc, newSDisc);
         };
 
         if (!emb.fields.length) return;
@@ -140,10 +178,11 @@ module.exports = async (oldGuild, newGuild) => {
     newGuild.updateCached("iconURL", newIcon);
 }
 
-async function elseImageEmbed(channel, embed, fieldName, fieldValue, thumbnail, image) {
-    embed.fields = [];
-    embed.addField(fieldName, fieldValue)
+async function imageLogEmbed(channel, embed, fieldName, fieldValue, thumbnail, image) {
+    const newEmb = new MessageEmbed(embed);
+    newEmb.fields = [];
+    newEmb.addField(fieldName, fieldValue)
         .setThumbnail(thumbnail)
         .setImage(image);
-    return trySend(channel.client, channel, embed);
+    return trySend(channel.client, channel, newEmb);
 }
