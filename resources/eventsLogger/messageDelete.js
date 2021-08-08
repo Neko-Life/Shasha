@@ -11,6 +11,7 @@ const getColor = require("../getColor");
  */
 module.exports = async (msg) => {
     if (msg.partial) return;
+    const dateNow = new Date();
     if (msg.guild) {
         if (!msg.guild.DB) await msg.guild.dbLoad();
         msg.guild.updateCached("systemChannelID", msg.guild.systemChannelID);
@@ -25,8 +26,10 @@ module.exports = async (msg) => {
         const emb = defaultEventLogEmbed(msg.guild);
         let audit = {};
         if (msg.guild.member(msg.client.user).hasPermission("VIEW_AUDIT_LOG")) {
-            const the = (await msg.guild.fetchAuditLogs({ limit: 1, type: "MESSAGE_DELETE" })).entries.first();
-            if (the.target.id === msg.id) audit = the;
+            const col = await msg.guild.fetchAuditLogs({ type: "MESSAGE_DELETE" });
+            const colFilter = col.entries.filter((r) => r.target.id === msg.author.id && r.extra.channel.id === msg.channel.id);
+            audit = colFilter.first() || {};
+            // console.log();
         }
         emb.setColor(getColor("yellow"))
             .setTitle((!msg.webhookID ? "Message " + msg.id : "Webhook " + msg.webhookID) + " deleted" + (audit?.executor ? ` by \`${audit.executor.tag}\`` : ""))
