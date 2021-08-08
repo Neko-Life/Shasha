@@ -27,9 +27,11 @@ module.exports = async (msg) => {
         let audit = {};
         if (msg.guild.member(msg.client.user).hasPermission("VIEW_AUDIT_LOG")) {
             const col = await msg.guild.fetchAuditLogs({ type: "MESSAGE_DELETE" });
-            const colFilter = col.entries.filter((r) => r.target.id === msg.author.id && r.extra.channel.id === msg.channel.id);
+            const colFilter = col.entries.filter((r) => r.target.id === msg.author.id &&
+                r.extra.channel.id === msg.channel.id &&
+                (dateNow.valueOf() - r.createdTimestamp) < 60000);
             audit = colFilter.first() || {};
-            // console.log();
+            console.log; // BREAKPOINT
         }
         emb.setColor(getColor("yellow"))
             .setTitle((!msg.webhookID ? "Message " + msg.id : "Webhook " + msg.webhookID) + " deleted" + (audit?.executor ? ` by \`${audit.executor.tag}\`` : ""))
