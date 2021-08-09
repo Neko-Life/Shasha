@@ -27,7 +27,7 @@ module.exports = async (member) => {
         const emb = defaultEventLogEmbed(member.guild),
             INT2 = Interval.fromDateTimes(DateTime.fromJSDate(member.user.createdAt), DateTime.now());
         emb
-            .setTitle("`" + member.user.tag + "` joined")
+            .setTitle((member.user.bot ? "`[BOT]` " : "") + "`" + member.user.tag + "` joined")
             .setThumbnail(member.user.displayAvatarURL({ format: "png", size: 4096, dynamic: true }))
             .setColor(getColor("cyan"))
             .addField("Registered", defaultDateFormat(member.user.createdAt) +

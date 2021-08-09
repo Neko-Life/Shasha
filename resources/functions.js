@@ -547,11 +547,29 @@ function defaultDateFormat(date) {
 }
 
 const defaultSplitMessage = { maxLength: 2000, char: ",", append: ',```', prepend: '```js\n' };
+
+/**
+ * @param {object} oldObj 
+ * @param {object} newObj 
+ */
+function changed(oldObj, newObj) {
+  let diffOld = {}, diffNew = {};
+  for (const key in oldObj) {
+    if (oldObj[key] === newObj[key]) continue;
+    diffOld[key] = oldObj[key];
+  };
+  for (const key in newObj) {
+    if (newObj[key] === oldObj[key]) continue;
+    diffNew[key] = newObj[key];
+  };
+  return { oldObj: diffOld, newObj: diffNew };
+}
+
 module.exports = {
   cleanMentionID, defaultEventLogEmbed,
   multipleMembersFound, multipleRolesFound, multipleChannelsFound,
   findMemberRegEx, findChannelRegEx, findRoleRegEx,
-  getChannelMessage, errLog,
+  getChannelMessage, errLog, changed,
   execCB, ranLog, noPerm, getUTCComparison,
   trySend, tryDelete, tryReact, defaultDateFormat,
   adCheck, defaultImageEmbed, getChannel,

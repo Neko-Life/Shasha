@@ -383,6 +383,38 @@ Structures.extend("DMChannel", u => {
     }
 });
 
+Structures.extend("NewsChannel", u => {
+    return class NewsChannel extends u {
+        constructor(guild, data) {
+            super(guild, data);
+            this.lastMessagesID = [];
+        };
+
+        pushLastMessagesID() {
+            if (this.lastMessagesID.length === 3) {
+                this.lastMessagesID.shift();
+            };
+            return this.lastMessagesID.push(this.lastMessageID);
+        };
+    }
+});
+
+Structures.extend("StoreChannel", u => {
+    return class StoreChannel extends u {
+        constructor(guild, data) {
+            super(guild, data);
+            this.lastMessagesID = [];
+        };
+
+        pushLastMessagesID() {
+            if (this.lastMessagesID.length === 3) {
+                this.lastMessagesID.shift();
+            };
+            return this.lastMessagesID.push(this.lastMessageID);
+        };
+    }
+});
+
 Structures.extend("Message", e => {
     return class Message extends e {
         constructor(client, data, channel) {

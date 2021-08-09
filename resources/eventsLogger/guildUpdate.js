@@ -16,9 +16,10 @@ module.exports = async (oldGuild, newGuild) => {
     if (newGuild.DB.eventChannels.guild) {
         const logChannel = newGuild.channels.cache.get(newGuild.DB.eventChannels.guild);
         if (!logChannel) return;
-        let audit = {}, newBanner, oldBanner, newSplash, oldSplash, newSDisc, oldSDisc;
+        let audit = {}, newBanner, oldBanner, newSplash, oldSplash, newSDisc, oldSDisc, auditPerm;
         const cached = newGuild.DB.cached;
         if (newGuild.me.hasPermission("VIEW_AUDIT_LOG")) {
+            auditPerm = true;
             audit = (await newGuild.fetchAuditLogs({ "limit": 1, "type": "GUILD_UPDATE" })).entries.first();
         } else audit.reason = "Unknown reason";
 
@@ -148,7 +149,8 @@ module.exports = async (oldGuild, newGuild) => {
         if (audit.executor) {
             if (audit.executor.bot)
                 emb.setDescription(audit.reason || "No reason provided");
-            emb.setAuthor(emb.author.name, audit.executor.displayAvatarURL({ size: 128, format: "png", dynamic: true }));
+            emb.setAuthor(emb.author.name, audit.executor.displayAvatarURL({ size: 128, format: "png", dynamic: true }))
+                .addField("Administrator", `<@${audit.executor.id}>\n(${audit.executor.id})`);
         };
 
         if (cached.iconURL && cached.iconURL !== newIcon) {
@@ -167,7 +169,7 @@ module.exports = async (oldGuild, newGuild) => {
             await imageLogEmbed(logChannel, newEmb, "Splash Discovery", "This embed's thumbnail is the server's old splash discovery.\nThe image below is the server's new splash discovery.", oldSDisc, newSDisc);
         };
 
-        if (!emb.fields.length) return;
+        if (audit.executor) if (emb.fields.length < 2) return; else if (!emb.fields.length) return;
 
         newGuild.updateCached("systemChannelID", newGuild.systemChannelID);
         newGuild.updateCached("iconURL", newIcon);
@@ -180,7 +182,7 @@ module.exports = async (oldGuild, newGuild) => {
 
 async function imageLogEmbed(channel, embed, fieldName, fieldValue, thumbnail, image) {
     const newEmb = new MessageEmbed(embed);
-    newEmb.fields = [];
+    newEmb.fields = newEmb.fields.slice(newEmb.fields.length - 1);
     newEmb.addField(fieldName, fieldValue)
         .setThumbnail(thumbnail)
         .setImage(image);

@@ -114,7 +114,11 @@ client.on("guildBanRemove", async (GUILD, USER) => {
 
 client.on("guildUpdate", async (oldGuild, newGuild) => {
     lgr.guildUpdate(oldGuild, newGuild);
-})
+});
+
+client.on("channelUpdate", async (oldChannel, newChannel) => {
+    lgr.channelUpdate(oldChannel, newChannel);
+});
 
 client.on("messageDelete", async (msg) => {
     if (msg.author && !msg.author.DB) await msg.author.dbLoad();

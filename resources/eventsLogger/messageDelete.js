@@ -34,7 +34,7 @@ module.exports = async (msg) => {
             console.log; // BREAKPOINT
         }
         emb.setColor(getColor("yellow"))
-            .setTitle((!msg.webhookID ? "Message " + msg.id : "Webhook " + msg.webhookID) + " deleted" + (audit?.executor ? ` by \`${audit.executor.tag}\`` : ""))
+            .setTitle((!msg.webhookID ? "Message " + msg.id : "Webhook " + msg.webhookID) + " deleted" + (audit?.executor ? ` by ${audit.executor.bot ? "`[BOT]` " : ""}\`${audit.executor.tag}\`` : ""))
             .setDescription(msg.content.length > 0 ? msg.content : "`[EMPTY]`")
             .setURL(msg.url)
             .setFooter(emb.footer.text || "​", msg.author.displayAvatarURL({ size: 128, format: "png", dynamic: true }));
@@ -53,6 +53,7 @@ module.exports = async (msg) => {
         emb.addField("Author", `<@!${msg.author?.id}>\n\`${msg.author?.tag}\`\n(${msg.author?.id})`, true)
             .addField("Channel", `<#${msg.channel?.id}>\n\`${msg.channel?.name}\`\n(${msg.channel?.id})`, true);
         if (audit.executor?.bot) emb.addField("Reason", audit.reason || "No reason provided");
+        if (audit.executor) emb.addField("Moderator", `<@${audit.executor.id}>\n(${audit.executor.id})`);
         return trySend(msg.client, log, emb);
     }
 }

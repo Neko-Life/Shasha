@@ -25,7 +25,7 @@ module.exports = async (member) => {
             INT = Interval.fromDateTimes(LE, DateTime.now());
 
         emb
-            .setTitle("`" + member.user.tag + "` left")
+            .setTitle((member.user.bot ? "`[BOT]` " : "") + "`" + member.user.tag + "` left")
             .setThumbnail(member.user.displayAvatarURL({ format: "png", size: 4096, dynamic: true }))
             .setColor(getColor("yellow"))
             .addField("Nick", "`" + member.displayName + "`")

@@ -20,7 +20,7 @@ module.exports = async (memberold, membernew) => {
         };
         return membernew.user.setDb("cachedAvatarURL", membernew.user.DB.cachedAvatarURL);
     }
-    let log, thumbMes = "", audit = {}, auditPerm, nullReason = false;
+    let log, thumbMes = "", audit = {}, auditPerm, nullReason = false, dateNow = new Date();
     const emb = defaultEventLogEmbed(membernew.guild), oldT = memberold.toJSON().displayAvatarURL;
     const oldAV = membernew.user.DB.cachedAvatarURL || oldT;
     if (oldAV) thumbMes += "This embed's thumbnail is the user's old avatar.\n";
@@ -29,7 +29,7 @@ module.exports = async (memberold, membernew) => {
         if (membernew.guild.me.hasPermission("VIEW_AUDIT_LOG")) {
             // console.log("FETCH UPDATE LOG", membernew.user.tag);
             const the = (await membernew.guild.fetchAuditLogs({ limit: 1, type: "MEMBER_ROLE_UPDATE" })).entries.first();
-            if (the.target.id === memberold.id) audit = the;
+            if (the.target.id === memberold.id && (dateNow.valueOf() - the.createdTimestamp) < 60000) audit = the;
             auditPerm = true;
         }
         if (membernew.roles.cache.size > memberold.roles.cache.size) {
@@ -82,18 +82,24 @@ module.exports = async (memberold, membernew) => {
         }
     }
     // console.log(audit);
-    emb.setTitle("Profile `" + memberold.user.tag + "` updated" +
-        (audit?.executor ? ` by \`${audit.executor.tag}\`` : ""))
-        .setColor(getColor("blue"));
+    emb.setTitle("Profile " + (membernew.user.bot ? "`[BOT]` " : "") + "`" + membernew.user.tag + "` updated" +
+        (audit?.executor ? ` by ${audit.executor.bot ? "`[BOT]` " : ""}\`${audit.executor.tag}\`` : ""))
+        .setColor(getColor("blue"))
+        .addField("User", `<@${membernew.user.id}>\n(${membernew.user.id})`, true);
     if (emb.fields[0]?.name !== "Avatar")
         emb.setFooter(emb.footer.text || "​", NEWAV);
     if (!nullReason) {
         if (auditPerm) {
             emb.setDescription((audit?.reason || "No reason provided") + (emb.description ? "\n\n" + emb.description : ""));
-        } else emb.setDescription("Unknown reason\n\n" + (emb.description ? "\n\n" + emb.description : ""));
-    }
+            console.log; // BREAKPOINT
+        } else emb.setDescription("Unknown reason" + (emb.description ? "\n\n" + emb.description : ""));
+    };
+    if (emb.length < 2) return;
+    if (audit.executor && audit.executor?.id !== membernew.user.id) {
+        emb.addField("Moderator", `<@${audit.executor.id}>\n(${audit.executor.id})`, true);
+    };
     membernew.user.DB.cachedAvatarURL = NEWAV;
     membernew.user.setDb("cachedAvatarURL", membernew.user.DB.cachedAvatarURL);
-    if (!emb.fields || emb.fields.length === 0) return;
+    if (!emb.fields || emb.fields.length < 2) return;
     return trySend(membernew.client, log, emb);
 }

@@ -26,7 +26,7 @@ module.exports = async (GUILD, USER) => {
             emb.setDescription(audit?.reason || "No reason provided");
         } else emb.setDescription("Unknown reason");
 
-        emb.setTitle(`\`${USER.tag}\` unbanned` + (audit?.executor ? ` by \`${audit.executor.tag}\`` : ""))
+        emb.setTitle(`${USER.bot ? "`[BOT]` " : ""}\`${USER.tag}\` unbanned` + (audit?.executor ? ` by ${audit.executor.bot ? "`[BOT]` " : ""}\`${audit.executor.tag}\`` : ""))
             .setColor(getColor("red"))
             .setThumbnail(USER.displayAvatarURL({ size: 4096, format: "png", dynamic: true }))
             .addField("User", `<@${USER.id}>\n(${USER.id})`);

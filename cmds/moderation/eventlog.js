@@ -7,7 +7,7 @@ const ARGS_TEXT = `**Set configuration using**` +
     `\`--[e|d]\` Message [edit|delete],\n\`  -i\` Ignore channel,\n\`--j\` Member Join,\n\`--l\` Member Leave,\n` +
     `\`--p\` Member Profile Update,\n\`--mr\` Member Roles Update,\n\`--b\` Ban,\n\`--u\` Unban,\n` +
     `\`--g\` Server Update,\n\`--r\` Role Update,\n` +
-    `\`--c\` Channel Update,\n\`--em\` Emote Update,\n\`--i\` Server Invites.\n` +
+    `\`--c\` Channel Update - **[REQUIRE \`VIEW_AUDIT_LOG\`]**,\n\`--em\` Emote Update,\n\`--i\` Server Invites.\n` +
     `\n**Examples:**\n\`\`\`\n--e #message-edited-log -i #admin, #staff --p #member-profile --b #ban-logs\`\`\` \`\`\`\n--rm --e --p --b\`\`\``;
 
 module.exports = class eventlog extends commando.Command {
