@@ -94,7 +94,7 @@ module.exports = async (memberold, membernew) => {
             console.log; // BREAKPOINT
         } else emb.setDescription("Unknown reason" + (emb.description ? "\n\n" + emb.description : ""));
     };
-    if (emb.length < 2) return;
+    if (emb.fields.length < 2) return;
     if (audit.executor && audit.executor?.id !== membernew.user.id) {
         emb.addField("Moderator", `<@${audit.executor.id}>\n(${audit.executor.id})`, true);
     };
