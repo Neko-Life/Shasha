@@ -4,7 +4,6 @@ const { Message } = require("discord.js");
 const { blockChannelUpdateEvents, unblockChannelUpdateEvents } = require("../../../resources/eventsLogger/channelUpdate");
 const { trySend, parseDash, defaultImageEmbed, defaultSplitMessage } = require("../../../resources/functions");
 const getColor = require("../../../resources/getColor");
-let block = false;
 
 module.exports = async (msg, arg) => {
     if (!msg.member.isAdmin) return trySend(msg.client, msg, "<@" + msg.author + "> you're not an Administrator <:nekohmLife:846371737644957786>");
@@ -25,11 +24,10 @@ module.exports = async (msg, arg) => {
     if (data.color) emb.setColor(data.color);
     await trySend(msg.client, msg, emb);
     const RR = await msg.channel.awaitMessages((r) => r.author === msg.author, { max: 1, time: 30000 });
-    if (RR.first()?.content.toLowerCase() === "yes" && !block) return detonate(msg, data); else return trySend(msg.client, msg, "Create Mute Role: **Cancelled**");
+    if (RR.first()?.content.toLowerCase() === "yes") return detonate(msg, data); else return trySend(msg.client, msg, "Create Mute Role: **Cancelled**");
 }
 
 async function detonate(msg, data) {
-    block = true;
     const map = msg.guild.channels.cache.map(r => r);
     const pleaseWait = await trySend(msg.client, msg, `Setting up for ${map.length} channel${map.length < 2 ? "" : "s"}... This message will be edited when done.`);
     data.permissions = 0;
@@ -51,6 +49,5 @@ async function detonate(msg, data) {
         trySend(msg.client, msg, { content: mes + "<#" + cant.join(">,\n<#") + ">", split: split });
     }
     msg.guild.setDb("settings", msg.guild.DB.settings);
-    block = false;
     return pleaseWait.edit(`Create Mute Role: ${ROLE} **Done**`);
 }
