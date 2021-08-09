@@ -38,34 +38,34 @@ async function run(oldChannel, newChannel) {
     let fetchAudit, fetchAR;
 
     console.log; // BREAKPOINT
-    if (oldChannel.name !== undefined && oldChannel.name !== newChannel.name) {
+    if (oldChannel.name !== newChannel.name) {
         if (!fetchAudit) fetchAudit = true;
-        emb.addField("Name", `Changed from \`${oldChannel.name}\` to \`${newChannel.name}\``);
+        emb.addField("Name", `Changed from \`${oldChannel.name || "Unknown"}\` to \`${newChannel.name}\``);
     };
     if (newChannel.type !== "category") {
-        if (oldChannel.parent !== undefined && oldChannel.parent !== newChannel.parent) {
+        if (oldChannel.parent !== newChannel.parent) {
             if (!fetchAudit) fetchAudit = true;
             emb.addField("Parent Category", `Moved from \`${oldChannel.parent?.name ||
                 "[NONE]"}\` to \`${newChannel.parent?.name || "[NONE]"}\``);
         };
     };
     if (newChannel.type !== "voice" && newChannel.type !== "category") {
-        if (oldChannel.topic !== undefined && oldChannel.topic !== newChannel.topic) {
+        if (oldChannel.topic !== newChannel.topic) {
             if (!fetchAudit) fetchAudit = true;
             emb.addField("Old Topic", oldChannel.topic || "`[NONE]`");
             emb.addField("New Topic", newChannel.topic || "`[NONE]`");
         };
-        if (oldChannel.nsfw !== undefined && oldChannel.nsfw !== newChannel.nsfw) {
+        if (oldChannel.nsfw !== newChannel.nsfw) {
             if (!fetchAudit) fetchAudit = true;
             emb.addField("NSFW", newChannel.nsfw ? "`Enabled`" : "`Disabled`");
         };
-        if (oldChannel.type !== undefined && oldChannel.type !== newChannel.type) {
+        if (oldChannel.type !== newChannel.type) {
             if (!fetchAudit) fetchAudit = true;
             emb.addField("Announcement", newChannel.type === "news" ?
                 "`Enabled`" : "`Disabled`");
         };
         if (newChannel.type === "text") {
-            if (oldChannel.rateLimitPerUser !== undefined && oldChannel.rateLimitPerUser !== newChannel.rateLimitPerUser) {
+            if (oldChannel.rateLimitPerUser !== newChannel.rateLimitPerUser) {
                 if (!fetchAudit) fetchAudit = true;
                 emb.addField("Slowmode",
                     `Changed from \`${oldChannel.rateLimitPerUser ?
@@ -80,15 +80,15 @@ async function run(oldChannel, newChannel) {
             };
         }
     } else if (newChannel.type === "voice") {
-        if (oldChannel.userLimit !== undefined && oldChannel.userLimit !== newChannel.userLimit) {
+        if (oldChannel.userLimit !== newChannel.userLimit) {
             if (!fetchAudit) fetchAudit = true;
             emb.addField("User Limit", `Changed from \`${oldChannel.userLimit || "Unlimited"
                 }\` to \`${newChannel.userLimit || "Unlimited"}\``);
         };
-        if (oldChannel.bitrate !== undefined && oldChannel.bitrate !== newChannel.bitrate) {
+        if (oldChannel.bitrate !== newChannel.bitrate) {
             if (!fetchAudit) fetchAudit = true;
             emb.addField("Bitrate", `Changed from \`${oldChannel.bitrate / 1000
-                } Kbps\` to \`${newChannel.bitrate / 1000} Kbps\``);
+                || "Unknown"} Kbps\` to \`${newChannel.bitrate / 1000} Kbps\``);
         };
 
     };
@@ -120,11 +120,12 @@ async function run(oldChannel, newChannel) {
             };
             emb.addField(`Changed override`, `**For ${overwrite.new.type}** ${overwrite.new.type === "member" ?
                 `<@${overwrite.new.id}> (${overwrite.new.id})` : overwrite.new.id === newChannel.guild.id ? "@everyone" : `<@&${overwrite.new.id}> (${overwrite.new.id})`
-                }\n` + "**Approved before:**```js\n" +
-                (allowBefore.join(", ") || "NONE") + "```**Currently approved:**```js\n" +
-                (allowAfter.join(", ") || "NONE") + "```**Denied before:**```js\n" +
-                (denyBefore.join(", ") || "NONE") + "```**Currently denied:**```js\n" +
-                (denyAfter.join(", ") || "NONE") + "```");
+                }\n` + ((allowBefore.length || allowAfter.length) ? "**Approved before:**```js\n" +
+                    (allowBefore.join(", ") || "NONE") + "```**Currently approved:**```js\n" +
+                    (allowAfter.join(", ") || "NONE") + "```" : "") +
+                ((denyBefore.length || denyAfter.length) ? "**Denied before:**```js\n" +
+                    (denyBefore.join(", ") || "NONE") + "```**Currently denied:**```js\n" +
+                    (denyAfter.join(", ") || "NONE") + "```" : ""));
             console.log; // BREAKPOINT
         }
     };
