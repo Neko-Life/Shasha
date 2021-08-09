@@ -155,7 +155,7 @@ module.exports = class mute extends commando.Command {
 
                 emb.addField("Muted", mutedStr || "`[NONE]`")
                     .addField("At", defaultDateFormat(duration.invoked), true)
-                    .addField("Until", duration.until ? defaultDateFormat(duration.until) : "Never", true)
+                    .addField("Until", duration.until ? defaultDateFormat(duration.until) : "Never", true);
             }
             emb.addField("For", duration.duration?.strings.join(" ") || "Indefinite");
 
