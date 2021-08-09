@@ -197,7 +197,7 @@ async function run(oldChannel, newChannel) {
 
     emb.setTitle((newChannel.type === "voice" ? "Voice " : "") +
         (newChannel.type === "category" ? "Category" : "Channel") +
-        "`" + newChannel.name + "` updated" + (audit?.executor ?
+        " `" + newChannel.name + "` updated" + (audit?.executor ?
             ` by ${audit.executor.bot ? "`[BOT]` " : ""
             }\`${audit.executor.tag}\`` : ""))
         .setColor(getColor("cyan"))
