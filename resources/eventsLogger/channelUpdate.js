@@ -1,6 +1,8 @@
 'use strict';
 
 const { GuildChannel, Guild, GuildAuditLogsEntry } = require("discord.js");
+const { Interval } = require("luxon");
+const { intervalToDuration } = require("../../cmds/moderation/src/duration");
 const { defaultEventLogEmbed, changed, trySend, wait } = require("../functions");
 const getColor = require("../getColor");
 let blockChannelUpdate = false;
@@ -34,6 +36,62 @@ async function run(oldChannel, newChannel) {
 
     const emb = defaultEventLogEmbed(newChannel.guild);
     let fetchAudit, fetchAR;
+
+    console.log; // BREAKPOINT
+    if (oldChannel.name !== undefined && oldChannel.name !== newChannel.name) {
+        if (!fetchAudit) fetchAudit = true;
+        emb.addField("Name", `Changed from \`${oldChannel.name}\` to \`${newChannel.name}\``);
+    };
+    if (newChannel.type !== "category") {
+        if (oldChannel.parent !== undefined && oldChannel.parent !== newChannel.parent) {
+            if (!fetchAudit) fetchAudit = true;
+            emb.addField("Parent Category", `Moved from \`${oldChannel.parent?.name ||
+                "[NONE]"}\` to \`${newChannel.parent?.name || "[NONE]"}\``);
+        };
+    };
+    if (newChannel.type !== "voice" && newChannel.type !== "category") {
+        if (oldChannel.topic !== undefined && oldChannel.topic !== newChannel.topic) {
+            if (!fetchAudit) fetchAudit = true;
+            emb.addField("Old Topic", oldChannel.topic || "`[NONE]`");
+            emb.addField("New Topic", newChannel.topic || "`[NONE]`");
+        };
+        if (oldChannel.nsfw !== undefined && oldChannel.nsfw !== newChannel.nsfw) {
+            if (!fetchAudit) fetchAudit = true;
+            emb.addField("NSFW", newChannel.nsfw ? "`Enabled`" : "`Disabled`");
+        };
+        if (oldChannel.type !== undefined && oldChannel.type !== newChannel.type) {
+            if (!fetchAudit) fetchAudit = true;
+            emb.addField("Announcement", newChannel.type === "news" ?
+                "`Enabled`" : "`Disabled`");
+        };
+        if (newChannel.type === "text") {
+            if (oldChannel.rateLimitPerUser !== undefined && oldChannel.rateLimitPerUser !== newChannel.rateLimitPerUser) {
+                if (!fetchAudit) fetchAudit = true;
+                emb.addField("Slowmode",
+                    `Changed from \`${oldChannel.rateLimitPerUser ?
+                        intervalToDuration(
+                            Interval.after(dateNow, oldChannel.rateLimitPerUser * 1000)
+                        ).strings.join(" ") : "[NONE]"
+                    }\` to \`${newChannel.rateLimitPerUser ?
+                        intervalToDuration(
+                            Interval.after(dateNow, newChannel.rateLimitPerUser * 1000)
+                        ).strings.join(" ") : "`[NONE]`"
+                    }\``)
+            };
+        }
+    } else if (newChannel.type === "voice") {
+        if (oldChannel.userLimit !== undefined && oldChannel.userLimit !== newChannel.userLimit) {
+            if (!fetchAudit) fetchAudit = true;
+            emb.addField("User Limit", `Changed from \`${oldChannel.userLimit || "Unlimited"
+                }\` to \`${newChannel.userLimit || "Unlimited"}\``);
+        };
+        if (oldChannel.bitrate !== undefined && oldChannel.bitrate !== newChannel.bitrate) {
+            if (!fetchAudit) fetchAudit = true;
+            emb.addField("Bitrate", `Changed from \`${oldChannel.bitrate / 1000
+                } Kbps\` to \`${newChannel.bitrate / 1000} Kbps\``);
+        };
+
+    };
 
     if (overwritesUpdates.length) {
         for (const overwrite of overwritesUpdates) {
@@ -136,9 +194,15 @@ async function run(oldChannel, newChannel) {
         };
     };
 
-    emb.setTitle("Channel `" + newChannel.name + "` updated" + (audit?.executor ? ` by ${audit.executor.bot ? "`[BOT]` " : ""}\`${audit.executor.tag}\`` : ""))
+    emb.setTitle((newChannel.type === "voice" ? "Voice " : "") +
+        (newChannel.type === "category" ? "Category" : "Channel") +
+        "`" + newChannel.name + "` updated" + (audit?.executor ?
+            ` by ${audit.executor.bot ? "`[BOT]` " : ""
+            }\`${audit.executor.tag}\`` : ""))
         .setColor(getColor("cyan"))
-        .addField("Channel", `<#${newChannel.id}>\n(${newChannel.id})`, true);
+        .addField((newChannel.type === "voice" ? "Voice " : "") +
+            (newChannel.type === "category" ? "Category" : "Channel"),
+            `<#${newChannel.id}>\n(${newChannel.id})`, true);
     if (emb.fields.length < 2) return;
     if (audit?.executor) {
         emb.setAuthor(emb.author.name, audit.executor.displayAvatarURL({ size: 128, format: "png", dynamic: true }))
@@ -173,4 +237,4 @@ function unblockChannelUpdateEvents() {
     console.log("CHANNEL UPDATE EVENTS UNBLOCKED. STATE:", blockChannelUpdate);
 };
 
-module.exports = { run, blockChannelUpdateEvents, unblockChannelUpdateEvents }
+module.exports = { run, blockChannelUpdateEvents, unblockChannelUpdateEvents, getAudit }
