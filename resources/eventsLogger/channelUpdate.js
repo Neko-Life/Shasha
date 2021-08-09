@@ -3,13 +3,14 @@
 const { GuildChannel, Guild, GuildAuditLogsEntry } = require("discord.js");
 const { defaultEventLogEmbed, changed, trySend, wait } = require("../functions");
 const getColor = require("../getColor");
+let blockChannelUpdate = false;
 
 /**
  * @param {GuildChannel} oldChannel 
  * @param {GuildChannel} newChannel 
  */
-module.exports = async (oldChannel, newChannel) => {
-    await wait(2000);
+async function run(oldChannel, newChannel) {
+    await wait(4000);
     const dateNow = new Date();
     if (!newChannel.guild.DB) await newChannel.guild.dbLoad();
     if (!newChannel.guild.DB.eventChannels?.guild) return;
@@ -76,6 +77,7 @@ module.exports = async (oldChannel, newChannel) => {
             const added = newChannel.permissionOverwrites.get(key);
             if (!newChannel.guild.roles.cache.get((removed || added).id)) continue;
             if (removed) {
+                if (blockChannelUpdate && removed.id === newChannel.guild.DB.settings.mute.role) return;
                 if (!fetchAR) fetchAR = "R";
                 const allow = removed.allow.serialize(), deny = removed.deny.serialize();
                 let all = [], den = [];
@@ -93,6 +95,7 @@ module.exports = async (oldChannel, newChannel) => {
                     "**Denied:**```js\n" + (den.join(", ") || "NONE") + "```");
                 console.log; // BREAKPOINT
             } else if (added) {
+                if (blockChannelUpdate && added.id === newChannel.guild.DB.settings.mute.role) return;
                 if (!fetchAR) fetchAR = "A";
                 const allow = added.allow.serialize(), deny = added.deny.serialize();
                 let all = [], den = [];
@@ -159,3 +162,15 @@ async function getAudit(guild, dateNow, id, option, filter = (value, key, collec
     const fil = col.entries.filter(filter);
     return fil.first();
 };
+
+function blockChannelUpdateEvents() {
+    blockChannelUpdate = true;
+    console.log("CHANNEL UPDATE EVENTS BLOCKED. STATE:", blockChannelUpdate);
+};
+
+function unblockChannelUpdateEvents() {
+    blockChannelUpdate = false;
+    console.log("CHANNEL UPDATE EVENTS UNBLOCKED. STATE:", blockChannelUpdate);
+};
+
+module.exports = { run, blockChannelUpdateEvents, unblockChannelUpdateEvents }

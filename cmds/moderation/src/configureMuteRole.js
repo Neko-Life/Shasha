@@ -1,6 +1,7 @@
 'use strict';
 
 const { Message } = require("discord.js");
+const { blockChannelUpdateEvents, unblockChannelUpdateEvents } = require("../../../resources/eventsLogger/channelUpdate");
 const { trySend, parseDash, defaultImageEmbed, defaultSplitMessage } = require("../../../resources/functions");
 const getColor = require("../../../resources/getColor");
 
@@ -34,9 +35,11 @@ async function detonate(msg, data) {
     msg.guild.DB.settings.mute.role = ROLE.id;
     let cant = [];
     if (ROLE) {
+        blockChannelUpdateEvents();
         for (const U of map) {
             await U.updateOverwrite(ROLE, { SEND_MESSAGES: false, CONNECT: false }, "Create Mute Role").catch(() => cant.push(U.id));
-        }
+        };
+        setTimeout(unblockChannelUpdateEvents, 5000);
     } else return pleaseWait.edit("Create Mute Role: Can't create role. Operation cancelled");
     if (cant.length > 0) {
         const split = defaultSplitMessage,

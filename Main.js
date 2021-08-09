@@ -117,7 +117,7 @@ client.on("guildUpdate", async (oldGuild, newGuild) => {
 });
 
 client.on("channelUpdate", async (oldChannel, newChannel) => {
-    lgr.channelUpdate(oldChannel, newChannel);
+    lgr.channelUpdate.run(oldChannel, newChannel);
 });
 
 client.on("messageDelete", async (msg) => {
