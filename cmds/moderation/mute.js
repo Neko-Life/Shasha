@@ -120,7 +120,11 @@ module.exports = class mute extends commando.Command {
 
             for (const EXEC of targetUsers) {
                 try {
-                    await EXEC.mute(msg.guild, { duration: duration, infraction: infractionToDoc.infraction, moderator: msg.member }, reason);
+                    await EXEC.mute(msg.guild, {
+                        duration: duration,
+                        infraction: infractionToDoc.infraction,
+                        moderator: msg.member
+                    }, reason);
                     muted.push(EXEC.id);
                 } catch (e) {
                     if (/Missing Permissions|someone with higher position/.test(e.message)) cant.push(EXEC.id);
@@ -146,7 +150,8 @@ module.exports = class mute extends commando.Command {
                 mutedStr = mutedStr.slice(0, -2);
 
                 if (mutedArr.length) mutedStr += ` and ${mutedArr.length} more...`;
-                if (already.length) emb.addField("Already muted", "<@" + already.join(">, <@") + ">\n\nDuration updated for these users");
+                if (already.length) emb.addField("Already muted", "<@" + already.join(">, <@") +
+                    ">\n\nDuration updated for these users");
 
                 emb.addField("Muted", mutedStr || "`[NONE]`")
                     .addField("At", defaultDateFormat(duration.invoked), true)
@@ -154,7 +159,8 @@ module.exports = class mute extends commando.Command {
             }
             emb.addField("For", duration.duration?.strings.join(" ") || "Indefinite");
 
-            if (cant.length) emb.addField("Can't mute", "<@" + cant.join(">, <@") + ">\n\n**You can't mute someone with higher position than you <:nekokekLife:852865942530949160>**");
+            if (cant.length) emb.addField("Can't mute", "<@" + cant.join(">, <@") +
+                ">\n\n**You can't mute someone with the same or higher position than you <:nekokekLife:852865942530949160>**");
 
             return trySend(msg.client, msg, { content: resultMsg, embed: emb });
         }

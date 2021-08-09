@@ -45,7 +45,8 @@ module.exports = class ban extends commando.Command {
                 if (ARG === "--" || ARG.trim().length < 1) continue;
                 if (ARG.startsWith("d ")) {
                     const U = ARG.slice(2).trim();
-                    if (U.length && !/\D/.test(U)) daysToDeleteMessages = parseInt(U, 10); else return trySend(msg.client, msg, "Invalid number of days to delete messages!");
+                    if (U.length && !/\D/.test(U)) daysToDeleteMessages = parseInt(U, 10); else return trySend(msg.client,
+                        msg, "Invalid number of days to delete messages!");
                     continue;
                 }
                 else if (CHECK_FOR_DURATION_REGEXP.test(ARG.trim()))
@@ -93,7 +94,8 @@ module.exports = class ban extends commando.Command {
                 bannedStr = bannedStr.slice(0, -2);
 
                 if (bannedArr.length) bannedStr += ` and ${bannedArr.length} more...`;
-                if (already.length) emb.addField("Already banned", "<@" + already.join(">, <@") + ">\n\nDuration updated for these users");
+                if (already.length) emb.addField("Already banned", "<@" + already.join(">, <@") +
+                    ">\n\nDuration updated for these users");
 
                 emb.addField("Banned", bannedStr || "`[NONE]`")
                     .addField("At", defaultDateFormat(pDuration.invoked), true)
@@ -101,7 +103,8 @@ module.exports = class ban extends commando.Command {
             }
             emb.addField("For", pDuration.duration?.strings.join(" ") || "Indefinite");
 
-            if (cant.length) emb.addField("Can't ban", "<@" + cant.join(">, <@") + ">\n\n**You can't ban someone with higher position than you <:nekokekLife:852865942530949160>**")
+            if (cant.length) emb.addField("Can't ban", "<@" + cant.join(">, <@") +
+                ">\n\n**You can't ban someone with the same or higher position than you <:nekokekLife:852865942530949160>**");
 
             return trySend(msg.client, msg, { content: resultMsg, embed: emb });
         }
