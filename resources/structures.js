@@ -226,7 +226,9 @@ Structures.extend("User", u => {
                 !(data.moderator.idAdmin || data.moderator.hasPermission("MANAGE_ROLES"))) throw new Error("Missing Permissions");
 
             if (MEM) {
-                if (data.moderator.roles.highest.position < MEM.roles.highest.position || MEM.roles.highest.position > guild.member(this.client.user).roles.highest.position) throw new Error("You can't mute someone with higher position than you <:nekokekLife:852865942530949160>");
+                if (data.moderator.roles.highest.position <= MEM.roles.highest.position ||
+                    MEM.roles.highest.position >= guild.member(this.client.user).roles.highest.position)
+                    throw new Error("You can't mute someone with higher position than you <:nekokekLife:852865942530949160>");
                 await MEM.mute(data, reason);
             }
 
@@ -298,8 +300,8 @@ Structures.extend("User", u => {
             if (!(CL.isAdmin || CL.hasPermission("BAN_MEMBERS")) ||
                 !(data.moderator.isAdmin || data.moderator.hasPermission("BAN_MEMBERS"))) throw new Error("Missing Permissions");
             if (MEM) {
-                if (data.moderator.roles.highest.position < MEM.roles.highest.position ||
-                    MEM.roles.highest.position > CL.roles.highest.position)
+                if (data.moderator.roles.highest.position <= MEM.roles.highest.position ||
+                    MEM.roles.highest.position >= CL.roles.highest.position)
                     throw new Error("You can't ban someone with higher position than you <:nekokekLife:852865942530949160>");
             }
             if (!guild.DB) await guild.dbLoad();
@@ -509,14 +511,14 @@ Structures.extend("GuildMember", u => {
          */
         async setLeaveRoles(roles = []) {
             if (!this.DB) await this.dbLoad();
-            const banned = await this.guild.fetchBan(this.user).catch(() => { });
-            // console.log("BANNED:", banned ? true : false);
-            if (banned) return;
             const kicked = (await this.guild.fetchAuditLogs({ "limit": 1, "type": "MEMBER_KICK" }).catch(() => { }))?.entries?.first();
             if (kicked?.target.id === this.id) {
                 // console.log("KICKED:", true);
                 return;
             }
+            const banned = await this.guild.fetchBan(this.user).catch(() => { });
+            // console.log("BANNED:", banned ? true : false);
+            if (banned) return;
             return this.setDb("leaveRoles", roles);
         }
 
