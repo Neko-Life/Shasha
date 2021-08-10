@@ -1,6 +1,6 @@
 'use strict';
 
-const { GuildChannel, Guild, GuildAuditLogsEntry } = require("discord.js");
+const { GuildChannel, Guild, GuildAuditLogsEntry, Role } = require("discord.js");
 const { Interval } = require("luxon");
 const { intervalToDuration } = require("../../cmds/moderation/src/duration");
 const { defaultEventLogEmbed, changed, trySend, wait } = require("../functions");
@@ -12,32 +12,39 @@ let blockChannelUpdate = false;
  * @param {GuildChannel} newChannel 
  */
 async function run(oldChannel, newChannel) {
-    await wait(4000);
     const dateNow = new Date();
     if (!newChannel.guild.DB) await newChannel.guild.dbLoad();
     if (!newChannel.guild.DB.eventChannels?.guild) return;
     const logChannel = newChannel.guild.channels.cache.get(newChannel.guild.DB.eventChannels.guild);
     if (!logChannel) return;
 
-    let audit;
+    const diff = newChannel.permissionOverwrites.difference(oldChannel.permissionOverwrites),
+        emb = defaultEventLogEmbed(newChannel.guild);
 
-    const diff = newChannel.permissionOverwrites.difference(oldChannel.permissionOverwrites);
-    let overwritesUpdates = [];
+    let audit, fetchAudit, fetchOverwrites,
+        permissionsOverwrites = new Map(),
+        permissionsAdded = new Map(),
+        permissionsRemoved = new Map();
 
     for (const [key, val] of newChannel.permissionOverwrites) {
         const oldOverwrites = oldChannel.permissionOverwrites.get(key);
         if (!oldOverwrites) continue;
         if (oldOverwrites?.allow.bitfield !== val.allow.bitfield ||
             oldOverwrites?.deny.bitfield !== val.deny.bitfield) {
-            overwritesUpdates.push({ new: val, old: oldOverwrites });
-            console.log; // BREAKPOINT
-        }
+            permissionsOverwrites.set(key, { old: oldOverwrites, new: val });
+            if (!fetchOverwrites) fetchOverwrites = true;
+        };
     };
 
-    const emb = defaultEventLogEmbed(newChannel.guild);
-    let fetchAudit, fetchAR;
+    if (diff.size) {
+        for (const [key, val] of diff) {
+            const removed = oldChannel.permissionOverwrites.get(key);
+            const added = newChannel.permissionOverwrites.get(key);
+            if (added) permissionsAdded.set(key, added);
+            if (removed) permissionsRemoved.set(key, removed);
+        };
+    };
 
-    console.log; // BREAKPOINT
     if (oldChannel.name !== newChannel.name) {
         if (!fetchAudit) fetchAudit = true;
         emb.addField("Name", `Changed from \`${oldChannel.name || "Unknown"}\` to \`${newChannel.name}\``);
@@ -67,6 +74,7 @@ async function run(oldChannel, newChannel) {
         if (newChannel.type === "text") {
             if (oldChannel.rateLimitPerUser !== newChannel.rateLimitPerUser) {
                 if (!fetchAudit) fetchAudit = true;
+
                 emb.addField("Slowmode",
                     `Changed from \`${oldChannel.rateLimitPerUser ?
                         intervalToDuration(
@@ -90,17 +98,98 @@ async function run(oldChannel, newChannel) {
             emb.addField("Bitrate", `Changed from \`${oldChannel.bitrate / 1000
                 || "Unknown"} Kbps\` to \`${newChannel.bitrate / 1000} Kbps\``);
         };
-
     };
 
-    if (overwritesUpdates.length) {
-        for (const overwrite of overwritesUpdates) {
-            const oldAllow = overwrite.old?.allow.serialize(),
-                oldDeny = overwrite.old?.deny.serialize(),
-                newAllow = overwrite.new.allow.serialize(),
-                newDeny = overwrite.new.deny.serialize(),
+    if (diff.size && newChannel.guild.me.hasPermission("VIEW_AUDIT_LOG")) {
+        let getID, removed, added;
+
+        if (permissionsRemoved.size) {
+            audit = await getAudit(newChannel.guild, dateNow, newChannel.id,
+                { type: "CHANNEL_OVERWRITE_DELETE" });
+            getID = audit.changes[0].old;
+            await wait(4000);
+        }
+        else if (permissionsAdded.size) {
+            await wait(1000);
+            audit = await getAudit(newChannel.guild, dateNow, newChannel.id,
+                { type: "CHANNEL_OVERWRITE_CREATE" });
+            getID = audit.changes[0].new;
+            added = permissionsAdded.get(getID);
+        };
+
+        if ((audit.extra instanceof Role) ? newChannel.guild.roles.cache.get(getID) :
+            newChannel.guild.member(getID)) {
+            if (audit.action === "CHANNEL_OVERWRITE_DELETE") {
+                for (const [key, val] of permissionsRemoved) {
+                    removed = oldChannel.permissionOverwrites.get(key);
+
+                    if (blockChannelUpdate &&
+                        removed.id === newChannel.guild.DB.settings.mute.role) return;
+
+                    const allow = removed.allow.serialize(),
+                        deny = removed.deny.serialize();
+                    let all = [], den = [];
+
+                    for (const K in allow) {
+                        if (!allow[K]) continue;
+                        all.push(K);
+                    };
+                    for (const K in deny) {
+                        if (!deny[K]) continue;
+                        den.push(K);
+                    };
+
+                    emb.addField(`Removed override`,
+                        `**For ${removed.type}** ${removed.type === "member" ?
+                            `<@${removed.id}> (${removed.id})` :
+                            removed.id === newChannel.guild.id ?
+                                "@everyone" : `<@&${removed.id}> (${removed.id})`
+                        }\n` +
+                        "**Approved:**```js\n" + (all.join(", ") || "NONE") + "```" +
+                        "**Denied:**```js\n" + (den.join(", ") || "NONE") + "```");
+                }
+            } else if (audit.action === "CHANNEL_OVERWRITE_CREATE") {
+                if (blockChannelUpdate &&
+                    added.id === newChannel.guild.DB.settings.mute.role) return;
+
+                const allow = added.allow.serialize(), deny = added.deny.serialize();
+                let all = [], den = [];
+
+                for (const K in allow) {
+                    if (!allow[K]) continue;
+                    all.push(K);
+                };
+                for (const K in deny) {
+                    if (!deny[K]) continue;
+                    den.push(K);
+                };
+
+                emb.addField(`Added override`,
+                    `**For ${added.type}** ${added.type === "member" ?
+                        `<@${added.id}> (${added.id})` :
+                        added.id === newChannel.guild.id ?
+                            "@everyone" : `<@&${added.id}> (${added.id})`
+                    }\n` +
+                    "**Approved:**```js\n" + (all.join(", ") || "NONE") + "```" +
+                    "**Denied:**```js\n" + (den.join(", ") || "NONE") + "```");
+            }
+        }
+    };
+
+    if (fetchOverwrites && newChannel.guild.me.hasPermission("VIEW_AUDIT_LOG")) {
+        await wait(1000);
+        audit = await getAudit(newChannel.guild, dateNow, newChannel.id,
+            { type: "CHANNEL_OVERWRITE_UPDATE" });
+        if (audit.target.id === newChannel.id) {
+            const val = permissionsOverwrites.entries().next().value[1];
+
+            const oldAllow = val.old.allow.serialize(),
+                oldDeny = val.old.deny.serialize(),
+                newAllow = val.new.allow.serialize(),
+                newDeny = val.new.deny.serialize(),
                 allowDiff = changed(oldAllow, newAllow),
                 denyDiff = changed(oldDeny, newDeny);
+
             let allowBefore = [], allowAfter = [], denyBefore = [], denyAfter = [], neutral = [];
             for (const u in allowDiff.oldObj) {
                 if (!allowDiff.oldObj[u]) continue;
@@ -118,6 +207,7 @@ async function run(oldChannel, newChannel) {
                 if (!denyDiff.newObj[u]) continue;
                 denyAfter.push(u);
             };
+
             for (const U in newAllow) {
                 if (
                     !newAllow[U] &&
@@ -134,106 +224,49 @@ async function run(oldChannel, newChannel) {
                 ) neutral.push(U);
                 else continue;
             }
+
             emb.addField(`Changed override`,
-                `**For ${overwrite.new.type}** ${overwrite.new.type === "member" ?
-                    `<@${overwrite.new.id}> (${overwrite.new.id})` :
-                    overwrite.new.id === newChannel.guild.id ?
-                        "@everyone" : `<@&${overwrite.new.id}> (${overwrite.new.id})`
+                `**For ${val.new.type}** ${val.new.type === "member" ?
+                    `<@${val.new.id}> (${val.new.id})` :
+                    val.new.id === newChannel.guild.id ?
+                        "@everyone" : `<@&${val.new.id}> (${val.new.id})`
                 }\n` +
                 (
-                    (allowBefore.length || allowAfter.length) ?
+                    allowBefore.length ?
                         "**Approved before:**```js\n" +
-                        (allowBefore.join(", ") || "NONE") +
-                        "```**Currently approved:**```js\n" +
-                        (allowAfter.join(", ") || "NONE") +
+                        allowBefore.join(", ") +
+                        "```" : ""
+                ) +
+                (
+                    denyBefore.length ?
+                        "** Denied before:** ```js\n" +
+                        denyBefore.join(", ") +
                         "```" : ""
                 ) +
                 (
                     neutral.length ?
-                        "**Defaulted:**```js\n" + neutral.join(", ") + "```" : ""
+                        "**Defaulted:**```js\n" + neutral.join(", ") +
+                        "```" : ""
                 ) +
                 (
-                    (denyBefore.length || denyAfter.length) ?
-                        "**Denied before:**```js\n" +
-                        (denyBefore.join(", ") || "NONE") +
-                        "```**Currently denied:**```js\n" +
-                        (denyAfter.join(", ") || "NONE") +
+                    allowAfter.length ?
+                        "**Approved:**```js\n" +
+                        allowAfter.join(", ") +
+                        "```" : ""
+                ) +
+                (
+                    denyAfter.length ?
+                        "**Denied:**```js\n" +
+                        denyAfter.join(", ") +
                         "```" : ""
                 )
             );
-            console.log; // BREAKPOINT
         }
     };
 
-    if (diff.size) {
-        for (const [key, val] of diff) {
-            const removed = oldChannel.permissionOverwrites.get(key);
-            const added = newChannel.permissionOverwrites.get(key);
-            if (!newChannel.guild.roles.cache.get((removed || added).id)) continue;
-            if (removed) {
-                if (blockChannelUpdate && removed.id === newChannel.guild.DB.settings.mute.role) return;
-                if (!fetchAR) fetchAR = "R";
-                const allow = removed.allow.serialize(), deny = removed.deny.serialize();
-                let all = [], den = [];
-                for (const K in allow) {
-                    if (!allow[K]) continue;
-                    all.push(K);
-                };
-                for (const K in deny) {
-                    if (!deny[K]) continue;
-                    den.push(K);
-                };
-                emb.addField(`Removed override`, `**For ${removed.type}** ${removed.type === "member" ?
-                    `<@${removed.id}> (${removed.id})` :
-                    removed.id === newChannel.guild.id ?
-                        "@everyone" : `<@&${removed.id}> (${removed.id})`
-                    }\n` +
-                    "**Approved:**```js\n" + (all.join(", ") || "NONE") + "```" +
-                    "**Denied:**```js\n" + (den.join(", ") || "NONE") + "```");
-                console.log; // BREAKPOINT
-            } else if (added) {
-                if (blockChannelUpdate && added.id === newChannel.guild.DB.settings.mute.role) return;
-                if (!fetchAR) fetchAR = "A";
-                const allow = added.allow.serialize(), deny = added.deny.serialize();
-                let all = [], den = [];
-                for (const K in allow) {
-                    if (!allow[K]) continue;
-                    all.push(K);
-                };
-                for (const K in deny) {
-                    if (!deny[K]) continue;
-                    den.push(K);
-                };
-                emb.addField(`Added override`, `**For ${added.type}** ${added.type === "member" ?
-                    `<@${added.id}> (${added.id})` :
-                    added.id === newChannel.guild.id ?
-                        "@everyone" : `<@&${added.id}> (${added.id})`
-                    }\n` +
-                    "**Approved:**```js\n" + (all.join(", ") || "NONE") + "```" +
-                    "**Denied:**```js\n" + (den.join(", ") || "NONE") + "```");
-                console.log; // BREAKPOINT
-            }
-        }
-    };
-
-    if (newChannel.guild.me.hasPermission("VIEW_AUDIT_LOG")) {
-        if (!audit && overwritesUpdates.length) {
-            audit = await getAudit(newChannel.guild, dateNow, newChannel.id, { type: "CHANNEL_OVERWRITE_UPDATE" });
-        };
-        if (!audit && fetchAudit) {
-            audit = await getAudit(newChannel.guild, dateNow, newChannel.id, { type: "CHANNEL_UPDATE" });
-        };
-        if (!audit && fetchAR) {
-            /**
-             * @type {import("discord.js").GuildAuditLogsFetchOptions}
-             */
-            let opt = {};
-            switch (fetchAR) {
-                case "A": opt.type = "CHANNEL_OVERWRITE_CREATE"; break;
-                case "R": opt.type = "CHANNEL_OVERWRITE_DELETE"; break;
-            };
-            audit = await getAudit(newChannel.guild, dateNow, newChannel.id, opt);
-        };
+    if (fetchAudit && !audit && newChannel.guild.me.hasPermission("VIEW_AUDIT_LOG")) {
+        audit = await getAudit(newChannel.guild, dateNow, newChannel.id,
+            { type: "CHANNEL_UPDATE" });
     };
 
     emb.setTitle((newChannel.type === "voice" ? "Voice " : "") +
@@ -245,13 +278,15 @@ async function run(oldChannel, newChannel) {
         .addField((newChannel.type === "voice" ? "Voice " : "") +
             (newChannel.type === "category" ? "Category" : "Channel"),
             `<#${newChannel.id}>\n(${newChannel.id})`, true);
+
     if (emb.fields.length < 2) return;
+
     if (audit?.executor) {
         emb.setAuthor(emb.author.name, audit.executor.displayAvatarURL({ size: 128, format: "png", dynamic: true }))
             .addField("Administrator", `<@${audit.executor.id}>\n(${audit.executor.id})`, true);
         if (audit.executor.bot) emb.addField("​", audit.reason || "No reason provided");
-    }
-    console.log; // BREAKPOINT
+    };
+
     return trySend(newChannel.client, logChannel, emb);
 };
 
