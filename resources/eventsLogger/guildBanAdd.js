@@ -30,7 +30,7 @@ module.exports = async (GUILD, USER) => {
             .setColor(getColor("red"))
             .setThumbnail(USER.displayAvatarURL({ size: 4096, format: "png", dynamic: true }))
             .addField("User", `<@${USER.id}>\n(${USER.id})`);
-        if (audit.executor)
+        if (audit?.executor)
             emb.setAuthor(emb.author.name, audit.executor.displayAvatarURL({ size: 128, format: "png", dynamic: true }));
         return trySend(GUILD.client, log, emb);
     }

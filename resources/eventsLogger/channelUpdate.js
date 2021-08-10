@@ -141,9 +141,11 @@ async function run(oldChannel, newChannel) {
 
                     emb.addField(`Removed override`,
                         `**For ${removed.type}** ${removed.type === "member" ?
-                            `<@${removed.id}> (${removed.id})` :
+                            `<@${removed.id}> \`${newChannel.guild.member(removed.id)
+                                .user.tag}\` (${removed.id})` :
                             removed.id === newChannel.guild.id ?
-                                "@everyone" : `<@&${removed.id}> (${removed.id})`
+                                "@everyone" : `<@&${removed.id}> \`${newChannel.guild.roles.cache
+                                    .get(removed.id).name}\` (${removed.id})`
                         }\n` +
                         "**Approved:**```js\n" + (all.join(", ") || "NONE") + "```" +
                         "**Denied:**```js\n" + (den.join(", ") || "NONE") + "```");
@@ -166,9 +168,11 @@ async function run(oldChannel, newChannel) {
 
                 emb.addField(`Added override`,
                     `**For ${added.type}** ${added.type === "member" ?
-                        `<@${added.id}> (${added.id})` :
+                        `<@${added.id}> \`${newChannel.guild.member(added.id)
+                            .user.tag}\` (${added.id})` :
                         added.id === newChannel.guild.id ?
-                            "@everyone" : `<@&${added.id}> (${added.id})`
+                            "@everyone" : `<@&${added.id}> \`${newChannel.guild.roles.cache
+                                .get(added.id).name}\` (${added.id})`
                     }\n` +
                     "**Approved:**```js\n" + (all.join(", ") || "NONE") + "```" +
                     "**Denied:**```js\n" + (den.join(", ") || "NONE") + "```");
@@ -181,86 +185,93 @@ async function run(oldChannel, newChannel) {
         audit = await getAudit(newChannel.guild, dateNow, newChannel.id,
             { type: "CHANNEL_OVERWRITE_UPDATE" });
         if (audit.target.id === newChannel.id) {
-            const val = permissionsOverwrites.entries().next().value[1];
 
-            const oldAllow = val.old.allow.serialize(),
-                oldDeny = val.old.deny.serialize(),
-                newAllow = val.new.allow.serialize(),
-                newDeny = val.new.deny.serialize(),
-                allowDiff = changed(oldAllow, newAllow),
-                denyDiff = changed(oldDeny, newDeny);
+            if (!oldChannel.permissionsLocked && newChannel.permissionsLocked) {
+                permissionsOverwrites.forEach((v, k) => addField(v));
+            } else addField(permissionsOverwrites.entries().next().value[1]);
 
-            let allowBefore = [], allowAfter = [], denyBefore = [], denyAfter = [], neutral = [];
-            for (const u in allowDiff.oldObj) {
-                if (!allowDiff.oldObj[u]) continue;
-                allowBefore.push(u);
-            };
-            for (const u in allowDiff.newObj) {
-                if (!allowDiff.newObj[u]) continue;
-                allowAfter.push(u);
-            };
-            for (const u in denyDiff.oldObj) {
-                if (!denyDiff.oldObj[u]) continue;
-                denyBefore.push(u);
-            };
-            for (const u in denyDiff.newObj) {
-                if (!denyDiff.newObj[u]) continue;
-                denyAfter.push(u);
-            };
+            function addField(val) {
+                const oldAllow = val.old.allow.serialize(),
+                    oldDeny = val.old.deny.serialize(),
+                    newAllow = val.new.allow.serialize(),
+                    newDeny = val.new.deny.serialize(),
+                    allowDiff = changed(oldAllow, newAllow),
+                    denyDiff = changed(oldDeny, newDeny);
 
-            for (const U in newAllow) {
-                if (
-                    !newAllow[U] &&
-                    oldAllow?.[U] !== newAllow[U] &&
-                    !newDeny[U]
-                ) neutral.push(U);
-                else continue;
-            };
-            for (const U in newDeny) {
-                if (
-                    !newDeny[U] &&
-                    oldDeny?.[U] !== newDeny[U] &&
-                    !newAllow[U]
-                ) neutral.push(U);
-                else continue;
+                let allowBefore = [], allowAfter = [], denyBefore = [], denyAfter = [], neutral = [];
+                for (const u in allowDiff.oldObj) {
+                    if (!allowDiff.oldObj[u]) continue;
+                    allowBefore.push(u);
+                };
+                for (const u in allowDiff.newObj) {
+                    if (!allowDiff.newObj[u]) continue;
+                    allowAfter.push(u);
+                };
+                for (const u in denyDiff.oldObj) {
+                    if (!denyDiff.oldObj[u]) continue;
+                    denyBefore.push(u);
+                };
+                for (const u in denyDiff.newObj) {
+                    if (!denyDiff.newObj[u]) continue;
+                    denyAfter.push(u);
+                };
+
+                for (const U in newAllow) {
+                    if (
+                        !newAllow[U] &&
+                        oldAllow?.[U] !== newAllow[U] &&
+                        !newDeny[U]
+                    ) neutral.push(U);
+                    else continue;
+                };
+                for (const U in newDeny) {
+                    if (
+                        !newDeny[U] &&
+                        oldDeny?.[U] !== newDeny[U] &&
+                        !newAllow[U]
+                    ) neutral.push(U);
+                    else continue;
+                }
+
+                emb.addField(`Changed override`,
+                    `**For ${val.new.type}** ${val.new.type === "member" ?
+                        `<@${val.new.id}> \`${newChannel.guild.member(val.new.id)
+                            .user.tag}\` (${val.new.id})` :
+                        val.new.id === newChannel.guild.id ?
+                            "@everyone" : `<@&${val.new.id}> \`${newChannel.guild.roles.cache
+                                .get(val.new.id).name}\` (${val.new.id})`
+                    }\n` +
+                    (
+                        allowBefore.length ?
+                            "**Approved before:**```js\n" +
+                            allowBefore.join(", ") +
+                            "```" : ""
+                    ) +
+                    (
+                        denyBefore.length ?
+                            "** Denied before:** ```js\n" +
+                            denyBefore.join(", ") +
+                            "```" : ""
+                    ) +
+                    (
+                        neutral.length ?
+                            "**Defaulted:**```js\n" + neutral.join(", ") +
+                            "```" : ""
+                    ) +
+                    (
+                        allowAfter.length ?
+                            "**Approved:**```js\n" +
+                            allowAfter.join(", ") +
+                            "```" : ""
+                    ) +
+                    (
+                        denyAfter.length ?
+                            "**Denied:**```js\n" +
+                            denyAfter.join(", ") +
+                            "```" : ""
+                    )
+                );
             }
-
-            emb.addField(`Changed override`,
-                `**For ${val.new.type}** ${val.new.type === "member" ?
-                    `<@${val.new.id}> (${val.new.id})` :
-                    val.new.id === newChannel.guild.id ?
-                        "@everyone" : `<@&${val.new.id}> (${val.new.id})`
-                }\n` +
-                (
-                    allowBefore.length ?
-                        "**Approved before:**```js\n" +
-                        allowBefore.join(", ") +
-                        "```" : ""
-                ) +
-                (
-                    denyBefore.length ?
-                        "** Denied before:** ```js\n" +
-                        denyBefore.join(", ") +
-                        "```" : ""
-                ) +
-                (
-                    neutral.length ?
-                        "**Defaulted:**```js\n" + neutral.join(", ") +
-                        "```" : ""
-                ) +
-                (
-                    allowAfter.length ?
-                        "**Approved:**```js\n" +
-                        allowAfter.join(", ") +
-                        "```" : ""
-                ) +
-                (
-                    denyAfter.length ?
-                        "**Denied:**```js\n" +
-                        denyAfter.join(", ") +
-                        "```" : ""
-                )
-            );
         }
     };
 
