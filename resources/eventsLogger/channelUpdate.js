@@ -101,7 +101,7 @@ async function run(oldChannel, newChannel) {
                 newDeny = overwrite.new.deny.serialize(),
                 allowDiff = changed(oldAllow, newAllow),
                 denyDiff = changed(oldDeny, newDeny);
-            let allowBefore = [], allowAfter = [], denyBefore = [], denyAfter = [];
+            let allowBefore = [], allowAfter = [], denyBefore = [], denyAfter = [], neutral = [];
             for (const u in allowDiff.oldObj) {
                 if (!allowDiff.oldObj[u]) continue;
                 allowBefore.push(u);
@@ -118,14 +118,49 @@ async function run(oldChannel, newChannel) {
                 if (!denyDiff.newObj[u]) continue;
                 denyAfter.push(u);
             };
-            emb.addField(`Changed override`, `**For ${overwrite.new.type}** ${overwrite.new.type === "member" ?
-                `<@${overwrite.new.id}> (${overwrite.new.id})` : overwrite.new.id === newChannel.guild.id ? "@everyone" : `<@&${overwrite.new.id}> (${overwrite.new.id})`
-                }\n` + ((allowBefore.length || allowAfter.length) ? "**Approved before:**```js\n" +
-                    (allowBefore.join(", ") || "NONE") + "```**Currently approved:**```js\n" +
-                    (allowAfter.join(", ") || "NONE") + "```" : "") +
-                ((denyBefore.length || denyAfter.length) ? "**Denied before:**```js\n" +
-                    (denyBefore.join(", ") || "NONE") + "```**Currently denied:**```js\n" +
-                    (denyAfter.join(", ") || "NONE") + "```" : ""));
+            for (const U in newAllow) {
+                if (
+                    !newAllow[U] &&
+                    oldAllow?.[U] !== newAllow[U] &&
+                    !newDeny[U]
+                ) neutral.push(U);
+                else continue;
+            };
+            for (const U in newDeny) {
+                if (
+                    !newDeny[U] &&
+                    oldDeny?.[U] !== newDeny[U] &&
+                    !newAllow[U]
+                ) neutral.push(U);
+                else continue;
+            }
+            emb.addField(`Changed override`,
+                `**For ${overwrite.new.type}** ${overwrite.new.type === "member" ?
+                    `<@${overwrite.new.id}> (${overwrite.new.id})` :
+                    overwrite.new.id === newChannel.guild.id ?
+                        "@everyone" : `<@&${overwrite.new.id}> (${overwrite.new.id})`
+                }\n` +
+                (
+                    (allowBefore.length || allowAfter.length) ?
+                        "**Approved before:**```js\n" +
+                        (allowBefore.join(", ") || "NONE") +
+                        "```**Currently approved:**```js\n" +
+                        (allowAfter.join(", ") || "NONE") +
+                        "```" : ""
+                ) +
+                (
+                    neutral.length ?
+                        "**Defaulted:**```js\n" + neutral.join(", ") + "```" : ""
+                ) +
+                (
+                    (denyBefore.length || denyAfter.length) ?
+                        "**Denied before:**```js\n" +
+                        (denyBefore.join(", ") || "NONE") +
+                        "```**Currently denied:**```js\n" +
+                        (denyAfter.join(", ") || "NONE") +
+                        "```" : ""
+                )
+            );
             console.log; // BREAKPOINT
         }
     };
@@ -149,7 +184,10 @@ async function run(oldChannel, newChannel) {
                     den.push(K);
                 };
                 emb.addField(`Removed override`, `**For ${removed.type}** ${removed.type === "member" ?
-                    `<@${removed.id}> (${removed.id})` : removed.id === newChannel.guild.id ? "@everyone" : `<@&${removed.id}> (${removed.id})`}\n` +
+                    `<@${removed.id}> (${removed.id})` :
+                    removed.id === newChannel.guild.id ?
+                        "@everyone" : `<@&${removed.id}> (${removed.id})`
+                    }\n` +
                     "**Approved:**```js\n" + (all.join(", ") || "NONE") + "```" +
                     "**Denied:**```js\n" + (den.join(", ") || "NONE") + "```");
                 console.log; // BREAKPOINT
@@ -167,7 +205,10 @@ async function run(oldChannel, newChannel) {
                     den.push(K);
                 };
                 emb.addField(`Added override`, `**For ${added.type}** ${added.type === "member" ?
-                    `<@${added.id}> (${added.id})` : added.id === newChannel.guild.id ? "@everyone" : `<@&${added.id}> (${added.id})`}\n` +
+                    `<@${added.id}> (${added.id})` :
+                    added.id === newChannel.guild.id ?
+                        "@everyone" : `<@&${added.id}> (${added.id})`
+                    }\n` +
                     "**Approved:**```js\n" + (all.join(", ") || "NONE") + "```" +
                     "**Denied:**```js\n" + (den.join(", ") || "NONE") + "```");
                 console.log; // BREAKPOINT
