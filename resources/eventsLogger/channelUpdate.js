@@ -19,17 +19,17 @@ async function run(oldChannel, newChannel) {
     const logChannel = newChannel.guild.channels.cache.get(newChannel.guild.DB.eventChannels.guild);
     if (!logChannel) return;
 
-    let audit;
-
     const diff = newChannel.permissionOverwrites.difference(oldChannel.permissionOverwrites);
-    let overwritesUpdates = [];
+    let overwriteRoles = [], overwriteMembers = [], audit;
 
     for (const [key, val] of newChannel.permissionOverwrites) {
         const oldOverwrites = oldChannel.permissionOverwrites.get(key);
         if (!oldOverwrites) continue;
         if (oldOverwrites?.allow.bitfield !== val.allow.bitfield ||
             oldOverwrites?.deny.bitfield !== val.deny.bitfield) {
-            overwritesUpdates.push({ new: val, old: oldOverwrites });
+            if (val.type === "role")
+                overwriteRoles.push({ new: val, old: oldOverwrites });
+            else overwriteMembers.push({ new: val, old: oldOverwrites });
             console.log; // BREAKPOINT
         }
     };
@@ -90,11 +90,26 @@ async function run(oldChannel, newChannel) {
             emb.addField("Bitrate", `Changed from \`${oldChannel.bitrate / 1000
                 || "Unknown"} Kbps\` to \`${newChannel.bitrate / 1000} Kbps\``);
         };
-
     };
 
-    if (overwritesUpdates.length) {
-        for (const overwrite of overwritesUpdates) {
+    if (overwriteRoles.length || overwriteMembers.length) {
+        let overwrite;
+        if (overwriteRoles.length) {
+            if (overwriteRoles.length > 1) {
+                overwriteRoles = overwriteRoles.sort((a, b) =>
+                    newChannel.guild.roles.cache.get(a.new.id).createdTimestamp -
+                    newChannel.guild.roles.cache.get(b.new.id).createdTimestamp);
+                if (overwriteRoles[0].new.id === newChannel.guild.id) overwriteRoles = overwriteRoles.slice(1);
+            }
+            overwrite = overwriteRoles.shift();
+        } else {
+            if (overwriteMembers.length > 1)
+                overwriteMembers = overwriteMembers.sort((a, b) =>
+                    newChannel.guild.member(a.new.id).displayName -
+                    newChannel.guild.member(b.new.id).displayName);
+            overwrite = overwriteMembers.shift();
+        };
+        if (overwrite) {
             const oldAllow = overwrite.old?.allow.serialize(),
                 oldDeny = overwrite.old?.deny.serialize(),
                 newAllow = overwrite.new.allow.serialize(),
@@ -141,23 +156,32 @@ async function run(oldChannel, newChannel) {
                         "@everyone" : `<@&${overwrite.new.id}> (${overwrite.new.id})`
                 }\n` +
                 (
-                    (allowBefore.length || allowAfter.length) ?
+                    allowBefore.length ?
                         "**Approved before:**```js\n" +
-                        (allowBefore.join(", ") || "NONE") +
-                        "```**Currently approved:**```js\n" +
-                        (allowAfter.join(", ") || "NONE") +
+                        allowBefore.join(", ") +
+                        "```" : ""
+                ) +
+                (
+                    denyBefore.length ?
+                        "** Denied before:** ```js\n" +
+                        denyBefore.join(", ") +
                         "```" : ""
                 ) +
                 (
                     neutral.length ?
-                        "**Defaulted:**```js\n" + neutral.join(", ") + "```" : ""
+                        "**Defaulted:**```js\n" + neutral.join(", ") +
+                        "```" : ""
                 ) +
                 (
-                    (denyBefore.length || denyAfter.length) ?
-                        "**Denied before:**```js\n" +
-                        (denyBefore.join(", ") || "NONE") +
-                        "```**Currently denied:**```js\n" +
-                        (denyAfter.join(", ") || "NONE") +
+                    allowAfter.length ?
+                        "**Approved:**```js\n" +
+                        allowAfter.join(", ") +
+                        "```" : ""
+                ) +
+                (
+                    denyAfter.length ?
+                        "**Denied:**```js\n" +
+                        denyAfter.join(", ") +
                         "```" : ""
                 )
             );
@@ -217,7 +241,7 @@ async function run(oldChannel, newChannel) {
     };
 
     if (newChannel.guild.me.hasPermission("VIEW_AUDIT_LOG")) {
-        if (!audit && overwritesUpdates.length) {
+        if (!audit && overwriteRoles.length) {
             audit = await getAudit(newChannel.guild, dateNow, newChannel.id, { type: "CHANNEL_OVERWRITE_UPDATE" });
         };
         if (!audit && fetchAudit) {
