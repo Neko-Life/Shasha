@@ -16,7 +16,7 @@ function timestampAt(client) {
  */
 function makeJSONMessage(object) {
     console.log(typeof object, object);
-    return { content: '```js\n' + JSON.stringify(object, (k, v) => v ?? undefined, 2) + '```', split: { maxLength: 2000, char: ",", append: ',```', prepend: '```js\n' } };
+    return { content: '```js\n' + JSON.stringify(object, (k, v) => v || undefined, 2) + '```', split: { maxLength: 2000, char: ",", append: ',```', prepend: '```js\n' } };
 }
 
 module.exports = { timestampAt, makeJSONMessage }

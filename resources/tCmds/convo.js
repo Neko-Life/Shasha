@@ -98,7 +98,7 @@ module.exports = {
             }
             console.log("Session:");
             for (let i = 0; i < C.length; i++) console.log(C[i].guild.name, C[i].guild.id, i + ":", C[i].name, C[i].id);
-        } else if (C[num]) return C[num].send(emoteMessage(client, sl ? arg.slice(num?.toString().length).trim() ?? "hi" : arg)).catch(console.error); else {
+        } else if (C[num]) return C[num].send(emoteMessage(client, sl ? arg.slice(num?.toString().length).trim() || "hi" : arg)).catch(console.error); else {
             console.log('No session. Available sessions:');
             for (let i = 0; i < C.length; i++) console.log(C[i].guild.name, C[i].guild.id, i + ":", C[i].name, C[i].id);
             return;

@@ -334,7 +334,11 @@ Structures.extend("User", u => {
             const CL = guild.member(this.client.user);
             if (!moderator.isAdmin || !CL.isAdmin) throw new Error("Missing permissions");
             let already = false, cant = false;
-            await guild.members.unban(this, reason);
+            await guild.members.unban(this, reason).catch(e => {
+                if (!/Unknown Ban/.test(e.message)) {
+                    throw new Error(e.message);
+                };
+            });
             // .catch(e => {
 
             // });

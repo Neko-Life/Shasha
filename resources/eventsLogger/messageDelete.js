@@ -46,7 +46,7 @@ module.exports = async (msg) => {
             for (const add of toField) emb.addField(emb.fields.length === 2 ? "Attachment" : "​", add.join("\n"));
         }
         if (msg.embeds?.[0]) {
-            const arr = JSON.stringify(msg.embeds[0], (k, v) => v ?? undefined, 2).replace(/```/g, "`\\``").split(",");
+            const arr = JSON.stringify(msg.embeds[0], (k, v) => v || undefined, 2).replace(/```/g, "`\\``").split(",");
             const toField = splitOnLength(arr, 1010, ",\n");
             for (let i = 0; i < toField.length; i++) emb.addField(i === 0 ? "Embed" : "​", "```js\n" + toField[i].join(",") + ((i !== toField.length - 1) ? "," : "") + "```");
         }

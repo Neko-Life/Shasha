@@ -409,11 +409,11 @@ module.exports = class embmaker extends commando.Command {
                         }
                     }
                 }
-                sent.push(trySend(this.client, channel ?? msg.channel, { content: content, embed: embed, files: newAttach }).catch(e => noPerm(msg)));
+                sent.push(trySend(this.client, channel || msg.channel, { content: content, embed: embed, files: newAttach }).catch(e => noPerm(msg)));
             }
             if (await sent[0]) {
                 tryReact(msg, "a:yesLife:794788847996370945");
-                ranLog(msg, ("```js\n" + JSON.stringify(embed, (k, v) => v ?? undefined, 2) + "```"));
+                ranLog(msg, ("```js\n" + JSON.stringify(embed, (k, v) => v || undefined, 2) + "```"));
             } else {
                 noPerm(msg);
             }

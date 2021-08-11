@@ -31,7 +31,7 @@ module.exports = class perms extends commando.Command {
                 channel = getChannel(msg, use);
                 if (!channel || !(channel instanceof GuildChannel)) {
                     channel = undefined;
-                    mes += "Channel unexisted???\n";
+                    mes += "Channel unexisted||?\n";
                 }
             }
             const find = arg.replace(/(?<!\\)--ch [^ ]*\s?/, "");

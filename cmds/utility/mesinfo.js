@@ -18,10 +18,10 @@ module.exports = class mesinfo extends commando.Command {
     if (!message) {
       return trySend(this.client, msg, "No message with that ID <:catstareLife:794930503076675584>")
     }
-    const mesinfo = 'Collected:```js\n'+JSON.stringify(message, (k, v) => v ?? undefined, 2).replace(/```/g,"`\\``")+'```';
+    const mesinfo = 'Collected:```js\n'+JSON.stringify(message, (k, v) => v || undefined, 2).replace(/```/g,"`\\``")+'```';
     const mentionJSON = message.mentions.toJSON();
-    const sendMentionInfo = 'Mentions:```js\n'+JSON.stringify(mentionJSON, (k, v) => v ?? undefined, 2)+'```';
-    const Attachments = 'Attachments:```js\n'+JSON.stringify(message.attachments, (k, v) => v ?? undefined, 2)+'```';
+    const sendMentionInfo = 'Mentions:```js\n'+JSON.stringify(mentionJSON, (k, v) => v || undefined, 2)+'```';
+    const Attachments = 'Attachments:```js\n'+JSON.stringify(message.attachments, (k, v) => v || undefined, 2)+'```';
     const sendmesinfo = mesinfo+sendMentionInfo+Attachments;
     return trySend(this.client, msg, {content:sendmesinfo,split:{ maxLength: 2000, char: ",",append: ',```', prepend: '```js\n' }});
   }

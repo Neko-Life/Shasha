@@ -12,12 +12,12 @@ let blockChannelUpdate = false;
  * @param {GuildChannel} newChannel 
  */
 async function run(oldChannel, newChannel) {
-    const dateNow = new Date();
     if (!newChannel.guild.DB) await newChannel.guild.dbLoad();
     if (!newChannel.guild.DB.eventChannels?.guild) return;
     const logChannel = newChannel.guild.channels.cache.get(newChannel.guild.DB.eventChannels.guild);
     if (!logChannel) return;
 
+    const dateNow = new Date();
     const diff = newChannel.permissionOverwrites.difference(oldChannel.permissionOverwrites),
         emb = defaultEventLogEmbed(newChannel.guild);
 

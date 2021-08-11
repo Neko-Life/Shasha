@@ -156,7 +156,7 @@ function multipleMembersFound(msg, arr, key, max = 4, withID, withNick) {
 function findMemberRegEx(base, key) {
   if (!base || !key) return;
   const re = new RegExp(key, "i");
-  return (base.guild ?? base).members.cache.filter(r => re.test(r.displayName) || re.test(r.user.tag)).map(r => r);
+  return (base.guild || base).members.cache.filter(r => re.test(r.displayName) || re.test(r.user.tag)).map(r => r);
 }
 
 /**
@@ -199,7 +199,7 @@ async function trySend(client, msgOrChannel, content, checkAd = true) {
       if (typeof content === "string") content = adCheck(content);
     }
   }
-  if (!((msgOrChannel instanceof Message) || (msgOrChannel instanceof TextChannel) || (msgOrChannel instanceof DMChannel))) return errLog(e, null, client, false, "[TRYSEND] Invalid {msgOrChannel} type.```js\n" + JSON.stringify(msgOrChannel, (k, v) => v ?? undefined, 2) + "```");
+  if (!((msgOrChannel instanceof Message) || (msgOrChannel instanceof TextChannel) || (msgOrChannel instanceof DMChannel))) return errLog(e, null, client, false, "[TRYSEND] Invalid {msgOrChannel} type.```js\n" + JSON.stringify(msgOrChannel, (k, v) => v || undefined, 2) + "```");
   let ret = await (msgOrChannel.channel || msgOrChannel).send(content).catch(/*msgOrChannel.channel ? noPerm(msgOrChannel) :*/ e => errLog(e, msgOrChannel, client));
   if (ret?.[0] instanceof Message) {
     // console.log(ret, typeof ret);
@@ -445,7 +445,7 @@ function defaultEventLogEmbed(guild) {
     .setColor(getColor(C.displayColor))
     .setAuthor(guild.name)
     .setFooter((guild.DB?.defaultEmbed?.footerQuote ?
-      guild.DB.defaultEmbed.footerQuote : ""), guild.iconURL({ format: "png", size: 128, dynamic: true }))
+      guild.DB.defaultEmbed.footerQuote : "​"), guild.iconURL({ format: "png", size: 128, dynamic: true }))
     .setTimestamp(new Date());
 }
 
@@ -507,10 +507,10 @@ const reValidURL = /^https?:\/\/[^\s\n]+\.[^\s\n][^\s\n]/;
  * Get user
  * @param {Message} msg 
  * @param {string} key 
- * @param {boolean} inGuild
+ * @param {any} inGuild
  * @returns {User}
  */
-async function getUser(msg, key, inGuild = false) {
+async function getUser(msg, key, inGuild) {
   if (!(msg || key)) return;
   const use = cleanMentionID(key);
   if (!use || use.length === 0) return;

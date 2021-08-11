@@ -26,7 +26,7 @@ module.exports = class cloneembed extends commando.Command {
             return trySend(this.client, msg, 'ypu don\'t know what an embed is? <:cathmmLife:772716381874946068>');
           }
           if (!args[0]) {
-            return trySend(this.client, msg, 'Which message??');
+            return trySend(this.client, msg, 'Which message||');
           }
           const sent = theMes.embeds.map(r => trySend(this.client, msg, {content:content,embed:r}));
           if (sent) {

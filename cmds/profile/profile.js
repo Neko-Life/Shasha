@@ -18,19 +18,20 @@ module.exports = class profile extends commando.Command {
         });
     }
     /**
-     * 
      * @param {Message} msg 
      * @param {*} arg 
      * @returns 
      */
     async run(msg, arg) {
+        if (msg.guild && !msg.guild.DB) await msg.guild.dbLoad();
+        if (!msg.author.DB) await msg.author.dbLoad();
         let TM, title = "";
-        if (!arg) TM = msg.author; else TM = await getUser(msg, arg, true);
+        if (!arg) TM = msg.author; else TM = await getUser(msg, arg, msg.guild);
         if (!TM) return trySend(msg.client, msg, "Bro stop lookin for yo imaginary gf");
         if (TM.bot) title += "`[BOT]` ";
         title += `\`${TM.tag}\`'s Profile`;
 
-        const MEM = msg.guild.member(TM),
+        const MEM = msg.guild ? msg.guild.member(TM) : false,
             emb = defaultImageEmbed(msg, null, title),
             INT2 = Interval.fromDateTimes(DateTime.fromJSDate(TM.createdAt), DateTime.now());
 

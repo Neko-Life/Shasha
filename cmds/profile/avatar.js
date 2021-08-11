@@ -80,7 +80,7 @@ module.exports = class avatar extends commando.Command {
       }
     } else {
       let emb = new MessageEmbed()
-        .setTitle(user.displayName ?? user.username)
+        .setTitle(user.displayName || user.username)
         .setImage(avatar)
         .setFooter(footerQuote);
       if (user.displayColor) emb.setColor(user.displayColor);

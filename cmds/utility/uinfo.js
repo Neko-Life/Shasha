@@ -31,10 +31,10 @@ module.exports = class uinfo extends commando.Command {
             const member = msg.guild.member(profile);
             let result = "";
             if (profile) {
-                result += 'User: '+profile.tag+'```js\n' + JSON.stringify(profile, (k, v) => v ?? undefined, 2)+'```';
+                result += 'User: '+profile.tag+'```js\n' + JSON.stringify(profile, (k, v) => v || undefined, 2)+'```';
             }
             if (member) {
-                result += 'As member: '+member.displayName+'```js\n'+JSON.stringify(member, (k, v) => v ?? undefined, 2)+'```';
+                result += 'As member: '+member.displayName+'```js\n'+JSON.stringify(member, (k, v) => v || undefined, 2)+'```';
                 if ((member.displayColor)) {
                     result += 'Display color:```js\n'+member.displayColor+'```';
                 }
