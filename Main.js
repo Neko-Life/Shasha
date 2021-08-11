@@ -143,6 +143,10 @@ client.on("guildMemberUpdate", async (memberold, membernew) => {
     lgr.guildMemberUpdate(memberold, membernew);
 });
 
+client.on("roleUpdate", async (oldRole, newRole) => {
+    lgr.roleUpdate.run(oldRole, newRole);
+});
+
 client.on("shardReady", async (shard) => {
     const log = client.channels.cache.get(configFile.shardChannel);
     if (!log.guild.DB) await log.guild.dbLoad();
@@ -168,7 +172,7 @@ client.on("shardDisconnect", async (e, shard) => {
     if (!log.guild.DB) await log.guild.dbLoad();
     const emb = defaultEventLogEmbed(log.guild);
     emb.setTitle("Shard #" + shard)
-        .setDescription("**DISCONNECTED\n\nTARGET:**```js\n" + JSON.stringify(e.target, (k, v) => v ?? undefined, 2) + "```")
+        .setDescription("**DISCONNECTED\n\nTARGET:**```js\n" + JSON.stringify(e.target, (k, v) => v || undefined, 2) + "```")
         .addField("CODE", e.code, true)
         .addField("REASON", e.reason, true)
         .addField("CLEAN", e.wasClean, true)
