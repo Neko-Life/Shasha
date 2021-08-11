@@ -565,11 +565,25 @@ function changed(oldObj, newObj) {
   return { oldObj: diffOld, newObj: diffNew };
 }
 
+/**
+ * @param {Guild} guild Get audit from
+ * @param {Date} dateNow 
+ * @param {string} id Target ID
+ * @param {import("discord.js").GuildAuditLogsFetchOptions} option 
+ * @returns {Promise<GuildAuditLogsEntry>}
+ */
+async function getAudit(guild, dateNow, id, option, filter = (value, key, collection) =>
+  value.target.id === id && (dateNow.valueOf() - value.createdTimestamp) < 60000) {
+  const col = await guild.fetchAuditLogs(option);
+  const fil = col.entries.filter(filter);
+  return fil.first();
+};
+
 module.exports = {
   cleanMentionID, defaultEventLogEmbed,
   multipleMembersFound, multipleRolesFound, multipleChannelsFound,
   findMemberRegEx, findChannelRegEx, findRoleRegEx,
-  getChannelMessage, errLog, changed,
+  getChannelMessage, errLog, changed, getAudit,
   execCB, ranLog, noPerm, getUTCComparison,
   trySend, tryDelete, tryReact, defaultDateFormat,
   adCheck, defaultImageEmbed, getChannel,

@@ -3,7 +3,7 @@
 const { GuildChannel, Guild, GuildAuditLogsEntry, Role } = require("discord.js");
 const { Interval } = require("luxon");
 const { intervalToDuration } = require("../../cmds/moderation/src/duration");
-const { defaultEventLogEmbed, changed, trySend, wait } = require("../functions");
+const { defaultEventLogEmbed, changed, trySend, wait, getAudit } = require("../functions");
 const getColor = require("../getColor");
 let blockChannelUpdate = false;
 
@@ -301,20 +301,6 @@ async function run(oldChannel, newChannel) {
     return trySend(newChannel.client, logChannel, emb);
 };
 
-/**
- * @param {Guild} guild Get audit from
- * @param {Date} dateNow 
- * @param {string} id Target ID
- * @param {import("discord.js").GuildAuditLogsFetchOptions} option 
- * @returns {Promise<GuildAuditLogsEntry>}
- */
-async function getAudit(guild, dateNow, id, option, filter = (value, key, collection) =>
-    value.target.id === id && (dateNow.valueOf() - value.createdTimestamp) < 60000) {
-    const col = await guild.fetchAuditLogs(option);
-    const fil = col.entries.filter(filter);
-    return fil.first();
-};
-
 function blockChannelUpdateEvents() {
     blockChannelUpdate = true;
     console.log("CHANNEL UPDATE EVENTS BLOCKED. STATE:", blockChannelUpdate);
@@ -325,4 +311,4 @@ function unblockChannelUpdateEvents() {
     console.log("CHANNEL UPDATE EVENTS UNBLOCKED. STATE:", blockChannelUpdate);
 };
 
-module.exports = { run, blockChannelUpdateEvents, unblockChannelUpdateEvents, getAudit }
+module.exports = { run, blockChannelUpdateEvents, unblockChannelUpdateEvents }
