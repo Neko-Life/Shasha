@@ -65,12 +65,11 @@ async function reset() {
     await jobManager.stop().catch(console.error);
     for (const job of jobs) {
         await jobManager.remove(job.name).catch(console.error);
-        console.log("REMOVED " + job.name);
     }
 
     await jobLoad();
     jobManager.add(jobs);
-    console.log("SCHEDULER REFRESHED");
+    console.log("JOBS REFRESHED");
     return jobStart();
 }
 
@@ -90,7 +89,7 @@ async function jobLoad() {
     };
     jobs.push(rsttm);
     console.log((jobs.length - 1) + " JOBS LOADED");
-    return 1;
+    return 0;
 }
 
 function jobStart() {
@@ -100,7 +99,7 @@ function jobStart() {
         if (v.date?.valueOf() < CHK) jobManager.run(v.name);
     });
     console.log("SCHEDULER STARTED");
-    return 1;
+    return 0;
 }
 
 module.exports = { createSchedule, init, reset }
