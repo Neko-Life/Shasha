@@ -21,7 +21,7 @@ module.exports = async (msgold, msgnew) => {
     if (msgnew.content === msgold.content) return;
     const ignored = msgnew.guild.DB.eventChannels.mesEd?.ignore?.includes(msgnew.channel.id) || false;
     let check = false;
-    if (msgnew.channel.id === msgnew.guild.DB.eventChannels.mesEd?.channel && msgnew.author ? msgnew.author !== msgnew.client.user : false && ignored === false) check = true;
+    if (msgnew.channel.id === msgnew.guild.DB.eventChannels.mesEd?.channel && (msgnew.author ? msgnew.author !== msgnew.client.user : false) && ignored === false) check = true;
     if (msgnew.guild.DB.eventChannels.mesEd?.channel !== msgnew.channel.id && ignored === false || check) {
         const log = getChannel(msgnew, msgnew.guild.DB.eventChannels.mesEd?.channel);
         if (!log || !msgnew.author) return;

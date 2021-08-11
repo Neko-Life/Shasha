@@ -17,9 +17,9 @@ module.exports = async (msg) => {
         msg.guild.updateCached("systemChannelID", msg.guild.systemChannelID);
         msg.guild.updateCached("iconURL", msg.guild.iconURL({ size: 4096, format: "png", dynamic: true }));
     }
-    const ignored = msg.guild.DB.eventChannels.mesDel?.ignore?.includes(msg.channel.id) ?? false;
+    const ignored = msg.guild.DB.eventChannels.mesDel?.ignore?.includes(msg.channel.id) || false;
     let check = false;
-    if (msg.channel.id === msg.guild.DB.eventChannels.mesDel?.channel && msg.author ? msg.author !== msg.client.user : false && ignored === false) check = true;
+    if (msg.channel.id === msg.guild.DB.eventChannels.mesDel?.channel && (msg.author ? msg.author !== msg.client.user : false) && ignored === false) check = true;
     if (msg.guild.DB.eventChannels.mesDel?.channel !== msg.channel.id && ignored === false || check) {
         const log = getChannel(msg, msg.guild.DB.eventChannels.mesDel?.channel);
         if (!log || !msg.author) return;

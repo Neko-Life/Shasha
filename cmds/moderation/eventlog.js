@@ -91,7 +91,7 @@ module.exports = class eventlog extends commando.Command {
                                         if (chan) {
                                             if (mesEdlog.ignore.includes(chan.id)) {
                                                 report += "**[MESEDIT_CHANNELIGNORE]** Duplicate result: <#" + chan.id +
-                                                    `> with keyword: **${ign.trim()}**\n`;
+                                                    `> for: **${ign.trim()}**\n`;
                                             } else {
                                                 mesEdlog.ignore.push(chan.id);
                                             }
@@ -136,7 +136,7 @@ module.exports = class eventlog extends commando.Command {
                                         if (chan) {
                                             if (mesDellog.ignore.includes(chan.id)) {
                                                 report += "**[MESDEL_CHANNELIGNORE]** Duplicate result: <#" + chan.id +
-                                                    `> with keyword: **${ign.trim()}**\n`;
+                                                    `> for: **${ign.trim()}**\n`;
                                             } else {
                                                 mesDellog.ignore.push(chan.id);
                                             }
