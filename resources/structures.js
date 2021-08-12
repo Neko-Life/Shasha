@@ -1,6 +1,6 @@
 'use strict';
 
-const { Structures, Guild, GuildMember, BanOptions, Role } = require("discord.js"),
+const { Structures, Guild, GuildMember, BanOptions } = require("discord.js"),
     { database } = require("../database/mongo"),
     { errLog, defaultEventLogEmbed, defaultDateFormat, trySend } = require("./functions");
 const { createSchedule } = require("../cmds/moderation/src/createSchedule");
