@@ -26,8 +26,8 @@ module.exports = class ban extends commando.Command {
      */
     async run(msg, arg) {
         const CL = msg.guild.member(msg.client.user);
-        if (!(msg.member.idAdmin || msg.member.hasPermission("BAN_MEMBER"))) return trySend(msg.client, msg, "bruh moment <:nekokekLife:852865942530949160>");
-        if (!(CL.idAdmin || CL.hasPermission("BAN_MEMBER"))) return trySend(msg.client, msg, "I don't have the power to do that <:pepewhysobLife:853237646666891274>");
+        if (!(msg.member.isAdmin || msg.member.hasPermission("BAN_MEMBER"))) return trySend(msg.client, msg, "bruh moment <:nekokekLife:852865942530949160>");
+        if (!(CL.isAdmin || CL.hasPermission("BAN_MEMBER"))) return trySend(msg.client, msg, "I don't have the power to do that <:pepewhysobLife:853237646666891274>");
         if (!arg) return trySend(msg.client, msg,
             "Args: `user_[name|mention|ID] -- [reason] -- [duration] [--d [number of days to delete messages of the user to ban]]`. Separate `user` with `,`. Example:" +
             `\`\`\`js\n${msg.guild.commandPrefix + this.name

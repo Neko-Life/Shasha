@@ -223,7 +223,7 @@ Structures.extend("User", u => {
             const CL = guild.member(this.client.user);
 
             if (!(CL.isAdmin || CL.hasPermission("MANAGE_ROLES")) ||
-                !(data.moderator.idAdmin || data.moderator.hasPermission("MANAGE_ROLES"))) throw new Error("Missing Permissions");
+                !(data.moderator.isAdmin || data.moderator.hasPermission("MANAGE_ROLES"))) throw new Error("Missing Permissions");
 
             if (MEM) {
                 if (data.moderator.roles.highest.position <= MEM.roles.highest.position ||
@@ -263,7 +263,7 @@ Structures.extend("User", u => {
             const MEM = guild.member(this);
             const CL = guild.member(this.client.user);
             if (!(CL.isAdmin || CL.hasPermission("MANAGE_ROLES")) ||
-                !(moderator.idAdmin || moderator.hasPermission("MANAGE_ROLES"))) throw new Error("Missing Permissions");
+                !(moderator.isAdmin || moderator.hasPermission("MANAGE_ROLES"))) throw new Error("Missing Permissions");
             if (!guild.DB) await guild.dbLoad();
 
             if (!this.bot) {

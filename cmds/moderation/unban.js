@@ -15,8 +15,8 @@ module.exports = class unbanCmd extends commando.Command {
 
     async run(msg, arg) {
         const CL = msg.guild.member(msg.client.user);
-        if (!msg.member.idAdmin) return trySend(msg.client, msg, "are they your friend? <:nekokekLife:852865942530949160>");
-        if (!CL.idAdmin) return trySend(msg.client, msg, "I don't have the power to do that <:pepewhysobLife:853237646666891274>");
+        if (!msg.member.isAdmin) return trySend(msg.client, msg, "are they your friend? <:nekokekLife:852865942530949160>");
+        if (!CL.isAdmin) return trySend(msg.client, msg, "I don't have the power to do that <:pepewhysobLife:853237646666891274>");
         if (!arg) return trySend(msg.client, msg, "Provide `user_ID` to unban. Separate `user` with `,`. Example:```js\n" +
             `${msg.guild.commandPrefix + this.name} 757453290714824844, 706039105540194314, 198558078508072960 ` +
             `-- sent me some nice materials for tonight\`\`\``);

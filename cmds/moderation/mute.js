@@ -65,8 +65,8 @@ module.exports = class mute extends commando.Command {
      */
     async run(msg, arg) {
         const CL = msg.guild.member(msg.client.user);
-        if (!(msg.member.idAdmin || msg.member.hasPermission("MANAGE_ROLES"))) return trySend(msg.client, msg, "Who are you <:nekohmLife:846371737644957786>");
-        if (!(CL.idAdmin || CL.hasPermission("MANAGE_ROLES"))) return trySend(msg.client, msg, "I don't have the power to do that <:pepewhysobLife:853237646666891274>");
+        if (!(msg.member.isAdmin || msg.member.hasPermission("MANAGE_ROLES"))) return trySend(msg.client, msg, "Who are you <:nekohmLife:846371737644957786>");
+        if (!(CL.isAdmin || CL.hasPermission("MANAGE_ROLES"))) return trySend(msg.client, msg, "I don't have the power to do that <:pepewhysobLife:853237646666891274>");
         msg.channel.startTyping();
         if (!msg.guild.DB) await msg.guild.dbLoad();
         const MOD = msg.guild.DB.settings,

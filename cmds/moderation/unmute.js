@@ -17,8 +17,8 @@ module.exports = class unmute extends commando.Command {
 
     async run(msg, arg) {
         const CL = msg.guild.member(msg.client.user);
-        if (!(msg.member.idAdmin || msg.member.hasPermission("MANAGE_ROLES"))) return trySend(msg.client, msg, "I refusee! <:nekohmLife:846371737644957786>");
-        if (!(CL.idAdmin || CL.hasPermission("MANAGE_ROLES"))) return trySend(msg.client, msg, "I don't have the power to do that <:pepewhysobLife:853237646666891274>");
+        if (!(msg.member.isAdmin || msg.member.hasPermission("MANAGE_ROLES"))) return trySend(msg.client, msg, "I refusee! <:nekohmLife:846371737644957786>");
+        if (!(CL.isAdmin || CL.hasPermission("MANAGE_ROLES"))) return trySend(msg.client, msg, "I don't have the power to do that <:pepewhysobLife:853237646666891274>");
         if (!msg.guild.DB) await msg.guild.dbLoad();
         msg.channel.startTyping();
         if (!arg) return trySend(msg.client, msg, "Provide `user_ID` to unmute. Separate `user` with `,`. Example:```js\n" +
