@@ -1,7 +1,18 @@
 {
+  "appId": "",
   "invite": "https://discord.com/oauth2/authorize?client_id=788006279837909032&scope=bot&permissions=8",
   "token": "",
+  "mongoServer": "mongodb://localhost:27017",
+  "chatChannel": "837178237322919966",
+  "guildLog": "840154722434154496",
+  "shardChannel": "851361670533218324",
+  "home": "772073587792281600",
+  "ranLogger": "848567827179110401",
   "errLogChannel": "822877910138224660",
+  "owners": [
+    "750335181285490760",
+    "820696421912412191"
+  ],
   "randomColors": [
     12357519,
     16711935,
@@ -20,14 +31,5 @@
     "faa775",
     "000000",
     16777214
-  ],
-  "defaultErrorLogChannel": "822877910138224660",
-  "mongoServer": "mongodb://localhost:27017",
-  "chatChannel": "837178237322919966",
-  "guildLog": "840154722434154496",
-  "shardChannel": "851361670533218324",
-  "home": "772073587792281600",
-  "schedulerLog": "868682302111248394",
-  "stdoutLog": "868682302111248394",
-  "ranLogger": "848567827179110401"
+  ]
 }
