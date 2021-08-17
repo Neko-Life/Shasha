@@ -3,10 +3,14 @@
 // require("./rsc/mongo");
 // require("./rsc/structures");
 const { Client, Intents } = require("discord.js");
+const { dispatch } = require("./rsc/dispatch");
+const configFile = require("./config.json");
 const client = new Client({
     partials: ["CHANNEL", "GUILD_MEMBER", "MESSAGE", "USER"],
     intents: [Intents.FLAGS.GUILDS]
 });
+
+dispatch(client);
 // require("./rsc/tCmd")(client);
 
 // if (process.argv.includes("-d")) {
@@ -14,11 +18,8 @@ const client = new Client({
 //     if (ex) ex.run(client); else console.log("No debug module in tCmds.");
 // }
 
-const configFile = require('./config.json');
 // const { errLog, trySend, defaultEventLogEmbed } = require('./rsc/functions');
-const { join } = require('path');
 // const getColor = require("./rsc/getColor");
-const requireAll = require("require-all");
 // const { chatAnswer } = require("./rsc/shaChat");
 // const { init } = require("./cmds/moderation/src/createSchedule");
 // const { dbClient } = require("./rsc/mongo");
@@ -27,24 +28,6 @@ const requireAll = require("require-all");
 //     dirname: join(__dirname, "rsc"),
 //     recursive: true
 // });
-const interactionCreate = require("./rsc/eventHandlers/interactionCreate");
-
-client.commands = requireAll({ dirname: join(__dirname, "cmds"), recursive: true })
-client.owners = [];
-
-client.on('ready', async () => {
-    console.log(client.user.tag + ' logged in!');
-    for (const U of configFile.owners) {
-        const owner = await client.users.fetch(U).catch(() => console.error("Can't fetch owner", U));
-        if (owner) client.owners.push(owner);
-    }
-    // init(client);
-});
-
-client.on("interactionCreate", async (interaction) => {
-    // console.log(interaction);
-    interactionCreate.handle(interaction);
-});
 
 // client.on("message", async msg => {
 //     if (!msg.author.DB) await msg.author.dbLoad();

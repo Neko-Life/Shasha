@@ -1,17 +1,17 @@
-'use strict';
+// 'use strict';
 
-const { SlashCommandBuilder, SlashCommandStringOption } = require("@discordjs/builders")
+// const { SlashCommandBuilder, SlashCommandStringOption } = require("@discordjs/builders")
 
-module.exports = new SlashCommandBuilder()
-    .setName("fun")
-    .addStringOption(
-        cmd => cmd
-            .setName("say")
-            .setDescription("Say somethin")
-    )
-    .addStringOption(
-        cmd => cmd
-            .setName("send")
-            .setDescription("Send to designated channel")
-    )
-    .setDescription("Fun commands");
+// module.exports = new SlashCommandBuilder()
+//     .setName("fun")
+//     .setDescription("Fun commands")
+//     .addSubcommand(
+//         subCmd => subCmd
+//             .setName("send")
+//             .setDescription("Send message with options")
+//             .addStringOption(
+//                 strOpt => strOpt
+//                     .setName("text")
+//                 .setDescription("Send ")
+//             )
+//     );

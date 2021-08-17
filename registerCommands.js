@@ -11,6 +11,7 @@ const rest = new REST({ version: "9" }).setToken(configFile.token);
 let commandCategories = [];
 
 for (const U in fetch) {
+    if (!fetch[U].name) continue;
     commandCategories.push(fetch[U]);
 }
 
@@ -22,7 +23,7 @@ for (const U in fetch) {
             { body: commandCategories }
         );
 
-        console.log("Registered", commandCategories.length, "category.");
+        console.log("Registered", commandCategories.length, "commands/categories.");
     } catch (e) {
         console.error(e);
     }

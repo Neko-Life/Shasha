@@ -1,17 +1,32 @@
 'use strict';
 
-// const { intervalToDuration } = require("../cmds/moderation/src/duration");
+const { intervalToDuration } = require("./Duration");
 const { DateTime, Interval, Settings } = require("luxon");
 Settings.defaultZone = "utc";
 
 class TimedPunishment {
     /**    
-     * @param {{userID: string, duration: { invoked: DateTime, interval: Interval, until: DateTime, duration: { "object": DurationObject, strings: string[] } }, infraction: number, type: "ban" | "mute"}} data 
+     * @param {{userID: string,
+     * duration: {
+     * invoked: DateTime,
+     * interval: Interval,
+     * until: DateTime,
+     * duration: {
+     * "object": DurationObject,
+     * strings: string[]
+     * } },
+     * infraction: number,
+     * type: "ban" | "mute"}} data 
      */
     constructor(data = {}) {
         this.userID = data?.userID;
         /**
-         * @type {{ invoked: DateTime, interval: Interval, until: DateTime, duration: { "object": DurationObject, strings: string[] } }}
+         * @type {{ invoked: DateTime,
+         * interval: Interval,
+         * until: DateTime,
+         * duration: { 
+         * "object": DurationObject,
+         * strings: string[] } }}
          */
         this.duration = data?.duration || {};
         this.infraction = data?.infraction;
