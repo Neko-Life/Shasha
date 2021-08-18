@@ -9,6 +9,14 @@ module.exports = class EvalCmd extends Command {
 
     async run(inter, { script }) {
         if (!inter.client.owners.includes(inter.user)) return inter.editReply("wat");
-        return inter.editReply("```js\n" + JSON.stringify(eval(script.value), null, 2) + "```");
+        let send;
+        try {
+            console.log(script.value);
+            const U = eval(script.value);
+            send = JSON.stringify(U, null, 2);
+        } catch (e) {
+            send = e.stack;
+        }
+        return inter.reply("```js\n" + send + "```");
     }
 }

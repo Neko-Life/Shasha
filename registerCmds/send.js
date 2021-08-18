@@ -93,30 +93,30 @@ module.exports = new SlashCommandBuilder()
                     .setDescription("Destination channel")
             ).addStringOption(
                 opt => opt
-                    .setName("field-1-name")
+                    .setName("field-name")
                     .setDescription("Embed field name")
             ).addStringOption(
                 opt => opt
-                    .setName("field-1-text")
+                    .setName("field-text")
                     .setDescription("Embed field text")
             ).addStringOption(
                 opt => opt
-                    .setName("field-1-inline")
-                    .setDescription("Put \`y\` to set this field to be inline")
-            ).addStringOption(
-                opt => opt
-                    .setName("field-2-name")
-                    .setDescription("Embed field name")
-            ).addStringOption(
-                opt => opt
-                    .setName("field-2-text")
-                    .setDescription("Embed field text")
-            ).addStringOption(
-                opt => opt
-                    .setName("field-2-inline")
+                    .setName("field-inline")
                     .setDescription("Put \`y\` to set this field to be inline")
             )
         // .addStringOption(
+        //     opt => opt
+        //         .setName("field-2-name")
+        //         .setDescription("Embed field name")
+        // ).addStringOption(
+        //     opt => opt
+        //         .setName("field-2-text")
+        //         .setDescription("Embed field text")
+        // ).addStringOption(
+        //     opt => opt
+        //         .setName("field-2-inline")
+        //         .setDescription("Put \`y\` to set this field to be inline")
+        // ).addStringOption(
         //     opt => opt
         //         .setName("field-3-name")
         //         .setDescription("Embed field name")

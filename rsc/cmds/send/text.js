@@ -20,7 +20,7 @@ module.exports = class SayCmd extends Command {
      * @returns 
      */
     async run(inter, { text, channel }) {
-        if (channel && !channel.isText()) return inter.reply("Not a text based channel!");
+        if (channel && !channel.isText()) return inter.reply("Can't send message to that channel!");
         /**
          * @type {import("discord.js").MessageOptions}
          */

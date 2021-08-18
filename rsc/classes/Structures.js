@@ -6,7 +6,7 @@ const { Structures, Guild, GuildMember, BanOptions, Role, User, Message } = requ
     { errLog, defaultEventLogEmbed, defaultDateFormat, trySend } = require("./functions");
 const { createSchedule } = require("../cmds/moderation/src/createSchedule");
 const { TimedPunishment } = require("./classes");
-const { GUILDFNS } = require("./StructuresFns");
+const { GUILDFNS } = require("../rsc/StructuresFns");
 const col = database.collection("Schedule");
 
 class BaseDBManager {
