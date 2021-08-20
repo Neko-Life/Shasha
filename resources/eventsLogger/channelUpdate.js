@@ -14,7 +14,7 @@ let blockChannelUpdate = false;
 async function run(oldChannel, newChannel) {
     if (!newChannel.guild.DB) await newChannel.guild.dbLoad();
     if (!newChannel.guild.DB.eventChannels?.guild) return;
-    const logChannel = newChannel.guild.channels.cache.get(newChannel.guild.DB.eventChannels.guild);
+    const logChannel = newChannel.guild.channels.cache.get(newChannel.guild.DB.eventChannels.channel);
     if (!logChannel) return;
 
     const dateNow = new Date();
