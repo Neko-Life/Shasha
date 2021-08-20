@@ -35,7 +35,7 @@ module.exports = class EvalCmd extends Command {
             );
         }
         const ret = [];
-        if (send.length) for (const U of send) {
+        if (send?.length) for (const U of send) {
             const push = await inter.channel.send(U);
             ret.push(push);
         }
