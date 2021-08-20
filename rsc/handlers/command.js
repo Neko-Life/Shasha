@@ -10,7 +10,7 @@ async function handle(interaction) {
     interaction.args = {};
     if (!category)
         return interaction.reply(
-            `Category \`${interaction.commandName}\` not found. Maybe removed/hacked or somethin`
+            `Category/command \`${interaction.commandName}\` not found. Maybe removed/hacked or somethin`
         );
     let subCategory, cmd, toArgs;
     if (interaction.options._group) {
@@ -40,7 +40,13 @@ async function handle(interaction) {
 
     if (toArgs?.length)
         for (const D of toArgs) {
-            interaction.args[D.name] = D;
+            const Dsplit = D.name.split(/-/);
+            if (Dsplit.length)
+                for (let i = 0; i < Dsplit.length; i++) {
+                    if (!i) continue;
+                    else Dsplit[i] = Dsplit[i][0].toUpperCase() + Dsplit[i].slice(1);
+                };
+            interaction.args[Dsplit.join("")] = D;
         };
 
     return new cmd(interaction).run(interaction, interaction.args);

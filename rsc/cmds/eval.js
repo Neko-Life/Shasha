@@ -1,5 +1,6 @@
 'use strict';
 
+const { Util, CommandInteraction } = require("discord.js");
 const { Command } = require("../classes/Command");
 
 module.exports = class EvalCmd extends Command {
@@ -7,16 +8,38 @@ module.exports = class EvalCmd extends Command {
         super(interaction, { name: "eval" });
     }
 
+    /**
+     * @param {CommandInteraction} inter 
+     * @param {*} param1 
+     * @returns 
+     */
     async run(inter, { script }) {
-        if (!inter.client.owners.includes(inter.user)) return inter.editReply("wat");
-        let send;
+        if (!inter.client.owners.includes(inter.user)) return inter.reply("wat");
+        await inter.deferReply({ ephemeral: true });
+        let mes;
         try {
-            console.log(script.value);
-            const U = eval(script.value);
-            send = JSON.stringify(U, null, 2);
+            const U = await eval(script.value);
+            mes = JSON.stringify(U, null, 2) || "undefined";
         } catch (e) {
-            send = e.stack;
+            mes = e.stack;
         }
-        return inter.reply("```js\n" + send + "```");
+        let send;
+        if (mes.length) {
+            send = Util.splitMessage("```js\n" + mes + "```",
+                {
+                    append: "```",
+                    prepend: "```js\n",
+                    char: ",",
+                    maxLength: 2000
+                }
+            );
+        }
+        const ret = [];
+        if (send.length) for (const U of send) {
+            const push = await inter.channel.send(U);
+            ret.push(push);
+        }
+        await inter.editReply({ content: "```js\n" + script.value + "```", ephemeral: true });
+        return ret;
     }
 }

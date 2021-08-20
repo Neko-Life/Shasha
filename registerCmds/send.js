@@ -103,6 +103,10 @@ module.exports = new SlashCommandBuilder()
                 opt => opt
                     .setName("field-inline")
                     .setDescription("Put \`y\` to set this field to be inline")
+            ).addStringOption(
+                opt => opt
+                    .setName("field-datas")
+                    .setDescription("Field datas message")
             )
         // .addStringOption(
         //     opt => opt

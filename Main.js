@@ -2,10 +2,11 @@
 
 // require("./rsc/mongo");
 // require("./rsc/structures");
-const { Client, Intents } = require("discord.js");
+const { Intents } = require("discord.js");
+const { SapphireClient } = require("@sapphire/framework");
 const { dispatch } = require("./rsc/dispatch");
 const configFile = require("./config.json");
-const client = new Client({
+const client = new SapphireClient({
     partials: ["CHANNEL", "GUILD_MEMBER", "MESSAGE", "USER"],
     intents: [Intents.FLAGS.GUILDS]
 });

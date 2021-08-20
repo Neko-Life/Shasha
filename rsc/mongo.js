@@ -1,7 +1,7 @@
 'use strict';
 
 const { mongoServer } = require("../config.json");
-const { MongoClient, Db } = require("mongodb");
+const { MongoClient } = require("mongodb");
 const dbClient = new MongoClient(process.env.MONGO_HOST || mongoServer, {
     useUnifiedTopology: true
 });
