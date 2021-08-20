@@ -546,7 +546,7 @@ function defaultDateFormat(date) {
   return "<t:" + (Math.floor(use / 1000)) + ":F>";
 }
 
-const defaultSplitMessage = { maxLength: 2000, char: ",", append: ',```', prepend: '```js\n' };
+const defaultSplitMessage = { maxLength: 2000, char: "", append: '```', prepend: '```js\n' };
 
 /**
  * @param {object} oldObj 
