@@ -1,6 +1,7 @@
 'use strict';
 
 const { CommandInteraction, MessageEmbed } = require("discord.js");
+const { randomColors } = require("../config.json");
 
 /**
  * Command usage logger
@@ -26,7 +27,7 @@ async function ranLog(msg, addition) {
 
 /**
  * Split on Length
- * @param {Array<String>} arr
+ * @param {Array<String>} arr Array of words
  * @param {number} maxLength - Max character length per split
  * @param {string} joiner
  * @returns {Array<String[]>}
@@ -34,34 +35,34 @@ async function ranLog(msg, addition) {
 function splitOnLength(arr, maxLength, joiner = "\n") {
     let toField = [], i = 0, pushed = 0;
     for (const res of arr) {
-        if (arr[pushed] && ((toField[i] ? toField[i].join(joiner) : "") + joiner + arr[pushed]).length > maxLength) {
-            i++;
-        } else {
-            pushed++;
-        }
-        if (!toField[i] || toField[i].length === 0) toField[i] = [];
+        if (
+            arr[pushed] &&
+            (
+                (
+                    toField[i] ?
+                        toField[i].join(joiner) :
+                        ""
+                ) +
+                joiner +
+                arr[pushed]
+            ).length > maxLength
+        ) i++; else pushed++;
+
+        if (!toField[i] || toField[i].length === 0)
+            toField[i] = [];
+
         toField[i].push(res);
+
         if (!arr[pushed]) break;
     }
     return toField;
 }
 
-/**
- * Make default image embed
- * @param {Message | GuildMember} msg 
- * @param {string} image 
- * @param {GuildMember | User} author 
- * @param {string} title 
- * @param {string} footerQuote
- * @returns {MessageEmbed}
- */
-function defaultImageEmbed(msg, image, title, footerQuote) {
-    if (!footerQuote) footerQuote = (msg.guild?.DB || msg.author.DB).defaultEmbed?.footerQuote || "";
+function footerColorEmbed(member) {
+    const footerQuote = (member.guild.DB || member.user.DB).defaultEmbed?.footerQuote || "";
     const emb = new MessageEmbed()
-        .setImage(image)
-        .setColor(msg.guild ? getColor((msg.member || msg).displayColor) : randomColors[Math.floor(Math.random() * randomColors.length)])
+        .setColor(member ? getColor(member.displayColor) : randomColors[Math.floor(Math.random() * randomColors.length)])
         .setFooter(footerQuote);
-    if (title) emb.setTitle(title);
     return emb;
 }
 

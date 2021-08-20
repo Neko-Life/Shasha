@@ -9,7 +9,7 @@ module.exports = class BuildEmbCmd extends Command {
         this.buildEmbed = new MessageEmbed();
         this.confEmbed =
         {
-            edit: () => { },
+            edit: (arg) => { },
             json: () => { },
             title: () => { },
             description: () => { },
