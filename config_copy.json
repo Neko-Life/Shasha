@@ -21,7 +21,6 @@
     "000000",
     16777214
   ],
-  "defaultErrorLogChannel": "822877910138224660",
   "mongoServer": "mongodb://localhost:27017",
   "chatChannel": "837178237322919966",
   "guildLog": "840154722434154496",

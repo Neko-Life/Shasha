@@ -1,7 +1,7 @@
 'use strict';
 
 const { MessageEmbed, Message, GuildMember, User, GuildChannel, Role, MessageOptions, TextChannel, DMChannel, Guild, Channel } = require('discord.js');
-const { defaultErrorLogChannel, ranLogger } = require("../config.json");
+const { errLogChannel, ranLogger } = require("../config.json");
 const { timestampAt } = require('./debug');
 const getColor = require('./getColor');
 const { randomColors } = require("../config.json");
@@ -42,7 +42,7 @@ async function errLog(theError, msg, client, sendTheError, errorMessage, notify)
   if (client) {
     inLogChannel = inLogChannel + '```js\n' + theError.stack + '```';
     try {
-      const sendAt = client.channels.cache.get(defaultErrorLogChannel);
+      const sendAt = client.channels.cache.get(errLogChannel);
       sendAt.send(logThis + inLogChannel.trim() + timestampAt(client), {
         split: {
           maxLength: 2000, char: "\n",
