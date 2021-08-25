@@ -2,7 +2,7 @@
 
 const commando = require("@iceprod/discord.js-commando");
 const { trySend, defaultImageEmbed } = require("../../resources/functions");
-const { default: fetchNeko } = require("nekos-best.js");
+const { fetchNeko } = require("nekos-best.js");
 
 module.exports = class smile extends commando.Command {
     constructor(client) {
@@ -17,7 +17,7 @@ module.exports = class smile extends commando.Command {
         msg.channel.startTyping();
         const title = `${msg.guild ? msg.member.displayName : msg.author.username} is smilin`;
         const image = await fetchNeko("smile");
-        const emb = defaultImageEmbed(msg, image); emb.setAuthor(title, msg.author.displayAvatarURL({ size: 128, format: "png", dynamic: true }));
+        const emb = defaultImageEmbed(msg, image.url); emb.setAuthor(title, msg.author.displayAvatarURL({ size: 128, format: "png", dynamic: true }));
         return trySend(this.client, msg, emb);
     }
 };

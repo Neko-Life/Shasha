@@ -1,6 +1,6 @@
 'use strict';
 
-const { default: fetchNeko } = require("nekos-best.js");
+const { fetchNeko } = require("nekos-best.js");
 const { parseComa, getMember, defaultImageEmbed } = require("../../../resources/functions");
 
 module.exports = async (msg, arg, name, endsaT = "") => {
@@ -99,7 +99,7 @@ module.exports = async (msg, arg, name, endsaT = "") => {
         ss = name.endsWith("s") ? name + "es" : name + "s";
         const aT = `${shoot.displayName} ${ss} ${tN} ${tN.endsWith(" times LMFAO") ? "" : endsaT}`,
             count = shoot.user.DB.interactions[name] + (iC > 0 ? 1 : 0),
-            emb = defaultImageEmbed(msg, await fetchNeko(name));
+            emb = defaultImageEmbed(msg, (await fetchNeko(name)).url);
         let num;
         if (count) {
             const u = count?.toString();
