@@ -25,7 +25,7 @@ module.exports = class CreateFields1 extends Command {
         )
         let sI = 0;
         for (const U of cont) {
-            await inter.channel.send({
+            const res = await inter.channel.send({
                 content: U.replace("<_version>", sI++)
             });
         }

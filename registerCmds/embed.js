@@ -1,10 +1,16 @@
 'use strict';
 
 const { SlashCommandBuilder } = require("@discordjs/builders");
+const EmbedStringsOptions = require("../rsc/subCmds/EmbedStringsOptions");
 
 module.exports = new SlashCommandBuilder()
     .setName("embed")
     .setDescription("Embed maker")
+    .addSubcommand(
+        sCmd => EmbedStringsOptions
+            .setName("build")
+            .setDescription("Build embed")
+    )
     .addSubcommand(
         sCmd => sCmd
             .setName("create-fields-1")

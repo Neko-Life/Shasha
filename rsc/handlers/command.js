@@ -38,6 +38,50 @@ async function handle(interaction) {
         toArgs = interaction.options.data;
     }
 
+    cmd = new cmd(interaction);
+    if (interaction.guild) {
+        const lackUser = [];
+        const lackClient = [];
+        if (cmd.userPermissions.length) {
+            const seri = interaction.channel.permissionsFor(interaction.user).serialize();
+            const perms = [];
+            for (const D in seri) {
+                if (!seri[D]) continue;
+                perms.push(D);
+            }
+            for (const A of cmd.userPermissions) {
+                if (perms.includes(A)) continue;
+                lackUser.push(A);
+            }
+        }
+        if (cmd.clientPermissions.length) {
+            const seri = interaction.channel.permissionsFor(interaction.client.user).serialize();
+            const perms = [];
+            for (const D in seri) {
+                if (!seri[D]) continue;
+                perms.push(D);
+            }
+            for (const A of cmd.clientPermissions) {
+                if (perms.includes(A)) continue;
+                lackClient.push(A);
+            }
+        }
+        if (lackUser.length || lackClient.length) {
+            let lackPermMsg = "";
+            if (lackClient.length) lackPermMsg += (
+                `Gib me these permissions <:nekoknifeLife:851287828453261322>`
+                + "```js\n" + lackClient.join(", ") + "```"
+            );
+            if (lackUser.length) lackPermMsg += (
+                `You need to have these permissions`
+                + "```js\n" + lackUser.join(", ") + "```"
+            );
+            if (lackPermMsg.length) {
+                return interaction.reply(lackPermMsg + "then we talk <:dunnoLife:853087375440871456>");
+            }
+        }
+    }
+
     if (toArgs?.length)
         for (const D of toArgs) {
             const Dsplit = D.name.split(/-/);
@@ -49,7 +93,7 @@ async function handle(interaction) {
             interaction.args[Dsplit.join("")] = D;
         };
 
-    return new cmd(interaction).run(interaction, interaction.args);
+    return cmd.run(interaction, interaction.args);
 }
 
 module.exports = { handle }

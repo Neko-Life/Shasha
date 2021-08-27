@@ -125,3 +125,61 @@ function adCheck(str) {
     }
     return str;
 }
+
+/**
+ * Parse string (split ",")
+ * @param {string} str
+ * @returns {String[]}
+ */
+function parseComa(str) {
+    if (!str) return;
+    return str.split(/(?<!\\),+(?!\d*})/);
+}
+
+/**
+ * Get message object from the message channel or provided channel
+ * @param {Message} msg - Message object (msg)
+ * @param {string} MainID - Message ID | Channel_[mention|ID] | Message link
+ * @param {string} SecondID - Message ID
+ * @returns {Promise<Message>} Message object | undefined
+ */
+async function getChannelMessage(msg, MainID, SecondID) {
+    if (!MainID || !msg) return;
+    if (/\//.test(MainID)) {
+        const splitURL = MainID.split(/\/+/);
+        SecondID = splitURL[splitURL.length - 1];
+        MainID = splitURL[splitURL.length - 2];
+    }
+    MainID = cleanMentionID(MainID);
+    if (SecondID && !/\D/.test(SecondID)) {
+        try {
+            const meschannel = (msg.client.owners.includes(msg.author) ? msg.client : msg.guild).channels.cache.get(MainID);
+            return meschannel.messages.fetch(SecondID, true).catch(() => { });
+        } catch {
+            return;
+        }
+    } else {
+        return msg.channel.messages.fetch(MainID, true).catch(() => { });
+    }
+}
+
+/**
+ * Return clean ID of provided key
+ * @param {string} key - Mention | Channel Name | Username | Rolename
+ * @returns {string} Clean ID
+ */
+function cleanMentionID(key) {
+    if (!key || (typeof key !== "string")) return;
+    let uID = key.trim();
+    if (!/\D/.test(uID)) return uID;
+    if (uID.startsWith('<@') || uID.startsWith('<#')) uID = uID.slice(2);
+    if (uID.endsWith('>')) uID = uID.slice(0, -1);
+    if (uID.startsWith('!') || uID.startsWith("@") || uID.startsWith("#") || uID.startsWith('&')) uID = uID.slice(1);
+    return uID;
+}
+
+module.exports = {
+    parseComa,
+    getChannelMessage,
+    cleanMentionID
+}
