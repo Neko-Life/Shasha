@@ -1,5 +1,6 @@
 'use strict';
 
+const { BaseGuildTextChannel } = require("discord.js");
 const { MessageEmbed } = require("discord.js");
 const { Command } = require("../../classes/Command");
 const { getChannelMessage } = require("../../functions");
@@ -7,11 +8,24 @@ const getColor = require("../../getColor");
 
 module.exports = class BuildEmbCmd extends Command {
     constructor(interaction) {
-        super(interaction, { name: "embed", clientPermissions: [] });
+        super(interaction, {
+            name: "embed",
+            clientPermissions: [
+                "EMBED_LINKS",
+                "ATTACH_FILES",
+                "SEND_MESSAGES"
+            ],
+            userPermissions: [
+                "SEND_MESSAGES",
+                "ATTACH_FILES",
+                "EMBED_LINKS",
+                "MANAGE_MESSAGES"
+            ]
+        });
         this.resultMsg = "";
         this.authorEmbed = {};
         this.footerEmbed = {};
-        this.fieldEmbed = [];
+        this.fieldEmbed = {};
         this.buildEmbed = new MessageEmbed();
         this.confEmbed =
         {
@@ -48,7 +62,7 @@ module.exports = class BuildEmbCmd extends Command {
                 this.buildEmbed.setDescription(value);
             },
             authorName: ({ value }) => {
-                this.authorEmbed.name = { value };
+                this.authorEmbed.name = value;
             },
             authorIcon: ({ value }) => {
                 this.authorEmbed.iconURL = value;
@@ -102,14 +116,34 @@ module.exports = class BuildEmbCmd extends Command {
     }
 
     async run(inter, data) {
-        for (const argName in data) {
-            const arg = data[argName];
-            await this.confEmbed[argName](arg);
+        try {
+            for (const argName in data) {
+                const arg = data[argName];
+                await this.confEmbed[argName](arg);
+            }
+            if (this.fieldEmbed.name || this.fieldEmbed.value)
+                this.buildEmbed.addField(this.fieldEmbed.name, this.fieldEmbed.value, this.fieldEmbed.inline || false);
+            if (this.authorEmbed.name)
+                this.buildEmbed.setAuthor(this.authorEmbed.name, this.authorEmbed.iconURL, this.authorEmbed.url);
+            if (this.footerEmbed.text || this.footerEmbed.iconURL)
+                this.buildEmbed.setFooter(this.footerEmbed.text, this.footerEmbed.iconURL);
+            /**
+             * @type {import("discord.js").MessageOptions}
+             */
+            const send = {
+                embed: this.buildEmbed
+            }
+            if (this.contentEmbed) send.content = this.contentEmbed;
+            /**
+             * @type {BaseGuildTextChannel}
+             */
+            let channel = this.channelSend;
+            if (!channel) channel = inter.channel;
+            const ret = await channel.send(send);
+            await inter.reply("ye");
+            return ret;
+        } catch (e) {
+            return inter.reply(e.message);
         }
-        const send = {
-            embed: this.buildEmbed
-        }
-        if (this.contentEmbed) send.content = this.contentEmbed;
-        const ret = await inter.channel.send()
     }
 }

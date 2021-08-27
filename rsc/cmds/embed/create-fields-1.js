@@ -6,7 +6,13 @@ const createJSONEmbedFields = require("../../rsc/createJSONEmbedFields");
 
 module.exports = class CreateFields1 extends Command {
     constructor(interaction) {
-        super(interaction, { name: "create-fields-1" });
+        super(interaction, {
+            name: "create-fields-1",
+            clientPermissions: ["SEND_MESSAGES"],
+            userPermissions: [
+                "SEND_MESSAGES"
+            ]
+        });
     }
 
     /**

@@ -7,6 +7,7 @@ const { PermissionString } = require("discord.js");
  * @property {string} name
  * @property {string} description
  * @property {boolean} guildOnly
+ * @property {boolean} ownerOnly
  * @property {PermissionString[]} userPermissions
  * @property {PermissionString[]} clientPermissions
  */
@@ -20,6 +21,7 @@ class Command {
         this.name = data.name;
         this.description = data.description;
         this.guildOnly = data.guildOnly || false;
+        this.ownerOnly = data.ownerOnly || false;
         this.userPermissions = data.userPermissions || [];
         this.clientPermissions = data.clientPermissions || [];
     }

@@ -6,7 +6,13 @@ const createJSONEmbedFields = require("../../rsc/createJSONEmbedFields");
 
 module.exports = class CreateFields3 extends Command {
     constructor(interaction) {
-        super(interaction, { name: "create-fields-3" });
+        super(interaction, {
+            name: "create-fields-3",
+            clientPermissions: ["SEND_MESSAGES"],
+            userPermissions: [
+                "SEND_MESSAGES"
+            ]
+        });
     }
 
     /**
@@ -25,7 +31,7 @@ module.exports = class CreateFields3 extends Command {
         )
         let sI = 0;
         for (const U of cont) {
-            await inter.channel.send({
+            const res = await inter.channel.send({
                 content: U.replace("<_version>", sI++)
             });
         }

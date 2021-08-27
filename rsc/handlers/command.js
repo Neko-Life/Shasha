@@ -39,6 +39,12 @@ async function handle(interaction) {
     }
 
     cmd = new cmd(interaction);
+
+    if (cmd.ownerOnly) {
+        if (!interaction.client.owners.includes(interaction.user))
+            return interaction.reply("Sorry i don't know you. You can't make me do that...");
+    }
+
     if (interaction.guild) {
         const lackUser = [];
         const lackClient = [];
@@ -73,7 +79,7 @@ async function handle(interaction) {
                 + "```js\n" + lackClient.join(", ") + "```"
             );
             if (lackUser.length) lackPermMsg += (
-                `You need to have these permissions`
+                `Get these permissions`
                 + "```js\n" + lackUser.join(", ") + "```"
             );
             if (lackPermMsg.length) {
