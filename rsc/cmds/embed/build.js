@@ -131,7 +131,7 @@ module.exports = class BuildEmbCmd extends Command {
              * @type {import("discord.js").MessageOptions}
              */
             const send = {
-                embed: this.buildEmbed
+                embeds: [this.buildEmbed]
             }
             if (this.contentEmbed) send.content = this.contentEmbed;
             /**
