@@ -3,6 +3,12 @@
 const { CommandInteraction, Util } = require("discord.js");
 const { Command } = require("../../classes/Command");
 const createJSONEmbedFields = require("../../rsc/createJSONEmbedFields");
+const FD_SPLIT_CONF = {
+    prepend: "#fields_data_2.<_version>```js\n",
+    append: "```",
+    maxLength: 2000,
+    char: ","
+}
 
 module.exports = class CreateFields2 extends Command {
     constructor(interaction) {
@@ -21,13 +27,8 @@ module.exports = class CreateFields2 extends Command {
     async run(inter, fields) {
         const fieldsArr = await createJSONEmbedFields(inter, fields);
         const cont = Util.splitMessage(
-            "#fields_data_2.<_version>```js\n" + JSON.stringify(fieldsArr) + "```",
-            {
-                prepend: "#fields_data_2.<_version>```js\n",
-                append: "```",
-                maxLength: 2000,
-                char: ","
-            }
+            FD_SPLIT_CONF.prepend + JSON.stringify(fieldsArr) + FD_SPLIT_CONF.append,
+            FD_SPLIT_CONF
         )
         let sI = 0;
         const ret = [];
@@ -39,7 +40,10 @@ module.exports = class CreateFields2 extends Command {
             res.fieldDataVersion = sI++;
             ret.push(res);
         }
-        inter.editReply("Created. Use the latest message of fields data messages to use in `embed build` command.");
+        inter.editReply("Provide these message Ids to be used in `embed build fieldDatas` command option,"
+            + " separated with ` ` ```js\n"
+            + ret.map(r => r.id).join(" ")
+            + "```");
         return ret;
     }
 }

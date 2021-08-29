@@ -118,7 +118,69 @@ module.exports = class BuildEmbCmd extends Command {
                 if (![`yes`, `true`, `y`, `1`].includes(value)) return;
                 this.fieldEmbed.inline = true;
             },
-            fieldDatas: ({ value }) => { }
+            fieldDatas: async ({ value }) => {
+                const ids = value.split(/ +/);
+                const messages = [];
+                for (const id of ids) {
+                    const msg = await getChannelMessage(interaction, id);
+                    if (!msg) {
+                        this.error = true;
+                        this.resultMsg += "**[FIELD_DATA]** Unknown message: **" + id + "**\n";
+                        continue;
+                    }
+                    if (!msg.fieldData) {
+                        const dataStr = msg.content?.match(/(?<=^#fields\_data\_)\d+\.\d+(?=```)/);
+                        if (dataStr?.length) {
+                            const split = dataStr.split(".");
+                            msg.fieldData = parseInt(split[0]);
+                            msg.fieldDataVersion = parseInt(split[1]);
+                        } else {
+                            this.error = true;
+                            this.resultMsg += "**[FIELD_DATA]** Invalid message: **" + id + "**\n";
+                            continue;
+                        }
+                    }
+                    messages.push(msg);
+                }
+                messages.sort((a, b) => {
+                    if (a.fieldData === b.fieldData)
+                        return a.fieldDataVersion - b.fieldDataVersion;
+                    return a.fieldData - b.fieldData;
+                });
+                let jsonData = ""
+                for (const msg of messages) {
+                    if (msg.fieldDataVersion > 0 && jsonData.endsWith("```")) {
+                        jsonData = jsonData.slice(0, -3);
+                        const add = msg.content.slice(
+                            msg.content.match(/^#fields\_data\_\d+\.\d+```js\\n/)[0].length
+                        );
+                        jsonData += "," + add;
+                        continue;
+                    }
+                    if (msg.fieldData > 1 && jsonData.endsWith("]```")) {
+                        jsonData = jsonData.slice(0, -4);
+                        const add = msg.content.slice(
+                            msg.content.match(/^#fields\_data\_\d+\.\d+```js\\n\[/)[0].length
+                        );
+                        jsonData += "," + add;
+                        continue;
+                    }
+                    jsonData += msg.content;
+                }
+                const sourceJson = JSON.parse(jsonData.slice(
+                    jsonData.match(/^#fields\_data\_\d+\.\d+```js\\n/)[0].length,
+                    -3
+                ));
+                const toEmbedF = sourceJson.map(a => {
+                    const ret = {};
+                    if (a.n) ret.name = a.n;
+                    if (a.v) ret.value = a.v;
+                    if (a.i) ret.inline = a.i;
+                    if (ret.name || ret.value)
+                        return ret;
+                });
+                this.buildEmbed.addFields(toEmbedF);
+            }
         };
     }
 

@@ -1,6 +1,6 @@
 'use strict';
 
-const { PermissionString } = require("discord.js");
+const { PermissionString, CommandInteraction } = require("discord.js");
 
 /**
  * @typedef {object} CommandData
@@ -14,6 +14,7 @@ const { PermissionString } = require("discord.js");
 
 class Command {
     /**
+     * @param {CommandInteraction} interaction
      * @param {CommandData} data
      */
     constructor(interaction, data) {

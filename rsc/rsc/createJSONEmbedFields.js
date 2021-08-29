@@ -14,7 +14,7 @@ module.exports = async (inter, fields, minus = 0) => {
         else if (N === "Text") fieldsArr[index].v = fields[U].value;
         else if (N === "Inline")
             fieldsArr[index].i = ["yes", "true", "y", "1"]
-                .includes(fields[U].value.trim().toLowerCase());
+                .includes(fields[U].value.trim().toLowerCase()) ? 1 : 0;
     }
     const ret = [];
     for (const U of fieldsArr) {
