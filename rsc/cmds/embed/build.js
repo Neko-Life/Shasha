@@ -32,8 +32,14 @@ module.exports = class BuildEmbCmd extends Command {
             edit: async ({ value }) => {
                 const args = value.trim().split(/ +/);
                 this.sourceMessage = await getChannelMessage(this.interaction, args[0], args[1]);
-                if (!this.sourceMessage) return this.resultMsg += "**[EDIT]** Unknown message\n";
-                if (!this.sourceMessage.embeds[0]) return this.resultMsg += "**[EDIT]** No embed found in the message\n";
+                if (!this.sourceMessage) {
+                    this.error = true;
+                    return this.resultMsg += "**[EDIT]** Unknown message\n";
+                }
+                if (!this.sourceMessage.embeds[0]) {
+                    this.error = true;
+                    return this.resultMsg += "**[EDIT]** No embed found in the message\n";
+                }
                 this.buildEmbed = this.sourceMessage.embeds[0];
                 this.contentEmbed = this.sourceMessage.content;
                 for (const D in this.buildEmbed.author) {
@@ -52,7 +58,8 @@ module.exports = class BuildEmbCmd extends Command {
                     this.buildEmbed = new MessageEmbed(JSON.parse(value));
                 } catch (e) {
                     this.buildEmbed = new MessageEmbed();
-                    this.resultMsg += "**[JSON]** Parse error: Invalid JSON\n";
+                    this.error = true;
+                    this.resultMsg += "**[JSON]** Invalid format\n";
                 }
             },
             title: ({ value }) => {
@@ -139,8 +146,16 @@ module.exports = class BuildEmbCmd extends Command {
              */
             let channel = this.channelSend;
             if (!channel) channel = inter.channel;
-            const ret = await channel.send(send);
-            await inter.reply("ye");
+            let ret;
+            if (!this.channelSend && this.sourceMessage) {
+                if (this.sourceMessage.author !== inter.client.user) {
+                    this.error = true;
+                    this.resultMsg += "**[EDIT]** no way <:catstareLife:794930503076675584>";
+                } else ret = await this.sourceMessage.edit(send);
+            }
+            if (!ret) ret = await channel.send(send);
+            await inter.reply(this.resultMsg +
+                (this.error ? "" : "\nDone <:awamazedLife:795227334339985418>"));
             return ret;
         } catch (e) {
             return inter.reply(e.message);

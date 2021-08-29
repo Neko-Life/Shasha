@@ -1,6 +1,7 @@
 'use strict';
 
-const { CommandInteraction } = require("discord.js");
+const { CommandInteraction, Message } = require("discord.js");
+const { isArray } = require("lodash");
 
 /**
  * @param {CommandInteraction} interaction 
@@ -79,7 +80,7 @@ async function handle(interaction) {
                 + "```js\n" + lackClient.join(", ") + "```"
             );
             if (lackUser.length) lackPermMsg += (
-                `Get these permissions`
+                (lackClient.length ? "you also need" : "Get") + ` these permissions`
                 + "```js\n" + lackUser.join(", ") + "```"
             );
             if (lackPermMsg.length) {
@@ -98,8 +99,28 @@ async function handle(interaction) {
                 };
             interaction.args[Dsplit.join("")] = D;
         };
-
-    return cmd.run(interaction, interaction.args);
+    interaction.commandResults = [];
+    const result = cmd.run(interaction, interaction.args);
+    if (isArray(result)) for (const res of result) {
+        if (res) {
+            if (res instanceof Promise) await res;
+            res.invoker = interaction.user;
+        }
+        interaction.commandResults.push(res);
+    } else {
+        if (result) {
+            if (result instanceof Promise) await result;
+            result.invoker = interaction.user;
+        }
+        interaction.commandResults.push(result);
+    }
+    interaction.client.handledCommands.set(interaction.id, interaction);
+    console.log("Interaction",
+        interaction.commandName,
+        interaction.id, "run by",
+        interaction.user.tag, "in",
+        interaction.channel.name,
+        interaction.guild?.name);
 }
 
 module.exports = { handle }

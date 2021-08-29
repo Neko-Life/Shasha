@@ -30,11 +30,16 @@ module.exports = class CreateFields3 extends Command {
             }
         )
         let sI = 0;
+        const ret = [];
         for (const U of cont) {
             const res = await inter.channel.send({
-                content: U.replace("<_version>", sI++)
+                content: U.replace("<_version>", sI)
             });
+            res.fieldData = 3;
+            res.fieldDataVersion = sI++;
+            ret.push(res);
         }
-        return inter.editReply("Created. Use the latest message of fields data messages to use in `embed build` command.");
+        inter.editReply("Created. Use the latest message of fields data messages to use in `embed build` command.");
+        return ret;
     }
 }
