@@ -41,7 +41,7 @@ module.exports = class CreateFields2 extends Command {
             ret.push(res);
         }
         inter.editReply("Provide these message Ids to be used in `embed build fieldDatas` command option,"
-            + " separated with ` ` ```js\n"
+            + " separated with ` ` (space) ```js\n"
             + ret.map(r => r.id).join(" ")
             + "```");
         return ret;

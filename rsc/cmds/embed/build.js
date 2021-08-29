@@ -129,7 +129,7 @@ module.exports = class BuildEmbCmd extends Command {
                         continue;
                     }
                     if (!msg.fieldData) {
-                        const dataStr = msg.content?.match(/(?<=^#fields\_data\_)\d+\.\d+(?=```)/);
+                        const dataStr = msg.content?.match(/(?<=^#fields\_data\_)\d+\.\d+(?=```)/)?.[0];
                         if (dataStr?.length) {
                             const split = dataStr.split(".");
                             msg.fieldData = parseInt(split[0]);
@@ -152,7 +152,7 @@ module.exports = class BuildEmbCmd extends Command {
                     if (msg.fieldDataVersion > 0 && jsonData.endsWith("```")) {
                         jsonData = jsonData.slice(0, -3);
                         const add = msg.content.slice(
-                            msg.content.match(/^#fields\_data\_\d+\.\d+```js\\n/)[0].length
+                            msg.content.match(/^#fields\_data\_\d+\.\d+```js\n/)[0].length
                         );
                         jsonData += "," + add;
                         continue;
@@ -160,7 +160,7 @@ module.exports = class BuildEmbCmd extends Command {
                     if (msg.fieldData > 1 && jsonData.endsWith("]```")) {
                         jsonData = jsonData.slice(0, -4);
                         const add = msg.content.slice(
-                            msg.content.match(/^#fields\_data\_\d+\.\d+```js\\n\[/)[0].length
+                            msg.content.match(/^#fields\_data\_\d+\.\d+```js\n\[/)[0].length
                         );
                         jsonData += "," + add;
                         continue;
@@ -168,7 +168,7 @@ module.exports = class BuildEmbCmd extends Command {
                     jsonData += msg.content;
                 }
                 const sourceJson = JSON.parse(jsonData.slice(
-                    jsonData.match(/^#fields\_data\_\d+\.\d+```js\\n/)[0].length,
+                    jsonData.match(/^#fields\_data\_\d+\.\d+```js\n/)[0].length,
                     -3
                 ));
                 const toEmbedF = sourceJson.map(a => {
