@@ -15,4 +15,7 @@ dbClient.connect(e => {
 
 const database = dbClient.db("Shasha");
 
+/**
+ * @type {dbClient: MongoClient, database: Db}
+ */
 module.exports = { dbClient, database }
