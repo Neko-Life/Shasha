@@ -23,6 +23,7 @@ const requireAll = require("require-all");
 const { chatAnswer } = require("./resources/shaChat");
 const { init } = require("./cmds/moderation/src/createSchedule");
 const { dbClient } = require("./database/mongo");
+const { escapeRegExp } = require("lodash");
 
 const lgr = requireAll({ dirname: join(__dirname, "resources/eventsLogger"), recursive: true });
 client.functions = requireAll({ dirname: join(__dirname, "resources"), recursive: true });
@@ -62,7 +63,7 @@ client.on("message", async msg => {
     lgr.message.letsChat(msg);
 
     if (msg.mentions.has(client.user) && !msg.isCommand && msg.channel.id != configFile.chatChannel) {
-        const re = new RegExp("@​" + (msg.guild ? msg.guild.member(client.user).displayName : msg.author.username));
+        const re = new RegExp("@​" + escapeRegExp(msg.guild ? msg.guild.me.displayName : msg.author.username));
         const u = msg.cleanContent.replace(re, "").trim();
         console.log(u, re);
         if (u.length > 0) {

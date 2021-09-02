@@ -1,7 +1,7 @@
 'use strict';
 
 const commando = require("@iceprod/discord.js-commando");
-// const { chatAnswer } = require("../../resources/shaChat");
+const { chatAnswer } = require("../../resources/shaChat");
 
 module.exports = class chat extends commando.Command {
     constructor(client) {
@@ -12,8 +12,12 @@ module.exports = class chat extends commando.Command {
             description: "Lets chat!"
         });
     }
-    async run(msg) {
-        return "Chat is currently unavailable.";
-        // chatAnswer(this.client, msg);
+    async run(msg, args) {
+        if (!args) {
+            return trySend(msg.client, msg, "Ask me somethin?");
+        }
+        msg.channel.startTyping();
+        return trySend(this.client, msg, await chatAnswer(
+            msg.cleanContent.slice((msg.guild.commandPrefix + msg.alias).length + 1).trim()));
     }
 };
