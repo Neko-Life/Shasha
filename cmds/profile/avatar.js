@@ -29,13 +29,13 @@ module.exports = class avatar extends commando.Command {
     const args = parseComa(arg);
     if (msg.guild ? !msg.member.hasPermission("MANAGE_MESSAGES") : false) {
       onceOnly = true;
-      if (args.length > 1) tryReact(msg, "cathmmLife:772716381874946068");
+      if (args?.length > 1) tryReact(msg, "cathmmLife:772716381874946068");
     }
     if (option) {
       const theVal = option.match(/\d+/)?.[0];
       if (theVal) show = parseInt(theVal.trim(), 10);
     }
-    if (arg) {
+    if (args?.length) {
       for (const theAvThis of args) {
         let avThis = theAvThis.replace(/(?<!\\)--s +\d+/, "");
         let uID = cleanMentionID(avThis.trim());
