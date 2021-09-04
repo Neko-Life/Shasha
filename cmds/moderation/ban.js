@@ -26,8 +26,8 @@ module.exports = class ban extends commando.Command {
      */
     async run(msg, arg) {
         const CL = msg.guild.member(msg.client.user);
-        if (!(msg.member.isAdmin || msg.member.hasPermission("BAN_MEMBER"))) return trySend(msg.client, msg, "bruh moment <:nekokekLife:852865942530949160>");
-        if (!(CL.isAdmin || CL.hasPermission("BAN_MEMBER"))) return trySend(msg.client, msg, "I don't have the power to do that <:pepewhysobLife:853237646666891274>");
+        if (!(msg.member.isAdmin || msg.member.permissions.serialize().BAN_MEMBERS)) return trySend(msg.client, msg, "bruh moment <:nekokekLife:852865942530949160>");
+        if (!(CL.isAdmin || CL.permissions.serialize().BAN_MEMBERS)) return trySend(msg.client, msg, "I don't have the power to do that <:pepewhysobLife:853237646666891274>");
         if (!arg) return trySend(msg.client, msg,
             "Args: `user_[name|mention|ID] -- [reason] -- [duration] [--d [number of days to delete messages of the user to ban]]`. Separate `user` with `,`. Example:" +
             `\`\`\`js\n${msg.guild.commandPrefix + this.name
@@ -57,57 +57,59 @@ module.exports = class ban extends commando.Command {
         if (!pDuration.invoked) pDuration.invoked = DateTime.fromJSDate(msg.editedAt || msg.createdAt);
         if (!execTarget?.length) if (!resultMsg.length) return; else return trySend(msg.client, msg, resultMsg);
 
+
+        const INFRACTION = createInfraction(msg, execTarget, "ban", reason),
+            data = {
+                duration: pDuration,
+                infraction: INFRACTION.infraction,
+                moderator: msg.member
+            };
+
+        let banned = [], already = [], cant = [];
+
         /**
          * @type {User}
          */
         for (const U of execTarget) {
-            const INFRACTION = createInfraction(msg, execTarget, "ban", reason),
-                data = {
-                    duration: pDuration,
-                    infraction: INFRACTION.infraction,
-                    moderator: msg.member
-                };
-            let banned = [], already = [], cant = [];
             try {
                 await U.ban(msg.guild, data, { days: daysToDeleteMessages, reason: reason });
                 banned.push(U.id);
             } catch (e) {
                 if (/Missing Permissions|someone with higher position/.test(e.message)) cant.push(U.id);
             }
-
-            INFRACTION.executed = banned;
-            INFRACTION.aborted = already;
-            INFRACTION.failed = cant;
-
-
-            const emb = defaultEventLogEmbed(msg.guild)
-                .setTitle("Infraction #" + INFRACTION.infraction)
-                .setDescription(reason);
-
-            if (banned.length) {
-                let bannedStr = "", bannedArr = [];
-                await msg.guild.addInfraction(INFRACTION);
-                for (const U of banned) {
-                    const tU = "<@" + U + ">, ";
-                    if ((bannedStr + tU).length < 1000) bannedStr += tU; else bannedArr.push(U);
-                }
-                bannedStr = bannedStr.slice(0, -2);
-
-                if (bannedArr.length) bannedStr += ` and ${bannedArr.length} more...`;
-                if (already.length) emb.addField("Already banned", "<@" + already.join(">, <@") +
-                    ">\n\nDuration updated for these users");
-
-                emb.addField("Banned", bannedStr || "`[NONE]`")
-                    .addField("At", defaultDateFormat(pDuration.invoked), true)
-                    .addField("Until", pDuration.until ? defaultDateFormat(pDuration.until) : "Never", true)
-            }
-            emb.addField("For", pDuration.duration?.strings.join(" ") || "Indefinite");
-
-            if (cant.length) emb.addField("Can't ban", "<@" + cant.join(">, <@") +
-                ">\n\n**You can't ban someone with the same or higher position than you <:nekokekLife:852865942530949160>**");
-
-            return trySend(msg.client, msg, { content: resultMsg, embed: emb });
         }
-        return trySend(msg.client, msg, resultMsg);
+
+        INFRACTION.executed = banned;
+        INFRACTION.aborted = already;
+        INFRACTION.failed = cant;
+
+        const emb = defaultEventLogEmbed(msg.guild)
+            .setTitle("Infraction #" + INFRACTION.infraction)
+            .setDescription(reason);
+
+        if (banned.length) {
+            let bannedStr = "", bannedArr = [];
+            await msg.guild.addInfraction(INFRACTION);
+            for (const U of banned) {
+                const tU = "<@" + U + ">, ";
+                if ((bannedStr + tU).length < 1000) bannedStr += tU; else bannedArr.push(U);
+            }
+            bannedStr = bannedStr.slice(0, -2);
+
+            if (bannedArr.length) bannedStr += ` and ${bannedArr.length} more...`;
+            if (already.length) emb.addField("Already banned", "<@" + already.join(">, <@") +
+                ">\n\nDuration updated for these users");
+
+            emb.addField("Banned", bannedStr || "`[NONE]`")
+                .addField("At", defaultDateFormat(pDuration.invoked), true)
+                .addField("Until", pDuration.until ? defaultDateFormat(pDuration.until) : "Never", true)
+        }
+        emb.addField("For", pDuration.duration?.strings.join(" ") || "Indefinite");
+
+        if (cant.length) emb.addField("Can't ban", "<@" + cant.join(">, <@") +
+            ">\n\n**You can't ban someone with the same or higher position than you <:nekokekLife:852865942530949160>**");
+        if (!banned.length && !already.length && !cant.length)
+            return trySend(msg.client, msg, resultMsg);
+        return trySend(msg.client, msg, { content: resultMsg, embed: emb });
     }
 }

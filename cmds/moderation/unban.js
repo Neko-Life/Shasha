@@ -38,13 +38,12 @@ module.exports = class unbanCmd extends commando.Command {
                 errLog(e, msg, msg.client, true, "", true);
                 cant.push(T.id);
             }
-
-            const emb = defaultEventLogEmbed(msg.guild);
-            if (cant.length) emb.addField("Can't unban", "<@" + cant.join(">, <@") + ">");
-            emb.setDescription(reason)
-                .setTitle("Unban")
-                .addField("Unbanned", success.length ? "<@" + success.join(">, <@") + ">" : "`[NONE]`");
-            return trySend(msg.client, msg, emb);
         }
+        const emb = defaultEventLogEmbed(msg.guild);
+        if (cant.length) emb.addField("Can't unban", "<@" + cant.join(">, <@") + ">");
+        emb.setDescription(reason)
+            .setTitle("Unban")
+            .addField("Unbanned", success.length ? "<@" + success.join(">, <@") + ">" : "`[NONE]`");
+        return trySend(msg.client, msg, emb);
     }
 };
