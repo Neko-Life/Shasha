@@ -11,7 +11,7 @@ Settings.defaultZone = "utc";
  * @param {Interval} interval 
  * @returns {{ "object": DurationObject, strings: string[] }}
  */
-function intervalToDuration(interval) {
+function intervalToStrings(interval) {
     if (!(interval instanceof Interval)) return;
     const object = interval.toDuration(["years", "months", "days", "hours", "minutes", "seconds"], { conversionAccuracy: "longterm" }).toObject();
     let strings = [];
@@ -86,7 +86,7 @@ function duration(base, string) {
 
     if (changed) DT_END = DateTime.fromJSDate(new Date(DURATION.year, DURATION.month, DURATION.day, DURATION.hour, DURATION.minute, DURATION.second));
     if (DT_END) DT_INTERVAL = Interval.fromDateTimes(DT_INVOKED, DT_END)
-    return { invoked: DT_INVOKED, until: DT_END, interval: DT_INTERVAL, duration: intervalToDuration(DT_INTERVAL) }
+    return { invoked: DT_INVOKED, until: DT_END, interval: DT_INTERVAL, duration: intervalToStrings(DT_INTERVAL) }
 }
 
 /**
@@ -101,4 +101,4 @@ function duration(base, string) {
  * @property {DurationStr} duration
  */
 
-module.exports = { duration, DT_PRINT_FORMAT, intervalToDuration, DURATION_REGEXP, CHECK_FOR_DURATION_REGEXP }
+module.exports = { duration, DT_PRINT_FORMAT, intervalToStrings, DURATION_REGEXP, CHECK_FOR_DURATION_REGEXP }
