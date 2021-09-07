@@ -1,6 +1,6 @@
 'use strict';
 
-const { CommandInteraction, Message } = require("discord.js");
+const { CommandInteraction } = require("discord.js");
 const { isArray } = require("lodash");
 
 /**
@@ -38,8 +38,16 @@ async function handle(interaction) {
         cmd = category;
         toArgs = interaction.options.data;
     }
-
-    cmd = new cmd(interaction);
+    try {
+        cmd = new cmd(interaction);
+    } catch {
+        delete cmd.constant;
+        const randCmd = [];
+        for (const T in cmd) {
+            randCmd.push(cmd[T]);
+        }
+        cmd = new randCmd[Math.floor(Math.random() * randCmd.length)];
+    }
 
     if (cmd.ownerOnly) {
         if (!interaction.client.owners.includes(interaction.user))

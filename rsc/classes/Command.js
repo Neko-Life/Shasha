@@ -12,7 +12,7 @@ const { PermissionString, CommandInteraction } = require("discord.js");
  * @property {PermissionString[]} clientPermissions
  */
 
-class Command {
+class ShaBaseCommand {
     /**
      * @param {CommandInteraction} interaction
      * @param {CommandData} data
@@ -28,4 +28,4 @@ class Command {
     }
 }
 
-module.exports = { Command }
+module.exports = { Command: ShaBaseCommand }

@@ -13,7 +13,7 @@
     "lodash": "^4.17.21",
     "luxon": "^2.0.1",
     "mongodb": "^3.6.6",
-    "nekos-best.js": "^2.0.2",
+    "nekos-best.js": "^4.0.2",
     "node": "^15.12.0",
     "require-all": "^3.0.0",
     "utf-8-validate": "^5.0.4",

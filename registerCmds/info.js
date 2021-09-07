@@ -23,4 +23,14 @@ module.exports = new SlashCommandBuilder()
                     .setName("user")
                     .setDescription("User to see the profile")
             )
+    ).addSubcommand(
+        sCmd => sCmd
+            .setName("role")
+            .setDescription("About a role")
+            .addRoleOption(
+                opt => opt
+                    .setName("role")
+                    .setDescription("Role to see about")
+                    .setRequired(true)
+            )
     )
