@@ -16,7 +16,6 @@ for (const IE of INTERACT_ENDPOINTS) {
                 opt => opt
                     .setName("user")
                     .setDescription("User to interact with")
-                    .setRequired(true)
             ).addStringOption(
                 opt => opt
                     .setName("message")
