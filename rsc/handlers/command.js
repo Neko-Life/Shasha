@@ -76,7 +76,7 @@ async function handle(interaction) {
                 if (!seri[D]) continue;
                 perms.push(D);
             }
-            for (const A of cmd.clientPermissions) {
+            for (const A of ["VIEW_CHANNEL", ...cmd.clientPermissions]) {
                 if (perms.includes(A)) continue;
                 lackClient.push(A);
             }

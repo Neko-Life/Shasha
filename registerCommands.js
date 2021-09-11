@@ -19,7 +19,7 @@ for (const U in fetch) {
     try {
         console.log("Registering slash commands...");
         await rest.put(
-            Routes.applicationGuildCommands(configFile.appId, "766775751412023297"),
+            Routes.applicationGuildCommands(configFile.appId, "772073587792281600"),
             { body: commandCategories }
         );
 

@@ -265,7 +265,7 @@ function maxLengthPad(arrStr) {
  * @returns {Promise<boolean>}
  */
 async function isInteractionInvoker(interaction, cmdName = "the command") {
-    if (!isOwner(interaction.client, interaction.user)
+    if (!isOwner(interaction.client, interaction.user.id)
         && interaction.message.interaction.user.id !== interaction.user.id) {
         await interaction.reply({
             content: "Run `" + cmdName + "` to create your own session",
