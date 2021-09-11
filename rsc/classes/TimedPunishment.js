@@ -1,6 +1,6 @@
 'use strict';
 
-const { intervalToDuration } = require("../rsc/Duration");
+const { intervalToStrings } = require("../rsc/Duration");
 const { DateTime, Interval, Settings } = require("luxon");
 Settings.defaultZone = "utc";
 
@@ -67,7 +67,7 @@ class TimedPunishment {
      * @param {Interval} interval
      */
     setDuration(interval) {
-        this.duration.duration = intervalToDuration(interval);
+        this.duration.duration = intervalToStrings(interval);
         return this;
     }
 

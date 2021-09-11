@@ -3,6 +3,7 @@
 const { MessageEmbed, Role } = require("discord.js");
 const { Interval, DateTime } = require("luxon");
 const { Command } = require("../../classes/Command");
+const { tickTag } = require("../../functions");
 const getColor = require("../../getColor");
 const { intervalToStrings } = require("../../rsc/Duration");
 
@@ -19,8 +20,14 @@ module.exports = class ProfileCmd extends Command {
         let member = user?.member || inter.member;
         if (!user) user = inter.user;
         else user = user.user;
+        const fStr = [];
+        const uFlags = user.flags.serialize();
+        for (const F in uFlags) {
+            if (!uFlags[F]) continue;
+            fStr.push(F);
+        }
         const emb = new MessageEmbed()
-            .setTitle(`\`${user.tag}\`'s profile`)
+            .setTitle(`${tickTag(user)}'s Profile`)
             .setThumbnail(user.displayAvatarURL({ size: 4096, format: "png", dynamic: true }))
             .addField("Identifier", `<@${user.id}>\n(${user.id})`)
             .addField("Registered", "<t:" + Math.floor(user.createdTimestamp / 1000) + ":F>\n"
@@ -30,6 +37,7 @@ module.exports = class ProfileCmd extends Command {
                         DateTime.fromJSDate(new Date())
                     )
                 ).strings.join(" ")} ago)`);
+        if (fStr.length) emb.addField("Badges", "```js\n" + fStr.join(", ") + "```");
         if (member) {
             /**
              * @type {Role[]}
@@ -45,12 +53,12 @@ module.exports = class ProfileCmd extends Command {
                         DateTime.fromJSDate(member.joinedAt),
                         DateTime.fromJSDate(new Date())
                     )).strings.join(" ")} ago)`)
-                .addField("Roles",
-                    ("<@&" + showRoles.join(">, <@&") + ">")
-                    + (left.length
-                        ? ` and ${left.length} more...`
-                        : ""))
                 .setColor(getColor(member.displayColor));
+            if (showRoles.length) emb.addField("Roles",
+                ("<@&" + showRoles.join(">, <@&") + ">")
+                + (left.length
+                    ? ` and ${left.length} more...`
+                    : ""));
         }
         return inter.reply({ embeds: [emb] });
     }

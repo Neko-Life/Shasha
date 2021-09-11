@@ -17,8 +17,12 @@ for (const IE of INTERACT_ENDPOINTS) {
                     .setName("user")
                     .setDescription("User to interact with")
                     .setRequired(true)
+            ).addStringOption(
+                opt => opt
+                    .setName("message")
+                    .setDescription("Message you want to say")
             )
-    )
+    );
 }
 
 module.exports = CMD

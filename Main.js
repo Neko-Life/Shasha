@@ -8,7 +8,11 @@ const { dispatch } = require("./rsc/dispatch");
 const configFile = require("./config.json");
 const client = new SapphireClient({
     partials: ["CHANNEL", "GUILD_MEMBER", "MESSAGE", "USER"],
-    intents: [Intents.FLAGS.GUILDS]
+    intents: [
+        Intents.FLAGS.GUILDS,
+        Intents.FLAGS.GUILD_MESSAGES,
+        Intents.FLAGS.GUILD_MEMBERS
+    ]
 });
 
 dispatch(client);

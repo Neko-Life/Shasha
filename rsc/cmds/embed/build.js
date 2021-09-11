@@ -1,6 +1,6 @@
 'use strict';
 
-const { BaseGuildTextChannel } = require("discord.js");
+const { BaseGuildTextChannel, Message } = require("discord.js");
 const { MessageEmbed } = require("discord.js");
 const { Command } = require("../../classes/Command");
 const { getChannelMessage } = require("../../functions");
@@ -31,6 +31,9 @@ module.exports = class BuildEmbCmd extends Command {
         {
             edit: async ({ value }) => {
                 const args = value.trim().split(/ +/);
+                /**
+                 * @type {Message}
+                 */
                 this.sourceMessage = await getChannelMessage(this.interaction, args[0], args[1]);
                 if (!this.sourceMessage) {
                     this.error = true;
@@ -99,7 +102,13 @@ module.exports = class BuildEmbCmd extends Command {
                 this.buildEmbed.setURL(value);
             },
             attachments: ({ value }) => {
-                this.buildEmbed.attachFiles(value.trim().split(/ +/));
+                if (!this.filesEmbed) this.filesEmbed = [];
+                const links = value.trim().split(/ +/);
+                if (links.includes("copy")) this.filesEmbed = this.sourceMessage.attachments.map(r => r.url);
+                for (const L of links) {
+                    if (L === "copy") continue;
+                    this.filesEmbed.push(L);
+                }
             },
             timestamp: ({ value }) => {
                 if (!/\D/.test(value)) value = parseInt(value, 10);
@@ -136,7 +145,7 @@ module.exports = class BuildEmbCmd extends Command {
                             msg.fieldDataVersion = parseInt(split[1]);
                         } else {
                             this.error = true;
-                            this.resultMsg += "**[FIELD_DATA]** Invalid message: **" + id + "**\n";
+                            this.resultMsg += "**[FIELD_DATA]** Invalid data in message **" + id + "**\n";
                             continue;
                         }
                     }
@@ -167,6 +176,10 @@ module.exports = class BuildEmbCmd extends Command {
                     }
                     jsonData += msg.content;
                 }
+                if (!/^#fields\_data\_\d+\.\d+```js\n.+```/.test(jsonData)) {
+                    this.resultMsg += "**[FIELD_DATAS]** Invalid: Cannot construct fields\n";
+                    return this.error = true;
+                }
                 const sourceJson = JSON.parse(jsonData.slice(
                     jsonData.match(/^#fields\_data\_\d+\.\d+```js\n/)[0].length,
                     -3
@@ -185,6 +198,7 @@ module.exports = class BuildEmbCmd extends Command {
     }
 
     async run(inter, data) {
+        await inter.deferReply();
         try {
             for (const argName in data) {
                 const arg = data[argName];
@@ -203,6 +217,7 @@ module.exports = class BuildEmbCmd extends Command {
                 embeds: [this.buildEmbed]
             }
             if (this.contentEmbed) send.content = this.contentEmbed;
+            if (this.filesEmbed) send.files = this.filesEmbed;
             /**
              * @type {BaseGuildTextChannel}
              */
@@ -216,11 +231,11 @@ module.exports = class BuildEmbCmd extends Command {
                 } else ret = await this.sourceMessage.edit(send);
             }
             if (!ret) ret = await channel.send(send);
-            await inter.reply(this.resultMsg +
+            await inter.editReply(this.resultMsg +
                 (this.error ? "" : "\nDone <:awamazedLife:795227334339985418>"));
             return ret;
         } catch (e) {
-            return inter.reply(e.message);
+            return inter.editReply(e.message);
         }
     }
 }

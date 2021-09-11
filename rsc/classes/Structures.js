@@ -1,13 +1,14 @@
 'use strict';
 
-const { Structures, Guild, GuildMember, BanOptions, Role, User, Message } = require("discord.js"),
+const { Structures, Guild, GuildMember, BanOptions, Role, User, Message, Interaction } = require("discord.js"),
     { MongoClient, Db, Collection } = require("mongodb"),
     { database } = require("../mongo"),
-    { errLog, defaultEventLogEmbed, defaultDateFormat, trySend } = require("./functions");
-const { createSchedule } = require("../cmds/moderation/src/createSchedule");
-const { TimedPunishment } = require("./classes");
+    { errLog, defaultEventLogEmbed, defaultDateFormat, trySend } = require("../functions");
+const { createSchedule } = require("../rsc/createSchedule");
+const { TimedPunishment } = require("./TimedPunishment");
 const { GUILDFNS } = require("../rsc/StructuresFns");
 const col = database.collection("Schedule");
+let initTypes;
 
 class BaseDBManager {
     #fn;
@@ -35,6 +36,31 @@ class BaseDBManager {
         for (const U in fn) {
             if (!U) continue;
             this.#fn[U] = fn[U];
+        }
+    }
+
+    /**
+     * 
+     * @param {Interaction | Message} param0 
+     */
+    static async initAllDBManager({ guild, user, author }) {
+        if (guild) await this.initDBManager(guild, "Guild");
+        if ((user || author) && (user || author).discriminator !== "0000") await this.initDBManager(user || author, "User");
+    }
+
+    /**
+     * 
+     * @param {Guild | User} instance
+     * @param {"Guild" | "User"} type
+     */
+    static async initDBManager(instance, type) {
+        if (!instance.DBMan) {
+            instance.DBMan = new initTypes[type](instance);
+            console.log("Init DBManager:", instance.displayName || instance.tag || instance.name, type);
+        }
+        if (!instance.DB) {
+            await instance.DBMan.dbLoad();
+            console.log("dbLoad:", instance.displayName || instance.tag || instance.name, type);
         }
     }
 
@@ -350,7 +376,7 @@ class UserDBManager extends BaseDBManager {
         return { set: await guild.removeTimedPunishment(this.instance.id, "ban"), already: already, cant: cant };
     }
 }
-
+/*
 Structures.extend("TextChannel", u => {
     return class TextChannel extends u {
         constructor(guild, data) {
@@ -459,67 +485,79 @@ Structures.extend("GuildMember", u => {
          * @param {{duration: import("./Duration").DurationOut, saveTakenRoles: boolean, infraction: number}} data
          * @param {string} reason
          * @returns
-         */
-        async mute(data, reason) {
-            if (!this.instance.DB) await this.dbLoad();
-            if (!data || !data.infraction) throw new Error("Missing infraction id");
-            if (!this.instance.DB.muted) this.instance.DB.muted = {};
-            if (data.saveTakenRoles === undefined) data.saveTakenRoles = !(this.instance.DB.muted.takenRoles?.length);
+         *//*
+async mute(data, reason) {
+if (!this.instance.DB) await this.dbLoad();
+if (!data || !data.infraction) throw new Error("Missing infraction id");
+if (!this.instance.DB.muted) this.instance.DB.muted = {};
+if (data.saveTakenRoles === undefined) data.saveTakenRoles = !(this.instance.DB.muted.takenRoles?.length);
 
-            const ROLES = this.instance.roles.cache.filter((r) => !r.managed).map(r => r.id);
-            if (data.saveTakenRoles && ROLES?.length) {
-                console.log("POPULATING TAKEN ROLES BEFORE MUTE");
-                this.instance.DB.muted.takenRoles = ROLES;
-            }
-            this.instance.DB.muted.muteRole = this.instance.guild.DB.settings.mute.role;
+const ROLES = this.instance.roles.cache.filter((r) => !r.managed).map(r => r.id);
+if (data.saveTakenRoles && ROLES?.length) {
+console.log("POPULATING TAKEN ROLES BEFORE MUTE");
+this.instance.DB.muted.takenRoles = ROLES;
+}
+this.instance.DB.muted.muteRole = this.instance.guild.DB.settings.mute.role;
 
-            try {
-                if (ROLES?.length) await this.instance.roles.remove(ROLES, reason);
-                await this.instance.roles.add(this.instance.DB.muted.muteRole, reason);
-                if (!this.instance.DB.muted.takenRoles) this.instance.DB.muted.takenRoles = [];
-                await this.setDb("muted", this.instance.DB.muted);
-                return true;
-            } catch (e) {
-                if (this.instance.DB.muted.takenRoles?.length) await this.instance.roles.add(this.instance.DB.muted.takenRoles, reason).catch(() => { });
-                if (this.instance.DB.muted.muteRole) await this.instance.roles.remove(this.instance.DB.muted.muteRole, reason).catch(() => { });
-                console.log("CLEAR TAKEN ROLES MUTE ERROR");
-                this.instance.DB.muted.takenRoles = [];
-                this.instance.DB.muted.muteRole = undefined;
-                throw e;
-            }
-        }
+try {
+if (ROLES?.length) await this.instance.roles.remove(ROLES, reason);
+await this.instance.roles.add(this.instance.DB.muted.muteRole, reason);
+if (!this.instance.DB.muted.takenRoles) this.instance.DB.muted.takenRoles = [];
+await this.setDb("muted", this.instance.DB.muted);
+return true;
+} catch (e) {
+if (this.instance.DB.muted.takenRoles?.length) await this.instance.roles.add(this.instance.DB.muted.takenRoles, reason).catch(() => { });
+if (this.instance.DB.muted.muteRole) await this.instance.roles.remove(this.instance.DB.muted.muteRole, reason).catch(() => { });
+console.log("CLEAR TAKEN ROLES MUTE ERROR");
+this.instance.DB.muted.takenRoles = [];
+this.instance.DB.muted.muteRole = undefined;
+throw e;
+}
+}
 
-        async unmute(reason) {
-            if (!this.instance.DB) await this.dbLoad();
-            try {
-                if (this.instance.DB.muted.takenRoles.length) await this.instance.roles.add(this.instance.DB.muted.takenRoles, reason);
-                if (this.instance.DB.muted.muteRole) await this.instance.roles.remove(this.instance.DB.muted.muteRole, reason);
-                console.log("CLEAR TAKEN ROLES UNMUTE");
-                this.instance.DB.muted.takenRoles = [];
-                this.instance.DB.muted.muteRole = undefined;
-                await this.setDb("muted", this.instance.DB.muted);
-                return true;
-            } catch (e) {
-                throw e;
-            }
-        }
+async unmute(reason) {
+if (!this.instance.DB) await this.dbLoad();
+try {
+if (this.instance.DB.muted.takenRoles.length) await this.instance.roles.add(this.instance.DB.muted.takenRoles, reason);
+if (this.instance.DB.muted.muteRole) await this.instance.roles.remove(this.instance.DB.muted.muteRole, reason);
+console.log("CLEAR TAKEN ROLES UNMUTE");
+this.instance.DB.muted.takenRoles = [];
+this.instance.DB.muted.muteRole = undefined;
+await this.setDb("muted", this.instance.DB.muted);
+return true;
+} catch (e) {
+throw e;
+}
+}
 
-        /**
-         * @param {string[]} roles
-         */
-        async setLeaveRoles(roles = []) {
-            if (!this.instance.DB) await this.dbLoad();
-            const kicked = (await this.instance.guild.fetchAuditLogs({ "limit": 1, "type": "MEMBER_KICK" }).catch(() => { }))?.entries?.first();
-            if (kicked?.target.id === this.instance.id) {
-                // console.log("KICKED:", true);
-                return;
-            }
-            const banned = await this.instance.guild.fetchBan(this.instance.user).catch(() => { });
-            // console.log("BANNED:", banned ? true : false);
-            if (banned) return;
-            return this.setDb("leaveRoles", roles);
-        }
+/**
+* @param {string[]} roles
+*//*
+async setLeaveRoles(roles = []) {
+   if (!this.instance.DB) await this.dbLoad();
+   const kicked = (await this.instance.guild.fetchAuditLogs({ "limit": 1, "type": "MEMBER_KICK" }).catch(() => { }))?.entries?.first();
+   if (kicked?.target.id === this.instance.id) {
+       // console.log("KICKED:", true);
+       return;
+   }
+   const banned = await this.instance.guild.fetchBan(this.instance.user).catch(() => { });
+   // console.log("BANNED:", banned ? true : false);
+   if (banned) return;
+   return this.setDb("leaveRoles", roles);
+}
 
-        get isAdmin() { if (!this.client.owners.includes(this.instance.user)) return this.instance.hasPermission("ADMINISTRATOR"); else return true }
-    }
+get isAdmin() { if (!this.client.owners.includes(this.instance.user)) return this.instance.hasPermission("ADMINISTRATOR"); else return true }
+}
 });
+*/
+
+initTypes = {
+    Guild: GuildDBManager,
+    User: UserDBManager
+}
+
+module.exports = {
+    GuildDBManager,
+    UserDBManager,
+    BaseDBManager
+}

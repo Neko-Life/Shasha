@@ -12,6 +12,11 @@ for (const EP of EXPRESS_ENDPOINTS) {
         sCmd => sCmd
             .setName(EP)
             .setDescription(EXPRESS_DESCRIPTIONS[EP])
+            .addStringOption(
+                opt => opt
+                    .setName("message")
+                    .setDescription("Message you want to say")
+            )
     );
 }
 

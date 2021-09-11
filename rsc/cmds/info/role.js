@@ -3,6 +3,7 @@
 const { MessageEmbed } = require("discord.js");
 const { Interval, DateTime } = require("luxon");
 const { Command } = require("../../classes/Command");
+const { fetchAllMembers } = require("../../functions");
 const getColor = require("../../getColor");
 const { intervalToStrings } = require("../../rsc/Duration");
 
@@ -15,6 +16,8 @@ module.exports = class RoleInfoCmd extends Command {
     }
 
     async run(inter, { role }) {
+        await inter.deferReply();
+        await fetchAllMembers(inter.guild);
         const {
             color,
             hexColor,
@@ -56,6 +59,6 @@ module.exports = class RoleInfoCmd extends Command {
             .addField("Color", "`" + hexColor + "`\n`" + color + "`", true)
             .addField("Permissions", "```js\n" + perms.join(", ") + "```")
             .setColor(getColor(hexColor));
-        return inter.reply({ embeds: [emb] })
+        return inter.editReply({ embeds: [emb] })
     }
 }

@@ -1,6 +1,7 @@
 'use strict';
 
-const { CommandInteraction, MessageEmbed } = require("discord.js");
+const { CommandInteraction, MessageEmbed, Client, Collection, Guild, User, Interaction } = require("discord.js");
+const { escapeRegExp } = require("lodash");
 const { randomColors } = require("../config.json");
 
 /**
@@ -178,8 +179,115 @@ function cleanMentionID(key) {
     return uID;
 }
 
+/**
+ * 
+ * @param {Client} client 
+ * @param {string} query 
+ * @param {string} reFlags 
+ * @param {boolean} force
+ * @returns {Promise<Map<string, Guild>> | Guild}
+ */
+async function findGuilds(client, query, reFlags, force = false) {
+    if (!client) throw new TypeError("client is undefined!");
+    if (typeof query !== "string") throw new TypeError("query must be a string!");
+    query = cleanMentionID(query);
+    if (!query) return;
+    if (/^\d{17,19}/.test(query))
+        return client.guilds.resolve(query);
+    else if (force) {
+        const re = createRegExp(query, reFlags);
+        return client.guilds.cache.filter(v =>
+            re.test(v.name)
+        );
+    } else {
+        return client.guilds.cache.filter(v =>
+            v.name === query
+        );
+    }
+}
+
+function createRegExp(pattern, flags) {
+    try {
+        return new RegExp(pattern, flags);
+    } catch {
+        return new RegExp(escapeRegExp(pattern), flags);
+    }
+}
+
+function tickTag(user) {
+    return `${user.bot ? "`BOT` " : ""}\`${user.tag}\``;
+}
+
+/**
+ * Check message's str for ads
+ * @param {string} str - Content to check
+ */
+function adCheck(str) {
+    if (str.length > 5) {
+        if (/(https:\/\/)?(www\.)?discord\.gg\/(?:\w{2,15}(?!\w)(?= *))/.test(str)) str = str
+            .replace(/(https:\/\/)?(www\.)?discord\.gg\/(?:\w{2,15}(?!\w)(?= *))/g, '`Some invite link goes here`');
+    }
+    return str;
+}
+
+function isAdmin(member) {
+    if (member instanceof User)
+        return "USER!";
+    try {
+        return member.permissions.serialize().ADMINISTRATOR;
+    } catch {
+        return;
+    }
+}
+
+function isOwner(client, id) {
+    return client.owners.map(r => r.id).includes(id);
+}
+
+async function fetchAllMembers(guild) {
+    if (guild.members.cache.size !== guild.memberCount) await guild.members.fetch();
+}
+
+function maxLengthPad(arrStr) {
+    let max = 0;
+    if (!Array.isArray(arrStr)) throw new TypeError("arrStr isn't array!");
+    for (const A of arrStr) {
+        if (typeof A !== "string") throw new TypeError("str isn't string!");
+        if (A.length > max) max = A.length;
+    }
+    return max;
+}
+
+/**
+ * Used for non-command interaction to check invoker for user specified handling
+ * @param {Interaction} interaction 
+ * @param {string} cmdName 
+ * @returns {Promise<boolean>}
+ */
+async function isInteractionInvoker(interaction, cmdName = "the command") {
+    if (!isOwner(interaction.client, interaction.user)
+        && interaction.message.interaction.user.id !== interaction.user.id) {
+        await interaction.reply({
+            content: "Run `" + cmdName + "` to create your own session",
+            ephemeral: true
+        });
+        return false;
+    }
+    return true;
+}
+
 module.exports = {
     parseComa,
     getChannelMessage,
-    cleanMentionID
+    cleanMentionID,
+    createRegExp,
+    findGuilds,
+    tickTag,
+    adCheck,
+    isAdmin,
+    trySend,
+    isOwner,
+    fetchAllMembers,
+    maxLengthPad,
+    isInteractionInvoker
 }

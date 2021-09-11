@@ -1,6 +1,7 @@
 'use strict';
 
 const { SlashCommandBuilder } = require("@discordjs/builders");
+const { addSubcommand } = require("./embed");
 
 module.exports = new SlashCommandBuilder()
     .setName("info")
@@ -31,6 +32,25 @@ module.exports = new SlashCommandBuilder()
                 opt => opt
                     .setName("role")
                     .setDescription("Role to see about")
+                    .setRequired(true)
+            )
+    ).addSubcommand(
+        sCmd => sCmd
+            .setName("server")
+            .setDescription("Fetch server profile")
+            .addStringOption(
+                opt => opt
+                    .setName("identifier")
+                    .setDescription("Exact name or Id of the server too look at")
+            )
+    ).addSubcommand(
+        sCmd => sCmd
+            .setName("channel")
+            .setDescription("About a server channel")
+            .addChannelOption(
+                opt => opt
+                    .setName("channel")
+                    .setDescription("Channel to look at")
                     .setRequired(true)
             )
     )

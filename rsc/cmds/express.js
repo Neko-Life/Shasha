@@ -16,7 +16,7 @@ const EXPRESS_TEXTS = {
     "bored": " is bored",
     "facepalm": " is disappointed",
     "happy": " is happy",
-    "pout": "is pouting",
+    "pout": " is pouting",
     "shrug": " is not sure",
     "sleep": " is sleepy",
     "think": " is thinking",
@@ -50,8 +50,8 @@ for (const EP of EXPRESS_ENDPOINTS) {
             });
         }
 
-        async run(inter) {
-            return expressCmd(inter, EP, EXPRESS_TEXTS[EP]);
+        async run(inter, { message }) {
+            return expressCmd(inter, EP, EXPRESS_TEXTS[EP], message?.value);
         }
     }
 }

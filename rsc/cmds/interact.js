@@ -42,8 +42,8 @@ for (const IE of INTERACT_ENDPOINTS) {
             });
         }
 
-        async run(inter, { user }) {
-            return interactCmd(inter, IE, user, INTERACT_TEXTS[IE]);
+        async run(inter, { user, message }) {
+            return interactCmd(inter, IE, user, INTERACT_TEXTS[IE], message?.value);
         }
     }
 }
