@@ -1,6 +1,7 @@
 const { trySend } = require('../../resources/functions');
 const { chatAnswer } = require('../../resources/shaChat');
 const Command = require('../../node_modules/@iceprod/discord.js-commando/src/commands/base');
+const { Message, Permissions } = require('discord.js');
 
 module.exports = class UnknownCommandCommand extends Command {
 	constructor(client) {
@@ -16,8 +17,17 @@ module.exports = class UnknownCommandCommand extends Command {
 	}
 
 	// eslint-disable-next-line
+	/**
+	 * 
+	 * @param {Message} msg 
+	 * @returns 
+	 */
 	async run(msg) {
-		if (msg.guild && !msg.member.hasPermission("MANAGE_MESSAGES")) return;
+		if (msg.guild && !msg.member.hasPermission("MANAGE_MESSAGES")) {
+			if (msg.channel.permissionsFor(msg.guild.me).has(Permissions.FLAGS.ADD_REACTIONS))
+				msg.react("nekohmLife:846371737644957786");
+			return;
+		}
 		if (new RegExp("^<@\!?" + msg.client.user.id + ">.").test(msg.content)) {
 			msg.channel.startTyping();
 			const s = msg.cleanContent.slice((msg.guild ? msg.guild.member(msg.client.user).displayName.length : msg.client.user.username.length) + 2).trim();

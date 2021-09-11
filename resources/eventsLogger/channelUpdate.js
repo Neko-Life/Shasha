@@ -106,7 +106,7 @@ async function run(oldChannel, newChannel) {
         if (permissionsRemoved.size) {
             audit = await getAudit(newChannel.guild, dateNow, newChannel.id,
                 { type: "CHANNEL_OVERWRITE_DELETE" });
-            getID = audit.changes[0].old;
+            getID = audit.changes?.[0].old;
             await wait(4000);
         }
         else if (permissionsAdded.size) {
