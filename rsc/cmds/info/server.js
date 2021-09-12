@@ -201,7 +201,7 @@ module.exports = class ServerInfoCmd extends Command {
             moreEmbed.addField("Join Boost Channel Settings", "```js\n" + moreInfo.systemChannelFlags.join(", ") + "```");
 
         if (moreInfo.invite)
-            moreEmbed.addField("Invite", `[**Join this server**](${moreInfo.invite})`);
+            moreEmbed.addField("Invite", `**[Join this server](${moreInfo.invite})**`);
 
         const bannerEmbed = new MessageEmbed(emb);
         if (bannerURL) bannerEmbed.setImage(bannerURL)
@@ -246,6 +246,6 @@ module.exports = class ServerInfoCmd extends Command {
                 components: [menu]
             }
         });
-        setTimeout(() => inter.client.activeSelectMenus.delete(mes.id), 60 * 1000 * 10);
+        setTimeout(() => inter.client.activeSelectMenus.delete(mes.id), 60 * 1000 * 60);
     }
 }
