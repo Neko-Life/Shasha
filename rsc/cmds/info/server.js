@@ -151,7 +151,9 @@ module.exports = class ServerInfoCmd extends Command {
         let channelTypesStr = "";
         const LENGTHCTARLS = maxLengthPad(CTARL) + 1;
         for (const T in moreInfo.channelTypesCount) {
-            channelTypesStr += `\`${T.padEnd(LENGTHCTARLS, " ")}\`: \`${moreInfo.channelTypesCount[T]}\`\n`;
+            let U;
+            if (T.startsWith("GUILD_")) U = T.slice("GUILD_".length);
+            channelTypesStr += `\`${(U || T).padEnd(LENGTHCTARLS, " ")}\`: \`${moreInfo.channelTypesCount[T]}\`\n`;
         }
 
         const moreEmbed = new MessageEmbed(emb)
