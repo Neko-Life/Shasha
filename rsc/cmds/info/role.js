@@ -51,7 +51,7 @@ module.exports = class RoleInfoCmd extends Command {
             .addField("Managed by Discord", managed ? "`Yes`" : "`No`", true)
             .addField("Hoisted", hoist ? "`Yes`" : "`No`", true)
             .addField("Mentionable", mentionable ? "`Yes`" : "`No`", true)
-            .addField("Members with this role", "Found `"
+            .addField("Member with this role", "Found `"
                 + members.size
                 + "` member"
                 + (members.size > 1 ? "s" : ""), true)
