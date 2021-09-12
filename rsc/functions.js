@@ -260,20 +260,21 @@ function maxLengthPad(arrStr) {
 
 /**
  * Used for non-command interaction to check invoker for user specified handling
- * @param {Interaction} interaction 
- * @param {string} cmdName 
- * @returns {Promise<boolean>}
+ * @param {Interaction} interaction
+ * @returns {boolean}
  */
-async function isInteractionInvoker(interaction, cmdName = "the command") {
+function isInteractionInvoker(interaction) {
     if (!isOwner(interaction.client, interaction.user.id)
         && interaction.message.interaction.user.id !== interaction.user.id) {
-        await interaction.reply({
-            content: "Run `" + cmdName + "` to create your own session",
-            ephemeral: true
-        });
         return false;
-    }
-    return true;
+    } else return true;
+}
+
+async function replyFalseInvoker(interaction, cmdName = "the command") {
+    return interaction.reply({
+        content: "Run `" + cmdName + "` to create your own session",
+        ephemeral: true
+    });
 }
 
 module.exports = {
@@ -289,5 +290,6 @@ module.exports = {
     isOwner,
     fetchAllMembers,
     maxLengthPad,
-    isInteractionInvoker
+    isInteractionInvoker,
+    replyFalseInvoker
 }

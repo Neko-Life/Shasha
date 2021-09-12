@@ -181,7 +181,7 @@ module.exports = class ServerInfoCmd extends Command {
             .addField("Sticker Count", "`" + moreInfo.stickerCount + "`", true)
             .addField("Boost", "`" + server.premiumSubscriptionCount + "`", true);
 
-        if (server.afkChannelID)
+        if (server.afkChannelId)
             moreEmbed.addField("AFK Voice Channel", `<#${server.afkChannelId}>`, true);
 
         moreEmbed.addField(
@@ -246,5 +246,6 @@ module.exports = class ServerInfoCmd extends Command {
                 components: [menu]
             }
         });
+        setTimeout(() => inter.client.activeSelectMenus.delete(mes.id), 60 * 1000 * 10);
     }
 }
