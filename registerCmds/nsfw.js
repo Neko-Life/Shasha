@@ -1,24 +1,19 @@
 'use strict';
 
 const { SlashCommandBuilder, SlashCommandStringOption } = require("@discordjs/builders");
-const { INTERACT_ENDPOINTS } = require("../rsc/cmds/nsfw").constant;
+const { NSFW_ENDPOINTS } = require("../rsc/cmds/nsfw").constant;
 
 const OPT = new SlashCommandStringOption()
-    .setName("nsfw")
-    .setDescription("NSFW Commands")
-    .setRequired(true);
+    .setName("category")
+    .setDescription("Category");
 
-for (const U of INTERACT_ENDPOINTS) {
+for (const U of NSFW_ENDPOINTS) {
     OPT.addChoice(U, U);
 }
 
 module.exports = new SlashCommandBuilder()
     .setName("nsfw")
-    .setDescription("NSFW Commands")
+    .setDescription("Have some lewds")
     .addStringOption(
         opt => OPT
-    ).addStringOption(
-        opt => opt
-            .setName("type")
-            .setDescription("The kind of nsfw you would like")
     );
