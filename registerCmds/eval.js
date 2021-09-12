@@ -9,5 +9,8 @@ module.exports = new SlashCommandBuilder()
         opt => opt
             .setName("script")
             .setDescription("Script to evaluate")
-            .setRequired(true)
+    ).addStringOption(
+        opt => opt
+            .setName("message")
+            .setDescription("Message contain script")
     );

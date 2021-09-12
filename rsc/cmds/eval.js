@@ -2,6 +2,7 @@
 
 const { Util, CommandInteraction } = require("discord.js");
 const { Command } = require("../classes/Command");
+const { getChannelMessage } = require("../functions");
 
 module.exports = class EvalCmd extends Command {
     constructor(interaction) {
@@ -13,12 +14,17 @@ module.exports = class EvalCmd extends Command {
      * @param {*} param1 
      * @returns 
      */
-    async run(inter, { script }) {
+    async run(inter, { script, message }) {
         if (!inter.client.owners.includes(inter.user)) return inter.reply("wat");
         await inter.deferReply({ ephemeral: true });
+        if (message) {
+            const SP = message.value.split(/ +/);
+            script = (await getChannelMessage(inter, SP[0], SP[1]))?.content;
+        } else script = script?.value;
+        if (!script) return inter.reply({ content: "No script OwO", ephemeral: true });
         let mes;
         try {
-            const U = await eval(script.value);
+            const U = await eval(script);
             mes = JSON.stringify(U, null, 2) || "undefined";
         } catch (e) {
             mes = e.stack;
