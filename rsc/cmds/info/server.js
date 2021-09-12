@@ -141,12 +141,17 @@ module.exports = class ServerInfoCmd extends Command {
         if (server.features?.length)
             generalEmbed.addField("Features", "```js\n" + server.features.join(", ") + "```");
 
-        let channelTypesStr = "";
         const CTARL = [];
-        for (const I in moreInfo.channelTypesCount) CTARL.push(I);
+        for (const I in moreInfo.channelTypesCount) {
+            let U;
+            if (I.startsWith("GUILD_")) U = I.slice("GUILD_".length);
+            CTARL.push(U || I);
+        }
+
+        let channelTypesStr = "";
         const LENGTHCTARLS = maxLengthPad(CTARL) + 1;
         for (const T in moreInfo.channelTypesCount) {
-            channelTypesStr += `\`${T.padEnd(LENGTHCTARLS, " ")}\`: \`${moreInfo.channelTypesCount[T]}\`\n`;
+            channelTypesStr += `\`${U.padEnd(LENGTHCTARLS, " ")}\`: \`${moreInfo.channelTypesCount[T]}\`\n`;
         }
 
         const moreEmbed = new MessageEmbed(emb)
