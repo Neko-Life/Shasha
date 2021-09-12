@@ -22,38 +22,18 @@ const EXPRESS_TEXTS = {
     "think": " is thinking",
     "thumbsup": " agreed"
 }
-const EXPRESS_DESCRIPTIONS = {
-    "smile": "Show your smile!",
-    "smug": "Show your little smug face!",
-    "laugh": "Lets laugh!",
-    "baka": "They're a baka!",
-    "cry": ":c",
-    "dance": "Lets danceey",
-    "wave": "Wave to your friends!",
-    "blush": "Show how flustered you are 😳",
-    "bored": "Show your boredom",
-    "facepalm": "Duhh",
-    "happy": "Be happy!",
-    "pout": "I'm also upset!",
-    "shrug": "Shrug it off",
-    "sleep": "You sleep?",
-    "think": "Have a thought",
-    "thumbsup": "Agree with some genius in the chat"
-}
 
-for (const EP of EXPRESS_ENDPOINTS) {
-    module.exports[EP] = class extends Command {
-        constructor(interaction) {
-            super(interaction, {
-                name: EP,
-                clientPermissions: ["EMBED_LINKS"]
-            });
-        }
+module.exports = class ExpressCmd extends Command {
+    constructor(interaction) {
+        super(interaction, {
+            name: "express",
+            clientPermissions: ["EMBED_LINKS"]
+        });
+    }
 
-        async run(inter, { message }) {
-            return expressCmd(inter, EP, EXPRESS_TEXTS[EP], message?.value);
-        }
+    async run(inter, { expression, message }) {
+        return expressCmd(inter, expression.value, EXPRESS_TEXTS[expression.value], message?.value);
     }
 }
 
-module.exports.constant = { EXPRESS_DESCRIPTIONS, EXPRESS_ENDPOINTS }
+module.exports.constant = { EXPRESS_ENDPOINTS }

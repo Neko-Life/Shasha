@@ -1,23 +1,24 @@
 'use strict';
 
-const { SlashCommandBuilder } = require("@discordjs/builders");
-const { EXPRESS_ENDPOINTS, EXPRESS_DESCRIPTIONS } = require("../rsc/cmds/express").constant;
+const { SlashCommandBuilder, SlashCommandStringOption } = require("@discordjs/builders");
+const { EXPRESS_ENDPOINTS } = require("../rsc/cmds/express").constant;
 
-const CMD = new SlashCommandBuilder()
-    .setName("express")
-    .setDescription("Express yourself");
+const OPT = new SlashCommandStringOption()
+    .setName("expression")
+    .setDescription("Your expression")
+    .setRequired(true);
 
-for (const EP of EXPRESS_ENDPOINTS) {
-    CMD.addSubcommand(
-        sCmd => sCmd
-            .setName(EP)
-            .setDescription(EXPRESS_DESCRIPTIONS[EP])
-            .addStringOption(
-                opt => opt
-                    .setName("message")
-                    .setDescription("Message you want to say")
-            )
-    );
+for (const U of EXPRESS_ENDPOINTS) {
+    OPT.addChoice(U, U);
 }
 
-module.exports = CMD
+module.exports = new SlashCommandBuilder()
+    .setName("express")
+    .setDescription("Express yourself")
+    .addStringOption(
+        opt => OPT
+    ).addStringOption(
+        opt => opt
+            .setName("message")
+            .setDescription("Message you want to say")
+    );
