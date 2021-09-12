@@ -18,9 +18,13 @@ module.exports = class ProfileCmd extends Command {
 
     async run(inter, { user }) {
         let member;
-        if (user) member = user.member; else member = inter.member;
-        if (!user) user = inter.user;
-        else user = user.user;
+        if (user) {
+            user = user.user
+            member = user.member;
+        } else {
+            user = inter.user
+            member = inter.member;
+        }
         const fStr = [];
         const uFlags = user.flags.serialize();
         for (const F in uFlags) {
