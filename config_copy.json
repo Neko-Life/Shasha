@@ -2,6 +2,7 @@
   "appId": "",
   "invite": "https://discord.com/oauth2/authorize?client_id=788006279837909032&scope=bot&permissions=8",
   "token": "",
+  "lewdsAPIkey": "",
   "mongoServer": "mongodb://localhost:27017",
   "chatChannel": "837178237322919966",
   "guildLog": "840154722434154496",
