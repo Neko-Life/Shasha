@@ -193,6 +193,27 @@ module.exports = class BuildEmbCmd extends Command {
                         return ret;
                 });
                 this.buildEmbed.addFields(toEmbedF);
+            },
+            remove: ({ value }) => {
+                const args = value.split(/ +/);
+                if (!args?.length) return;
+                for (const arg of args) {
+                    if (["a", "author", "aut"].includes(arg)) {
+                        this.buildEmbed.author = null;
+                        this.authorEmbed = {};
+                        this.resultMsg += "Removed author\n";
+                    } else if (["f", "field", "fields", "fi"]
+                        .includes(arg)) {
+                        this.buildEmbed.fields = [];
+                        this.resultMsg += "Removed fields\n";
+                    }
+                    else if (["fo", "foot", "foo", "footer"]
+                        .includes(arg)) {
+                        this.buildEmbed.footer = null;
+                        this.footerEmbed = {};
+                        this.resultMsg += "Removed footer\n";
+                    }
+                }
             }
         };
     }
