@@ -19,7 +19,7 @@ for (const U in fetch) {
     try {
         console.log("Registering slash commands...");
         await rest.put(
-            Routes.applicationGuildCommands(configFile.appId, "772073587792281600"),
+            Routes.applicationGuildCommands(configFile.appId, configFile.home),
             { body: commandCategories }
         );
 
@@ -33,3 +33,4 @@ for (const U in fetch) {
 "823176176641376296" // yes uwu
 "274557343058886666" // Black Wolf Test Server (missing access)
 "766775751412023297" // Cweenie server
+

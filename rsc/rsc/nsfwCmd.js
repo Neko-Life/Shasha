@@ -1,7 +1,8 @@
 'use strict';
 
 const { MessageEmbed } = require("discord.js");
-const { fetchNeko } = require("nekos-best.js");
+const { LewdClient } = require('lewds.api');
+const lewds = new LewdClient({ KEY: require("../../config.json").lewdsAPIkey })
 const emoteMessage = require("../emoteMessage");
 const { adCheck, isAdmin } = require("../functions");
 const getColor = require("../getColor");
@@ -15,16 +16,17 @@ module.exports = async (interaction, query, user, text, msg) => {
         user = interaction.member || interaction.user;
         from = interaction.guild?.me || interaction.client.user;
     }
+	lewds.nsfw(query).then(result =>{
     const emb = new MessageEmbed()
-        .setAuthor((from.displayName || from.username) + text + (user.displayName || user.username),
-            (from.user || from).displayAvatarURL({
+        .setAuthor((user.displayName || user.username),
+            (user.user || user).displayAvatarURL({
                 size: 128,
                 format: "png",
                 dynamic: true
             }))
-        .setImage((await fetchNeko(query)).url)
+        .setImage(result)
         .setColor(getColor(from.displayColor));
-    const desc = emoteMessage(interaction.client, msg);
-    if (msg) emb.setDescription(isAdmin(from) ? desc : adCheck(desc));
+  if (!interaction.channel.nsfw) return interaction.reply("This channel is not marked as NSFW, Baka!")
     return interaction.reply({ content: `<@${user.id}>`, embeds: [emb] });
+	})
 }

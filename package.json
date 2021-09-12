@@ -10,6 +10,7 @@
     "discord.js": "^13.0.1",
     "erlpack": "github:discord/erlpack",
     "fs-extra": "^9.1.0",
+    "lewds.api": "^2.2.7",
     "lodash": "^4.17.21",
     "luxon": "^2.0.1",
     "mongodb": "^3.6.6",
