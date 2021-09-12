@@ -59,11 +59,18 @@ module.exports = class ServerInfoCmd extends Command {
                 return ret;
             })(),
             invite: server.features.includes("COMMUNITY") && server.rulesChannel
-                ? (await server.invites.fetch({ channelId: server.rulesChannel.id }).catch(() => { }))
-                    ?.filter(
-                        r => r.inviter.id === inter.client.user.id
-                    )?.first()?.url
-                || (await server.invites.create(server.rulesChannel).catch(() => { }))?.url
+                ? (
+                    server.me.permissionsIn(server.rulesChannel).has("MANAGE_CHANNELS")
+                        ? (await server.invites.fetch({ channelId: server.rulesChannel.id }).catch(() => { }))
+                            ?.filter(
+                                r => r.inviter.id === inter.client.user.id
+                            )?.first()?.url
+                        : null
+                ) || (
+                    server.me.permissionsIn(server.rulesChannel).has("CREATE_INSTANT_INVITE")
+                        ? (await server.invites.create(server.rulesChannel).catch(() => { }))?.url
+                        : null
+                )
                 : null
         }
         for (const C of server.channels.cache.map(r => r)) {
