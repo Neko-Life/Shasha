@@ -16,7 +16,7 @@ module.exports = async (interaction, query, user, text, msg) => {
         user = interaction.member || interaction.user;
         from = interaction.guild?.me || interaction.client.user;
     }
-	lewds.nsfw(query).then(result =>{
+	lewds.nsfw(interaction.args.nsfw.value).then(result =>{
     const emb = new MessageEmbed()
         .setAuthor((user.displayName || user.username),
             (user.user || user).displayAvatarURL({
