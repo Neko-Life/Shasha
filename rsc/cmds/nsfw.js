@@ -9,7 +9,7 @@ for (const IE of INTERACT_ENDPOINTS) {
     module.exports[IE] = class extends Command {
         constructor(interaction) {
             super(interaction, {
-                name: IE,
+                name: "NSFW",
                 clientPermissions: ["EMBED_LINKS"]
             });
         }
