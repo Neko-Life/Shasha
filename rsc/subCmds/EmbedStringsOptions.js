@@ -87,4 +87,8 @@ module.exports = new SlashCommandSubcommandBuilder()
         opt => opt
             .setName("field-datas")
             .setDescription("Field datas message")
+    ).addStringOption(
+        opt => opt
+            .setName("remove")
+            .setDescription("One or more of `a`(author), `f`(fields), `fo`(footer) separated with ` `(space)")
     )
