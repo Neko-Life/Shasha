@@ -3,20 +3,12 @@
 const { MessageEmbed } = require("discord.js");
 const { LewdClient } = require('lewds.api');
 const lewds = new LewdClient({ KEY: require("../../config.json").lewdsAPIkey })
-const emoteMessage = require("../emoteMessage");
-const { adCheck, isAdmin } = require("../functions");
 const getColor = require("../getColor");
 
-module.exports = async (interaction, query, user, text, msg) => {
-    let from;
-    if (user) {
-        user = user.member || user.user;
-        from = interaction.member || interaction.user;
-    } else {
-        user = interaction.member || interaction.user;
-        from = interaction.guild?.me || interaction.client.user;
-    }
-	lewds.nsfw(interaction.args.nsfw.value).then(result =>{
+module.exports = async (interaction, query) => {
+    const user = interaction.member || interaction.user;
+    const URL = await lewds.nsfw(query);
+    if (!URL) return interaction.reply("Oopsie service is busy, guess you're gonna go dry...");
     const emb = new MessageEmbed()
         .setAuthor((user.displayName || user.username),
             (user.user || user).displayAvatarURL({
@@ -24,9 +16,7 @@ module.exports = async (interaction, query, user, text, msg) => {
                 format: "png",
                 dynamic: true
             }))
-        .setImage(result)
-        .setColor(getColor(from.displayColor));
-  if (!interaction.channel.nsfw) return interaction.reply("This channel is not marked as NSFW, Baka!")
-    return interaction.reply({ content: `<@${user.id}>`, embeds: [emb] });
-	})
+        .setImage(URL)
+        .setColor(getColor(user.displayColor));
+    return interaction.reply({ embeds: [emb] });
 }
