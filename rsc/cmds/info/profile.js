@@ -19,10 +19,10 @@ module.exports = class ProfileCmd extends Command {
     async run(inter, { user }) {
         let member;
         if (user) {
-            user = user.user
             member = user.member;
+            user = user.user;
         } else {
-            user = inter.user
+            user = inter.user;
             member = inter.member;
         }
         const fStr = [];
