@@ -8,6 +8,7 @@ const { PermissionString, CommandInteraction } = require("discord.js");
  * @property {string} description
  * @property {boolean} guildOnly
  * @property {boolean} ownerOnly
+ * @property {boolean} nsfwOnly
  * @property {PermissionString[]} userPermissions
  * @property {PermissionString[]} clientPermissions
  */
@@ -23,6 +24,7 @@ class ShaBaseCommand {
         this.description = data.description;
         this.guildOnly = data.guildOnly || false;
         this.ownerOnly = data.ownerOnly || false;
+        this.nsfwOnly = data.nsfwOnly || false;
         this.userPermissions = data.userPermissions || [];
         this.clientPermissions = data.clientPermissions || [];
     }

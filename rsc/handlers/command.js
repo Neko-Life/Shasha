@@ -51,10 +51,14 @@ async function handle(interaction) {
 
     if (cmd.ownerOnly) {
         if (!interaction.client.owners.includes(interaction.user))
-            return interaction.reply("Sorry i don't know you. You can't make me do that...");
+            return interaction.reply("Sorry i don't love you enough. You can't make me do that...");
     }
 
     if (interaction.guild) {
+        if (cmd.nsfwOnly)
+            if (!interaction.channel.nsfw)
+                return interaction.reply("This command can only be run in NSFW Channels");
+
         const lackUser = [];
         const lackClient = [];
         if (cmd.userPermissions.length) {

@@ -10,12 +10,12 @@ module.exports = class NsfwCmd extends Command {
     constructor(interaction) {
         super(interaction, {
             name: "nsfw",
-            clientPermissions: ["EMBED_LINKS"]
+            clientPermissions: ["EMBED_LINKS"],
+            nsfwOnly: true
         });
     }
 
     async run(inter, { category }) {
-        if (!inter.channel.nsfw) return inter.reply("This is not an NSFW channel, baka!");
         if (!category) category = NSFW_ENDPOINTS[Math.floor(Math.random() * NSFW_ENDPOINTS.length)];
         else category = category.value;
         return nsfwCmd(inter, category);
