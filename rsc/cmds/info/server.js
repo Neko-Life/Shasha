@@ -246,6 +246,6 @@ module.exports = class ServerInfoCmd extends Command {
                 components: [menu]
             }
         });
-        setTimeout(() => inter.client.activeSelectMenus.delete(mes.id), 60 * 1000 * 60);
+        setTimeout(() => inter.client.activeSelectMenus.delete(mes.id), 60 * 1000 * 15);
     }
 }
