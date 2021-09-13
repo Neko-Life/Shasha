@@ -1,9 +1,9 @@
 'use strict';
 
-const { CommandInteraction, Channel } = require("discord.js");
-const { Command } = require("../../classes/Command");
-const emoteMessage = require("../../emoteMessage");
-const { isAdmin, adCheck } = require("../../functions");
+const { CommandInteraction, GuildChannel } = require("discord.js");
+const { Command } = require("../classes/Command");
+const emoteMessage = require("../emoteMessage");
+const { isAdmin, adCheck } = require("../functions");
 
 module.exports = class SayCmd extends Command {
     constructor(interaction) {
@@ -15,14 +15,14 @@ module.exports = class SayCmd extends Command {
     /**
      * @typedef {object} runArgs
      * @property {string} text
-     * @property {{channel: Channel}} channel
+     * @property {{channel: GuildChannel}} channel
      * 
      * @param {CommandInteraction} inter 
      * @param {runArgs} param1 
      * @returns 
      */
     async run(inter, { text, channel }) {
-        if (channel && !channel.channel.isText())
+        if (channel && (!channel.channel.isText() || !channel.channel.permissionsFor(inter.client.user).has("SEND_MESSAGES")))
             return inter.reply("Can't send message to that channel!");
         const use = emoteMessage(inter.client, text.value);
         /**
