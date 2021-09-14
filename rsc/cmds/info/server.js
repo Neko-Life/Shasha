@@ -11,7 +11,7 @@ module.exports = class ServerInfoCmd extends Command {
     constructor(interaction) {
         super(interaction, {
             name: "server-info",
-            clientPermissions: ["EMBED_LINKS"]
+            clientPermissions: ["VIEW_CHANNEL", "EMBED_LINKS"]
         });
     }
 
