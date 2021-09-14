@@ -2,6 +2,7 @@
 
 const { CommandInteraction } = require("discord.js");
 const { isArray } = require("lodash");
+const { isOwner } = require("../functions");
 
 /**
  * @param {CommandInteraction} interaction 
@@ -61,7 +62,7 @@ async function handle(interaction) {
 
         const lackUser = [];
         const lackClient = [];
-        if (cmd.userPermissions.length) {
+        if (!isOwner(interaction.client, interaction.user.id) && cmd.userPermissions.length) {
             const seri = interaction.channel.permissionsFor(interaction.user).serialize();
             const perms = [];
             for (const D in seri) {

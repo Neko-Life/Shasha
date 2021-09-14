@@ -42,6 +42,7 @@ module.exports = class ServerInfoCmd extends Command {
         }
         const moreInfo = {
             channelTypesCount: {},
+            channelNsfwCount: server.channels.cache.filter(r => r.nsfw).size,
             emoteCount: server.emojis.cache.size,
             emojiStatic: server.emojis.cache.filter(r => !r.animated).size,
             emojiAnimated: server.emojis.cache.filter(r => r.animated).size,
@@ -167,7 +168,12 @@ module.exports = class ServerInfoCmd extends Command {
             .setTitle(`More About **${server.name}**`)
             .addField("Channel Count",
                 channelTypesStr
-                + `\`${"Total".padEnd(LENGTHCTARLS, " ")}\`: \`${generalInfo.channelCount}\``, true)
+                + `\`${"Total".padEnd(LENGTHCTARLS, " ")}\`: \`${generalInfo.channelCount}\``
+                + (
+                    moreInfo.channelNsfwCount
+                        ? `\n\n\`${"NSFW".padEnd(LENGTHCTARLS, " ")}\`: \`${moreInfo.channelNsfwCount}\``
+                        : ""
+                ), true)
             .addField("Member Count",
                 `\`${"User".padEnd(15, " ")}\`: \`${moreInfo.userCount}\`\n`
                 + `\`${"Bot".padEnd(15, " ")}\`: \`${moreInfo.botCount}\`\n`

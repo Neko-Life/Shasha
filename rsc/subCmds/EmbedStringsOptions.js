@@ -54,7 +54,7 @@ module.exports = new SlashCommandSubcommandBuilder()
     ).addStringOption(
         opt => opt
             .setName("content")
-            .setDescription("Message text content")
+            .setDescription("Message text content, provide `EMPTY` to clear when editing")
     ).addStringOption(
         opt => opt
             .setName("url")

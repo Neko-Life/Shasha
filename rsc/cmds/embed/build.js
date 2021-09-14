@@ -96,6 +96,7 @@ module.exports = class BuildEmbCmd extends Command {
                 this.footerEmbed.iconURL = value;
             },
             content: ({ value }) => {
+                if (value === "EMPTY") return this.contentEmbed = null;
                 this.contentEmbed = value;
             },
             url: ({ value }) => {
