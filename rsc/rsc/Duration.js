@@ -21,7 +21,7 @@ function intervalToStrings(interval) {
     }
     if (strings.length > 0) {
         if (strings.length > 1) strings[strings.length - 2] += " and";
-    }
+    } else strings[0] = "2 miliseconds";
     return { object, strings };
 };
 
@@ -89,6 +89,10 @@ function duration(base, string) {
     return { invoked: DT_INVOKED, until: DT_END, interval: DT_INTERVAL, duration: intervalToStrings(DT_INTERVAL) }
 }
 
+function createInterval(startDate, endDate) {
+    return Interval.fromDateTimes(DateTime.fromJSDate(startDate), DateTime.fromJSDate(endDate));
+}
+
 /**
  * @typedef {object} DurationStr
  * @property {DurationObject} object
@@ -101,4 +105,4 @@ function duration(base, string) {
  * @property {DurationStr} duration
  */
 
-module.exports = { duration, DT_PRINT_FORMAT, intervalToStrings, DURATION_REGEXP, CHECK_FOR_DURATION_REGEXP }
+module.exports = { duration, DT_PRINT_FORMAT, intervalToStrings, DURATION_REGEXP, CHECK_FOR_DURATION_REGEXP, createInterval }

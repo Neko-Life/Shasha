@@ -2,11 +2,7 @@
 const configFile = require('../config.json');
 const { join } = require('path');
 const requireAll = require("require-all");
-const { SapphireClient } = require("@sapphire/framework");
 
-/**
- * @param {SapphireClient} client 
- */
 function dispatch(client) {
     client.eventHandlers = requireAll({ dirname: join(__dirname, "eventHandlers") });
     client.commands = requireAll({ dirname: join(__dirname, "cmds"), recursive: true });

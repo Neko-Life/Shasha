@@ -3,6 +3,7 @@
 const { CommandInteraction, MessageEmbed, Client, Collection, Guild, User, Interaction } = require("discord.js");
 const { escapeRegExp } = require("lodash");
 const { randomColors } = require("../config.json");
+const emoteMessage = require("./emoteMessage");
 
 /**
  * Command usage logger
@@ -232,7 +233,7 @@ function adCheck(str) {
 
 function isAdmin(member) {
     if (member instanceof User)
-        return "USER!";
+        return "USER";
     try {
         return member.permissions.serialize().ADMINISTRATOR;
     } catch {
@@ -277,6 +278,16 @@ async function replyFalseInvoker(interaction, cmdName = "the command") {
     });
 }
 
+function strYesNo(bool) {
+    return bool ? "`Yes`" : "`No`";
+}
+
+function finalizeStr(client, str, noAdCheck = false) {
+    let ret = emoteMessage(client, str);
+    if (!noAdCheck) ret = adCheck(str);
+    return ret;
+}
+
 module.exports = {
     parseComa,
     getChannelMessage,
@@ -291,5 +302,7 @@ module.exports = {
     fetchAllMembers,
     maxLengthPad,
     isInteractionInvoker,
-    replyFalseInvoker
+    replyFalseInvoker,
+    strYesNo,
+    finalizeStr
 }

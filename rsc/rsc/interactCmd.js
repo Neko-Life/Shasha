@@ -2,11 +2,11 @@
 
 const { MessageEmbed } = require("discord.js");
 const { fetchNeko } = require("nekos-best.js");
-const emoteMessage = require("../emoteMessage");
-const { adCheck, isAdmin } = require("../functions");
+const { isAdmin, finalizeStr } = require("../functions");
 const getColor = require("../getColor");
 
 module.exports = async (interaction, query, user, text, msg) => {
+    await interaction.deferReply();
     let from;
     if (user) {
         user = user.member || user.user;
@@ -24,7 +24,6 @@ module.exports = async (interaction, query, user, text, msg) => {
             }))
         .setImage((await fetchNeko(query)).url)
         .setColor(getColor(from.displayColor));
-    const desc = emoteMessage(interaction.client, msg);
-    if (msg) emb.setDescription(isAdmin(from) ? desc : adCheck(desc));
-    return interaction.reply({ content: `<@${user.id}>`, embeds: [emb] });
+    if (msg) emb.setDescription(finalizeStr(interaction.client, msg, isAdmin(from)));
+    return interaction.editReply({ content: `<@${user.id}>`, embeds: [emb] });
 }

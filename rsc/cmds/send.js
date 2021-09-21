@@ -3,7 +3,7 @@
 const { CommandInteraction, GuildChannel } = require("discord.js");
 const { Command } = require("../classes/Command");
 const emoteMessage = require("../emoteMessage");
-const { isAdmin, adCheck } = require("../functions");
+const { isAdmin, adCheck, finalizeStr } = require("../functions");
 
 module.exports = class SayCmd extends Command {
     constructor(interaction) {
@@ -24,14 +24,11 @@ module.exports = class SayCmd extends Command {
     async run(inter, { text, channel }) {
         if (channel && (!channel.channel.isText() || !channel.channel.permissionsFor(inter.client.user).has("SEND_MESSAGES")))
             return inter.reply("Can't send message to that channel!");
-        const use = emoteMessage(inter.client, text.value);
         /**
          * @type {import("discord.js").MessageOptions}
          */
         const send = {
-            content: isAdmin(inter.member || inter.user)
-                ? use
-                : adCheck(use),
+            content: finalizeStr(inter.client, text.value, isAdmin(inter.member || inter.user)),
             allowedMentions: {}
         };
         // if (inter.member) binds(inter.member, "GUILD_MEMBER");

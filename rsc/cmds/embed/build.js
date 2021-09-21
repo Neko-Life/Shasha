@@ -3,7 +3,7 @@
 const { BaseGuildTextChannel, Message } = require("discord.js");
 const { MessageEmbed } = require("discord.js");
 const { Command } = require("../../classes/Command");
-const { getChannelMessage } = require("../../functions");
+const { getChannelMessage, finalizeStr, isAdmin } = require("../../functions");
 const getColor = require("../../getColor");
 
 module.exports = class BuildEmbCmd extends Command {
@@ -66,13 +66,13 @@ module.exports = class BuildEmbCmd extends Command {
                 }
             },
             title: ({ value }) => {
-                this.buildEmbed.setTitle(value);
+                this.buildEmbed.setTitle(finalizeStr(this.interaction.client, value, isAdmin(this.interaction.member || this.interaction.user)));
             },
             description: ({ value }) => {
-                this.buildEmbed.setDescription(value);
+                this.buildEmbed.setDescription(finalizeStr(this.interaction.client, value, isAdmin(this.interaction.member || this.interaction.user)));
             },
             authorName: ({ value }) => {
-                this.authorEmbed.name = value;
+                this.authorEmbed.name = finalizeStr(this.interaction.client, value, isAdmin(this.interaction.member || this.interaction.user));
             },
             authorIcon: ({ value }) => {
                 this.authorEmbed.iconURL = value;
@@ -90,14 +90,14 @@ module.exports = class BuildEmbCmd extends Command {
                 this.buildEmbed.setColor(getColor(value));
             },
             footerText: ({ value }) => {
-                this.footerEmbed.text = value;
+                this.footerEmbed.text = finalizeStr(this.interaction.client, value, isAdmin(this.interaction.member || this.interaction.user));
             },
             footerIcon: ({ value }) => {
                 this.footerEmbed.iconURL = value;
             },
             content: ({ value }) => {
                 if (value === "EMPTY") return this.contentEmbed = null;
-                this.contentEmbed = value;
+                this.contentEmbed = finalizeStr(this.interaction.client, value, isAdmin(this.interaction.member || this.interaction.user));
             },
             url: ({ value }) => {
                 this.buildEmbed.setURL(value);
@@ -119,10 +119,10 @@ module.exports = class BuildEmbCmd extends Command {
                 this.channelSend = channel;
             },
             fieldName: ({ value }) => {
-                this.fieldEmbed.name = value;
+                this.fieldEmbed.name = finalizeStr(this.interaction.client, value, isAdmin(this.interaction.member || this.interaction.user));
             },
             fieldText: ({ value }) => {
-                this.fieldEmbed.value = value;
+                this.fieldEmbed.value = finalizeStr(this.interaction.client, value, isAdmin(this.interaction.member || this.interaction.user));
             },
             fieldInline: ({ value }) => {
                 if (![`yes`, `true`, `y`, `1`].includes(value)) return;
@@ -188,7 +188,7 @@ module.exports = class BuildEmbCmd extends Command {
                 const toEmbedF = sourceJson.map(a => {
                     const ret = {};
                     if (a.n) ret.name = a.n;
-                    if (a.v) ret.value = a.v;
+                    if (a.v) ret.value = finalizeStr(this.interaction.client, a.v, isAdmin(this.interaction.member || this.interaction.user));
                     if (a.i) ret.inline = a.i;
                     if (ret.name || ret.value)
                         return ret;

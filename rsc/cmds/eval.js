@@ -3,6 +3,7 @@
 const { Util, CommandInteraction } = require("discord.js");
 const { Command } = require("../classes/Command");
 const { getChannelMessage } = require("../functions");
+const { inspect } = require("util");
 
 module.exports = class EvalCmd extends Command {
     constructor(interaction) {
@@ -21,11 +22,21 @@ module.exports = class EvalCmd extends Command {
             const SP = message.value.split(/ +/);
             script = (await getChannelMessage(inter, SP[0], SP[1]))?.content;
         } else script = script?.value;
-        if (!script) return inter.reply({ content: "No script OwO", ephemeral: true });
-        let mes;
+        if (!script) return inter.editReply({ content: "No script OwO", ephemeral: true });
+        let mes, bf, af;
         try {
-            const U = await eval(script);
-            mes = JSON.stringify(U, null, 2) || "undefined";
+            bf = new Date();
+            const res = await eval(script);
+            af = new Date();
+            mes = inspect(res, {
+                compact: false,
+                depth: 1,
+                getters: true,
+                maxArrayLength: 249,
+                sorted: true,
+                maxStringLength: 2000,
+                showHidden: false
+            });
         } catch (e) {
             mes = e.stack;
         }
@@ -45,7 +56,7 @@ module.exports = class EvalCmd extends Command {
             const push = await inter.channel.send(U);
             ret.push(push);
         }
-        await inter.editReply({ content: "```js\n" + script.value + "```", ephemeral: true });
+        await inter.editReply({ content: "```js\nExecuted in " + ((af.valueOf() - bf.valueOf()) / 1000) + " s```", ephemeral: true });
         return ret;
     }
 }
