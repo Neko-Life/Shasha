@@ -50,7 +50,7 @@ module.exports = class EvalCmd extends Command {
                 {
                     append: "```",
                     prepend: "```js\n",
-                    char: ",",
+                    char: /,/.test(mes) ? "," : "",
                     maxLength: 2000
                 }
             );
