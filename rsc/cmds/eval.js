@@ -4,6 +4,15 @@ const { Util, CommandInteraction } = require("discord.js");
 const { Command } = require("../classes/Command");
 const { getChannelMessage } = require("../functions");
 const { inspect } = require("util");
+const inspectOpt = {
+    compact: false,
+    depth: 1,
+    getters: true,
+    maxArrayLength: 249,
+    sorted: true,
+    maxStringLength: 2000,
+    showHidden: false
+}
 
 module.exports = class EvalCmd extends Command {
     constructor(interaction) {
@@ -12,7 +21,7 @@ module.exports = class EvalCmd extends Command {
 
     /**
      * @param {CommandInteraction} inter 
-     * @param {*} param1 
+     * @param {{script: string, message: string}} param1 
      * @returns 
      */
     async run(inter, { script, message }) {
@@ -26,21 +35,16 @@ module.exports = class EvalCmd extends Command {
                 script = (await getChannelMessage(inter, SP[0], SP[1]))?.content;
             }
         } else script = script?.value;
+
+        if (typeof script === "string") script = script.replace(/^```(js)?\n|```$/g, "");
+
         if (!script) return inter.editReply({ content: "No script OwO", ephemeral: true });
         let mes, bf, af;
         try {
             bf = new Date();
             const res = await eval(script);
             af = new Date();
-            mes = inspect(res, {
-                compact: false,
-                depth: 1,
-                getters: true,
-                maxArrayLength: 249,
-                sorted: true,
-                maxStringLength: 2000,
-                showHidden: false
-            });
+            mes = inspect(res, inspectOpt);
         } catch (e) {
             mes = e.stack;
         }
@@ -50,7 +54,7 @@ module.exports = class EvalCmd extends Command {
                 {
                     append: "```",
                     prepend: "```js\n",
-                    char: /,/.test(mes) ? "," : "",
+                    char: "\n",
                     maxLength: 2000
                 }
             );
