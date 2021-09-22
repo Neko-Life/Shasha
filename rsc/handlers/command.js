@@ -113,7 +113,14 @@ async function handle(interaction) {
             interaction.args[Dsplit.join("")] = D;
         };
     interaction.commandResults = [];
-    const result = cmd.run(interaction, interaction.args);
+    let result;
+    try {
+        result = await cmd.run(interaction, interaction.args);
+    } catch (e) {
+        if (interaction.deferred || interaction.replied)
+            result = interaction.editReply(e.message);
+        else result = interaction.reply(e.message);
+    }
     if (isArray(result)) for (const res of result) {
         if (res) {
             if (res instanceof Promise) await res;

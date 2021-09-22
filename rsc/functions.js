@@ -1,6 +1,6 @@
 'use strict';
 
-const { CommandInteraction, MessageEmbed, Client, Collection, Guild, User, Interaction } = require("discord.js");
+const { CommandInteraction, MessageEmbed, Client, Collection, Guild, User, Interaction, GuildMember } = require("discord.js");
 const { escapeRegExp } = require("lodash");
 const { randomColors } = require("../config.json");
 const emoteMessage = require("./emoteMessage");
@@ -117,18 +117,6 @@ async function trySend(client, msgOrChannel, content, checkAd = true) {
 }
 
 /**
- * Check message's str for ads
- * @param {string} str - String to check
- */
-function adCheck(str) {
-    if (str.length > 8) {
-        if (/(https:\/\/)?(www\.)?discord\.gg\/(?:\w{2,15}(?!\w)(?= *))/.test(str)) str = str
-            .replace(/(https:\/\/)?(www\.)?discord\.gg\/(?:\w{2,15}(?!\w)(?= *))/g, '`Some invite link goes here`');
-    }
-    return str;
-}
-
-/**
  * Parse string (split ",")
  * @param {string} str
  * @returns {String[]}
@@ -140,7 +128,7 @@ function parseComa(str) {
 
 /**
  * Get message object from the message channel or provided channel
- * @param {Message} msg - Message object (msg)
+ * @param {Message | Interaction} msg - Message object (msg)
  * @param {string} MainID - Message ID | Channel_[mention|ID] | Message link
  * @param {string} SecondID - Message ID
  * @returns {Promise<Message>} Message object | undefined
@@ -155,7 +143,7 @@ async function getChannelMessage(msg, MainID, SecondID) {
     MainID = cleanMentionID(MainID);
     if (SecondID && !/\D/.test(SecondID)) {
         try {
-            const meschannel = (msg.client.owners.includes(msg.author) ? msg.client : msg.guild).channels.cache.get(MainID);
+            const meschannel = (msg.client.owners.map(r => r.id).includes(msg.author?.id || msg.user?.id || msg.id) ? msg.client : msg.guild).channels.cache.get(MainID);
             return meschannel.messages.fetch(SecondID, true).catch(() => { });
         } catch {
             return;
@@ -181,7 +169,7 @@ function cleanMentionID(key) {
 }
 
 /**
- * 
+ * Fing guild with id or exact name, force will use RegExp
  * @param {Client} client 
  * @param {string} query 
  * @param {string} reFlags 
@@ -207,6 +195,12 @@ async function findGuilds(client, query, reFlags, force = false) {
     }
 }
 
+/**
+ * Create RegExp, invalid symbols will be escaped if any making it an exact match
+ * @param {string} pattern 
+ * @param {string} flags 
+ * @returns 
+ */
 function createRegExp(pattern, flags) {
     try {
         return new RegExp(pattern, flags);
@@ -221,16 +215,22 @@ function tickTag(user) {
 
 /**
  * Check message's str for ads
- * @param {string} str - Content to check
+ * @param {string} str - String to check
+ * @returns {string} Cleaned str
  */
 function adCheck(str) {
-    if (str.length > 5) {
+    if (str.length > 8) {
         if (/(https:\/\/)?(www\.)?discord\.gg\/(?:\w{2,15}(?!\w)(?= *))/.test(str)) str = str
             .replace(/(https:\/\/)?(www\.)?discord\.gg\/(?:\w{2,15}(?!\w)(?= *))/g, '`Some invite link goes here`');
     }
     return str;
 }
 
+/**
+ * Check a member if they're administrator, will return string if `member` is User instance, or undefined when error
+ * @param {GuildMember | User} member 
+ * @returns {boolean | "USER"}
+ */
 function isAdmin(member) {
     if (member instanceof User)
         return "USER";
@@ -241,7 +241,16 @@ function isAdmin(member) {
     }
 }
 
+/**
+ * Check if id is this owner
+ * @param {Client} client 
+ * @param {User | GuildMember | string} id 
+ * @returns 
+ */
 function isOwner(client, id) {
+    if (id.id && /^\d{17,19}$/.test(id.id)) id = id.id;
+    if (typeof id !== "string" || (typeof id === "string" && !/^\d{17,19}$/.test(id)))
+        throw new TypeError("id is " + id);
     return client.owners.map(r => r.id).includes(id);
 }
 
@@ -249,6 +258,11 @@ async function fetchAllMembers(guild) {
     if (guild.members.cache.size !== guild.memberCount) await guild.members.fetch();
 }
 
+/**
+ * Get the longest string length in strings array
+ * @param {string[]} arrStr
+ * @returns {number}
+ */
 function maxLengthPad(arrStr) {
     let max = 0;
     if (!Array.isArray(arrStr)) throw new TypeError("arrStr isn't array!");
@@ -282,10 +296,28 @@ function strYesNo(bool) {
     return bool ? "`Yes`" : "`No`";
 }
 
+/**
+ * Emotify str and check for ads
+ * @param {Client} client 
+ * @param {string} str 
+ * @param {boolean} noAdCheck 
+ * @returns 
+ */
 function finalizeStr(client, str, noAdCheck = false) {
     let ret = emoteMessage(client, str);
     if (!noAdCheck) ret = adCheck(str);
     return ret;
+}
+
+/**
+ * Convert unix timestamp to seconds timestamp
+ * @param {Date | number} val 
+ * @returns {number}
+ */
+function unixToSeconds(val) {
+    if (val instanceof Date) val = val.valueOf();
+    if (typeof val !== "number") throw new TypeError("val is " + (typeof val));
+    return Math.floor(val / 1000);
 }
 
 module.exports = {
@@ -304,5 +336,6 @@ module.exports = {
     isInteractionInvoker,
     replyFalseInvoker,
     strYesNo,
-    finalizeStr
+    finalizeStr,
+    unixToSeconds
 }

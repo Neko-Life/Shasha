@@ -19,8 +19,12 @@ module.exports = class EvalCmd extends Command {
         if (!inter.client.owners.includes(inter.user)) return inter.reply("wat");
         await inter.deferReply({ ephemeral: true });
         if (message) {
-            const SP = message.value.split(/ +/);
-            script = (await getChannelMessage(inter, SP[0], SP[1]))?.content;
+            if (["l", "last"].includes(message.value.toLowerCase()))
+                script = inter.channel.lastMessage.content;
+            else {
+                const SP = message.value.split(/ +/);
+                script = (await getChannelMessage(inter, SP[0], SP[1]))?.content;
+            }
         } else script = script?.value;
         if (!script) return inter.editReply({ content: "No script OwO", ephemeral: true });
         let mes, bf, af;
@@ -56,7 +60,11 @@ module.exports = class EvalCmd extends Command {
             const push = await inter.channel.send(U);
             ret.push(push);
         }
-        await inter.editReply({ content: "```js\nExecuted in " + ((af.valueOf() - bf.valueOf()) / 1000) + " s```", ephemeral: true });
+        await inter.editReply({
+            content: af && bf
+                ? "```js\nExecuted in " + ((af.valueOf() - bf.valueOf()) / 1000) + " s```"
+                : "```js\nError```", ephemeral: true
+        });
         return ret;
     }
 }

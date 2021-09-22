@@ -14,6 +14,8 @@ const client = new Client({
     ]
 });
 
+process.dev = true;
+
 dispatch(client);
 // require("./rsc/tCmd")(client);
 

@@ -33,7 +33,7 @@ async function handle(inter, args) {
         // const mes = await inter.reply(ePages[args[0]]);
         // inter.client.activeSelectMenus.set(mes.id, ePages);
     }
-    if (!inter.replied) {
+    if (!(inter.replied || inter.deferred)) {
         const ret = await inter.message.edit(pages[args[0]]);
         await inter.deferUpdate();
     } else await inter.editReply(pages[args[0]]);
