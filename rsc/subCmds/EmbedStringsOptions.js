@@ -82,7 +82,9 @@ module.exports = new SlashCommandSubcommandBuilder()
     ).addStringOption(
         opt => opt
             .setName("field-inline")
-            .setDescription("Set this field inline with `yes` or `true` or `y` or `1` as argument")
+            .addChoice("yes", "1")
+            .addChoice("no", "0")
+            .setDescription("Set this field inline")
     ).addStringOption(
         opt => opt
             .setName("field-datas")

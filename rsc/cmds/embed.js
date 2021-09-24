@@ -1,12 +1,13 @@
 'use strict';
 
-const { BaseGuildTextChannel, Message } = require("discord.js");
+const { BaseGuildTextChannel, Message, CommandInteraction, Util } = require("discord.js");
 const { MessageEmbed } = require("discord.js");
-const { Command } = require("../../classes/Command");
-const { getChannelMessage, finalizeStr, isAdmin } = require("../../functions");
-const getColor = require("../../getColor");
+const { Command } = require("../classes/Command");
+const { getChannelMessage, finalizeStr, isAdmin } = require("../functions");
+const getColor = require("../getColor");
+const createJSONEmbedFields = require("../rsc/createJSONEmbedFields");
 
-module.exports = class BuildEmbCmd extends Command {
+module.exports.build = class BuildEmbCmd extends Command {
     constructor(interaction) {
         super(interaction, {
             name: "embed",
@@ -187,9 +188,9 @@ module.exports = class BuildEmbCmd extends Command {
                 ));
                 const toEmbedF = sourceJson.map(a => {
                     const ret = {};
-                    if (a.n) ret.name = a.n;
+                    if (a.n) ret.name = finalizeStr(this.interaction.client, a.n, isAdmin(this.interaction.member || this.interaction.user));
                     if (a.v) ret.value = finalizeStr(this.interaction.client, a.v, isAdmin(this.interaction.member || this.interaction.user));
-                    if (a.i) ret.inline = a.i;
+                    if (a.i === 1) ret.inline = true;
                     if (ret.name || ret.value)
                         return ret;
                 });
@@ -259,5 +260,130 @@ module.exports = class BuildEmbCmd extends Command {
         } catch (e) {
             return inter.editReply(e.message);
         }
+    }
+}
+
+async function createFields(inter, fields, ver) {
+    const FD_SPLIT_CONF = {
+        prepend: `#fields_data_${ver}.<_version>\`\`\`js\n`,
+        append: "```",
+        maxLength: 2000,
+        char: ","
+    }
+    const fieldsArr = await createJSONEmbedFields(inter, fields);
+    const cont = Util.splitMessage(
+        FD_SPLIT_CONF.prepend + JSON.stringify(fieldsArr) + FD_SPLIT_CONF.append,
+        FD_SPLIT_CONF
+    )
+    let sI = 0;
+    const ret = [];
+    for (const U of cont) {
+        const res = await inter.channel.send({
+            content: U.replace("<_version>", sI)
+        });
+        res.fieldData = 1;
+        res.fieldDataVersion = sI++;
+        ret.push(res);
+    }
+    inter.editReply("Provide these message Ids to be used in `/embed build fieldDatas` command option,"
+        + " separated with ` ` (space) ```js\n"
+        + ret.map(r => r.id).join(" ")
+        + "```");
+    return ret;
+}
+
+module.exports["create-fields-1"] = class CreateFields1 extends Command {
+    constructor(interaction) {
+        super(interaction, {
+            name: "create-fields-1",
+            clientPermissions: ["SEND_MESSAGES"],
+            userPermissions: [
+                "SEND_MESSAGES"
+            ]
+        });
+    }
+
+    /**
+     * @param {CommandInteraction} inter
+     */
+    async run(inter, fields) {
+        return createFields(inter, fields, 1);
+    }
+}
+
+module.exports["create-fields-2"] = class CreateFields2 extends Command {
+    constructor(interaction) {
+        super(interaction, {
+            name: "create-fields-2",
+            clientPermissions: ["SEND_MESSAGES"],
+            userPermissions: [
+                "SEND_MESSAGES"
+            ]
+        });
+    }
+
+    /**
+     * @param {CommandInteraction} inter
+     */
+    async run(inter, fields) {
+        return createFields(inter, fields, 2);
+    }
+}
+
+module.exports["create-fields-3"] = class CreateFields3 extends Command {
+    constructor(interaction) {
+        super(interaction, {
+            name: "create-fields-3",
+            clientPermissions: ["SEND_MESSAGES"],
+            userPermissions: [
+                "SEND_MESSAGES"
+            ]
+        });
+    }
+
+    /**
+     * @param {CommandInteraction} inter
+     */
+    async run(inter, fields) {
+        return createFields(inter, fields, 3);
+    }
+}
+
+module.exports.join = class EmbedJoinCmd extends Command {
+    constructor(interaction) {
+        super(interaction, {
+            name: "join",
+            clientPermissions: ["EMBED_LINKS"],
+            userPermissions: ["MANAGE_MESSAGES"]
+        });
+    }
+    async run(inter, { messages, channel, content }) {
+        await inter.deferReply();
+        if (!channel) channel = inter.channel;
+        else channel = channel.channel;
+        if (!channel.isText()) return inter.editReply("Can't send to <#" + channel.id + ">");
+        const IDS = messages.value.split(/ +/);
+        let resultMsg = "";
+        const emb = [];
+        for (const Id of IDS) {
+            const msg = await getChannelMessage(inter, Id);
+            if (!msg) {
+                resultMsg += `Unknown message **${Id}**\n`;
+                continue;
+            }
+            if (!msg.embeds.length) {
+                resultMsg += `No embed in **${Id}**\n`;
+                continue;
+            }
+            emb.push(...msg.embeds);
+        }
+        const send = {};
+        if (content?.value) send.content = content.value;
+        if (emb.length) send.embeds = emb.slice(0, 10);
+        let ret;
+        if (send.embeds || send.content) ret = channel.send(send);
+        if (emb.length > 10) resultMsg += `There's ${emb.length} embeds joined but only 10 allowed in one message\n`;
+        await inter.editReply(resultMsg || "Done <:awamazedLife:795227334339985418>");
+        return ret;
     }
 }

@@ -10,8 +10,25 @@ module.exports = new SlashCommandBuilder()
         sCmd => EmbedStringsOptions
             .setName("build")
             .setDescription("Build embed")
-    )
-    .addSubcommand(
+    ).addSubcommand(
+        sCmd => sCmd
+            .setName("join")
+            .setDescription("Join all embeds in messages to put in one message. 10 embeds maximum")
+            .addStringOption(
+                opt => opt
+                    .setName("messages")
+                    .setDescription("Message links or Ids separated with ` ` (space)")
+                    .setRequired(true)
+            ).addChannelOption(
+                opt => opt
+                    .setName("channel")
+                    .setDescription("Channel to send in")
+            ).addStringOption(
+                opt => opt
+                    .setName("content")
+                    .setDescription("Message content")
+            )
+    ).addSubcommand(
         sCmd => sCmd
             .setName("create-fields-1")
             .setDescription("Create fields data to use in embed build command")
@@ -26,7 +43,9 @@ module.exports = new SlashCommandBuilder()
             ).addStringOption(
                 opt => opt
                     .setName("field-1-inline")
-                    .setDescription("Set this field inline with `yes` or `true` or `y` or `1` as argument")
+                    .addChoice("yes", "1")
+                    .addChoice("no", "0")
+                    .setDescription("Set this field inline")
             ).addStringOption(
                 opt => opt
                     .setName("field-2-name")
@@ -38,7 +57,9 @@ module.exports = new SlashCommandBuilder()
             ).addStringOption(
                 opt => opt
                     .setName("field-2-inline")
-                    .setDescription("Set this field inline with `yes` or `true` or `y` or `1` as argument")
+                    .addChoice("yes", "1")
+                    .addChoice("no", "0")
+                    .setDescription("Set this field inline")
             ).addStringOption(
                 opt => opt
                     .setName("field-3-name")
@@ -50,7 +71,9 @@ module.exports = new SlashCommandBuilder()
             ).addStringOption(
                 opt => opt
                     .setName("field-3-inline")
-                    .setDescription("Set this field inline with `yes` or `true` or `y` or `1` as argument")
+                    .addChoice("yes", "1")
+                    .addChoice("no", "0")
+                    .setDescription("Set this field inline")
             ).addStringOption(
                 opt => opt
                     .setName("field-4-name")
@@ -62,7 +85,9 @@ module.exports = new SlashCommandBuilder()
             ).addStringOption(
                 opt => opt
                     .setName("field-4-inline")
-                    .setDescription("Set this field inline with `yes` or `true` or `y` or `1` as argument")
+                    .addChoice("yes", "1")
+                    .addChoice("no", "0")
+                    .setDescription("Set this field inline")
             ).addStringOption(
                 opt => opt
                     .setName("field-5-name")
@@ -74,7 +99,9 @@ module.exports = new SlashCommandBuilder()
             ).addStringOption(
                 opt => opt
                     .setName("field-5-inline")
-                    .setDescription("Set this field inline with `yes` or `true` or `y` or `1` as argument")
+                    .addChoice("yes", "1")
+                    .addChoice("no", "0")
+                    .setDescription("Set this field inline")
             ).addStringOption(
                 opt => opt
                     .setName("field-6-name")
@@ -86,7 +113,9 @@ module.exports = new SlashCommandBuilder()
             ).addStringOption(
                 opt => opt
                     .setName("field-6-inline")
-                    .setDescription("Set this field inline with `yes` or `true` or `y` or `1` as argument")
+                    .addChoice("yes", "1")
+                    .addChoice("no", "0")
+                    .setDescription("Set this field inline")
             ).addStringOption(
                 opt => opt
                     .setName("field-7-name")
@@ -98,7 +127,9 @@ module.exports = new SlashCommandBuilder()
             ).addStringOption(
                 opt => opt
                     .setName("field-7-inline")
-                    .setDescription("Set this field inline with `yes` or `true` or `y` or `1` as argument")
+                    .addChoice("yes", "1")
+                    .addChoice("no", "0")
+                    .setDescription("Set this field inline")
             ).addStringOption(
                 opt => opt
                     .setName("field-8-name")
@@ -110,7 +141,9 @@ module.exports = new SlashCommandBuilder()
             ).addStringOption(
                 opt => opt
                     .setName("field-8-inline")
-                    .setDescription("Set this field inline with `yes` or `true` or `y` or `1` as argument")
+                    .addChoice("yes", "1")
+                    .addChoice("no", "0")
+                    .setDescription("Set this field inline")
             )
     ).addSubcommand(
         sCmd => sCmd
@@ -127,7 +160,9 @@ module.exports = new SlashCommandBuilder()
             ).addStringOption(
                 opt => opt
                     .setName("field-9-inline")
-                    .setDescription("Set this field inline with `yes` or `true` or `y` or `1` as argument")
+                    .addChoice("yes", "1")
+                    .addChoice("no", "0")
+                    .setDescription("Set this field inline")
             ).addStringOption(
                 opt => opt
                     .setName("field-10-name")
@@ -139,7 +174,9 @@ module.exports = new SlashCommandBuilder()
             ).addStringOption(
                 opt => opt
                     .setName("field-10-inline")
-                    .setDescription("Set this field inline with `yes` or `true` or `y` or `1` as argument")
+                    .addChoice("yes", "1")
+                    .addChoice("no", "0")
+                    .setDescription("Set this field inline")
             ).addStringOption(
                 opt => opt
                     .setName("field-11-name")
@@ -151,7 +188,9 @@ module.exports = new SlashCommandBuilder()
             ).addStringOption(
                 opt => opt
                     .setName("field-11-inline")
-                    .setDescription("Set this field inline with `yes` or `true` or `y` or `1` as argument")
+                    .addChoice("yes", "1")
+                    .addChoice("no", "0")
+                    .setDescription("Set this field inline")
             ).addStringOption(
                 opt => opt
                     .setName("field-12-name")
@@ -163,7 +202,9 @@ module.exports = new SlashCommandBuilder()
             ).addStringOption(
                 opt => opt
                     .setName("field-12-inline")
-                    .setDescription("Set this field inline with `yes` or `true` or `y` or `1` as argument")
+                    .addChoice("yes", "1")
+                    .addChoice("no", "0")
+                    .setDescription("Set this field inline")
             ).addStringOption(
                 opt => opt
                     .setName("field-13-name")
@@ -175,7 +216,9 @@ module.exports = new SlashCommandBuilder()
             ).addStringOption(
                 opt => opt
                     .setName("field-13-inline")
-                    .setDescription("Set this field inline with `yes` or `true` or `y` or `1` as argument")
+                    .addChoice("yes", "1")
+                    .addChoice("no", "0")
+                    .setDescription("Set this field inline")
             ).addStringOption(
                 opt => opt
                     .setName("field-14-name")
@@ -187,7 +230,9 @@ module.exports = new SlashCommandBuilder()
             ).addStringOption(
                 opt => opt
                     .setName("field-14-inline")
-                    .setDescription("Set this field inline with `yes` or `true` or `y` or `1` as argument")
+                    .addChoice("yes", "1")
+                    .addChoice("no", "0")
+                    .setDescription("Set this field inline")
             ).addStringOption(
                 opt => opt
                     .setName("field-15-name")
@@ -199,7 +244,9 @@ module.exports = new SlashCommandBuilder()
             ).addStringOption(
                 opt => opt
                     .setName("field-15-inline")
-                    .setDescription("Set this field inline with `yes` or `true` or `y` or `1` as argument")
+                    .addChoice("yes", "1")
+                    .addChoice("no", "0")
+                    .setDescription("Set this field inline")
             ).addStringOption(
                 opt => opt
                     .setName("field-16-name")
@@ -211,7 +258,9 @@ module.exports = new SlashCommandBuilder()
             ).addStringOption(
                 opt => opt
                     .setName("field-16-inline")
-                    .setDescription("Set this field inline with `yes` or `true` or `y` or `1` as argument")
+                    .addChoice("yes", "1")
+                    .addChoice("no", "0")
+                    .setDescription("Set this field inline")
             )
     ).addSubcommand(
         sCmd => sCmd
@@ -228,7 +277,9 @@ module.exports = new SlashCommandBuilder()
             ).addStringOption(
                 opt => opt
                     .setName("field-17-inline")
-                    .setDescription("Set this field inline with `yes` or `true` or `y` or `1` as argument")
+                    .addChoice("yes", "1")
+                    .addChoice("no", "0")
+                    .setDescription("Set this field inline")
             ).addStringOption(
                 opt => opt
                     .setName("field-18-name")
@@ -240,7 +291,9 @@ module.exports = new SlashCommandBuilder()
             ).addStringOption(
                 opt => opt
                     .setName("field-18-inline")
-                    .setDescription("Set this field inline with `yes` or `true` or `y` or `1` as argument")
+                    .addChoice("yes", "1")
+                    .addChoice("no", "0")
+                    .setDescription("Set this field inline")
             ).addStringOption(
                 opt => opt
                     .setName("field-19-name")
@@ -252,7 +305,9 @@ module.exports = new SlashCommandBuilder()
             ).addStringOption(
                 opt => opt
                     .setName("field-19-inline")
-                    .setDescription("Set this field inline with `yes` or `true` or `y` or `1` as argument")
+                    .addChoice("yes", "1")
+                    .addChoice("no", "0")
+                    .setDescription("Set this field inline")
             ).addStringOption(
                 opt => opt
                     .setName("field-20-name")
@@ -264,7 +319,9 @@ module.exports = new SlashCommandBuilder()
             ).addStringOption(
                 opt => opt
                     .setName("field-20-inline")
-                    .setDescription("Set this field inline with `yes` or `true` or `y` or `1` as argument")
+                    .addChoice("yes", "1")
+                    .addChoice("no", "0")
+                    .setDescription("Set this field inline")
             ).addStringOption(
                 opt => opt
                     .setName("field-21-name")
@@ -276,7 +333,9 @@ module.exports = new SlashCommandBuilder()
             ).addStringOption(
                 opt => opt
                     .setName("field-21-inline")
-                    .setDescription("Set this field inline with `yes` or `true` or `y` or `1` as argument")
+                    .addChoice("yes", "1")
+                    .addChoice("no", "0")
+                    .setDescription("Set this field inline")
             ).addStringOption(
                 opt => opt
                     .setName("field-22-name")
@@ -288,7 +347,9 @@ module.exports = new SlashCommandBuilder()
             ).addStringOption(
                 opt => opt
                     .setName("field-22-inline")
-                    .setDescription("Set this field inline with `yes` or `true` or `y` or `1` as argument")
+                    .addChoice("yes", "1")
+                    .addChoice("no", "0")
+                    .setDescription("Set this field inline")
             ).addStringOption(
                 opt => opt
                     .setName("field-23-name")
@@ -300,7 +361,9 @@ module.exports = new SlashCommandBuilder()
             ).addStringOption(
                 opt => opt
                     .setName("field-23-inline")
-                    .setDescription("Set this field inline with `yes` or `true` or `y` or `1` as argument")
+                    .addChoice("yes", "1")
+                    .addChoice("no", "0")
+                    .setDescription("Set this field inline")
             ).addStringOption(
                 opt => opt
                     .setName("field-24-name")
@@ -312,6 +375,8 @@ module.exports = new SlashCommandBuilder()
             ).addStringOption(
                 opt => opt
                     .setName("field-24-inline")
-                    .setDescription("Set this field inline with `yes` or `true` or `y` or `1` as argument")
+                    .addChoice("yes", "1")
+                    .addChoice("no", "0")
+                    .setDescription("Set this field inline")
             )
     )
