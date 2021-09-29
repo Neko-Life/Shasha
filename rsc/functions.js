@@ -1,9 +1,8 @@
 'use strict';
 
-const { CommandInteraction, MessageEmbed, Client, Collection, Guild, User, Interaction, GuildMember } = require("discord.js");
+const { CommandInteraction, MessageEmbed, Client, Collection, Guild, User, Interaction, GuildMember, Invite } = require("discord.js");
 const { escapeRegExp } = require("lodash");
 const { randomColors } = require("../config.json");
-const emoteMessage = require("./emoteMessage");
 
 /**
  * Command usage logger
@@ -169,33 +168,6 @@ function cleanMentionID(key) {
 }
 
 /**
- * Fing guild with id or exact name, force will use RegExp
- * @param {Client} client 
- * @param {string} query 
- * @param {string} reFlags 
- * @param {boolean} force
- * @returns {Promise<Map<string, Guild>> | Guild}
- */
-async function findGuilds(client, query, reFlags, force = false) {
-    if (!client) throw new TypeError("client is undefined!");
-    if (typeof query !== "string") throw new TypeError("query must be a string!");
-    query = cleanMentionID(query);
-    if (!query) return;
-    if (/^\d{17,19}/.test(query))
-        return client.guilds.resolve(query);
-    else if (force) {
-        const re = createRegExp(query, reFlags);
-        return client.guilds.cache.filter(v =>
-            re.test(v.name)
-        );
-    } else {
-        return client.guilds.cache.filter(v =>
-            v.name === query
-        );
-    }
-}
-
-/**
  * Create RegExp, invalid symbols will be escaped if any making it an exact match
  * @param {string} pattern 
  * @param {string} flags 
@@ -241,19 +213,6 @@ function isAdmin(member) {
     }
 }
 
-/**
- * Check if id is this owner
- * @param {Client} client 
- * @param {User | GuildMember | string} id 
- * @returns 
- */
-function isOwner(client, id) {
-    if (id.id && /^\d{17,19}$/.test(id.id)) id = id.id;
-    if (typeof id !== "string" || (typeof id === "string" && !/^\d{17,19}$/.test(id)))
-        throw new TypeError("id is " + id);
-    return client.owners.map(r => r.id).includes(id);
-}
-
 async function fetchAllMembers(guild) {
     if (guild.members.cache.size !== guild.memberCount) await guild.members.fetch();
 }
@@ -279,8 +238,7 @@ function maxLengthPad(arrStr) {
  * @returns {boolean}
  */
 function isInteractionInvoker(interaction) {
-    if (!isOwner(interaction.client, interaction.user.id)
-        && interaction.message.interaction.user.id !== interaction.user.id) {
+    if (interaction.message.interaction.user.id !== interaction.user.id) {
         return false;
     } else return true;
 }
@@ -297,19 +255,6 @@ function strYesNo(bool) {
 }
 
 /**
- * Emotify str and check for ads
- * @param {Client} client 
- * @param {string} str 
- * @param {boolean} noAdCheck 
- * @returns 
- */
-function finalizeStr(client, str, noAdCheck = false) {
-    let ret = emoteMessage(client, str);
-    if (!noAdCheck) ret = adCheck(str);
-    return ret;
-}
-
-/**
  * Convert unix timestamp to seconds timestamp
  * @param {Date | number} val 
  * @returns {number}
@@ -320,22 +265,90 @@ function unixToSeconds(val) {
     return Math.floor(val / 1000);
 }
 
+const reValidURL = /^https?:\/\/[^\s\n]+\.[^\s\n][^\s\n]/;
+
+const ePerms = [
+    "KICK_MEMBERS",
+    "BAN_MEMBERS",
+    "MANAGE_CHANNELS",
+    "MANAGE_GUILD",
+    "VIEW_AUDIT_LOG",
+    "MANAGE_MESSAGES",
+    "MENTION_EVERYONE",
+    "VIEW_GUILD_INSIGHTS",
+    "MUTE_MEMBERS",
+    "DEAFEN_MEMBERS",
+    "MOVE_MEMBERS",
+    "MANAGE_NICKNAMES",
+    "MANAGE_ROLES",
+    "MANAGE_WEBHOOKS",
+    "MANAGE_EMOJIS_AND_STICKERS",
+    "MANAGE_THREADS"
+]
+
+/**
+ * Put single quote on perm string to put on js codeblock to emphasize it
+ * @param {import("discord.js").PermissionString} str 
+ * @returns {string}
+ */
+function emphasizePerms(str) { return ePerms.includes(str) ? "'" + str + "'" : str }
+
+/**
+ * @typedef {object} allowMentionParam
+ * @property {GuildMember} member - Guild Member
+ * @property {string} content - String containing mentions
+ *
+ * @param {allowMentionParam} param0 
+ * @returns {object}
+ */
+function allowMention({ member, content }) {
+    const allowedMentions = {};
+    if (member && !member.permissions.has("MENTION_EVERYONE")) {
+        if (content?.match(/<@\!?[^&]\d{17,19}>/g)?.length > 1)
+            allowedMentions.parse = [];
+        else allowedMentions.parse = ["users"];
+    } else allowedMentions.parse = ["everyone", "roles", "users"];
+    return allowedMentions;
+}
+
+/**
+ * Create/get invite from the rules channel of a community guild
+ * @param {Guild} guild
+ * @returns {Promise<Invite>}
+ */
+async function getCommunityInvite(guild) {
+    return guild.features.includes("COMMUNITY") && guild.rulesChannel
+        ? (
+            guild.me.permissionsIn(guild.rulesChannel).has("MANAGE_CHANNELS")
+                ? (await guild.invites.fetch({ channelId: guild.rulesChannel.id }).catch(() => { }))
+                    ?.filter(
+                        r => r.inviter.id === guild.client.user.id
+                    )?.first()
+                : null
+        ) || (
+            guild.me.permissionsIn(guild.rulesChannel).has("CREATE_INSTANT_INVITE")
+                ? (await guild.invites.create(guild.rulesChannel).catch(() => { }))
+                : null
+        ) : null
+}
+
 module.exports = {
     parseComa,
     getChannelMessage,
     cleanMentionID,
     createRegExp,
-    findGuilds,
     tickTag,
     adCheck,
     isAdmin,
     trySend,
-    isOwner,
     fetchAllMembers,
     maxLengthPad,
     isInteractionInvoker,
     replyFalseInvoker,
     strYesNo,
-    finalizeStr,
-    unixToSeconds
+    unixToSeconds,
+    reValidURL,
+    emphasizePerms,
+    allowMention,
+    getCommunityInvite
 }

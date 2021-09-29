@@ -3,7 +3,7 @@
 const { MessageSelectMenu, MessageActionRow, MessageEmbed, Guild } = require("discord.js");
 const { Interval, DateTime } = require("luxon");
 const { Command } = require("../../classes/Command");
-const { findGuilds, isOwner, fetchAllMembers, tickTag, maxLengthPad } = require("../../functions");
+const { fetchAllMembers, tickTag, maxLengthPad, getCommunityInvite } = require("../../functions");
 const getColor = require("../../getColor");
 const { intervalToStrings } = require("../../rsc/Duration");
 
@@ -27,9 +27,9 @@ module.exports = class ServerInfoCmd extends Command {
          * @type {Guild}
          */
         let server = inter.guild;
-        if (identifier) server = await findGuilds(
-            inter.client, identifier.value, "i",
-            isOwner(inter.client, inter.user.id)
+        if (identifier) server = await inter.client.findGuilds(
+            identifier.value, "i",
+            inter.client.isOwner(inter.user)
         );
         if (server instanceof Map) server = server.first();
         if (!server) return inter.editReply("Can't find that server :c");
@@ -59,20 +59,7 @@ module.exports = class ServerInfoCmd extends Command {
                 }
                 return ret;
             })(),
-            invite: server.features.includes("COMMUNITY") && server.rulesChannel
-                ? (
-                    server.me.permissionsIn(server.rulesChannel).has("MANAGE_CHANNELS")
-                        ? (await server.invites.fetch({ channelId: server.rulesChannel.id }).catch(() => { }))
-                            ?.filter(
-                                r => r.inviter.id === inter.client.user.id
-                            )?.first()?.url
-                        : null
-                ) || (
-                    server.me.permissionsIn(server.rulesChannel).has("CREATE_INSTANT_INVITE")
-                        ? (await server.invites.create(server.rulesChannel).catch(() => { }))?.url
-                        : null
-                )
-                : null
+            invite: (await getCommunityInvite(server))?.url
         }
         for (const C of server.channels.cache.map(r => r)) {
             if (moreInfo.channelTypesCount[C.type] === undefined)

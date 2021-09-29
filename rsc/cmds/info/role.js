@@ -3,7 +3,7 @@
 const { MessageEmbed } = require("discord.js");
 const { Interval, DateTime } = require("luxon");
 const { Command } = require("../../classes/Command");
-const { fetchAllMembers } = require("../../functions");
+const { fetchAllMembers, emphasizePerms } = require("../../functions");
 const getColor = require("../../getColor");
 const { intervalToStrings } = require("../../rsc/Duration");
 
@@ -34,12 +34,14 @@ module.exports = class RoleInfoCmd extends Command {
         } = role.role;
         const perms = [];
         const permData = permissions.serialize();
-        for (const U in permData) {
+        if (permData.ADMINISTRATOR) perms.push("'ADMINISTRATOR'");
+        else for (const U in permData) {
             if (!permData[U]) continue;
-            perms.push(U);
+            perms.push(emphasizePerms(U));
         }
+        if (!perms.length) perms.push("THIS ROLE IS FOR ANTIQUE PURPOSE ONLY");
         const emb = new MessageEmbed()
-            .setTitle(`About \`${name}\` Role`)
+            .setTitle(`About Role \`${name}\``)
             .addField("Identifier", `<@&${id}>\n(${id})`)
             .addField("Created", "<t:" + Math.floor(createdTimestamp / 1000) + ":F>\n"
                 + `(${intervalToStrings(
@@ -57,7 +59,7 @@ module.exports = class RoleInfoCmd extends Command {
                 + (members.size > 1 ? "s" : ""), true)
             .addField("Position", "`" + position + "`", true)
             .addField("Color", "`" + hexColor + "`\n`" + color + "`", true)
-            .addField("Permissions", "```js\n" + perms.join(", ") + "```")
+            .addField("Permissions", "```js\n" + (perms.join(", ")) + "```")
             .setColor(getColor(hexColor));
         return inter.editReply({ embeds: [emb] })
     }

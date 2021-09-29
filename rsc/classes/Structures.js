@@ -1,13 +1,13 @@
 'use strict';
 
-const { Structures, Guild, GuildMember, BanOptions, Role, User, Message, Interaction } = require("discord.js"),
-    { MongoClient, Db, Collection } = require("mongodb"),
-    { database } = require("../mongo"),
-    { errLog, defaultEventLogEmbed, defaultDateFormat, trySend } = require("../functions");
+const { Structures, Guild, GuildMember, BanOptions, Role, User, Message, Interaction } = require("discord.js");
+const { MongoClient, Db, Collection } = require("mongodb");
+const { database } = require("../mongo");
+const { errLog, defaultEventLogEmbed, defaultDateFormat, trySend } = require("../functions");
 const { createSchedule } = require("../rsc/createSchedule");
 const { TimedPunishment } = require("./TimedPunishment");
 const { GUILDFNS } = require("../rsc/StructuresFns");
-const col = database.collection("Schedule");
+const scheduleDb = database.collection("Schedule");
 let initTypes;
 
 class BaseDBManager {
@@ -304,7 +304,7 @@ class UserDBManager extends BaseDBManager {
                 throw new Error("You can't mute someone with higher position than you <:nekokekLife:852865942530949160>");
             await MEM.unmute(reason);
         }
-        await col.deleteOne({ document: [guild.id, this.instance.id, "mute"].join("/") }).then(() => console.log("SCHEDULE " + [guild.id, this.instance.id, "mute"].join("/") + " DELETED")).catch(e => errLog(e, null, client));
+        await scheduleDb.deleteOne({ document: [guild.id, this.instance.id, "mute"].join("/") }).then(() => console.log("SCHEDULE " + [guild.id, this.instance.id, "mute"].join("/") + " DELETED")).catch(e => errLog(e, null, client));
         return guild.removeTimedPunishment(this.instance.id, "mute");
     }
 
@@ -372,7 +372,7 @@ class UserDBManager extends BaseDBManager {
                 .setDescription(reason || "No reason provided");
             this.instance.createDM().then(r => trySend(this.client, r, emb));
         }
-        await col.deleteOne({ document: [guild.id, this.instance.id, "ban"].join("/") }).then(() => console.log("SCHEDULE " + [guild.id, this.instance.id, "ban"].join("/") + " DELETED")).catch(e => errLog(e, null, client));
+        await scheduleDb.deleteOne({ document: [guild.id, this.instance.id, "ban"].join("/") }).then(() => console.log("SCHEDULE " + [guild.id, this.instance.id, "ban"].join("/") + " DELETED")).catch(e => errLog(e, null, client));
         return { set: await guild.removeTimedPunishment(this.instance.id, "ban"), already: already, cant: cant };
     }
 }

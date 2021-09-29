@@ -4,14 +4,19 @@ const { Util, CommandInteraction } = require("discord.js");
 const { Command } = require("../classes/Command");
 const { getChannelMessage } = require("../functions");
 const { inspect } = require("util");
+/**
+ * @type {import("util").InspectOptions}
+ */
 const inspectOpt = {
     compact: false,
     depth: 1,
     getters: true,
     maxArrayLength: 249,
     sorted: true,
-    maxStringLength: 2000,
-    showHidden: false
+    maxStringLength: 5000,
+    showHidden: false,
+    getters: true,
+    breakLength: 2000
 }
 
 module.exports = class EvalCmd extends Command {
@@ -25,7 +30,7 @@ module.exports = class EvalCmd extends Command {
      * @returns 
      */
     async run(inter, { script, message }) {
-        if (!inter.client.owners.includes(inter.user)) return inter.reply("wat");
+        if (!inter.client.isOwner(inter.user)) return inter.reply("wat");
         await inter.deferReply({ ephemeral: true });
         if (message) {
             if (["l", "last"].includes(message.value.toLowerCase()))

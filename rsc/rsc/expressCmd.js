@@ -2,7 +2,7 @@
 
 const { MessageEmbed } = require("discord.js");
 const { fetchNeko } = require("nekos-best.js");
-const { finalizeStr, isAdmin } = require("../functions");
+const { isAdmin } = require("../functions");
 const getColor = require("../getColor");
 
 module.exports = async (interaction, query, text, msg, noName) => {
@@ -14,6 +14,6 @@ module.exports = async (interaction, query, text, msg, noName) => {
             (member.user || member).displayAvatarURL({ size: 128, format: "png", dynamic: true }))
         .setImage((await fetchNeko(query)).url)
         .setColor(getColor(member.displayColor));
-    if (msg) emb.setDescription(finalizeStr(interaction.client, msg, isAdmin(member)));
+    if (msg) emb.setDescription(interaction.client.finalizeStr(msg, isAdmin(member)));
     return interaction.editReply({ embeds: [emb] });
 }

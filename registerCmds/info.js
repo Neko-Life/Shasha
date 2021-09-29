@@ -1,7 +1,6 @@
 'use strict';
 
 const { SlashCommandBuilder } = require("@discordjs/builders");
-const { addSubcommand } = require("./embed");
 
 module.exports = new SlashCommandBuilder()
     .setName("info")
@@ -53,4 +52,25 @@ module.exports = new SlashCommandBuilder()
                     .setDescription("Channel to look at")
                     .setRequired(true)
             )
+    ).addSubcommand(
+        sCmd => sCmd
+            .setName("permission")
+            .setDescription("See someone's or some role's permissions")
+            .addMentionableOption(
+                opt => opt
+                    .setName("permission-for")
+                    .setDescription("Someone or some role")
+            ).addChannelOption(
+                opt => opt
+                    .setName("channel")
+                    .setDescription("In channel")
+            )
+    ).addSubcommand(
+        sCmd => sCmd
+            .setName("support")
+            .setDescription("Get help from the support server")
+    ).addSubcommand(
+        sCmd => sCmd
+            .setName("stats")
+            .setDescription("Show my stats")
     )

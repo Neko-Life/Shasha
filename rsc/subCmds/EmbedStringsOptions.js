@@ -85,6 +85,10 @@ module.exports = new SlashCommandSubcommandBuilder()
             .addChoice("yes", "1")
             .addChoice("no", "0")
             .setDescription("Set this field inline")
+    ).addIntegerOption(
+        opt => opt
+            .setName("edit-field")
+            .setDescription("Edit field in this position (number). Make sure to provide `field-property` options")
     ).addStringOption(
         opt => opt
             .setName("field-datas")

@@ -2,8 +2,7 @@
 
 const { CommandInteraction, GuildChannel } = require("discord.js");
 const { Command } = require("../classes/Command");
-const emoteMessage = require("../emoteMessage");
-const { isAdmin, adCheck, finalizeStr } = require("../functions");
+const { isAdmin, allowMention } = require("../functions");
 
 module.exports = class SayCmd extends Command {
     constructor(interaction) {
@@ -23,24 +22,18 @@ module.exports = class SayCmd extends Command {
      */
     async run(inter, { text, channel }) {
         if (channel && (!channel.channel.isText() || !channel.channel.permissionsFor(inter.client.user).has("SEND_MESSAGES")))
-            return inter.reply("Can't send message to that channel!");
+            return inter.reply("Can't send message to **<#" + channel.channel.id + ">**");
         /**
          * @type {import("discord.js").MessageOptions}
          */
         const send = {
-            content: finalizeStr(inter.client, text.value, isAdmin(inter.member || inter.user)),
-            allowedMentions: {}
+            content: inter.client.finalizeStr(text.value, isAdmin(inter.member || inter.user)),
+            allowedMentions: allowMention({ member: inter.member, content: text.value })
         };
-        // if (inter.member) binds(inter.member, "GUILD_MEMBER");
-        if (!inter.member.permissions.has("MENTION_EVERYONE")) {
-            if (text.value.match(/<@\!?[^&]\d{17,19}>/g)?.length > 1)
-                send.allowedMentions.parse = [];
-            else send.allowedMentions.parse = ["users"];
-        } else send.allowedMentions.parse = ["everyone", "roles", "users"];
         let ret;
         if (channel) {
             ret = await channel.channel.send(send);
-            inter.reply("Sent 🙏");
+            inter.reply("Said 🙏");
         } else inter.reply(send);
         return ret;
     }

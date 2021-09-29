@@ -3,8 +3,8 @@
 const { SlashCommandBuilder } = require("@discordjs/builders");
 
 module.exports = new SlashCommandBuilder()
-    .setName("send")
-    .setDescription("Send message with options")
+    .setName("say")
+    .setDescription("Say something using me")
     .addStringOption(
         opt => opt
             .setName("text")
@@ -14,5 +14,4 @@ module.exports = new SlashCommandBuilder()
         opt => opt
             .setName("channel")
             .setDescription("Destination channel")
-
     );

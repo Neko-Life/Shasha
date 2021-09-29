@@ -2,21 +2,22 @@
 
 // require("./rsc/mongo");
 // require("./rsc/structures");
-const { Intents, Client } = require("discord.js");
-const { dispatch } = require("./rsc/dispatch");
+const { Intents } = require("discord.js");
 const configFile = require("./config.json");
-const client = new Client({
+const ShaClient = require("./rsc/classes/ShaClient");
+const client = new ShaClient({
     partials: ["CHANNEL", "GUILD_MEMBER", "MESSAGE", "USER"],
     intents: [
         Intents.FLAGS.GUILDS,
         Intents.FLAGS.GUILD_MESSAGES,
-        Intents.FLAGS.GUILD_MEMBERS
+        Intents.FLAGS.GUILD_MEMBERS,
+        Intents.FLAGS.GUILD_PRESENCES
     ]
 });
 
 process.dev = true;
 
-dispatch(client);
+client.dispatch();
 // require("./rsc/tCmd")(client);
 
 // if (process.argv.includes("-d")) {
