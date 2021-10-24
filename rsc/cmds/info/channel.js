@@ -1,6 +1,6 @@
 'use strict';
 
-const { MessageEmbed } = require("discord.js");
+const { MessageEmbed, StageChannel } = require("discord.js");
 const { Interval, DateTime } = require("luxon");
 const { Command } = require("../../classes/Command");
 const { fetchAllMembers, strYesNo, maxLengthPad } = require("../../functions");
@@ -9,14 +9,11 @@ const { intervalToStrings, createInterval } = require("../../rsc/Duration");
 
 class GetEmbed {
     static async GUILD_TEXT(channel, baseEmbed) {
-        await fetchAllMembers(channel.guild);
-        const viewableCount = channel.members.size;
         const threadCount = {
             PUBLIC: channel.threads.cache.filter(r => r.type === "GUILD_PUBLIC_THREAD").size,
             PRIVATE: channel.threads.cache.filter(r => r.type === "GUILD_PRIVATE_THREAD").size
         };
         const emb = new MessageEmbed(baseEmbed)
-            .addField("Viewable by", `\`${viewableCount}\` member${viewableCount > 1 ? "s" : ""}`, true)
             .setTitle("About Channel **" + channel.name + "**");
         if (channel.threads.cache.size) {
             const maxL = [];
@@ -37,8 +34,14 @@ class GetEmbed {
         emb.addField("NSFW", strYesNo(channel.nsfw), true)
         return emb;
     }
+
+    static async GUILD_NEWS(channel, baseEmbed) {
+        return this.GUILD_TEXT(channel, baseEmbed).then(
+            r => r.setTitle(`About News Channel **${channel.name}**`)
+        );
+    }
+
     static async GUILD_PUBLIC_THREAD(channel, baseEmbed) {
-        await fetchAllMembers(channel.guild);
         const emb = new MessageEmbed(baseEmbed)
             .setTitle("About Public Thread **" + channel.name + "**")
             .addField("Archived", strYesNo(channel.archived), true)
@@ -58,9 +61,8 @@ class GetEmbed {
             .addField("Rate Limit", "`" + channel.rateLimitPerUser + "`", true);
         return emb;
     }
+
     static async GUILD_CATEGORY(channel, baseEmbed) {
-        await fetchAllMembers(channel.guild);
-        const viewableCount = channel.members.size;
         let chCount = "";
         if (channel.children.size) {
             const ch = {};
@@ -107,15 +109,46 @@ class GetEmbed {
         }
         const emb = new MessageEmbed(baseEmbed);
         if (chCount.length) emb.addField("Channel Count", chCount, true);
-        emb.setTitle("About Channel Category **" + channel.name + "**")
-            .addField("Viewable by", `\`${viewableCount}\` member${viewableCount > 1 ? "s" : ""}`, true);
+        emb.setTitle("About Channel Category **" + channel.name + "**");
 
         return emb;
     }
+
     static async GUILD_PRIVATE_THREAD(channel, baseEmbed) {
         return this.GUILD_PUBLIC_THREAD(channel, baseEmbed).then(r =>
             r.setTitle("About Private Thread **" + channel.name + "**")
         );
+    }
+
+    /**
+     * 
+     * @param {StageChannel} channel 
+     * @param {*} baseEmbed 
+     * @returns 
+     */
+    static async GUILD_STAGE_VOICE(channel, baseEmbed) {
+        const emb = new MessageEmbed(baseEmbed);
+        this.baseVoiceChannel(channel, emb);
+        if (channel.stageInstance) {
+            console.log(channel.stageInstance);
+            emb.addField("Stage Instance (Testing)", `\`${channel.stageInstance}\``, true);
+        }
+        return emb;
+    }
+
+    static async GUILD_VOICE(channel, baseEmbed) {
+        const emb = new MessageEmbed(baseEmbed);
+        this.baseVoiceChannel(channel, emb);
+        return emb;
+    }
+
+    static baseVoiceChannel(channel, baseEmbed) {
+        if (channel.bitrate) baseEmbed
+            .addField("Bitrate", `\`${channel.bitrate}\``, true);
+        if (channel.rtcRegion) baseEmbed
+            .addField("Region", `\`${channel.rtcRegion}\``, true);
+        if (channel.userLimit) baseEmbed
+            .addField("User Limit", `\`${channel.userLimit}\``, true);
     }
 }
 
@@ -148,7 +181,12 @@ module.exports = class ChannelInfoCmd extends Command {
                 baseEmbed.addField("Pemissions Synced", strYesNo(channel.permissionsLocked), true);
         }
         if (channel.topic) baseEmbed.setDescription(channel.topic);
+        await fetchAllMembers(channel.guild);
         const emb = await GetEmbed[channel.type](channel, baseEmbed);
+        const viewableCount = channel.members.size;
+        if (viewableCount) emb.addField(/VOICE/.test(channel.type) ?
+            "Active Member" : "Viewable by",
+            `\`${viewableCount}\` member${viewableCount > 1 ? "s" : ""}`, true)
         return inter.editReply({ embeds: [emb] });
     }
 }

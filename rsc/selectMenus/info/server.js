@@ -25,13 +25,12 @@ async function handle(inter, args) {
         // If it were able to fetch the reply ephemeral message, this would be cool
         // const ePages = {};
         // for (const U in pages) {
-        //     const D = pages[U];
-        //     D.ephemeral = true;
-        //     D.fetchReply = true;
-        //     ePages[U] = D;
+        //     ePages[U] = pages[U];
+        //     ePages[U].ephemeral = true;
         // }
         // const mes = await inter.reply(ePages[args[0]]);
-        // inter.client.activeSelectMenus.set(mes.id, ePages);
+        // inter.client.createSelectMenu(mes.id, ePages);
+        // return mes;
     }
     if (!(inter.replied || inter.deferred)) {
         const ret = await inter.message.edit(pages[args[0]]);

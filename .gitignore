@@ -2,6 +2,7 @@ config.json
 package-lock.json
 *.sqlite3
 dashboard/
+.vscode
 
 pnpm-lock.yaml
 config-live.json

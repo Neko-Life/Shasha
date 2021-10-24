@@ -1,5 +1,6 @@
 'use strict';
 
+const { MessageEmbed } = require("discord.js");
 const OS = require("os");
 const { Command } = require("../../classes/Command");
 
@@ -18,6 +19,11 @@ module.exports = class BotStatsCmd extends Command {
                 data[I] = fn();
             } else data[I] = fn;
         }
-        console;
+        const emb = new MessageEmbed();
+        for (const A in data) {
+            if (!data[A] || data[A] === '\n') continue;
+            if (typeof data[A] === "string") emb.addField(A, data[A]);
+        }
+        return inter.reply({ embeds: [emb] });
     }
 }

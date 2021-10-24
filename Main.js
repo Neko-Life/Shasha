@@ -1,21 +1,29 @@
 'use strict';
 
+if (process.argv.includes("-d")) process.dev = true;
+
+const { exec } = require("child_process");
 // require("./rsc/mongo");
 // require("./rsc/structures");
 const { Intents } = require("discord.js");
 const configFile = require("./config.json");
+const { ShaBaseDb } = require("./rsc/classes/Database");
 const ShaClient = require("./rsc/classes/ShaClient");
+const { database } = require("./rsc/mongo");
+const dashboard = null; // exec("cd dashboard && npm run dev", (e) => console.error);
 const client = new ShaClient({
     partials: ["CHANNEL", "GUILD_MEMBER", "MESSAGE", "USER"],
     intents: [
         Intents.FLAGS.GUILDS,
         Intents.FLAGS.GUILD_MESSAGES,
         Intents.FLAGS.GUILD_MEMBERS,
-        Intents.FLAGS.GUILD_PRESENCES
-    ]
+        Intents.FLAGS.GUILD_PRESENCES,
+        Intents.FLAGS.GUILD_VOICE_STATES,
+        Intents.FLAGS.DIRECT_MESSAGES
+    ],
+    dashboard: dashboard,
+    db: new ShaBaseDb(database, "main")
 });
-
-process.dev = true;
 
 client.dispatch();
 // require("./rsc/tCmd")(client);
@@ -201,11 +209,17 @@ client.dispatch();
 // });
 
 process.on("uncaughtException", e => {
-    console.error(e);
+    if (process.dev) console.error(e);
+    if (client.errorChannel) {
+        client.errorChannel.send("`[ EXCEPTION ]` ```js\n" + e.stack + "```");
+    }
     // errLog(e, null, client);
 });
 process.on("unhandledRejection", e => {
-    console.error(e);
+    if (process.dev) console.error(e);
+    if (client.errorChannel) {
+        client.errorChannel.send("`[ REJECTION ]` ```js\n" + e.stack + "```");
+    }
     //     errLog(e, null, client);
     //     if (/MongoError: Topology is closed, please connect/.test(e.message)) {
     //         console.log("Trying reconnecting...");

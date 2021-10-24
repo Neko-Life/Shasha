@@ -3,7 +3,6 @@
 const { Command } = require("../classes/Command");
 const expressCmd = require("../rsc/expressCmd");
 
-const EXPRESS_ENDPOINTS = ["smile", "smug", "laugh", "baka", "cry", "dance", "wave", "blush", "bored", "facepalm", "happy", "pout", "shrug", "sleep", "think", "thumbsup"];
 const EXPRESS_TEXTS = {
     "smile": " is smiling",
     "smug": " got a smug face",
@@ -26,8 +25,7 @@ const EXPRESS_TEXTS = {
 module.exports = class ExpressCmd extends Command {
     constructor(interaction) {
         super(interaction, {
-            name: "express",
-            clientPermissions: ["EMBED_LINKS"]
+            name: "express"
         });
     }
 
@@ -35,5 +33,3 @@ module.exports = class ExpressCmd extends Command {
         return expressCmd(inter, expression.value, EXPRESS_TEXTS[expression.value], message?.value);
     }
 }
-
-module.exports.constant = { EXPRESS_ENDPOINTS }

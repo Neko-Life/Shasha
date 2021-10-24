@@ -1,8 +1,8 @@
 'use strict';
 
 const { CommandInteraction, GuildChannel } = require("discord.js");
-const { Command } = require("../classes/Command");
-const { isAdmin, allowMention } = require("../functions");
+const { Command } = require("../../classes/Command");
+const { isAdmin, allowMention } = require("../../functions");
 
 module.exports = class SayCmd extends Command {
     constructor(interaction) {

@@ -1,9 +1,13 @@
 'use strict';
 
-const { Client, User } = require("discord.js");
+const { ChildProcess } = require("child_process");
+const { Client, User, Guild, Collection } = require("discord.js");
 const { join } = require("path");
 const requireAll = require("require-all");
+const { ShaBaseDb } = require("./Database");
 const { adCheck, cleanMentionID, createRegExp } = require("../functions");
+const { escapeRegExp } = require("lodash");
+const { logDev } = require("../debug");
 
 module.exports = class ShaClient extends Client {
     constructor(options) {
@@ -12,27 +16,35 @@ module.exports = class ShaClient extends Client {
          * @type {User[]}
          */
         this.owners = [];
-        this.eventHandlers = {};
-        this.handlers = {};
-        this.commands = {};
-        this.selectMenus = {};
-        this.functions = {};
+        this.eventHandlers = null;
+        this.handlers = null;
+        this.commands = null;
+        this.selectMenus = null;
+        this.functions = null;
         this.handledCommands = new Map();
         this.activeSelectMenus = new Map();
+        this.loadedListeners = {};
+        /**
+         * @type {ChildProcess}
+         */
+        this.dashboard = options.dashboard || null;
+        /**
+         * @type {ShaBaseDb}
+         */
+        this.db = options.db || null;
     }
 
     dispatch() {
-        this.loadModules();
-        let count = 0;
-        for (const U in this.eventHandlers) {
-            this.on(U, async (...args) => {
-                if (process.dev) console.debug("[ EVENT", U, "]", ...args);
-                this.eventHandlers[U].handle(this, ...args);
-            });
-            if (process.dev) console.debug("Listener", U, "dispatched");
-            count++;
-        }
-        console.log(count, "listeners loaded.");
+        try {
+            this.unloadModules();
+            try {
+                this.loadModules();
+            } catch (e) { process.emit("error", e) }
+            this.dispatchListeners("on");
+            this.dispatchDashboard();
+
+            this.loadDbSelectMenus();
+        } catch (e) { process.emit("error", e) }
     }
 
     loadModules() {
@@ -41,6 +53,69 @@ module.exports = class ShaClient extends Client {
         this.commands = requireAll({ dirname: join(__dirname, "../cmds"), recursive: true });
         this.selectMenus = requireAll({ dirname: join(__dirname, "../selectMenus"), recursive: true });
         this.functions = require("../functions");
+        logDev("Modules unload/load done");
+    }
+
+    unloadModules() {
+        const modulesDirName = ["../eventHandlers", "../handlers", "../cmds", "../selectMenus"];
+        const modulesName = ["../functions.js"];
+        const modulesDirPath = modulesDirName.map(r => join(__dirname, r));
+        modulesDirPath.push(...modulesName.map(r => join(__dirname, r)));
+        this.dispatchListeners();
+        for (const R in require.cache) {
+            if (modulesDirPath.some(r => new RegExp("^" + escapeRegExp(r)).test(R))) {
+                delete require.cache[R];
+                logDev("unloaded module:", R);
+            }
+        }
+    }
+
+    /**
+     * 
+     * @param {"off"|"on"} opt
+     */
+    dispatchListeners(opt = "off") {
+        if (opt !== "on" && opt !== "off") throw new TypeError("Expected 'on' or 'off'. Got " + opt);
+        let count = 0;
+        for (const U in this.eventHandlers) {
+            if (opt === "on") this.loadedListeners[U] = async (...args) => {
+                logDev("[ EVENT", U, "]", ...args);
+                this.eventHandlers[U].handle(this, ...args);
+            }
+            this[opt](U, this.loadedListeners[U]);
+            logDev("Listener", U, (opt === "on" ? "dispatched" : "removed"));
+            count++;
+        }
+        logDev(count, `listeners ${opt === "off" ? "un" : ""}loaded`);
+    }
+
+    dispatchDashboard() {
+        if (this.dashboard instanceof ChildProcess) {
+            this.dashboard.on("spawn", () =>
+                console.log("Dashboard initialized..."));
+
+            this.dashboard.on("message", (msg, sendHandle) =>
+                console.log("[ DASHBOARD_MESSAGE ]\n%s", msg,
+                    "SEND_HANDLE:\n%s", sendHandle), "\n[ END:DASHBOARD_MESSAGE ]");
+
+            this.dashboard.on("exit", (c, s) =>
+                console.warn("[ DASHBOARD_EXIT ]\n%s", "CODE:", c, "SIG:\n%s", s, "\n[ END:DASHBOARD_EXIT ]"));
+
+            this.dashboard.on("error", (e) =>
+                console.error("[ DASHBOARD_ERROR ]\n%s", e, "\n[ END:DASHBOARD_ERROR ]"));
+
+            this.dashboard.on("disconnect", () =>
+                console.warn("Dashboard got disconnected..."));
+
+            this.dashboard.on("close", (c, s) =>
+                console.warn("[ DASHBOARD_CLOSED ]\n%s", "CODE:", c, "SIG:\n%s", s, "\n[ END:DASHBOARD_CLOSED ]"));
+
+            // this.dashboard.stdout.on("data", (c) =>
+            //     console.log("[ DASHBOARD_STDOUT ]\n%s", c, "\n[ END:DASHBOARD_STDOUT ]"));
+
+            // this.dashboard.stderr.on("data", (c) =>
+            //     console.log("[ DASHBOARD_STDERR ]\n%s", c, "\n[ END:DASHBOARD_STDERR ]"));
+        }
     }
 
     /**
@@ -51,8 +126,38 @@ module.exports = class ShaClient extends Client {
      */
     finalizeStr(str, noAdCheck = false) {
         let ret = this.emoteMessage(str);
-        if (!noAdCheck) ret = adCheck(str);
+        if (!noAdCheck) ret = adCheck(ret);
         return ret;
+    }
+
+    /**
+     * 
+     * @param {string} id
+     * @param {*} val - Value
+     * @param {number|boolean} timeout - Delete in ms
+     * @returns 
+     */
+    async createSelectMenu(id, val, timeout = true) {
+        const ret = this.activeSelectMenus.set(id, val);
+        if (timeout === true) timeout = 60 * 1000 * 15;
+        if (typeof timeout === "number" && timeout > 0)
+            setTimeout(() => this.activeSelectMenus.delete(id), timeout);
+        else {
+            await this.db.set("activeSelectMenus", id, val);
+        }
+        return ret;
+    }
+
+    async loadDbSelectMenus() {
+        const get = await this.db.get("activeSelectMenus", String);
+        if (get.size)
+            for (const [k, v] of get)
+                this.activeSelectMenus.set(k, v);
+    }
+
+    async deleteSelectMenu(id) {
+        this.activeSelectMenus.delete(id);
+        return this.db.delete("activeSelectMenus", id);
     }
 
     /**
@@ -61,24 +166,24 @@ module.exports = class ShaClient extends Client {
      * @returns {boolean}
      */
     isOwner(user) {
-        if (user.id && /^\d{17,19}$/.test(user.id)) user = user.id;
-        if (typeof user !== "string" || (typeof user === "string" && !/^\d{17,19}$/.test(user)))
+        if (user.id && /^\d{18,20}$/.test(user.id)) user = user.id;
+        if (typeof user !== "string" || (typeof user === "string" && !/^\d{18,20}$/.test(user)))
             throw new TypeError("user is " + user);
-        return this.owners.map(r => r.id).includes(user);
+        return this.owners.some(r => r.id === user);
     }
 
     /**
-     * Fing guild with id or exact name, force will use RegExp
-     * @param {string} query 
-     * @param {string} reFlags 
+     * Find guild with id or exact name, force will use RegExp
+     * @param {string} query
+     * @param {string} reFlags - RegExp flags (force)
      * @param {boolean} force
-     * @returns {Promise<Map<string, Guild>> | Guild}
+     * @returns {Promise<Collection<string, Guild>> | Guild}
      */
-    async findGuilds(query, reFlags, force = false) {
+    findGuilds(query, reFlags, force = false) {
         if (typeof query !== "string") throw new TypeError("query must be a string!");
         query = cleanMentionID(query);
         if (!query) return;
-        if (/^\d{17,19}/.test(query))
+        if (/^\d{18,20}$/.test(query))
             return this.guilds.resolve(query);
         else if (force) {
             const re = createRegExp(query, reFlags);
@@ -92,20 +197,39 @@ module.exports = class ShaClient extends Client {
         }
     }
 
+    /**
+     * @param {string} query 
+     * @param {string} reFlags 
+     * @returns {Promise<Collection<string, User>> | User}
+     */
+    async findUsers(query, reFlags) {
+        if (typeof query !== "string") throw new TypeError("query must be a string!");
+        query = cleanMentionID(query);
+        if (!query) return;
+        if (/^\d{18,20}$/.test(query)) {
+            let u = this.users.resolve(query);
+            if (!u) u = await this.users.fetch(query).catch(() => { });
+            return u;
+        } else {
+            const re = createRegExp(query, reFlags);
+            return this.users.cache.filter(r =>
+                re.test(r.username) || re.test(r.tag));
+        }
+    }
+
     emoteMessage(content) {
-        const E = content?.match(/:\w{1,32}:(?!\d{17,19}>)/g);
-        if (!E || E.length === 0) return content;
-        let tE = [];
+        const E = content?.match(/:\w{1,32}:(?!\d{18,20}>)/g);
+        if (!E || !E.length) return content;
+        const tE = [];
         for (const eN of E) {
-            let findThis = eN.slice(1, -1);
-            let found = this.emojis.cache.map(r => r).filter(r => r.name.toLowerCase() === findThis.toLowerCase())?.[0];
+            const findThis = eN.slice(1, -1).toLowerCase();
+            const found = this.emojis.cache.filter(r => r.name.toLowerCase() === findThis).first();
             tE.push(found);
         }
-        if (tE.length > 0) {
+        if (tE.length && tE.some(r => !!r)) {
             for (let index = 0; index < E.length; index++) {
-                if (tE[index]) {
-                    content = content.replace(E[index], `<${tE[index].animated ? "a" : ""}:${tE[index].name}:${tE[index].id}>`);
-                }
+                if (!tE[index]) continue;
+                content = content.replace(E[index], `<${tE[index].animated ? "a" : ""}:${tE[index].name}:${tE[index].id}>`);
             }
         }
         return content;

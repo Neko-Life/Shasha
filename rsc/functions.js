@@ -1,8 +1,36 @@
 'use strict';
 
-const { CommandInteraction, MessageEmbed, Client, Collection, Guild, User, Interaction, GuildMember, Invite } = require("discord.js");
+const { CommandInteraction, MessageEmbed, Client, Collection, Guild, User, Interaction, GuildMember, Invite, Role, GuildChannel } = require("discord.js");
 const { escapeRegExp } = require("lodash");
+const { database } = require("./mongo");
 const { randomColors } = require("../config.json");
+const { ShaBaseDb } = require("./classes/Database");
+
+// ---------------- CONSTANTS ----------------
+
+const ePerms = [
+    "KICK_MEMBERS",
+    "BAN_MEMBERS",
+    "MANAGE_CHANNELS",
+    "MANAGE_GUILD",
+    "VIEW_AUDIT_LOG",
+    "MANAGE_MESSAGES",
+    "MENTION_EVERYONE",
+    "VIEW_GUILD_INSIGHTS",
+    "MUTE_MEMBERS",
+    "DEAFEN_MEMBERS",
+    "MOVE_MEMBERS",
+    "MANAGE_NICKNAMES",
+    "MANAGE_ROLES",
+    "MANAGE_WEBHOOKS",
+    "MANAGE_EMOJIS_AND_STICKERS",
+    "MANAGE_THREADS"
+];
+
+const reValidURL = /^https?:\/\/[^\s\n]+\.[^\s\n][^\s\n]/;
+const reParseQuote = /(?<!".+)'.+'(?!.+")|(?<!'.+)".+"(?!.+')/g;
+
+// ---------------- FUNCTIONS ----------------
 
 /**
  * Command usage logger
@@ -191,9 +219,10 @@ function tickTag(user) {
  * @returns {string} Cleaned str
  */
 function adCheck(str) {
-    if (str.length > 8) {
+    if (str?.length > 8) {
         if (/(https:\/\/)?(www\.)?discord\.gg\/(?:\w{2,15}(?!\w)(?= *))/.test(str)) str = str
-            .replace(/(https:\/\/)?(www\.)?discord\.gg\/(?:\w{2,15}(?!\w)(?= *))/g, '`Some invite link goes here`');
+            .replace(/(https:\/\/)?(www\.)?discord\.gg\/(?:\w{2,15}(?!\w)(?= *))/g,
+                '`Some invite link goes here`');
     }
     return str;
 }
@@ -214,6 +243,7 @@ function isAdmin(member) {
 }
 
 async function fetchAllMembers(guild) {
+    if (!(guild instanceof Guild)) throw new TypeError("guild isn't instance of Guild");
     if (guild.members.cache.size !== guild.memberCount) await guild.members.fetch();
 }
 
@@ -265,27 +295,6 @@ function unixToSeconds(val) {
     return Math.floor(val / 1000);
 }
 
-const reValidURL = /^https?:\/\/[^\s\n]+\.[^\s\n][^\s\n]/;
-
-const ePerms = [
-    "KICK_MEMBERS",
-    "BAN_MEMBERS",
-    "MANAGE_CHANNELS",
-    "MANAGE_GUILD",
-    "VIEW_AUDIT_LOG",
-    "MANAGE_MESSAGES",
-    "MENTION_EVERYONE",
-    "VIEW_GUILD_INSIGHTS",
-    "MUTE_MEMBERS",
-    "DEAFEN_MEMBERS",
-    "MOVE_MEMBERS",
-    "MANAGE_NICKNAMES",
-    "MANAGE_ROLES",
-    "MANAGE_WEBHOOKS",
-    "MANAGE_EMOJIS_AND_STICKERS",
-    "MANAGE_THREADS"
-]
-
 /**
  * Put single quote on perm string to put on js codeblock to emphasize it
  * @param {import("discord.js").PermissionString} str 
@@ -304,7 +313,7 @@ function emphasizePerms(str) { return ePerms.includes(str) ? "'" + str + "'" : s
 function allowMention({ member, content }) {
     const allowedMentions = {};
     if (member && !member.permissions.has("MENTION_EVERYONE")) {
-        if (content?.match(/<@\!?[^&]\d{17,19}>/g)?.length > 1)
+        if (content?.match(/<@\!?[^&]\d{18,20}>/g)?.length > 1)
             allowedMentions.parse = [];
         else allowedMentions.parse = ["users"];
     } else allowedMentions.parse = ["everyone", "roles", "users"];
@@ -332,7 +341,138 @@ async function getCommunityInvite(guild) {
         ) : null
 }
 
+/**
+ * 
+ * @param {number} ms - Wait for ms
+ * @returns 
+ */
+async function wait(ms) {
+    return new Promise((r, j) => setTimeout(r, ms));
+}
+
+/**
+ * 
+ * @param {Guild} guild 
+ * @param {string} query 
+ * @param {string} reFlags 
+ * @returns {Collection<string, Role> | Role}
+ */
+function findRoles(guild, query, reFlags) {
+    if (typeof query !== "string") throw new TypeError("query must be a string!");
+    query = cleanMentionID(query);
+    if (!query) return;
+    if (/^\d{18,20}$/.test(query)) {
+        return guild.roles.resolve(query);
+    } else {
+        const re = createRegExp(query, reFlags);
+        return guild.roles.cache.filter(r => re.test(r.name));
+    }
+}
+
+/**
+ * Find channel with id or name, force will use RegExp
+ * @param {Guild} guild - Guild to find in
+ * @param {string} query
+ * @param {string} reFlags - RegExp flags (force)
+ * @param {boolean} force
+ * @returns {Collection<string, GuildChannel> | GuildChannel}
+ */
+function findChannels(guild, query, reFlags, force = false) {
+    if (typeof query !== "string") throw new TypeError("query must be a string!");
+    query = cleanMentionID(query);
+    if (!query) return;
+    if (/^\d{18,20}$/.test(query)) {
+        const ch = guild.channels.resolve(query);
+        if (!ch && force) return guild.client.channels.resolve(query);
+        return ch;
+    } else {
+        const re = createRegExp(query, reFlags);
+        const ch = guild.channels.cache.filter(v =>
+            re.test(v.name)
+        );
+        if (ch.size) return ch;
+        if (force) return guild.client.channels.cache.filter(v =>
+            re.test(v.name)
+        );
+        return ch;
+    }
+}
+
+/**
+ * 
+ * @param {Guild} guild 
+ * @param {string} query 
+ * @param {string} reFlags 
+ * @returns {Collection<string, GuildMember> | GuildMember}
+ */
+function findMembers(guild, query, reFlags) {
+    if (typeof query !== "string") throw new TypeError("query must be a string!");
+    query = cleanMentionID(query);
+    if (!query) return;
+    if (/^\d{18,20}$/.test(query)) return guild.members.resolve(query);
+    else {
+        const re = createRegExp(query, reFlags);
+        return guild.members.cache.filter(r =>
+            re.test(r.nickname) || re.test(r.user.username) || re.test(r.user.tag));
+    }
+}
+
+// ---------------- DATABASES ----------------
+
+/**
+ * 
+ * @param {*} instance 
+ * @param {import("./classes/Database").ShaDbCollectionType} collection 
+ * @returns
+ */
+function loadDb(instance, collection) {
+    if (!instance) throw new TypeError("instance is undefined!");
+    if (instance.db) return instance;
+    if (!collection) throw new Error("collection isn't specified!");
+    instance.db = new ShaBaseDb(database, collection);
+    return instance;
+}
+
+/**
+ * @typedef {object} AddUserExpOpt
+ * @property {number} maxRandom - Max random value
+ * @property {number} minRandom - Min random value
+ * @property {"floor"|"ceil"} round - Round maxRandom result
+ * @property {number} divide - Divide rounded maxRandom result
+ * @property {number} add - Value to add
+ * 
+ * @param {User} user 
+ * @param {AddUserExpOpt} opt
+ * @returns 
+ */
+async function addUserExp(user, opt = {}) {
+    loadDb(user, "user/" + user.id);
+    const data = await user.db.getOne("exp", "Number");
+    let exp = data?.value;
+    if (!exp) exp = 0;
+    if (typeof exp !== "number")
+        throw new TypeError("exp isn't number. Somethin's wrong in your codes");
+    let add;
+    if (opt.maxRandom) {
+        if (typeof opt.minRandom !== "number") opt.minRandom = 0;
+        add = Math.random() * (opt.maxRandom - opt.minRandom) + opt.minRandom;
+        if (["floor", "ceil"].includes(opt.round))
+            add = Math[opt.round](add);
+        if (opt.divide)
+            add = add / opt.divide;
+    }
+    if (opt.add)
+        exp += opt.add;
+    if (typeof add !== "number") add = 0;
+    exp += add;
+    if (typeof exp !== "number") throw new TypeError("exp isn't a number");
+    return user.db.set("exp", "Number", { value: exp });
+}
+
 module.exports = {
+    // ---------------- FUNCTIONS ---------------- 
+    // Essentials for bot functionality
+
     parseComa,
     getChannelMessage,
     cleanMentionID,
@@ -347,8 +487,23 @@ module.exports = {
     replyFalseInvoker,
     strYesNo,
     unixToSeconds,
-    reValidURL,
     emphasizePerms,
     allowMention,
-    getCommunityInvite
+    getCommunityInvite,
+    wait,
+    findRoles,
+    findChannels,
+    findMembers,
+
+    // ---------------- DATABASES ----------------
+    // Databases related functions
+
+    loadDb,
+    addUserExp
+}
+
+module.exports.constants = {
+    ePerms,
+    reValidURL,
+    reParseQuote
 }

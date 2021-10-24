@@ -3,9 +3,9 @@
 async function handle(interaction) {
     const path = interaction.customId.split("/");
     let cmd = interaction.client.selectMenus;
-    for (const U of path) {
-        if (!cmd) continue;
+    if (cmd) for (const U of path) {
         cmd = cmd[U];
+        if (!cmd) break;
     }
     if (!cmd?.handle)
         return interaction.reply({

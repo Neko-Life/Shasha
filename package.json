@@ -17,8 +17,15 @@
     "nekos-best.js": "^4.0.2",
     "node": "^15.12.0",
     "require-all": "^3.0.0",
+    "translate-google": "^1.5.0",
     "utf-8-validate": "^5.0.4",
     "zlib-sync": "^0.1.7"
+  },
+  "scripts": {
+    "web": "cd dashboard && npm run dev",
+    "debug": "node --trace-warnings Main.js -d",
+    "bot": "node Main.js",
+    "reg": "node registerCommands.js null"
   },
   "devDependencies": {
     "@types/bree": "^6.2.1",

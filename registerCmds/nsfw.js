@@ -1,7 +1,7 @@
 'use strict';
 
 const { SlashCommandBuilder, SlashCommandStringOption } = require("@discordjs/builders");
-const { NSFW_ENDPOINTS } = require("../rsc/cmds/nsfw").constant;
+const NSFW_ENDPOINTS = ["ass", "athighs", "blow", "boobs", "feet", "furfuta", "furgif", "futa", "gifs", "hboobs", "hentai", "hfeet", "jackopose", "milk", "pantsu", "sex", "slime", "trap", "yuri"];
 
 const OPT = new SlashCommandStringOption()
     .setName("category")

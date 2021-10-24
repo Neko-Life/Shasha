@@ -3,7 +3,8 @@
 const { BaseGuildTextChannel, Message, CommandInteraction, Util } = require("discord.js");
 const { MessageEmbed } = require("discord.js");
 const { Command } = require("../classes/Command");
-const { getChannelMessage, isAdmin, reValidURL, allowMention } = require("../functions");
+const { getChannelMessage, isAdmin, allowMention, constants } = require("../functions");
+const { reValidURL } = constants;
 const getColor = require("../getColor");
 const createJSONEmbedFields = require("../rsc/createJSONEmbedFields");
 const sortProchedure = [
@@ -142,7 +143,7 @@ module.exports.build = class BuildEmbCmd extends Command {
                 this.footerEmbed.iconURL = value;
             },
             content: ({ value }) => {
-                if (value === "EMPTY") return this.contentEmbed = null;
+                if (value === "EMPTY") return this.contentEmbed = "";
                 this.contentEmbed = this.interaction.client.finalizeStr(value, isAdmin(this.interaction.member || this.interaction.user));
             },
             url: ({ value }) => {
@@ -252,11 +253,8 @@ module.exports.build = class BuildEmbCmd extends Command {
         const prochedure = Object.keys(data);
         prochedure.sort(
             (a, b) =>
-                (
-                    sortProchedure.indexOf(a)
-                ) - (
-                    sortProchedure.indexOf(b)
-                )
+                sortProchedure.indexOf(a) -
+                sortProchedure.indexOf(b)
         );
         for (const argName of prochedure) {
             const arg = data[argName];
@@ -290,7 +288,8 @@ module.exports.build = class BuildEmbCmd extends Command {
                 send.embeds = this.sourceMessage.embeds;
             } else send.embeds = [this.buildEmbed];
         }
-        if (this.contentEmbed) send.content = this.contentEmbed;
+        if (this.contentEmbed === "") send.content = null;
+        else if (this.contentEmbed) send.content = this.contentEmbed;
         if (this.filesEmbed) send.files = this.filesEmbed;
         let ret;
         if (!this.channelSend && this.sourceMessage && this.editExist) {
@@ -372,6 +371,7 @@ module.exports.join = class EmbedJoinCmd extends Command {
         const IDS = messages.value.split(/ +/);
         let resultMsg = "";
         const emb = [];
+        const msgs = [];
         for (const Id of IDS) {
             const msg = await getChannelMessage(inter, Id);
             if (!msg) {
@@ -383,6 +383,7 @@ module.exports.join = class EmbedJoinCmd extends Command {
                 continue;
             }
             emb.push(...msg.embeds);
+            msgs.push(msg);
         }
         const send = {};
         if (content?.value) send.content = content.value;
@@ -391,6 +392,16 @@ module.exports.join = class EmbedJoinCmd extends Command {
             const filter = attachments.value.split(/ +/);
             const toSend = [];
             if (filter.length) for (const F of filter) {
+                if (F === "copy") {
+                    const att = [];
+                    for (const M of msgs) {
+                        const f = M.attachments.map(r => r.url);
+                        if (!f.length) continue;
+                        att.push(...f);
+                    }
+                    toSend.push(...att);
+                    continue;
+                }
                 if (!F) continue;
                 if (reValidURL.test(F)) toSend.push(F);
                 else resultMsg += `**${F}** isn't a valid URL\n`;
@@ -399,8 +410,32 @@ module.exports.join = class EmbedJoinCmd extends Command {
         }
         let ret;
         if (send.embeds || send.content) ret = await channel.send(send);
-        if (emb.length > 10) resultMsg += `There's ${emb.length} embeds joined but only 10 allowed in one message\n`;
+        if (emb.length > 10) resultMsg += `There are ${emb.length} embeds joined but only 10 allowed in a message\n`;
         await inter.editReply(resultMsg || "Done <:awamazedLife:795227334339985418>");
         return ret;
     }
+}
+
+module.exports["role-menu"] = class RoleMenuCmd extends Command {
+    constructor(interaction) {
+        super(interaction, {
+            name: "role-menu",
+            clientPermissions: ["EMBED_LINKS"],
+            userPermissions: ["MANAGE_MESSAGES"]
+        });
+    }
+    async run(inter, { roleMenuDatas }) { }
+}
+
+module.exports["create-role-menu-datas"] = class CreateRMDatasCmd extends Command {
+    constructor(interaction) {
+        super(interaction, {
+            name: "create-role-menu-datas",
+            clientPermissions: ["SEND_MESSAGES"],
+            userPermissions: [
+                "SEND_MESSAGES"
+            ]
+        });
+    }
+    async run(inter, { }) { }
 }

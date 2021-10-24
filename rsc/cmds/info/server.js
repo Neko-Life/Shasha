@@ -27,7 +27,7 @@ module.exports = class ServerInfoCmd extends Command {
          * @type {Guild}
          */
         let server = inter.guild;
-        if (identifier) server = await inter.client.findGuilds(
+        if (identifier) server = inter.client.findGuilds(
             identifier.value, "i",
             inter.client.isOwner(inter.user)
         );
@@ -120,6 +120,7 @@ module.exports = class ServerInfoCmd extends Command {
                         DateTime.fromJSDate(new Date())
                     )).strings.join(" ")} ago)`)
             .addField("Explicit Content Filter", "`" + server.explicitContentFilter + "`")
+            .addField("Member Count", `\`${server.memberCount}\``, true)
             .addField("Channel Count", `\`${generalInfo.channelCount}\``, true)
             .addField("NSFW Level", "`" + server.nsfwLevel + "`", true)
             .addField("Verification Level", "`" + server.verificationLevel + "`", true)
@@ -213,7 +214,7 @@ module.exports = class ServerInfoCmd extends Command {
         else iconEmbed.setTitle("No Icon for this server yet...");
 
         const mes = await inter.editReply({ embeds: [generalEmbed], components: [menu] });
-        inter.client.activeSelectMenus.set(mes.id, {
+        inter.client.createSelectMenu(mes.id, {
             generalPage: {
                 embeds: [generalEmbed],
                 components: [menu]
@@ -239,6 +240,5 @@ module.exports = class ServerInfoCmd extends Command {
                 components: [menu]
             }
         });
-        setTimeout(() => inter.client.activeSelectMenus.delete(mes.id), 60 * 1000 * 15);
     }
 }

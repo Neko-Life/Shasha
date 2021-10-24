@@ -67,6 +67,10 @@ module.exports = new SlashCommandBuilder()
             )
     ).addSubcommand(
         sCmd => sCmd
+            .setName("invite")
+            .setDescription("Give you my invite link ❤️")
+    ).addSubcommand(
+        sCmd => sCmd
             .setName("support")
             .setDescription("Get help from the support server")
     ).addSubcommand(

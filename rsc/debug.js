@@ -1,5 +1,8 @@
 'use strict';
 
+// ---------------- DEBUGGING ----------------
+// Debug helpers
+
 function timestampAt(client) {
     const date = new Date(new Date().valueOf() + (client?.matchTimestamp ? client.matchTimestamp : 0)),
         string = date.toLocaleTimeString("UTC", { "day": "numeric", "month": "2-digit", "year": "2-digit", "hour12": true }),
@@ -19,4 +22,13 @@ function makeJSONMessage(object) {
     return { content: '```js\n' + JSON.stringify(object, (k, v) => v || undefined, 2) + '```', split: { maxLength: 2000, char: ",", append: ',```', prepend: '```js\n' } };
 }
 
-module.exports = { timestampAt, makeJSONMessage }
+function logDev(...debug) {
+    if (!process.dev) return;
+    console.debug(...debug);
+}
+
+module.exports = {
+    timestampAt,
+    makeJSONMessage,
+    logDev
+}

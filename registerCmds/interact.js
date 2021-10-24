@@ -1,7 +1,7 @@
 'use strict';
 
 const { SlashCommandBuilder, SlashCommandStringOption } = require("@discordjs/builders");
-const { INTERACT_ENDPOINTS } = require("../rsc/cmds/interact").constant;
+const INTERACT_ENDPOINTS = ["tickle", "kiss", "cuddle", "feed", "hug", "pat", "poke", "bite", "slap", "highfive", "stare", "wink"];
 
 const OPT = new SlashCommandStringOption()
     .setName("interaction")

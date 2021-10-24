@@ -18,6 +18,6 @@ module.exports = class SupportCmd extends Command {
         const inv = await getCommunityInvite(home);
         if (!inv) return inter.editReply("Failed to create invite to " + home.name);
         return inter.editReply("Need help? Wanna ask something for more details?\n"
-            + "Join the [support server](" + inv.url + ")")
+            + "Join the [**SUPPORT SERVER**](" + inv.url + ")");
     }
 }

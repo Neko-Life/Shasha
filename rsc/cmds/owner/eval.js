@@ -1,23 +1,9 @@
 'use strict';
 
 const { Util, CommandInteraction } = require("discord.js");
-const { Command } = require("../classes/Command");
-const { getChannelMessage } = require("../functions");
+const { Command } = require("../../classes/Command");
+const { getChannelMessage } = require("../../functions");
 const { inspect } = require("util");
-/**
- * @type {import("util").InspectOptions}
- */
-const inspectOpt = {
-    compact: false,
-    depth: 1,
-    getters: true,
-    maxArrayLength: 249,
-    sorted: true,
-    maxStringLength: 5000,
-    showHidden: false,
-    getters: true,
-    breakLength: 2000
-}
 
 module.exports = class EvalCmd extends Command {
     constructor(interaction) {
@@ -31,10 +17,11 @@ module.exports = class EvalCmd extends Command {
      */
     async run(inter, { script, message }) {
         if (!inter.client.isOwner(inter.user)) return inter.reply("wat");
+        const LM = inter.channel.lastMessage;
         await inter.deferReply({ ephemeral: true });
         if (message) {
             if (["l", "last"].includes(message.value.toLowerCase()))
-                script = inter.channel.lastMessage.content;
+                script = LM.content;
             else {
                 const SP = message.value.split(/ +/);
                 script = (await getChannelMessage(inter, SP[0], SP[1]))?.content;
@@ -49,7 +36,7 @@ module.exports = class EvalCmd extends Command {
             bf = new Date();
             const res = await eval(script);
             af = new Date();
-            mes = inspect(res, inspectOpt);
+            mes = inspect(res, this.inspectOpt);
         } catch (e) {
             mes = e.stack;
         }
@@ -75,5 +62,19 @@ module.exports = class EvalCmd extends Command {
                 : "```js\nError```", ephemeral: true
         });
         return ret;
+    }
+    /**
+     * @type {import("util").InspectOptions}
+     */
+    inspectOpt = {
+        compact: false,
+        depth: 1,
+        getters: true,
+        maxArrayLength: 249,
+        sorted: true,
+        maxStringLength: 5000,
+        showHidden: false,
+        getters: true,
+        breakLength: 2000
     }
 }

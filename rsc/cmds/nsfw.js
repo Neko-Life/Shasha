@@ -2,15 +2,12 @@
 
 const { Command } = require("../classes/Command");
 const nsfwCmd = require("../rsc/nsfwCmd");
-
 const NSFW_ENDPOINTS = ["ass", "athighs", "blow", "boobs", "feet", "furfuta", "furgif", "futa", "gifs", "hboobs", "hentai", "hfeet", "jackopose", "milk", "pantsu", "sex", "slime", "trap", "yuri"];
-
 
 module.exports = class NsfwCmd extends Command {
     constructor(interaction) {
         super(interaction, {
             name: "nsfw",
-            clientPermissions: ["EMBED_LINKS"],
             nsfwOnly: true
         });
     }
@@ -21,5 +18,3 @@ module.exports = class NsfwCmd extends Command {
         return nsfwCmd(inter, category);
     }
 }
-
-module.exports.constant = { NSFW_ENDPOINTS }
