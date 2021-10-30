@@ -1,6 +1,6 @@
 'use strict';
 
-const { wait } = require("./functions");
+const { wait } = require("../functions");
 
 const axios = require("axios").default,
 	U = ["Yo", "Yyo", "Hello my friend", "Hey cutie <3", "What", "Wat", "Watchu want", "Hewwo", "UwU hwee", "OwO whats this", "Yoooooooooo", "Supp", "Whats good mein frien", "Iyo", "Hows doin", "Wassup", "Whats good", "Wanna chat?"];

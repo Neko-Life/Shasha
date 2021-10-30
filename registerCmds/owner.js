@@ -4,48 +4,82 @@ const { SlashCommandBuilder } = require("@discordjs/builders");
 
 module.exports = new SlashCommandBuilder()
     .setName("owner")
-    .setDescription("I accept these commands from my master only")
+    .setDescription("Owner only")
     .addSubcommand(
         sCmd => sCmd
             .setName("eval")
-            .setDescription("Evaluate script (owner-only)")
+            .setDescription("Owner only")
             .addStringOption(
                 opt => opt
                     .setName("script")
-                    .setDescription("Script to evaluate")
+                    .setDescription("Owner only")
             ).addStringOption(
                 opt => opt
                     .setName("message")
-                    .setDescription("Message containing script")
+                    .setDescription("Owner only")
+            ).addStringOption(
+                opt => opt
+                    .setName("split")
+                    .setDescription("Owner only")
             )
     ).addSubcommand(
         sCmd => sCmd
             .setName("register")
-            .setDescription("Run registerCommands")
+            .setDescription("Owner only")
             .addStringOption(
                 opt => opt
                     .setName("category")
-                    .setDescription("Category to register")
+                    .setDescription("Owner only")
             ).addStringOption(
                 opt => opt
                     .setName("guild")
-                    .setDescription("Register the category in this guild")
+                    .setDescription("Owner only")
             )
     ).addSubcommand(
         sCmd => sCmd
             .setName("reload")
-            .setDescription("Reload teh gunz")
+            .setDescription("Owner only")
     ).addSubcommand(
         sCmd => sCmd
             .setName("ban")
-            .setDescription("Command ban")
-            .addUserOption(
+            .setDescription("Owner only")
+            .addStringOption(
                 opt => opt
                     .setName("user")
-                    .setDescription("User to ban")
+                    .setDescription("Owner only")
             ).addStringOption(
                 opt => opt
                     .setName("guild")
-                    .setDescription("Guild to ban")
+                    .setDescription("Owner only")
             )
-    );
+    ).addSubcommand(
+        sCmd => sCmd
+            .setName("unban")
+            .setDescription("Owner only")
+            .addStringOption(
+                opt => opt
+                    .setName("user")
+                    .setDescription("Owner only")
+            ).addStringOption(
+                opt => opt
+                    .setName("guild")
+                    .setDescription("Owner only")
+            )
+    ).addSubcommand(
+        sCmd => sCmd
+            .setName("su")
+            .setDescription("Owner only")
+            .addUserOption(
+                opt => opt
+                    .setName("user")
+                    .setDescription("Owner only")
+            ).addStringOption(
+                opt => opt
+                    .setName("command")
+                    .setDescription("Owner only")
+            ).addStringOption(
+                opt => opt
+                    .setName("args")
+                    .setDescription("Owner only")
+            )
+    )

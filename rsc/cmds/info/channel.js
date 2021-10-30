@@ -4,7 +4,7 @@ const { MessageEmbed, StageChannel } = require("discord.js");
 const { Interval, DateTime } = require("luxon");
 const { Command } = require("../../classes/Command");
 const { fetchAllMembers, strYesNo, maxLengthPad } = require("../../functions");
-const getColor = require("../../getColor");
+const { getColor } = require("../../functions");
 const { intervalToStrings, createInterval } = require("../../rsc/Duration");
 
 class GetEmbed {

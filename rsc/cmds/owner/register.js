@@ -40,9 +40,18 @@ module.exports = class RegisterCommandsCmd extends Command {
             }
         }
 
+        const bf = new Date();
         const child = exec("node registerCommands.js " + category.value + " " + (guild || ""));
         child.stdout.on("data", async (msg) => {
-            await inter.editReply(msg + "`" + (G?.name || "GLOBAL") + "`");
+            await inter.channel.send(msg + "Registered in: `" + (G?.name || "GLOBAL") + "`");
         });
+        child.stderr.on("data", async (msg) => {
+            await inter.channel.send("```js\n" + msg + "```");
+        });
+        child.on("exit", () => {
+            const af = new Date();
+            inter.editReply("```js\nExecuted in " + ((af.valueOf() - bf.valueOf()) / 1000) + " s```");
+        });
+        inter.editReply("Please wait...");
     }
 }

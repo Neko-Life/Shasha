@@ -34,7 +34,7 @@ client.dispatch();
 // }
 
 // const { errLog, trySend, defaultEventLogEmbed } = require('./rsc/functions');
-// const getColor = require("./rsc/getColor");
+// const { getColor } = require("./rsc/functions");
 // const { chatAnswer } = require("./rsc/shaChat");
 // const { init } = require("./cmds/moderation/src/createSchedule");
 // const { dbClient } = require("./rsc/mongo");

@@ -7,15 +7,6 @@ module.exports = new SlashCommandBuilder()
     .setDescription("Anything's info")
     .addSubcommand(
         sCmd => sCmd
-            .setName("avatar")
-            .setDescription("Show someone's avatar")
-            .addUserOption(
-                opt => opt
-                    .setName("user")
-                    .setDescription("User to see the avatar")
-            )
-    ).addSubcommand(
-        sCmd => sCmd
             .setName("profile")
             .setDescription("Show someone's profile")
             .addUserOption(
@@ -54,11 +45,11 @@ module.exports = new SlashCommandBuilder()
             )
     ).addSubcommand(
         sCmd => sCmd
-            .setName("permission")
+            .setName("permissions")
             .setDescription("See someone's or some role's permissions")
             .addMentionableOption(
                 opt => opt
-                    .setName("permission-for")
+                    .setName("permissions-for")
                     .setDescription("Someone or some role")
             ).addChannelOption(
                 opt => opt

@@ -2,33 +2,7 @@
 
 const { CommandInteraction, MessageEmbed, Client, Collection, Guild, User, Interaction, GuildMember, Invite, Role, GuildChannel } = require("discord.js");
 const { escapeRegExp } = require("lodash");
-const { database } = require("./mongo");
-const { randomColors } = require("../config.json");
-const { ShaBaseDb } = require("./classes/Database");
-
-// ---------------- CONSTANTS ----------------
-
-const ePerms = [
-    "KICK_MEMBERS",
-    "BAN_MEMBERS",
-    "MANAGE_CHANNELS",
-    "MANAGE_GUILD",
-    "VIEW_AUDIT_LOG",
-    "MANAGE_MESSAGES",
-    "MENTION_EVERYONE",
-    "VIEW_GUILD_INSIGHTS",
-    "MUTE_MEMBERS",
-    "DEAFEN_MEMBERS",
-    "MOVE_MEMBERS",
-    "MANAGE_NICKNAMES",
-    "MANAGE_ROLES",
-    "MANAGE_WEBHOOKS",
-    "MANAGE_EMOJIS_AND_STICKERS",
-    "MANAGE_THREADS"
-];
-
-const reValidURL = /^https?:\/\/[^\s\n]+\.[^\s\n][^\s\n]/;
-const reParseQuote = /(?<!".+)'.+'(?!.+")|(?<!'.+)".+"(?!.+')/g;
+const { ePerms } = require("./constants");
 
 // ---------------- FUNCTIONS ----------------
 
@@ -387,12 +361,12 @@ function findChannels(guild, query, reFlags, force = false) {
         return ch;
     } else {
         const re = createRegExp(query, reFlags);
-        const ch = guild.channels.cache.filter(v =>
-            re.test(v.name)
+        const ch = guild.channels.cache.filter(
+            v => re.test(v.name)
         );
         if (ch.size) return ch;
-        if (force) return guild.client.channels.cache.filter(v =>
-            re.test(v.name)
+        if (force) return guild.client.channels.cache.filter(
+            v => re.test(v.name)
         );
         return ch;
     }
@@ -417,57 +391,19 @@ function findMembers(guild, query, reFlags) {
     }
 }
 
-// ---------------- DATABASES ----------------
-
 /**
  * 
- * @param {*} instance 
- * @param {import("./classes/Database").ShaDbCollectionType} collection 
- * @returns
+ * @param {string} str 
+ * @param {number} pad 
+ * @returns {string}
  */
-function loadDb(instance, collection) {
-    if (!instance) throw new TypeError("instance is undefined!");
-    if (instance.db) return instance;
-    if (!collection) throw new Error("collection isn't specified!");
-    instance.db = new ShaBaseDb(database, collection);
-    return instance;
+function tickPadEnd(str, pad = 0) {
+    return "`" + str.toString().padEnd(pad, " ") + "`";
 }
 
-/**
- * @typedef {object} AddUserExpOpt
- * @property {number} maxRandom - Max random value
- * @property {number} minRandom - Min random value
- * @property {"floor"|"ceil"} round - Round maxRandom result
- * @property {number} divide - Divide rounded maxRandom result
- * @property {number} add - Value to add
- * 
- * @param {User} user 
- * @param {AddUserExpOpt} opt
- * @returns 
- */
-async function addUserExp(user, opt = {}) {
-    loadDb(user, "user/" + user.id);
-    const data = await user.db.getOne("exp", "Number");
-    let exp = data?.value;
-    if (!exp) exp = 0;
-    if (typeof exp !== "number")
-        throw new TypeError("exp isn't number. Somethin's wrong in your codes");
-    let add;
-    if (opt.maxRandom) {
-        if (typeof opt.minRandom !== "number") opt.minRandom = 0;
-        add = Math.random() * (opt.maxRandom - opt.minRandom) + opt.minRandom;
-        if (["floor", "ceil"].includes(opt.round))
-            add = Math[opt.round](add);
-        if (opt.divide)
-            add = add / opt.divide;
-    }
-    if (opt.add)
-        exp += opt.add;
-    if (typeof add !== "number") add = 0;
-    exp += add;
-    if (typeof exp !== "number") throw new TypeError("exp isn't a number");
-    return user.db.set("exp", "Number", { value: exp });
-}
+// ---------------- FNS IMPORTS ----------------
+
+const getColor = require("./fns/getColor");
 
 module.exports = {
     // ---------------- FUNCTIONS ---------------- 
@@ -494,16 +430,10 @@ module.exports = {
     findRoles,
     findChannels,
     findMembers,
+    tickPadEnd,
 
-    // ---------------- DATABASES ----------------
-    // Databases related functions
+    // ---------------- FNS IMPORTS ----------------
+    // Functions too big to be put here so imported and has its own file instead
 
-    loadDb,
-    addUserExp
-}
-
-module.exports.constants = {
-    ePerms,
-    reValidURL,
-    reParseQuote
+    getColor
 }

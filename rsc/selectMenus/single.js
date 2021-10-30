@@ -1,7 +1,7 @@
 'use strict';
 
 const { SelectMenuInteraction } = require("discord.js");
-const { isInteractionInvoker } = require("../../functions");
+const { isInteractionInvoker } = require("../functions");
 
 /**
  * 

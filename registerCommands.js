@@ -35,12 +35,10 @@ async function register() {
             Routes.applicationCommands(configFile.appId),
         { body: commandCategories }
     );
-
-    parMes += "Registered " + commandCategories.length + " commands/categories in:";
 }
 
 register().then(() => {
-    console.log(parMes);
+    console.log(parMes + "Count:", commandCategories.length);
     process.exit();
 });
 

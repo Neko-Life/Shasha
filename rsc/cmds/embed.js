@@ -3,9 +3,8 @@
 const { BaseGuildTextChannel, Message, CommandInteraction, Util } = require("discord.js");
 const { MessageEmbed } = require("discord.js");
 const { Command } = require("../classes/Command");
-const { getChannelMessage, isAdmin, allowMention, constants } = require("../functions");
-const { reValidURL } = constants;
-const getColor = require("../getColor");
+const { getChannelMessage, isAdmin, allowMention, getColor } = require("../functions");
+const { reValidURL } = require("../constants");
 const createJSONEmbedFields = require("../rsc/createJSONEmbedFields");
 const sortProchedure = [
     'json',

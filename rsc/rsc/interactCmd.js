@@ -2,8 +2,9 @@
 
 const { MessageEmbed } = require("discord.js");
 const { fetchNeko } = require("nekos-best.js");
-const { isAdmin, loadDb } = require("../functions");
-const getColor = require("../getColor");
+const { isAdmin } = require("../functions");
+const { loadDb } = require("../database");
+const { getColor } = require("../functions");
 
 module.exports = async (interaction, query, user, text, msg) => {
     await interaction.deferReply();

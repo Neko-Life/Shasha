@@ -3,7 +3,7 @@
 const { Collection, Permissions, MessageEmbed, Guild } = require("discord.js");
 const { Command } = require("../classes/Command");
 const { findRoles, findMembers, createRegExp, emphasizePerms, loadDb, findChannels } = require("../functions");
-const getColor = require("../getColor");
+const { getColor } = require("../functions");
 const perms = [];
 for (const k in Permissions.FLAGS)
     perms.push(k);
@@ -34,16 +34,20 @@ module.exports = class DisableEnableCmd extends Command {
             if (data.size) for (const [k, v] of data) {
                 let res = "";
                 if (v.channels.length)
-                    res += "**For channels**:\n<#" + v.channels.join(">, <#") + ">\n";
+                    res += "**For channels**:\n<#"
+                        + v.channels.join(">, <#") + ">\n";
                 if (v.bypass.roles?.length)
-                    res += "**Bypass roles**:\n<@&" + v.bypass.roles.join(">, <@&") + ">\n";
+                    res += "**Bypass roles**:\n<@&"
+                        + v.bypass.roles.join(">, <@&") + ">\n";
                 if (v.bypass.users?.length)
-                    res += "**Bypass users**:\n<@" + this.disableOpt.bypass.users.join(">, <@") + ">";
+                    res += "**Bypass users**:\n<@"
+                        + this.disableOpt.bypass.users.join(">, <@") + ">";
                 if (v.bypass.permissions?.length) {
                     const emph = [];
                     for (const K of v.bypass.permissions)
                         emph.push(emphasizePerms(K));
-                    res += "**Bypass permissions**:```js\n" + emph.join(", ") + "```";
+                    res += "**Bypass permissions**:```js\n"
+                        + emph.join(", ") + "```";
                 }
                 emb.addField("`/" + k.replace(/\//g, " ") + "`", res);
             }
@@ -121,10 +125,14 @@ module.exports = class DisableEnableCmd extends Command {
             this.disableOpt.bypass.permissions = [];
             const arg = bypassPermissions.value.split(/ +/);
             for (const str of arg) {
-                const fil = perms.filter(r =>
-                    createRegExp(str, "i").test(r) ||
-                    createRegExp(str, "i").test(r.replace(/\_/g, "")) ||
-                    createRegExp(str, "i").test(r.replace(/\_/g, " "))
+                const fil = perms.filter(
+                    r => {
+                        const re = createRegExp(str, "i")
+                        return re.test(r)
+                            || re.test(r.replace(/\_/g, ""))
+                            || re.test(r.replace(/\_/g, "-"))
+                            || re.test(r.replace(/\_/g, " "))
+                    }
                 );
                 if (fil?.length) {
                     for (const K of fil)
@@ -176,12 +184,17 @@ module.exports = class DisableEnableCmd extends Command {
                 };
                 await this.disableCmd(obj, newPath);
             } else {
-            if (!(target.prototype instanceof Command)) return this.resultMes += "`/" + opt.commandPath.join(" ") + "` isn't Command: " + typeof target + "\n";
+            if (!(target.prototype instanceof Command))
+                return this.resultMes
+                    += "`/" + opt.commandPath.join(" ")
+                    + "` isn't Command: "
+                    + typeof target + "\n";
             /**
              * @type {Command}
              */
             const cmd = new target(opt);
-            if (cmd.guarded && !this.enable) return this.resultMes += "`/" + opt.commandPath.join(" ") + "` can't be disabled\n";
+            if (cmd.guarded && !this.enable)
+                return this.resultMes += "`/" + opt.commandPath.join(" ") + "` can't be disabled\n";
             else {
                 await cmd.setDisabled(this.disableOpt);
                 return this.resultMes += "`/" + opt.commandPath.join(" ") + `\` ${this.enable ? "enabled" : "disabled"}\n`;

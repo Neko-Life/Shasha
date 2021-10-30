@@ -2,8 +2,10 @@
 
 const { Util, CommandInteraction } = require("discord.js");
 const { Command } = require("../../classes/Command");
-const { getChannelMessage } = require("../../functions");
+const { getChannelMessage, createRegExp } = require("../../functions");
 const { inspect } = require("util");
+const req = require("axios").default;
+const { escapeRegExp } = require("lodash");
 
 module.exports = class EvalCmd extends Command {
     constructor(interaction) {
@@ -15,8 +17,8 @@ module.exports = class EvalCmd extends Command {
      * @param {{script: string, message: string}} param1 
      * @returns 
      */
-    async run(inter, { script, message }) {
-        if (!inter.client.isOwner(inter.user)) return inter.reply("wat");
+    async run(inter, { script, message, split }) {
+        if (!inter.client.isOwner(inter.user)) return inter.reply("Hi daddy");
         const LM = inter.channel.lastMessage;
         await inter.deferReply({ ephemeral: true });
         if (message) {
@@ -42,20 +44,28 @@ module.exports = class EvalCmd extends Command {
         }
         let send;
         if (mes.length) {
+            let re;
+            if (/^\/.+\/\w{0,6}$/.test(split?.value)) {
+                const sp = split.value.split("/");
+                re = createRegExp(sp[1], sp[3] || "");
+            } else re = split?.value;
             send = Util.splitMessage("```js\n" + mes + "```",
                 {
                     append: "```",
                     prepend: "```js\n",
-                    char: "\n",
+                    char: (
+                        split?.value.toLowerCase() === "none"
+                            ? ""
+                            : re
+                    ) ?? "\n",
                     maxLength: 2000
                 }
             );
         }
         const ret = [];
-        if (send?.length) for (const U of send) {
-            const push = await inter.channel.send(U);
-            ret.push(push);
-        }
+        if (send?.length)
+            for (const U of send)
+                ret.push(await inter.channel.send(U));
         await inter.editReply({
             content: af && bf
                 ? "```js\nExecuted in " + ((af.valueOf() - bf.valueOf()) / 1000) + " s```"

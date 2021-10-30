@@ -37,12 +37,9 @@ module.exports = class ShaClient extends Client {
     dispatch() {
         try {
             this.unloadModules();
-            try {
-                this.loadModules();
-            } catch (e) { process.emit("error", e) }
+            this.loadModules();
             this.dispatchListeners("on");
             this.dispatchDashboard();
-
             this.loadDbSelectMenus();
         } catch (e) { process.emit("error", e) }
     }
@@ -177,7 +174,7 @@ module.exports = class ShaClient extends Client {
      * @param {string} query
      * @param {string} reFlags - RegExp flags (force)
      * @param {boolean} force
-     * @returns {Promise<Collection<string, Guild>> | Guild}
+     * @returns {Collection<string, Guild> | Guild}
      */
     findGuilds(query, reFlags, force = false) {
         if (typeof query !== "string") throw new TypeError("query must be a string!");
@@ -200,7 +197,7 @@ module.exports = class ShaClient extends Client {
     /**
      * @param {string} query 
      * @param {string} reFlags 
-     * @returns {Promise<Collection<string, User>> | User}
+     * @returns {Collection<string, User> | Promise<User>}
      */
     async findUsers(query, reFlags) {
         if (typeof query !== "string") throw new TypeError("query must be a string!");
@@ -233,5 +230,116 @@ module.exports = class ShaClient extends Client {
             }
         }
         return content;
+    }
+
+    async loadBannedGuilds() {
+        if (this.bannedGuilds) return this.bannedGuilds;
+        const get = await this.db.getOne("bannedGuilds", "String[]");
+        return this.bannedGuilds = get?.value || [];
+    }
+
+    async loadBannedUsers() {
+        if (this.bannedUsers) return this.bannedUsers;
+        const get = await this.db.getOne("bannedUsers", "String[]");
+        return this.bannedUsers = get?.value || [];
+    }
+
+    /**
+     * 
+     * @param {Guild} guild 
+     * @returns 
+     */
+    async banGuild(guild) {
+        await this.loadBannedGuilds();
+        const id = Array.isArray(guild) ? guild : [guild];
+        const banned = [];
+        const already = [];
+        const error = [];
+        for (let r of id) {
+            const ori = r;
+            if (r instanceof Guild) r = r.id;
+            if (typeof r !== "string") {
+                error.push("Expected string. Got " + typeof id + " of " + r);
+                continue;
+            };
+            if (!/^\d{18,20}$/.test(r)) {
+                error.push("Invalid id: " + r);
+                continue;
+            };
+            if (this.bannedGuilds.includes(r)) {
+                if (!already.some(a => (a.id || a) === r)) already.push(ori);
+                continue;
+            }
+            this.bannedGuilds.push(r);
+            banned.push(ori);
+        };
+        const db = await this.db.set("bannedGuilds", "String[]", { value: this.bannedGuilds });
+        return { banned, already, error, db };
+    }
+
+    async banUser(user) {
+        await this.loadBannedUsers();
+        const id = Array.isArray(user) ? user : [user];
+        const banned = [];
+        const already = [];
+        const error = [];
+        for (let r of id) {
+            const ori = r;
+            if (r instanceof User) r = r.id;
+            if (typeof r !== "string") {
+                error.push("Expected string. Got " + typeof id + " of " + r);
+                continue;
+            };
+            if (!/^\d{18,20}$/.test(r)) {
+                error.push("Invalid id: " + r);
+                continue;
+            };
+            if (this.bannedUsers.includes(r)) {
+                if (!already.some(a => (a.id || a) === r)) already.push(ori);
+                continue;
+            }
+            this.bannedUsers.push(r);
+            banned.push(ori);
+        };
+        const db = await this.db.set("bannedUsers", "String[]", { value: this.bannedUsers });
+        return { banned, already, error, db };
+    }
+
+    async unbanGuild(guild) {
+        await this.loadBannedGuilds();
+        const unbanned = [];
+        const already = [];
+        const id = Array.isArray(guild) ? guild : [guild];
+        for (let r of id) {
+            const ori = r;
+            if (r instanceof Guild) r = r.id;
+            if (!this.bannedGuilds.includes(r)) {
+                if (!already.some(a => (a.id || a) === r)) already.push(ori);
+                continue;
+            }
+            this.bannedGuilds.splice(this.bannedGuilds.indexOf(r), 1);
+            unbanned.push(ori);
+        }
+        const db = await this.db.set("bannedGuilds", "String[]", { value: this.bannedGuilds });
+        return { unbanned, already, db };
+    }
+
+    async unbanUser(user) {
+        await this.loadBannedUsers();
+        const unbanned = [];
+        const already = [];
+        const id = Array.isArray(user) ? user : [user];
+        for (let r of id) {
+            const ori = r;
+            if (r instanceof User) r = r.id;
+            if (!this.bannedUsers.includes(r)) {
+                if (!already.some(a => (a.id || a) === r)) already.push(ori);
+                continue;
+            }
+            this.bannedUsers.splice(this.bannedUsers.indexOf(r), 1);
+            unbanned.push(ori);
+        }
+        const db = await this.db.set("bannedUsers", "String[]", { value: this.bannedUsers });
+        return { unbanned, already, db };
     }
 }

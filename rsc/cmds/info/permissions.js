@@ -3,22 +3,22 @@
 const { MessageEmbed, GuildMember, Role, User } = require("discord.js");
 const { Command } = require("../../classes/Command");
 const { tickTag, emphasizePerms } = require("../../functions");
-const getColor = require("../../getColor");
+const { getColor } = require("../../functions");
 
 module.exports = class PermCmd extends Command {
     constructor(interaction) {
         super(interaction, {
-            name: "permission",
+            name: "permissions",
             clientPermissions: ["EMBED_LINKS"]
         });
     }
 
-    async run(inter, { permissionFor, channel }) {
+    async run(inter, { permissionsFor, channel }) {
         await inter.deferReply();
         let pFor;
-        if (permissionFor) {
-            if (permissionFor.user) pFor = permissionFor.member || permissionFor.user;
-            else pFor = permissionFor.role;
+        if (permissionsFor) {
+            if (permissionsFor.user) pFor = permissionsFor.member || permissionsFor.user;
+            else pFor = permissionsFor.role;
         } else pFor = inter.member;
         const serial = pFor.permissions?.serialize();
         const defPerms = [];

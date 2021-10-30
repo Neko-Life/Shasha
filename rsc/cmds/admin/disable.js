@@ -1,7 +1,7 @@
 'use strict';
 
 const { Command } = require("../../classes/Command");
-const DisableEnableCmd = require("../../rsc/DisableEnableCmds");
+const DisableEnableCmd = require("../../rsc/DisableEnableCmd");
 
 module.exports = class DisableCmd extends Command {
     constructor(interaction) {

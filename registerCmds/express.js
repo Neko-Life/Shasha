@@ -1,7 +1,7 @@
 'use strict';
 
 const { SlashCommandBuilder, SlashCommandStringOption } = require("@discordjs/builders");
-const EXPRESS_ENDPOINTS = ["smile", "smug", "laugh", "baka", "cry", "dance", "wave", "blush", "bored", "facepalm", "happy", "pout", "shrug", "sleep", "think", "thumbsup"];
+const { EXPRESS_ENDPOINTS } = require("../rsc/constants");
 
 const OPT = new SlashCommandStringOption()
     .setName("expression")

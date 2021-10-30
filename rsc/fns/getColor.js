@@ -1,13 +1,13 @@
 'use strict';
 
-const { randomColors } = require("../config.json");
+const { randomColors } = require("../constants");
 
 /**
  * Get color by name
  * @param {String | Number} name - Name of color | Hex | Number
  * @returns {String | Number} Color hex | Color number
  */
-module.exports = function getColor(name) {
+module.exports = (name) => {
     if (!name) return randomColors[Math.floor(Math.random() * randomColors.length)];
     if (typeof name === 'number') {
         if (name === 16777215) {

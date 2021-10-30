@@ -12,7 +12,13 @@ module.exports = class ReloadCmd extends Command {
 
     async run(inter) {
         await inter.deferReply();
-        inter.client.dispatch();
+        try {
+            inter.client.dispatch();
+        } catch (e) {
+            console.error(e);
+            await inter.editReply("```js\n" + e.stack + "\nexiting...```");
+            process.exit(1);
+        }
         return inter.editReply("Okkiie thank chu ❤️❤️");
     }
 }

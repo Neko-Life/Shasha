@@ -2,21 +2,7 @@
 
 const { Command } = require("../classes/Command");
 const interactCmd = require("../rsc/interactCmd");
-
-const INTERACT_TEXTS = {
-    "tickle": " tickles ",
-    "kiss": " kisses ",
-    "cuddle": " cuddles ",
-    "feed": " feeds ",
-    "hug": " hugs ",
-    "pat": " pats ",
-    "poke": " pokes ",
-    "bite": " bites ",
-    "slap": " slaps ",
-    "highfive": " highfives ",
-    "stare": " stares at ",
-    "wink": " winks at "
-}
+const { INTERACT_TEXTS } = require("../constants");
 
 module.exports = class InteractCmd extends Command {
     constructor(interaction) {

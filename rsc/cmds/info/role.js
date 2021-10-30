@@ -4,7 +4,7 @@ const { MessageEmbed } = require("discord.js");
 const { Interval, DateTime } = require("luxon");
 const { Command } = require("../../classes/Command");
 const { fetchAllMembers, emphasizePerms } = require("../../functions");
-const getColor = require("../../getColor");
+const { getColor } = require("../../functions");
 const { intervalToStrings } = require("../../rsc/Duration");
 
 module.exports = class RoleInfoCmd extends Command {

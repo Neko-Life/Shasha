@@ -3,7 +3,7 @@
 const Bree = require("bree");
 // const cabin = require("cabin");
 const { Client } = require("discord.js");
-const { errLog } = require("./functions");
+const { errLog } = require("../functions");
 
 /**
  * @param {Client} client

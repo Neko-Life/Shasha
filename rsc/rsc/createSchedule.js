@@ -4,7 +4,7 @@ const Bree = require("bree");
 const { errLog } = require("../functions");
 
 const { join } = require("path"),
-    { scheduler } = require("../scheduler"),
+    { scheduler } = require("./scheduler"),
     { database } = require("../mongo"),
     col = database.collection("Schedule");
 

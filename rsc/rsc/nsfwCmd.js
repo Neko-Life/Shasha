@@ -3,7 +3,7 @@
 const { MessageEmbed } = require("discord.js");
 const { LewdClient } = require('lewds.api');
 const lewds = new LewdClient({ KEY: require("../../config.json").lewdsAPIkey })
-const getColor = require("../getColor");
+const { getColor } = require("../functions");
 
 module.exports = async (interaction, query) => {
     await interaction.deferReply();

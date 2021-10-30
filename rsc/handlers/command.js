@@ -3,8 +3,8 @@
 const { CommandInteraction, MessageOptions } = require("discord.js");
 const { Command } = require("../classes/Command");
 const { logDev } = require("../debug");
-const { addUserExp, allowMention, isAdmin } = require("../functions");
-
+const { allowMention, isAdmin } = require("../functions");
+const { addUserExp } = require("../database");
 
 module.exports = class CommandHandler {
     /**
@@ -21,7 +21,10 @@ module.exports = class CommandHandler {
         //     }
         //     cmd = new randCmd[Math.floor(Math.random() * randCmd.length)];
         // }
-        if (!(cmd instanceof Command)) return;
+        if (!(cmd instanceof Command))
+            return interaction.reply("Command `/"
+                + interaction.commandPath.join(" ")
+                + "` not found, maybe got hacked or somethin");
 
         let result;
         try {
@@ -59,7 +62,10 @@ module.exports = class CommandHandler {
             interaction.commandResults.push(result);
         }
         await addUserExp(interaction.user, { maxRandom: 100, round: "floor", divide: 1000 });
-        interaction.client.handledCommands.set(interaction.id, interaction);
+        interaction.client.handledCommands.set(
+            new Date().toUTCString(),
+            { interaction: interaction, command: cmd }
+        );
         logDev("Interaction",
             interaction.commandName,
             interaction.id, "run by",
@@ -115,6 +121,7 @@ module.exports = class CommandHandler {
         interaction.args = {};
         if (toArgs?.length)
             for (const D of toArgs) {
+                D.value = D.value?.trim();
                 const Dsplit = D.name.split(/-/);
                 if (Dsplit.length)
                     for (let i = 0; i < Dsplit.length; i++) {
@@ -123,7 +130,8 @@ module.exports = class CommandHandler {
                     };
                 interaction.args[Dsplit.join("")] = D;
             };
-        return new cmd(interaction);
+        if (cmd.prototype instanceof Command)
+            return new cmd(interaction);
     }
 
     /**
@@ -133,14 +141,17 @@ module.exports = class CommandHandler {
      * @returns {Promise<Command>}
      */
     static async checkCmd(interaction, cmd) {
-        if (await cmd.disabled()) return interaction.reply("This command is disabled in this channel");
+        if (!cmd) return;
+        if (await cmd.userBanned()) return interaction.reply("You can't command me anymore! Go away!");
 
         if (cmd.ownerOnly) {
-            if (!interaction.client.owners.some(r => r.id === interaction.user.id))
+            if (!interaction.client.isOwner(interaction.user))
                 return interaction.reply("Excuse me? I'm sorry who're you again?");
         }
 
         if (interaction.guild) {
+            if (await cmd.guildBanned()) return interaction.reply("Something's wrong, please contact the support server by running `/info support`");
+            if (await cmd.disabled()) return interaction.reply("You can't command me here...");
             if (cmd.nsfwOnly)
                 if (!interaction.channel.nsfw)
                     return interaction.reply("This is not an NSFW channel baka!");
@@ -148,7 +159,7 @@ module.exports = class CommandHandler {
             const lackUser = [];
             const lackClient = [];
             if (!interaction.client.isOwner(interaction.user) &&
-                cmd.userPermissions.length) {
+                !cmd.bypass && cmd.userPermissions.length) {
                 const seri = interaction.channel.permissionsFor(interaction.user).serialize();
                 const perms = [];
                 if (seri.ADMINISTRATOR) perms.push("ADMINISTRATOR");

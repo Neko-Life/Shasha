@@ -1,27 +1,28 @@
 'use strict';
 
+const { Db, Collection } = require("mongodb");
 const { logDev } = require("../debug");
 
 /**
- * @typedef {"activeSelectMenus"|"document"|"commandDisabled"|"commandBanned"} ShaDbDocument
- * @typedef {"String"|"Object"|"Number"|"Boolean"|"{Id}"} ShaDbQuery
+ * @typedef {"activeSelectMenus"|"document"|"commandDisabled"|"bannedGuilds"|"bannedUsers"} ShaDbDocument
+ * @typedef {"String"|"Object"|"Number"|"Boolean"|"String[]"|"Object[]"|"Number[]"|"Boolean[]"|"{Id}"} ShaDbQuery
  * @typedef {"user/"|"guild/"|"member/"|"channel/"} ShaDbCollectionType - Types with "/" followed by Id
  */
 
 class ShaBaseDb {
     /**
-     * @param {import("mongodb/lib/db")} Db
+     * @param {Db} Db
      * @param {ShaDbCollectionType} collection
      */
     constructor(Db, collection) {
         /**
-         * @type {import("mongodb/lib/db")}
+         * @type {Db}
          */
         this.db = Db;
         /**
-         * @type {import("mongodb/lib/collection")}
+         * @type {Collection}
          */
-        this.collection = Db.collection(collection);
+        this.col = Db.collection(collection);
     }
 
     /**
@@ -34,10 +35,9 @@ class ShaBaseDb {
         const find = {};
         if (doc !== undefined && query !== undefined) find[doc] = query;
         logDev("get", doc, query);
-        const cursor = this.collection.find(find);
+        const cursor = this.col.find(find);
         let i = 0;
         const map = new Map((await cursor.toArray()).map(r => [r[doc] || i++, r]));
-        cursor.close(null, logDev);
         return map;
     }
 
@@ -48,7 +48,7 @@ class ShaBaseDb {
      * @returns {Promise<object>}
      */
     async getOne(doc, query) {
-        return this.collection.findOne({ [doc]: query });
+        return this.col.findOne({ [doc]: query });
     }
 
     /**
@@ -61,7 +61,7 @@ class ShaBaseDb {
      */
     async set(doc, query, val = { noData: true }, push) {
         if (typeof val !== 'object') throw new TypeError("val must be a type of object. Got " + typeof val);
-        return this.collection.updateOne({ [doc]: query },
+        return this.col.updateOne({ [doc]: query },
             push ? {
                 $push: val,
                 $setOnInsert: { [doc]: query }
@@ -80,7 +80,7 @@ class ShaBaseDb {
      */
     async delete(doc, query) {
         if (typeof query !== "string") throw new TypeError("query must be a type of string. Got " + typeof query);
-        return this.collection.deleteOne({ [doc]: query });
+        return this.col.deleteOne({ [doc]: query });
     }
 
     /**
