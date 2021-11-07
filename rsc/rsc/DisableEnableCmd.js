@@ -2,8 +2,8 @@
 
 const { Collection, Permissions, MessageEmbed, Guild } = require("discord.js");
 const { Command } = require("../classes/Command");
-const { findRoles, findMembers, createRegExp, emphasizePerms, loadDb, findChannels } = require("../functions");
-const { getColor } = require("../functions");
+const { findRoles, findMembers, createRegExp, emphasizePerms, findChannels, getColor } = require("../functions");
+const { loadDb } = require("../database");
 const perms = [];
 for (const k in Permissions.FLAGS)
     perms.push(k);

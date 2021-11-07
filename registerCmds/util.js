@@ -17,10 +17,12 @@ module.exports = new SlashCommandBuilder()
                 opt => opt
                     .setName("lang-to")
                     .setDescription("To this language (default to `english`)")
+                    .setAutocomplete(true)
             ).addStringOption(
                 opt => opt
                     .setName("lang-from")
                     .setDescription("From this language (if you want to specify the source language)")
+                    .setAutocomplete(true)
             ).addStringOption(
                 opt => opt
                     .setName("message")

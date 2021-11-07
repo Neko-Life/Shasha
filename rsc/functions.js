@@ -183,8 +183,15 @@ function createRegExp(pattern, flags) {
     }
 }
 
+/**
+ * Was originally for user tick tag and bot. Use for anything that has user property
+ * Can be used for string as well
+ * @param {User | GuildMember | string} user
+ * @returns {string} Ticked string
+ */
 function tickTag(user) {
-    return `${user.bot ? "`BOT` " : ""}\`${user.tag}\``;
+    if (user.user) user = user.user;
+    return `${user.bot ? "`BOT` " : ""}\`${user.tag || user}\``;
 }
 
 /**
@@ -226,7 +233,7 @@ async function fetchAllMembers(guild) {
  * @param {string[]} arrStr
  * @returns {number}
  */
-function maxLengthPad(arrStr) {
+function maxStringsLength(arrStr) {
     let max = 0;
     if (!Array.isArray(arrStr)) throw new TypeError("arrStr isn't array!");
     for (const A of arrStr) {
@@ -260,12 +267,12 @@ function strYesNo(bool) {
 
 /**
  * Convert unix timestamp to seconds timestamp
- * @param {Date | number} val 
+ * @param {Date | number} val
  * @returns {number}
  */
 function unixToSeconds(val) {
     if (val instanceof Date) val = val.valueOf();
-    if (typeof val !== "number") throw new TypeError("val is " + (typeof val));
+    if (typeof val !== "number") throw new TypeError("val is " + typeof val);
     return Math.floor(val / 1000);
 }
 
@@ -418,7 +425,7 @@ module.exports = {
     isAdmin,
     trySend,
     fetchAllMembers,
-    maxLengthPad,
+    maxStringsLength,
     isInteractionInvoker,
     replyFalseInvoker,
     strYesNo,

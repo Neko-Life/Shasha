@@ -50,11 +50,12 @@ module.exports = class ShaClient extends Client {
         this.commands = requireAll({ dirname: join(__dirname, "../cmds"), recursive: true });
         this.selectMenus = requireAll({ dirname: join(__dirname, "../selectMenus"), recursive: true });
         this.functions = require("../functions");
+        requireAll({ dirname: join(__dirname, "../rsc") });
         logDev("Modules unload/load done");
     }
 
     unloadModules() {
-        const modulesDirName = ["../eventHandlers", "../handlers", "../cmds", "../selectMenus"];
+        const modulesDirName = ["../eventHandlers", "../handlers", "../cmds", "../selectMenus", "../rsc"];
         const modulesName = ["../functions.js"];
         const modulesDirPath = modulesDirName.map(r => join(__dirname, r));
         modulesDirPath.push(...modulesName.map(r => join(__dirname, r)));
@@ -122,7 +123,7 @@ module.exports = class ShaClient extends Client {
      * @returns {string}
      */
     finalizeStr(str, noAdCheck = false) {
-        let ret = this.emoteMessage(str);
+        let ret = this.emoteReplace(str);
         if (!noAdCheck) ret = adCheck(ret);
         return ret;
     }
@@ -139,9 +140,7 @@ module.exports = class ShaClient extends Client {
         if (timeout === true) timeout = 60 * 1000 * 15;
         if (typeof timeout === "number" && timeout > 0)
             setTimeout(() => this.activeSelectMenus.delete(id), timeout);
-        else {
-            await this.db.set("activeSelectMenus", id, val);
-        }
+        else await this.db.set("activeSelectMenus", id, val);
         return ret;
     }
 
@@ -214,8 +213,8 @@ module.exports = class ShaClient extends Client {
         }
     }
 
-    emoteMessage(content) {
-        const E = content?.match(/:\w{1,32}:(?!\d{18,20}>)/g);
+    emoteReplace(content) {
+        const E = content?.match(/:[\w-_]{1,32}:(?!\d{18,20}>)/g);
         if (!E || !E.length) return content;
         const tE = [];
         for (const eN of E) {
@@ -250,42 +249,36 @@ module.exports = class ShaClient extends Client {
      * @returns 
      */
     async banGuild(guild) {
-        await this.loadBannedGuilds();
-        const id = Array.isArray(guild) ? guild : [guild];
-        const banned = [];
-        const already = [];
-        const error = [];
-        for (let r of id) {
-            const ori = r;
-            if (r instanceof Guild) r = r.id;
-            if (typeof r !== "string") {
-                error.push("Expected string. Got " + typeof id + " of " + r);
-                continue;
-            };
-            if (!/^\d{18,20}$/.test(r)) {
-                error.push("Invalid id: " + r);
-                continue;
-            };
-            if (this.bannedGuilds.includes(r)) {
-                if (!already.some(a => (a.id || a) === r)) already.push(ori);
-                continue;
-            }
-            this.bannedGuilds.push(r);
-            banned.push(ori);
-        };
-        const db = await this.db.set("bannedGuilds", "String[]", { value: this.bannedGuilds });
-        return { banned, already, error, db };
+        return this._execCommandBan(guild, "Guild");
     }
 
     async banUser(user) {
-        await this.loadBannedUsers();
-        const id = Array.isArray(user) ? user : [user];
+        return this._execCommandBan(user, "User");
+    }
+
+    /**
+     * 
+     * @param {*} inst 
+     * @param {"Guild" | "User"} type 
+     * @returns 
+     */
+    async _execCommandBan(inst, type) {
+        const id = Array.isArray(inst) ? inst : [inst];
+        let cInstance;
+        if (id.some(r => r instanceof User) || type === "User") {
+            cInstance = User;
+            type = "User";
+        } else if (id.some(r => r instanceof Guild) || type === "Guild") {
+            cInstance = Guild;
+            type = "Guild";
+        } else throw new TypeError("Unknown type " + type + " of " + inst);
+        await this["loadBanned" + type + "s"]();
         const banned = [];
         const already = [];
         const error = [];
         for (let r of id) {
             const ori = r;
-            if (r instanceof User) r = r.id;
+            if (r instanceof cInstance) r = r.id;
             if (typeof r !== "string") {
                 error.push("Expected string. Got " + typeof id + " of " + r);
                 continue;
@@ -294,52 +287,61 @@ module.exports = class ShaClient extends Client {
                 error.push("Invalid id: " + r);
                 continue;
             };
-            if (this.bannedUsers.includes(r)) {
+            if (this["banned" + type + "s"].includes(r)) {
                 if (!already.some(a => (a.id || a) === r)) already.push(ori);
                 continue;
             }
-            this.bannedUsers.push(r);
+            this["banned" + type + "s"].push(r);
             banned.push(ori);
         };
-        const db = await this.db.set("bannedUsers", "String[]", { value: this.bannedUsers });
+        const db = await this.db.set(
+            "banned" + type + "s", "String[]",
+            { value: this["banned" + type + "s"] }
+        );
         return { banned, already, error, db };
     }
 
     async unbanGuild(guild) {
-        await this.loadBannedGuilds();
-        const unbanned = [];
-        const already = [];
-        const id = Array.isArray(guild) ? guild : [guild];
-        for (let r of id) {
-            const ori = r;
-            if (r instanceof Guild) r = r.id;
-            if (!this.bannedGuilds.includes(r)) {
-                if (!already.some(a => (a.id || a) === r)) already.push(ori);
-                continue;
-            }
-            this.bannedGuilds.splice(this.bannedGuilds.indexOf(r), 1);
-            unbanned.push(ori);
-        }
-        const db = await this.db.set("bannedGuilds", "String[]", { value: this.bannedGuilds });
-        return { unbanned, already, db };
+        return this._execCommandUnban(guild, "Guild");
     }
 
     async unbanUser(user) {
-        await this.loadBannedUsers();
+        return this._execCommandUnban(user, "User");
+    }
+
+    /**
+     * 
+     * @param {*} inst 
+     * @param {"Guild"|"User"} type 
+     * @returns 
+     */
+    async _execCommandUnban(inst, type) {
+        const id = Array.isArray(inst) ? inst : [inst];
+        let cInstance;
+        if (id.some(r => r instanceof User) || type === "User") {
+            cInstance = User;
+            type = "User";
+        } else if (id.some(r => r instanceof Guild) || type === "Guild") {
+            cInstance = Guild;
+            type = "Guild";
+        } else throw new TypeError("Unknown type " + type + " of " + inst);
+        await this["loadBanned" + type + "s"]();
         const unbanned = [];
         const already = [];
-        const id = Array.isArray(user) ? user : [user];
         for (let r of id) {
             const ori = r;
-            if (r instanceof User) r = r.id;
-            if (!this.bannedUsers.includes(r)) {
+            if (r instanceof cInstance) r = r.id;
+            if (!this["banned" + type + "s"].includes(r)) {
                 if (!already.some(a => (a.id || a) === r)) already.push(ori);
                 continue;
             }
-            this.bannedUsers.splice(this.bannedUsers.indexOf(r), 1);
+            this["banned" + type + "s"].splice(this["banned" + type + "s"].indexOf(r), 1);
             unbanned.push(ori);
         }
-        const db = await this.db.set("bannedUsers", "String[]", { value: this.bannedUsers });
+        const db = await this.db.set(
+            "banned" + type + "s", "String[]",
+            { value: this["banned" + type + "s"] }
+        );
         return { unbanned, already, db };
     }
 }

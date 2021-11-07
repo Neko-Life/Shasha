@@ -2,7 +2,6 @@
 
 const { CommandInteraction, MessageOptions } = require("discord.js");
 const { Command } = require("../classes/Command");
-const { logDev } = require("../debug");
 const { allowMention, isAdmin } = require("../functions");
 const { addUserExp } = require("../database");
 
@@ -22,7 +21,8 @@ module.exports = class CommandHandler {
         //     cmd = new randCmd[Math.floor(Math.random() * randCmd.length)];
         // }
         if (!(cmd instanceof Command))
-            return interaction.reply("Command `/"
+            if (interaction.replied) return;
+            else return interaction.reply("Command `/"
                 + interaction.commandPath.join(" ")
                 + "` not found, maybe got hacked or somethin");
 
@@ -66,7 +66,7 @@ module.exports = class CommandHandler {
             new Date().toUTCString(),
             { interaction: interaction, command: cmd }
         );
-        logDev("Interaction",
+        console.log("Interaction",
             interaction.commandName,
             interaction.id, "run by",
             interaction.user.tag, "in",
@@ -141,7 +141,7 @@ module.exports = class CommandHandler {
      * @returns {Promise<Command>}
      */
     static async checkCmd(interaction, cmd) {
-        if (!cmd) return;
+        if (!(cmd instanceof Command)) return;
         if (await cmd.userBanned()) return interaction.reply("You can't command me anymore! Go away!");
 
         if (cmd.ownerOnly) {

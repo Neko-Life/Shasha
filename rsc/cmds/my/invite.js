@@ -31,6 +31,6 @@ module.exports = class InviteCmd extends Command {
         //         "messages.read"
         //     ], permissions: ["ADMINISTRATOR"], disableGuildSelect: true
         // });
-        return inter.reply(`[**INVITE ME ❤️**](https://discord.com/oauth2/authorize?client_id=843298069515730944&scope=bot+applications.commands&permissions=8)`); // https://discord.com/oauth2/authorize?client_id=843298069515730944&scope=bot+applications.commands&permissions=8
+        return inter.reply(`** [INVITE ME ❤️](https://discord.com/oauth2/authorize?client_id=843298069515730944&scope=bot+applications.commands&permissions=8) **`); // https://discord.com/oauth2/authorize?client_id=843298069515730944&scope=bot+applications.commands&permissions=8
     }
 }

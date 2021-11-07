@@ -22,7 +22,6 @@ module.exports = new SlashCommandBuilder()
                 opt => opt
                     .setName("role")
                     .setDescription("Role to see about")
-                    .setRequired(true)
             )
     ).addSubcommand(
         sCmd => sCmd
@@ -41,7 +40,6 @@ module.exports = new SlashCommandBuilder()
                 opt => opt
                     .setName("channel")
                     .setDescription("Channel to look at")
-                    .setRequired(true)
             )
     ).addSubcommand(
         sCmd => sCmd
@@ -58,14 +56,12 @@ module.exports = new SlashCommandBuilder()
             )
     ).addSubcommand(
         sCmd => sCmd
-            .setName("invite")
-            .setDescription("Give you my invite link ❤️")
-    ).addSubcommand(
-        sCmd => sCmd
-            .setName("support")
-            .setDescription("Get help from the support server")
-    ).addSubcommand(
-        sCmd => sCmd
-            .setName("stats")
-            .setDescription("Show my stats")
+            .setName("emoji")
+            .setDescription("Show about an emoji")
+            .addStringOption(
+                opt => opt
+                    .setName("emoji")
+                    .setDescription("Emoji to see about")
+                    .setRequired(true)
+            )
     )

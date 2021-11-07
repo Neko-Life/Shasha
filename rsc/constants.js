@@ -60,10 +60,16 @@ const NSFW_ENDPOINTS = [
     "jackopose",
     "milk",
     "pantsu",
-    "sex",
     "slime",
     "trap",
     "yuri"
+];
+
+const NSFW_INTERACT = [
+    {
+        name: "fuck",
+        query: "sex"
+    }
 ];
 
 const INTERACT_ENDPOINTS = [
@@ -134,14 +140,34 @@ const EXPRESS_TEXTS = {
     "thumbsup": " agreed"
 }
 
+const ENUM_ACTIVITY_TYPES = {
+    PLAYING: 0,
+    STREAMING: 1,
+    LISTENING: 2,
+    WATCHING: 3,
+    CUSTOM: 4,
+    COMPETING: 5
+}
+
+const PRESENCE_STATUSES = {
+    Online: "online",
+    DoNotDisturb: "dnd",
+    Idle: "idle",
+    Invisible: "invisible",
+    Offline: "offline"
+}
+
 module.exports = {
     randomColors,
     ePerms,
     reValidURL,
     reParseQuote,
     NSFW_ENDPOINTS,
+    NSFW_INTERACT,
     INTERACT_ENDPOINTS,
     EXPRESS_ENDPOINTS,
     INTERACT_TEXTS,
-    EXPRESS_TEXTS
+    EXPRESS_TEXTS,
+    ENUM_ACTIVITY_TYPES,
+    PRESENCE_STATUSES
 }

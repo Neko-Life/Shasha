@@ -9,7 +9,7 @@ module.exports = class PermCmd extends Command {
     constructor(interaction) {
         super(interaction, {
             name: "permissions",
-            clientPermissions: ["EMBED_LINKS"]
+            guildOnly: true
         });
     }
 

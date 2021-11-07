@@ -4,7 +4,7 @@ const { Db, Collection } = require("mongodb");
 const { logDev } = require("../debug");
 
 /**
- * @typedef {"activeSelectMenus"|"document"|"commandDisabled"|"bannedGuilds"|"bannedUsers"} ShaDbDocument
+ * @typedef {"activeSelectMenus"|"document"|"commandDisabled"|"bannedGuilds"|"bannedUsers"|"infractions"|"interactions"} ShaDbDocument
  * @typedef {"String"|"Object"|"Number"|"Boolean"|"String[]"|"Object[]"|"Number[]"|"Boolean[]"|"{Id}"} ShaDbQuery
  * @typedef {"user/"|"guild/"|"member/"|"channel/"} ShaDbCollectionType - Types with "/" followed by Id
  */

@@ -8,7 +8,14 @@ const { Util } = require("discord.js");
 module.exports = class TranslateCmd extends Command {
     constructor(interaction) {
         super(interaction, {
-            name: "translate"
+            name: "translate",
+            autocomplete: {
+                matchKey: true,
+                commands: {
+                    "lang-to": translate.languages,
+                    "lang-from": translate.languages
+                }
+            }
         });
     }
 

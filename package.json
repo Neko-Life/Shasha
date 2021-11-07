@@ -1,13 +1,19 @@
 {
+  "scripts": {
+    "web": "cd dashboard && npm run dev",
+    "debug": "node --trace-warnings Main.js -d",
+    "bot": "node Main.js",
+    "reg": "node registerCommands.js"
+  },
   "dependencies": {
-    "@discordjs/builders": "^0.5.0",
+    "@discordjs/builders": "^0.8.2",
     "@discordjs/rest": "^0.1.0-canary.0",
     "axios": "^0.21.1",
     "bree": "^6.2.0",
     "bufferutil": "^4.0.3",
     "degit": "^2.8.4",
-    "discord-api-types": "^0.22.0",
-    "discord.js": "^13.2.0",
+    "discord-api-types": "^0.24.0",
+    "discord.js": "^13.3.1",
     "erlpack": "github:discord/erlpack",
     "fs-extra": "^9.1.0",
     "lewds.api": "^2.2.7",
@@ -20,12 +26,6 @@
     "translate-google": "^1.5.0",
     "utf-8-validate": "^5.0.4",
     "zlib-sync": "^0.1.7"
-  },
-  "scripts": {
-    "web": "cd dashboard && npm run dev",
-    "debug": "node --trace-warnings Main.js -d",
-    "bot": "node Main.js",
-    "reg": "node registerCommands.js null"
   },
   "devDependencies": {
     "@types/bree": "^6.2.1",

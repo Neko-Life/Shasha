@@ -1,15 +1,14 @@
 'use strict';
 
 const { MessageEmbed } = require("discord.js");
-const { LewdClient } = require('lewds.api');
-const lewds = new LewdClient({ KEY: require("../../config.json").lewdsAPIkey })
 const { getColor } = require("../functions");
+const lewds = require("./lewds");
 
 module.exports = async (interaction, query) => {
     await interaction.deferReply();
     const user = interaction.member || interaction.user;
     const URL = await lewds.nsfw(query);
-    if (!URL) return interaction.reply("Oopsie our service is busy, guess you're gonna go dry...");
+    if (!URL) return interaction.editReply("Oopsie our service is busy, guess you're gonna go dry...");
     const emb = new MessageEmbed()
         .setAuthor((user.displayName || user.username) + "'s " + query + " 😳",
             (user.user || user).displayAvatarURL({

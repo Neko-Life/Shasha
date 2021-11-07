@@ -2,8 +2,7 @@
 
 const { MessageEmbed, CommandInteraction } = require("discord.js");
 const { fetchNeko } = require("nekos-best.js");
-const { isAdmin } = require("../functions");
-const { getColor } = require("../functions");
+const { isAdmin, getColor } = require("../functions");
 
 /**
  * 

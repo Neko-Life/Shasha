@@ -11,12 +11,16 @@ module.exports = class RoleInfoCmd extends Command {
     constructor(interaction) {
         super(interaction, {
             name: "role",
-            clientPermissions: ["EMBED_LINKS"]
+            guildOnly: true
         });
     }
 
     async run(inter, { role }) {
         await inter.deferReply();
+        if (!role)
+            role = {
+                role: inter.guild.roles.cache.get(inter.guild.id)
+            }
         await fetchAllMembers(inter.guild);
         const {
             color,
@@ -42,7 +46,7 @@ module.exports = class RoleInfoCmd extends Command {
         if (!perms.length) perms.push("THIS ROLE IS FOR ANTIQUE PURPOSE ONLY");
         const emb = new MessageEmbed()
             .setTitle(`About Role \`${name}\``)
-            .addField("Identifier", `<@&${id}>\n(${id})`)
+            .addField("Identifier", `${id === inter.guild.id ? "@everyone" : `<@&${id}>`}\n(${id})`)
             .addField("Created", "<t:" + Math.floor(createdTimestamp / 1000) + ":F>\n"
                 + `(${intervalToStrings(
                     Interval.fromDateTimes(

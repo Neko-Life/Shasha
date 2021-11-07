@@ -16,8 +16,8 @@ module.exports = class SupportCmd extends Command {
         const home = inter.client.guilds.cache.get(configFile.home);
         if (!home) return inter.editReply("No support server available currently");
         const inv = await getCommunityInvite(home);
-        if (!inv) return inter.editReply("Failed to create invite to " + home.name);
+        if (!inv) return inter.editReply("Failed to create invite to support server: **" + home.name + "**");
         return inter.editReply("Need help? Wanna ask something for more details?\n"
-            + "Join the [**SUPPORT SERVER**](" + inv.url + ")");
+            + "Join the** [Support Server](" + inv.url + ") **");
     }
 }

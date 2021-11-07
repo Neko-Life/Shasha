@@ -1,6 +1,21 @@
 'use strict';
 
-const { SlashCommandBuilder } = require("@discordjs/builders");
+const { SlashCommandBuilder, SlashCommandStringOption } = require("@discordjs/builders");
+const { ENUM_ACTIVITY_TYPES, PRESENCE_STATUSES } = require("../rsc/constants");
+
+const presenceOpt = new SlashCommandStringOption()
+    .setName("status")
+    .setDescription("Owner only");
+
+for (const k in PRESENCE_STATUSES)
+    presenceOpt.addChoice(k, PRESENCE_STATUSES[k]);
+
+const activityTypeOpt = new SlashCommandStringOption()
+    .setName("type")
+    .setDescription("Owner only");
+
+for (const k in ENUM_ACTIVITY_TYPES)
+    activityTypeOpt.addChoice(k, k);
 
 module.exports = new SlashCommandBuilder()
     .setName("owner")
@@ -81,5 +96,26 @@ module.exports = new SlashCommandBuilder()
                 opt => opt
                     .setName("args")
                     .setDescription("Owner only")
+            )
+    ).addSubcommand(
+        sCmd => sCmd
+            .setName("presence")
+            .setDescription("Owner only")
+            .addStringOption(
+                opt => presenceOpt
+            ).addBooleanOption(
+                opt => opt
+                    .setName("afk")
+                    .setDescription("Owner only")
+            ).addStringOption(
+                opt => opt
+                    .setName("title")
+                    .setDescription("Owner only")
+            ).addStringOption(
+                opt => opt
+                    .setName("url")
+                    .setDescription("Owner only")
+            ).addStringOption(
+                opt => activityTypeOpt
             )
     )

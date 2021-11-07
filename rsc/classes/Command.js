@@ -1,11 +1,16 @@
 'use strict';
 
-const { PermissionString, CommandInteraction, TextBasedChannels, User, GuildMember, Guild } = require("discord.js");
+const { PermissionString, CommandInteraction, TextBasedChannels, User, GuildMember, Guild, AutocompleteInteraction } = require("discord.js");
 const ShaClient = require("./ShaClient");
 const configFile = require("../../config.json");
 const { loadDb } = require("../database");
+const { escapeRegExp } = require("lodash");
 
 /**
+ * @typedef {object} AutocompleteData
+ * @property {{command:{key: string} | {key: {name: string, value: string}}}} commands
+ * @property {boolean} matchKey - Match options key
+ * 
  * @typedef {object} CommandData
  * @property {string} name
  * @property {string} description
@@ -13,6 +18,7 @@ const { loadDb } = require("../database");
  * @property {boolean} ownerOnly
  * @property {boolean} nsfwOnly
  * @property {boolean} guarded
+ * @property {AutocompleteData} autocomplete
  * @property {PermissionString[]} userPermissions
  * @property {PermissionString[]} clientPermissions
  *
@@ -29,6 +35,8 @@ module.exports.Command = class ShaBaseCommand {
      * @param {CommandData} data
      */
     constructor(interaction, data) {
+        if (typeof data.autocomplete !== "object" && data.autocomplete !== undefined && data.autocomplete !== null)
+            throw new TypeError("autocomplete must be a type of object, received " + typeof data.autocomplete);
         /**
          * @type {CommandInteraction}
          */
@@ -64,8 +72,44 @@ module.exports.Command = class ShaBaseCommand {
         this.nsfwOnly = data.nsfwOnly || false;
         this.guarded = data.guarded || false;
         this.bypass = null;
+        /**
+         * @type {AutocompleteData}
+         */
+        this.autocomplete = data.autocomplete || {};
         this.userPermissions = data.userPermissions || [];
         this.clientPermissions = data.clientPermissions || [];
+    }
+
+    /**
+     * @param {AutocompleteInteraction} inter 
+     * @param {import("discord.js").ApplicationCommandOptionChoice | string | number} focus
+     */
+    handleAutocomplete(inter, focus) {
+        const cmd = this.autocomplete.commands?.[focus?.name || focus];
+        if (!cmd) return;
+        const res = [];
+
+        if (!focus.value) {
+            for (const k in cmd) {
+                if (typeof cmd[k] === "function") continue;
+                res.push({
+                    name: cmd[k].name || cmd[k],
+                    value: cmd[k].value || cmd[k]
+                });
+            }
+        } else {
+            const re = new RegExp(escapeRegExp(focus.value), "i");
+            for (const k in cmd) {
+                if (typeof cmd[k] === "function") continue;
+                else if (typeof cmd[k] === "object") {
+                    if (re.test(cmd[k].name) || (this.autocomplete.matchKey ? re.test(k) : false))
+                        res.push(cmd[k]);
+                } else if (re.test(cmd[k]) || (this.autocomplete.matchKey ? re.test(k) : false))
+                    res.push({ name: cmd[k], value: cmd[k] });
+            }
+        }
+
+        return inter.respond(res.slice(0, 25));
     }
 
     #disabled = null;

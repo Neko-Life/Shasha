@@ -6,6 +6,7 @@ const { getChannelMessage, createRegExp } = require("../../functions");
 const { inspect } = require("util");
 const req = require("axios").default;
 const { escapeRegExp } = require("lodash");
+const { join } = require("path");
 
 module.exports = class EvalCmd extends Command {
     constructor(interaction) {
@@ -13,8 +14,8 @@ module.exports = class EvalCmd extends Command {
     }
 
     /**
-     * @param {CommandInteraction} inter 
-     * @param {{script: string, message: string}} param1 
+     * @param {CommandInteraction} inter
+     * @param {{script: string, message: string}} param1
      * @returns 
      */
     async run(inter, { script, message, split }) {
@@ -30,7 +31,7 @@ module.exports = class EvalCmd extends Command {
             }
         } else script = script?.value;
 
-        if (typeof script === "string") script = script.replace(/^```(js)?\n|```$/g, "");
+        script = script.replace(/^```(js)?\n|```$/g, "");
 
         if (!script) return inter.editReply({ content: "No script OwO", ephemeral: true });
         let mes, bf, af;

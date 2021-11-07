@@ -1,16 +1,19 @@
 'use strict';
 
-const { Interaction, Guild } = require("discord.js");
-const { BaseDBManager } = require("../classes/Structures");
+const { Interaction } = require("discord.js");
+const ShaClient = require("../classes/ShaClient");
+
 /**
+ * @param {ShaClient} client
  * @param {Interaction} interaction 
  */
 async function handle(client, interaction) {
-    // await BaseDBManager.initAllDBManager(interaction);
-    if (interaction.isCommand()) {
-        const result = client.handlers.command.handle(interaction);
+    if (interaction.isAutocomplete()) {
+        client.handlers.autocomplete.handle(interaction);
+    } else if (interaction.isCommand()) {
+        client.handlers.command.handle(interaction);
     } else if (interaction.isSelectMenu()) {
-        const result = client.handlers.selectMenu.handle(interaction);
+        client.handlers.selectMenu.handle(interaction);
     }
 }
 

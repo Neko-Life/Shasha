@@ -3,7 +3,7 @@
 const { MessageEmbed, StageChannel } = require("discord.js");
 const { Interval, DateTime } = require("luxon");
 const { Command } = require("../../classes/Command");
-const { fetchAllMembers, strYesNo, maxLengthPad } = require("../../functions");
+const { fetchAllMembers, strYesNo, maxStringsLength } = require("../../functions");
 const { getColor } = require("../../functions");
 const { intervalToStrings, createInterval } = require("../../rsc/Duration");
 
@@ -22,7 +22,7 @@ class GetEmbed {
                 maxL.push(T);
             }
             maxL.push("Total");
-            const maxN = maxLengthPad(maxL) + 1;
+            const maxN = maxStringsLength(maxL) + 1;
             let str = "";
             for (const I in threadCount) {
                 if (!threadCount[I]) continue;
@@ -98,7 +98,7 @@ class GetEmbed {
                 }
             }
             mL.push("Total");
-            const maxL = maxLengthPad(mL) + 1;
+            const maxL = maxStringsLength(mL) + 1;
             for (const C in ch) {
                 if (C === "NSFW") continue;
                 const n = ch[C];
@@ -156,8 +156,7 @@ module.exports = class ChannelInfoCmd extends Command {
     constructor(interaction) {
         super(interaction, {
             name: "channel",
-            guildOnly: true,
-            clientPermissions: ["EMBED_LINKS"]
+            guildOnly: true
         });
     }
 

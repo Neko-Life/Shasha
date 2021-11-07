@@ -3,8 +3,7 @@
 const { Collection, MessageEmbed } = require("discord.js");
 const { Command } = require("../classes/Command");
 const { logDev } = require("../debug");
-const { tickPadEnd, maxLengthPad } = require("../functions");
-const { getColor } = require("../functions");
+const { tickPadEnd, maxStringsLength, getColor } = require("../functions");
 
 module.exports = class CommandBanUnbanCmd extends Command {
     constructor(interaction) {
@@ -97,7 +96,7 @@ module.exports = class CommandBanUnbanCmd extends Command {
         if (res.error?.length)
             data["Error"] = "``js\n" + res.error.join("\n") + "``";
         const toMax = Object.keys(data);
-        const maxP = maxLengthPad(toMax) + 1;
+        const maxP = maxStringsLength(toMax) + 1;
         let desc = "";
         for (const k in data) desc += tickPadEnd(k, maxP) + ": " + tickPadEnd(data[k]) + "\n";
         this.embed.addField(fieldName, desc);

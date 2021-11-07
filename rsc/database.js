@@ -10,7 +10,7 @@ const { database } = require("./mongo");
  * 
  * @param {*} instance 
  * @param {import("./classes/Database").ShaDbCollectionType} collection 
- * @returns
+ * @returns instance
  */
 function loadDb(instance, collection) {
     if (!instance) throw new TypeError("instance is undefined!");

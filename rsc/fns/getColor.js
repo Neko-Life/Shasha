@@ -5,10 +5,13 @@ const { randomColors } = require("../constants");
 /**
  * Get color by name
  * @param {String | Number} name - Name of color | Hex | Number
+ * @param {boolean} returnNull - Return null if no name
  * @returns {String | Number} Color hex | Color number
  */
-module.exports = (name) => {
-    if (!name) return randomColors[Math.floor(Math.random() * randomColors.length)];
+module.exports = (name, returnNull) => {
+    if (!name)
+        if (returnNull) return null;
+        else return randomColors[Math.floor(Math.random() * randomColors.length)];
     if (typeof name === 'number') {
         if (name === 16777215) {
             return 16777214;

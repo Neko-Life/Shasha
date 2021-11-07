@@ -3,7 +3,7 @@
 const { MessageSelectMenu, MessageActionRow, MessageEmbed, Guild } = require("discord.js");
 const { Interval, DateTime } = require("luxon");
 const { Command } = require("../../classes/Command");
-const { fetchAllMembers, tickTag, maxLengthPad, getCommunityInvite } = require("../../functions");
+const { fetchAllMembers, tickTag, maxStringsLength, getCommunityInvite } = require("../../functions");
 const { getColor } = require("../../functions");
 const { intervalToStrings } = require("../../rsc/Duration");
 
@@ -72,13 +72,13 @@ module.exports = class ServerInfoCmd extends Command {
         const iconURL = server.iconURL({ size: 4096, format: "png", dynamic: true });
 
         const baseEmbed = new MessageEmbed()
+            .setAuthor(server.name, iconURL, moreInfo.invite)
             .setColor(getColor(inter.member?.displayColor));
 
         const selectDatas = {};
 
         const generalEmbed = new MessageEmbed(baseEmbed)
-            .setThumbnail(iconURL)
-            .setTitle(`About **${server.name}**`)
+            .setTitle(`General Info`)
             .addField("Identifier", `\`${server.name}\`\n\`${server.nameAcronym}\`\n(${server.id})`, true)
             .addField("Owner", `${tickTag(generalInfo.owner.user)}\n<@${server.ownerId}>`, true)
             .addField("Created",
@@ -118,7 +118,7 @@ module.exports = class ServerInfoCmd extends Command {
         }
 
         let channelTypesStr = "";
-        const LENGTHCTARLS = maxLengthPad(CTARL) + 1;
+        const LENGTHCTARLS = maxStringsLength(CTARL) + 1;
         for (const T in moreInfo.channelTypesCount) {
             let U;
             if (T.startsWith("GUILD_")) U = T.slice("GUILD_".length);
@@ -126,7 +126,7 @@ module.exports = class ServerInfoCmd extends Command {
         }
 
         const moreEmbed = new MessageEmbed(baseEmbed)
-            .setTitle(`More About **${server.name}**`)
+            .setTitle(`More Info`)
             .addField("Channel Count",
                 channelTypesStr
                 + `\`${"Total".padEnd(LENGTHCTARLS, " ")}\`: \`${generalInfo.channelCount}\``
@@ -188,8 +188,8 @@ module.exports = class ServerInfoCmd extends Command {
 
         if (iconURL) {
             const iconEmbed = new MessageEmbed(baseEmbed)
-                .setTitle(`**${server.name}**'s Icon`)
-            setImage(iconURL);
+                .setTitle(`Icon`)
+                .setImage(iconURL);
             selectDatas.iconPage = {
                 embeds: [iconEmbed]
             };
@@ -201,8 +201,9 @@ module.exports = class ServerInfoCmd extends Command {
         }
 
         if (bannerURL) {
-            const bannerEmbed = new MessageEmbed(baseEmbed);
-            bannerEmbed.setImage(bannerURL);
+            const bannerEmbed = new MessageEmbed(baseEmbed)
+                .setTitle(`Banner`)
+                .setImage(bannerURL);
             selectDatas.bannerPage = {
                 embeds: [bannerEmbed]
             };
@@ -214,8 +215,9 @@ module.exports = class ServerInfoCmd extends Command {
         }
 
         if (splashURL) {
-            const splashEmbed = new MessageEmbed(baseEmbed);
-            splashEmbed.setImage(splashURL);
+            const splashEmbed = new MessageEmbed(baseEmbed)
+                .setTitle(`Splash Invite`)
+                .setImage(splashURL);
             selectDatas.splashPage = {
                 embeds: [splashEmbed]
             };
@@ -227,8 +229,9 @@ module.exports = class ServerInfoCmd extends Command {
         }
 
         if (discoverySplashURL) {
-            const discoveryEmbed = new MessageEmbed(baseEmbed);
-            discoveryEmbed.setImage(discoverySplashURL);
+            const discoveryEmbed = new MessageEmbed(baseEmbed)
+                .setTitle(`Splash Discovery`)
+                .setImage(discoverySplashURL);
             selectDatas.discoveryPage = {
                 embeds: [discoveryEmbed]
             };
@@ -251,7 +254,7 @@ module.exports = class ServerInfoCmd extends Command {
         for (const page in selectDatas)
             selectDatas[page].components = [menu];
 
-        const mes = await inter.editReply({ embeds: [generalEmbed], components: [menu] });
+        const mes = await inter.editReply(selectDatas.generalPage);
         inter.client.createSelectMenu(mes.id, selectDatas);
         return mes;
     }

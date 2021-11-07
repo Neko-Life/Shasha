@@ -12,7 +12,7 @@ module.exports = class ProfileCmd extends Command {
         super(interaction, {
             name: "profile",
             description: "Show someone's profile",
-            clientPermissions: ["EMBED_LINKS"]
+            clientPermissions: ["VIEW_CHANNEL", "EMBED_LINKS"]
         });
     }
 
@@ -43,14 +43,15 @@ module.exports = class ProfileCmd extends Command {
             fStr.push(F);
         }
 
+        const memberAvatar = member?.displayAvatarURL({ size: 4096, format: "png", dynamic: true });
         const userAvatar = user.displayAvatarURL({ size: 4096, format: "png", dynamic: true });
 
         const baseEmbed = new MessageEmbed()
-            .setColor(getColor(member?.displayColor));
+            .setAuthor(tickTag(user).slice(1, -1), memberAvatar || userAvatar)
+            .setColor(getColor(user.accentColor, true) || getColor(member?.displayColor, true));
 
         const generalEmbed = new MessageEmbed(baseEmbed)
-            .setTitle(`${tickTag(user)}'s Profile`)
-            .setThumbnail(userAvatar)
+            .setTitle("Profile")
             .addField("Identifier", `<@${user.id}>\n(${user.id})`)
             .addField("Registered", "<t:" + Math.floor(user.createdTimestamp / 1000) + ":F>\n"
                 + `(${intervalToStrings(
@@ -78,13 +79,13 @@ module.exports = class ProfileCmd extends Command {
         }];
 
         if (member) {
-            const memberAvatar = member.displayAvatarURL({ size: 4096, format: "png", dynamic: true });
-            generalEmbed.addField("Nick", `\`${member.displayName}\``)
+            generalEmbed
                 .addField("Joined", "<t:" + Math.floor(member.joinedTimestamp / 1000) + ":F>\n"
                     + `(${intervalToStrings(Interval.fromDateTimes(
                         DateTime.fromJSDate(member.joinedAt),
                         DateTime.fromJSDate(new Date())
-                    )).strings.join(" ")} ago)`);
+                    )).strings.join(" ")} ago)`, true)
+                .addField("Nick", `\`${member.displayName}\``, true);
 
             /**
              * @type {Role[]}
@@ -94,17 +95,22 @@ module.exports = class ProfileCmd extends Command {
             ).map(r => r.id).slice(0, -1);
 
             if (roles.length) {
-                const rolesEmbed = new MessageEmbed(baseEmbed)
-                    .setTitle(`${tickTag(user)}'s Roles`)
-                    .setDescription("<@&" + roles.join(">, <@&") + ">");
-                selectMenuDatas.rolesPage = {
-                    embeds: [rolesEmbed]
-                };
-                menuOptions.push({
-                    label: "Roles",
-                    value: "rolesPage",
-                    description: "Show roles"
-                });
+                if (roles.length <= 42)
+                    generalEmbed.addField("Roles", "<@&" + roles.join(">, <@&") + ">");
+                else {
+                    const rolesEmbed = new MessageEmbed(baseEmbed)
+                        .setTitle("Roles")
+                        .setDescription("<@&" + roles.join(">, <@&") + ">");
+
+                    selectMenuDatas.rolesPage = {
+                        embeds: [rolesEmbed]
+                    };
+                    menuOptions.push({
+                        label: "Roles",
+                        value: "rolesPage",
+                        description: "Show roles"
+                    });
+                }
             }
 
             addUserAvatarPage();
@@ -112,7 +118,7 @@ module.exports = class ProfileCmd extends Command {
             if (memberAvatar && userAvatar !== memberAvatar) {
                 const memberAvatarEmbed = new MessageEmbed(baseEmbed)
                     .setImage(memberAvatar)
-                    .setTitle(tickTag(user) + "'s Server Avatar");
+                    .setTitle("Server Avatar");
                 selectMenuDatas.memberAvatarPage = {
                     embeds: [memberAvatarEmbed]
                 };
@@ -122,31 +128,14 @@ module.exports = class ProfileCmd extends Command {
                     value: "memberAvatarPage"
                 });
             }
-        }
-
-        if (!selectMenuDatas.userAvatarPage) addUserAvatarPage();
-
-        function addUserAvatarPage() {
-            if (!userAvatar) return;
-            const userAvatarEmbed = new MessageEmbed(baseEmbed)
-                .setTitle(tickTag(user) + "'s Avatar")
-                .setImage(userAvatar);
-            selectMenuDatas.userAvatarPage = {
-                embeds: [userAvatarEmbed]
-            };
-            menuOptions.push({
-                label: "Avatar",
-                description: "Default avatar",
-                value: "userAvatarPage"
-            });
-        }
+        } else addUserAvatarPage();
 
         const userBanner = user.bannerURL({ size: 4096, format: "png", dynamic: true });
 
         if (userBanner) {
             const userBannerEmbed = new MessageEmbed(baseEmbed)
                 .setImage(userBanner)
-                .setTitle(tickTag(user) + "'s Banner");
+                .setTitle("Banner");
             selectMenuDatas.userBannerPage = {
                 embeds: [userBannerEmbed]
             };
@@ -166,16 +155,28 @@ module.exports = class ProfileCmd extends Command {
                     .setOptions(menuOptions)
             );
 
-        const replyInter = { embeds: [generalEmbed] }
-
         if (menuOptions.length > 1) {
-            replyInter.components = [menu];
             for (const k in selectMenuDatas)
                 selectMenuDatas[k].components = [menu];
         }
 
-        const mes = await inter.editReply(replyInter);
+        const mes = await inter.editReply(selectMenuDatas.generalPage);
         await this.client.createSelectMenu(mes.id, selectMenuDatas);
         return mes;
+
+        function addUserAvatarPage() {
+            if (!userAvatar) return;
+            const userAvatarEmbed = new MessageEmbed(baseEmbed)
+                .setTitle("Avatar")
+                .setImage(userAvatar);
+            selectMenuDatas.userAvatarPage = {
+                embeds: [userAvatarEmbed]
+            };
+            menuOptions.push({
+                label: "Avatar",
+                description: "Default avatar",
+                value: "userAvatarPage"
+            });
+        }
     }
 }
