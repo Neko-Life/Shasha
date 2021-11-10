@@ -211,9 +211,13 @@ function adCheck(str) {
 /**
  * Check a member if they're administrator, will return string if `member` is User instance, or undefined when error
  * @param {GuildMember | User} member 
+ * @param {boolean} bypassOwner
  * @returns {boolean | "USER"}
  */
-function isAdmin(member) {
+function isAdmin(member, bypassOwner) {
+    if (bypassOwner)
+        if (member.client.isOwner(member))
+            return true;
     if (member instanceof User)
         return "USER";
     try {
@@ -284,12 +288,8 @@ function unixToSeconds(val) {
 function emphasizePerms(str) { return ePerms.includes(str) ? "'" + str + "'" : str }
 
 /**
- * @typedef {object} allowMentionParam
- * @property {GuildMember} member - Guild Member
- * @property {string} content - String containing mentions
- *
- * @param {allowMentionParam} param0 
- * @returns {object}
+ * @param {import("./classes/Command").allowMentionParam} param0 
+ * @returns {{parse:string[]}}
  */
 function allowMention({ member, content }) {
     const allowedMentions = {};

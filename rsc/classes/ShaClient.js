@@ -32,6 +32,8 @@ module.exports = class ShaClient extends Client {
          * @type {ShaBaseDb}
          */
         this.db = options.db || null;
+        this.bannedGuilds = null;
+        this.bannedUsers = null;
     }
 
     dispatch() {
@@ -42,6 +44,8 @@ module.exports = class ShaClient extends Client {
             this.dispatchDashboard();
             this.loadDbSelectMenus();
         } catch (e) { process.emit("error", e) }
+        this.loadBannedGuilds();
+        this.loadBannedUsers();
     }
 
     loadModules() {
@@ -88,32 +92,31 @@ module.exports = class ShaClient extends Client {
     }
 
     dispatchDashboard() {
-        if (this.dashboard instanceof ChildProcess) {
-            this.dashboard.on("spawn", () =>
-                console.log("Dashboard initialized..."));
+        if (!(this.dashboard instanceof ChildProcess)) return;
+        this.dashboard.on("spawn", () =>
+            console.log("Dashboard initialized..."));
 
-            this.dashboard.on("message", (msg, sendHandle) =>
-                console.log("[ DASHBOARD_MESSAGE ]\n%s", msg,
-                    "SEND_HANDLE:\n%s", sendHandle), "\n[ END:DASHBOARD_MESSAGE ]");
+        this.dashboard.on("message", (msg, sendHandle) =>
+            console.log("[ DASHBOARD_MESSAGE ]\n%s", msg,
+                "SEND_HANDLE:\n%s", sendHandle), "\n[ END:DASHBOARD_MESSAGE ]");
 
-            this.dashboard.on("exit", (c, s) =>
-                console.warn("[ DASHBOARD_EXIT ]\n%s", "CODE:", c, "SIG:\n%s", s, "\n[ END:DASHBOARD_EXIT ]"));
+        this.dashboard.on("exit", (c, s) =>
+            console.warn("[ DASHBOARD_EXIT ]\n%s", "CODE:", c, "SIG:\n%s", s, "\n[ END:DASHBOARD_EXIT ]"));
 
-            this.dashboard.on("error", (e) =>
-                console.error("[ DASHBOARD_ERROR ]\n%s", e, "\n[ END:DASHBOARD_ERROR ]"));
+        this.dashboard.on("error", (e) =>
+            console.error("[ DASHBOARD_ERROR ]\n%s", e, "\n[ END:DASHBOARD_ERROR ]"));
 
-            this.dashboard.on("disconnect", () =>
-                console.warn("Dashboard got disconnected..."));
+        this.dashboard.on("disconnect", () =>
+            console.warn("Dashboard got disconnected..."));
 
-            this.dashboard.on("close", (c, s) =>
-                console.warn("[ DASHBOARD_CLOSED ]\n%s", "CODE:", c, "SIG:\n%s", s, "\n[ END:DASHBOARD_CLOSED ]"));
+        this.dashboard.on("close", (c, s) =>
+            console.warn("[ DASHBOARD_CLOSED ]\n%s", "CODE:", c, "SIG:\n%s", s, "\n[ END:DASHBOARD_CLOSED ]"));
 
-            // this.dashboard.stdout.on("data", (c) =>
-            //     console.log("[ DASHBOARD_STDOUT ]\n%s", c, "\n[ END:DASHBOARD_STDOUT ]"));
+        // this.dashboard.stdout.on("data", (c) =>
+        //     console.log("[ DASHBOARD_STDOUT ]\n%s", c, "\n[ END:DASHBOARD_STDOUT ]"));
 
-            // this.dashboard.stderr.on("data", (c) =>
-            //     console.log("[ DASHBOARD_STDERR ]\n%s", c, "\n[ END:DASHBOARD_STDERR ]"));
-        }
+        // this.dashboard.stderr.on("data", (c) =>
+        //     console.log("[ DASHBOARD_STDERR ]\n%s", c, "\n[ END:DASHBOARD_STDERR ]"));
     }
 
     /**
@@ -162,9 +165,9 @@ module.exports = class ShaClient extends Client {
      * @returns {boolean}
      */
     isOwner(user) {
-        if (user.id && /^\d{18,20}$/.test(user.id)) user = user.id;
-        if (typeof user !== "string" || (typeof user === "string" && !/^\d{18,20}$/.test(user)))
-            throw new TypeError("user is " + user);
+        if (user.id) user = user.id;
+        if (typeof user !== "string")
+            throw new TypeError("Expected string, got " + typeof user);
         return this.owners.some(r => r.id === user);
     }
 
@@ -232,13 +235,13 @@ module.exports = class ShaClient extends Client {
     }
 
     async loadBannedGuilds() {
-        if (this.bannedGuilds) return this.bannedGuilds;
+        if (Array.isArray(this.bannedGuilds)) return this.bannedGuilds;
         const get = await this.db.getOne("bannedGuilds", "String[]");
         return this.bannedGuilds = get?.value || [];
     }
 
     async loadBannedUsers() {
-        if (this.bannedUsers) return this.bannedUsers;
+        if (Array.isArray(this.bannedUsers)) return this.bannedUsers;
         const get = await this.db.getOne("bannedUsers", "String[]");
         return this.bannedUsers = get?.value || [];
     }
@@ -343,5 +346,14 @@ module.exports = class ShaClient extends Client {
             { value: this["banned" + type + "s"] }
         );
         return { unbanned, already, db };
+    }
+
+    /**
+     * 
+     * @param {import("discord.js").GuildMemberResolvable} user 
+     * @returns {Collection<string, Guild>}
+     */
+    findMutualGuilds(user) {
+        return this.guilds.cache.filter(r => r.members.resolve(user));
     }
 }

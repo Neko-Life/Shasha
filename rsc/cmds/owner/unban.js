@@ -5,9 +5,21 @@ const CommandBanUnbanCmd = require("../../rsc/CommandBanUnbanCmd");
 
 module.exports = class CommandUnbanCmd extends Command {
     constructor(interaction) {
+        const toCommands = {
+            guild: {},
+            user: {}
+        }
+        for (const k of interaction.client.bannedUsers)
+            toCommands.user[k] = interaction.client.users.cache.get(k)?.tag || ("<@" + k + ">");
+        for (const k of interaction.client.bannedGuilds)
+            toCommands.guild[k] = interaction.client.guilds.cache.get(k)?.name || k;
         super(interaction, {
             name: "commandunban",
-            ownerOnly: true
+            ownerOnly: true,
+            autocomplete: {
+                matchKey: true,
+                commands: toCommands
+            }
         });
     }
 

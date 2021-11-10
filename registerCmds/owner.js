@@ -45,10 +45,12 @@ module.exports = new SlashCommandBuilder()
                 opt => opt
                     .setName("category")
                     .setDescription("Owner only")
+                    .setAutocomplete(true)
             ).addStringOption(
                 opt => opt
                     .setName("guild")
                     .setDescription("Owner only")
+                    .setAutocomplete(true)
             )
     ).addSubcommand(
         sCmd => sCmd
@@ -62,10 +64,12 @@ module.exports = new SlashCommandBuilder()
                 opt => opt
                     .setName("user")
                     .setDescription("Owner only")
+                    .setAutocomplete(true)
             ).addStringOption(
                 opt => opt
                     .setName("guild")
                     .setDescription("Owner only")
+                    .setAutocomplete(true)
             )
     ).addSubcommand(
         sCmd => sCmd
@@ -75,10 +79,12 @@ module.exports = new SlashCommandBuilder()
                 opt => opt
                     .setName("user")
                     .setDescription("Owner only")
+                    .setAutocomplete(true)
             ).addStringOption(
                 opt => opt
                     .setName("guild")
                     .setDescription("Owner only")
+                    .setAutocomplete(true)
             )
     ).addSubcommand(
         sCmd => sCmd
@@ -117,5 +123,20 @@ module.exports = new SlashCommandBuilder()
                     .setDescription("Owner only")
             ).addStringOption(
                 opt => activityTypeOpt
+            )
+    ).addSubcommandGroup(
+        sCmd => sCmd
+            .setName("info")
+            .setDescription("Owner only")
+            .addSubcommand(
+                sCmd => sCmd
+                    .setName("server")
+                    .setDescription("Owner only")
+                    .addStringOption(
+                        opt => opt
+                            .setName("identifier")
+                            .setDescription("Owner only")
+                            .setAutocomplete(true)
+                    )
             )
     )

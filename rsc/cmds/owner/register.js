@@ -8,19 +8,32 @@ const configFile = require("../../../config.json");
 
 module.exports = class RegisterCommandsCmd extends Command {
     constructor(interaction) {
+        const categories = requireAll({ dirname: join(__dirname, "../../../registerCmds") });
+        const toCommands = {
+            category: {},
+            guild: {}
+        }
+        for (const k in categories)
+            toCommands.category[k] = k;
+        for (const [k, v] of interaction.client.guilds.cache)
+            toCommands.guild[k] = { name: v.name, value: v.id };
         super(interaction, {
             name: "register",
-            ownerOnly: true
+            ownerOnly: true,
+            autocomplete: {
+                matchKey: true,
+                commands: toCommands
+            }
         });
+        this.categories = categories;
     }
 
     async run(inter, { category, guild }) {
         await inter.deferReply();
-        const fetch = requireAll({ dirname: join(__dirname, "../../../registerCmds") });
 
-        if (category?.value && !fetch[category.value])
+        if (category?.value && !this.categories[category.value])
             throw new Error("No command/category: " + category.value +
-                "\nAvailable categories:```js\n" + Object.keys(fetch).join("\n") + "```");
+                "\nAvailable categories:```js\n" + Object.keys(this.categories).join("\n") + "```");
 
         if (!category) category = { value: "null" };
         let G;

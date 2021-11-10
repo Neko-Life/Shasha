@@ -19,6 +19,7 @@ if (args[0] && args[0] !== "null") {
 } else {
     for (const U in fetch) {
         if (!fetch[U].name) continue;
+        if (fetch[U].name === "owner" && !args[1]) continue;
         parMes += fetch[U].name + "\n";
         commandCategories.push(fetch[U]);
     }

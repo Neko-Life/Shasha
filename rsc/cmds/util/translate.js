@@ -1,7 +1,7 @@
 'use strict';
 
 const { Command } = require("../../classes/Command");
-const { getChannelMessage, isAdmin, allowMention } = require("../../functions");
+const { getChannelMessage, allowMention } = require("../../functions");
 const translate = require('translate-google');
 const { Util } = require("discord.js");
 
@@ -62,7 +62,7 @@ module.exports = class TranslateCmd extends Command {
             erMe += k + ": " + translate.languages[k] + "\n";
         }
         erMe += "```";
-        erMe = this.interaction.client.finalizeStr(erMe, isAdmin(this.interaction.member || this.interaction.user));
+        erMe = this.client.finalizeStr(erMe, this.isAdmin(true));
         const contents = Util.splitMessage(erMe, {
             append: "```",
             char: "\n",

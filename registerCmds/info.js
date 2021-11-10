@@ -31,6 +31,7 @@ module.exports = new SlashCommandBuilder()
                 opt => opt
                     .setName("identifier")
                     .setDescription("Exact name or Id of the server too look at")
+                    .setAutocomplete(true)
             )
     ).addSubcommand(
         sCmd => sCmd
@@ -63,5 +64,6 @@ module.exports = new SlashCommandBuilder()
                     .setName("emoji")
                     .setDescription("Emoji to see about")
                     .setRequired(true)
+                    .setAutocomplete(true)
             )
     )

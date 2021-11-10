@@ -47,12 +47,12 @@ module.exports = class ProfileCmd extends Command {
         const userAvatar = user.displayAvatarURL({ size: 4096, format: "png", dynamic: true });
 
         const baseEmbed = new MessageEmbed()
-            .setAuthor(tickTag(user).slice(1, -1), memberAvatar || userAvatar)
+            .setAuthor(`${user.bot ? "BOT " : ""}${user.tag}`, memberAvatar || userAvatar)
             .setColor(getColor(user.accentColor, true) || getColor(member?.displayColor, true));
 
         const generalEmbed = new MessageEmbed(baseEmbed)
             .setTitle("Profile")
-            .addField("Identifier", `<@${user.id}>\n(${user.id})`)
+            .addField("Identifier", `<@${user.id}>\n(${user.id})`, true)
             .addField("Registered", "<t:" + Math.floor(user.createdTimestamp / 1000) + ":F>\n"
                 + `(${intervalToStrings(
                     Interval.fromDateTimes(
@@ -84,8 +84,8 @@ module.exports = class ProfileCmd extends Command {
                     + `(${intervalToStrings(Interval.fromDateTimes(
                         DateTime.fromJSDate(member.joinedAt),
                         DateTime.fromJSDate(new Date())
-                    )).strings.join(" ")} ago)`, true)
-                .addField("Nick", `\`${member.displayName}\``, true);
+                    )).strings.join(" ")} ago)`)
+                .fields.splice(1, 0, { name: "Nick", value: `\`${member.displayName}\``, inline: true });
 
             /**
              * @type {Role[]}

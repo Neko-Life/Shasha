@@ -24,6 +24,6 @@ module.exports = async (interaction, query, text = "", msg, noName) => {
         emb.setAuthor(
             auN,
             (member.user || member).displayAvatarURL({ size: 128, format: "png", dynamic: true }));
-    if (msg) emb.setDescription(interaction.client.finalizeStr(msg, isAdmin(member)));
+    if (msg) emb.setDescription(interaction.client.finalizeStr(msg, isAdmin(member, true)));
     return interaction.editReply({ embeds: [emb] });
 }

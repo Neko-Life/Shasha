@@ -5,11 +5,13 @@ const ShaClient = require("./ShaClient");
 const configFile = require("../../config.json");
 const { loadDb } = require("../database");
 const { escapeRegExp } = require("lodash");
+const { isAdmin, allowMention, cleanMentionID } = require("../functions");
 
 /**
  * @typedef {object} AutocompleteData
  * @property {{command:{key: string} | {key: {name: string, value: string}}}} commands
- * @property {boolean} matchKey - Match options key
+ * @property {boolean} matchKey - Match options key, `undefined` by default
+ * @property {boolean} matchName - `true` by default
  * 
  * @typedef {object} CommandData
  * @property {string} name
@@ -21,6 +23,10 @@ const { escapeRegExp } = require("lodash");
  * @property {AutocompleteData} autocomplete
  * @property {PermissionString[]} userPermissions
  * @property {PermissionString[]} clientPermissions
+ *
+ * @typedef {object} allowMentionParam
+ * @property {GuildMember} member - Guild Member
+ * @property {string} content - String containing mentions
  *
  * @typedef {object} CmdDisableOpt
  * @property {{users: string[], roles: string[], permissions: PermissionString[]}} bypass - Ids to bypass
@@ -81,6 +87,29 @@ module.exports.Command = class ShaBaseCommand {
     }
 
     /**
+     * 
+     * @param {{client:ShaClient, user: User, guild: Guild}} param0 
+     * @returns 
+     */
+    static constructCommandEmoteAutocomplete({ client, user, guild }) {
+        const emoji = {};
+        const mutual = client.findMutualGuilds(user);
+        for (const [k, v] of client.emojis.cache) {
+            let theName;
+            if (v.guild.id !== guild.id) {
+                const your = mutual.get(v.guild.id);
+                if (!your) continue;
+                if (your.ownerId === user.id)
+                    theName = "In your server: ";
+                else theName = "In other server: ";
+            } else theName = "In this server: ";
+            theName += v.name;
+            emoji[`<${v.animated ? "a" : ""}:${v.name}:${v.id}>`] = { name: theName, value: v.id };
+        }
+        return emoji;
+    }
+
+    /**
      * @param {AutocompleteInteraction} inter 
      * @param {import("discord.js").ApplicationCommandOptionChoice | string | number} focus
      */
@@ -98,18 +127,43 @@ module.exports.Command = class ShaBaseCommand {
                 });
             }
         } else {
-            const re = new RegExp(escapeRegExp(focus.value), "i");
+            if (typeof this.autocomplete.matchName !== "boolean")
+                this.autocomplete.matchName = true;
+            if (!this.autocomplete.matchName && this.autocomplete.matchKey === undefined)
+                this.autocomplete.matchKey = true;
+            const re = new RegExp(escapeRegExp(cleanMentionID(focus.value)), "i");
             for (const k in cmd) {
                 if (typeof cmd[k] === "function") continue;
                 else if (typeof cmd[k] === "object") {
-                    if (re.test(cmd[k].name) || (this.autocomplete.matchKey ? re.test(k) : false))
+                    if ((this.autocomplete.matchName ? re.test(cmd[k].name) : false) || (this.autocomplete.matchKey ? re.test(k) : false))
                         res.push(cmd[k]);
-                } else if (re.test(cmd[k]) || (this.autocomplete.matchKey ? re.test(k) : false))
+                } else if ((this.autocomplete.matchName ? re.test(cmd[k]) : false) || (this.autocomplete.matchKey ? re.test(k) : false))
                     res.push({ name: cmd[k], value: cmd[k] });
             }
         }
 
         return inter.respond(res.slice(0, 25));
+    }
+
+    /**
+     * Check a member if they're administrator, will return string if `member` is User instance, or undefined when error
+     * @param {boolean} bypassOwner
+     * @returns {boolean | "USER"}
+     */
+    isAdmin(bypassOwner) {
+        return isAdmin(this.member || this.user, bypassOwner);
+    }
+
+    /**
+     * @param {string} content 
+     * @returns {{parse:string[]}}
+     */
+    allowMention(content) {
+        return allowMention({ member: this.member, content });
+    }
+
+    get isOwner() {
+        return this.client.isOwner(this.user);
     }
 
     #disabled = null;

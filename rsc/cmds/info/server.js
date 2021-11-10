@@ -9,9 +9,19 @@ const { intervalToStrings } = require("../../rsc/Duration");
 
 module.exports = class ServerInfoCmd extends Command {
     constructor(interaction) {
+        const tocommands = {
+            identifier: {}
+        }
+        const mutual = interaction.client.findMutualGuilds(interaction.user);
+        for (const [k, v] of mutual)
+            tocommands.identifier[k] = v.name;
         super(interaction, {
             name: "server-info",
-            clientPermissions: ["VIEW_CHANNEL", "EMBED_LINKS"]
+            clientPermissions: ["VIEW_CHANNEL", "EMBED_LINKS"],
+            autocomplete: {
+                matchKey: true,
+                commands: tocommands
+            }
         });
     }
 

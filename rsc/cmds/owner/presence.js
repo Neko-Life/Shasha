@@ -23,9 +23,22 @@ module.exports = class PresenceCmd extends Command {
          */
         const use = {};
         if (status) use.status = status.value;
-        if (afk) status.afk = afk.value;
+        if (afk) use.afk = afk.value;
         const act = {};
-        if (title) act.name = title.value;
+        if (title) {
+            const toEval = title.value.match(/(?<=\$\{).+(?=\})/g);
+            if (toEval?.length) {
+                const rep = [];
+                for (const k of toEval) {
+                    const data = { name: k };
+                    data.value = await eval(k);
+                    rep.push(data);
+                }
+                for (const k of rep)
+                    title.value = title.value.replace("${" + k.name + "}", k.value);
+            }
+            act.name = title.value;
+        }
         if (type) act.type = type.value;
         if (url) act.url = url.value;
         if (Object.keys(act).length) use.activities = [act];

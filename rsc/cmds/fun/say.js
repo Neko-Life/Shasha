@@ -2,7 +2,7 @@
 
 const { CommandInteraction, GuildChannel } = require("discord.js");
 const { Command } = require("../../classes/Command");
-const { isAdmin, allowMention } = require("../../functions");
+const { allowMention } = require("../../functions");
 
 module.exports = class SayCmd extends Command {
     constructor(interaction) {
@@ -27,8 +27,8 @@ module.exports = class SayCmd extends Command {
          * @type {import("discord.js").MessageOptions}
          */
         const send = {
-            content: inter.client.finalizeStr(text.value, isAdmin(inter.member || inter.user)),
-            allowedMentions: allowMention({ member: inter.member, content: text.value })
+            content: inter.client.finalizeStr(text.value, this.isAdmin(true)),
+            allowedMentions: this.allowMention(text.value)
         };
         let ret;
         if (channel) {

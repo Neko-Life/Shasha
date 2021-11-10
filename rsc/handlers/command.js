@@ -94,14 +94,13 @@ module.exports = class CommandHandler {
                 return interaction.reply(
                     `Sub-category \`${interaction.options._group}\` got sucked into a blackhole and gone forever`
                 );
-            toArgs = interaction.options.data[0].options[0].options[0].options;
             interaction.commandPath.push(interaction.options._group);
         }
         /**
          * @type {Command}
          */
         let cmd;
-        if (interaction.options._subcommand) {
+        if (interaction.options._subcommand || subCategory) {
             if (subCategory) {
                 cmd = subCategory[interaction.options._subcommand];
                 toArgs = interaction.options.data[0].options[0].options;
@@ -121,7 +120,8 @@ module.exports = class CommandHandler {
         interaction.args = {};
         if (toArgs?.length)
             for (const D of toArgs) {
-                D.value = D.value?.trim();
+                if (typeof D.value === "string")
+                    D.value = D.value.trim();
                 const Dsplit = D.name.split(/-/);
                 if (Dsplit.length)
                     for (let i = 0; i < Dsplit.length; i++) {

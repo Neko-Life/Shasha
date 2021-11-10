@@ -28,4 +28,15 @@ module.exports = new SlashCommandBuilder()
                     .setName("question")
                     .setDescription("Your curiousness")
             )
+    ).addSubcommand(
+        sCmd => sCmd
+            .setName("jumbo")
+            .setDescription("Make an emoji JUMBO")
+            .addStringOption(
+                opt => opt
+                    .setName("emoji")
+                    .setDescription("Emoji to get JUMBO-ed")
+                    .setRequired(true)
+                    .setAutocomplete(true)
+            )
     );
