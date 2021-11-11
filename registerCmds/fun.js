@@ -13,7 +13,12 @@ module.exports = new SlashCommandBuilder()
                 opt => opt
                     .setName("text")
                     .setDescription("Text to send")
-                    .setRequired(true)
+                    .setAutocomplete(true)
+            ).addStringOption(
+                opt => opt
+                    .setName("message")
+                    .setDescription("Say this message")
+                    .setAutocomplete(true)
             ).addChannelOption(
                 opt => opt
                     .setName("channel")
@@ -27,6 +32,7 @@ module.exports = new SlashCommandBuilder()
                 opt => opt
                     .setName("question")
                     .setDescription("Your curiousness")
+                    .setAutocomplete(true)
             )
     ).addSubcommand(
         sCmd => sCmd

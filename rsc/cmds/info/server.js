@@ -14,13 +14,14 @@ module.exports = class ServerInfoCmd extends Command {
         }
         const mutual = interaction.client.findMutualGuilds(interaction.user);
         for (const [k, v] of mutual)
-            tocommands.identifier[k] = v.name;
+            tocommands.identifier[k] = { name: v.name, value: v.id };
         super(interaction, {
             name: "server-info",
             clientPermissions: ["VIEW_CHANNEL", "EMBED_LINKS"],
             autocomplete: {
                 matchKey: true,
-                commands: tocommands
+                commands: tocommands,
+                preview: false
             }
         });
     }
@@ -39,7 +40,7 @@ module.exports = class ServerInfoCmd extends Command {
         let server = inter.guild;
         if (identifier) server = inter.client.findGuilds(
             identifier.value, "i",
-            inter.client.isOwner(inter.user)
+            this.isOwner
         );
         if (server instanceof Map) server = server.first();
         if (!server) return inter.editReply("Can't find that server :c");

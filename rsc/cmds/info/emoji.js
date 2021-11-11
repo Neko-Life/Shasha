@@ -15,7 +15,8 @@ module.exports = class InfoEmojiCmd extends Command {
                 matchName: false,
                 commands: {
                     emoji: Command.constructCommandEmoteAutocomplete(interaction)
-                }
+                },
+                preview: false
             }
         });
     }

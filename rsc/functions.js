@@ -147,7 +147,7 @@ async function getChannelMessage(msg, MainID, SecondID) {
             const meschannel = (msg.client.owners.map(r => r.id).includes(msg.author?.id || msg.user?.id || msg.id) ? msg.client : msg.guild).channels.cache.get(MainID);
             return meschannel.messages.fetch(SecondID, true).catch(() => { });
         } catch {
-            return;
+            return null;
         }
     } else {
         return msg.channel.messages.fetch(MainID, true).catch(() => { });

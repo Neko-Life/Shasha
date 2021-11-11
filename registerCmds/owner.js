@@ -28,14 +28,17 @@ module.exports = new SlashCommandBuilder()
                 opt => opt
                     .setName("script")
                     .setDescription("Owner only")
+                    .setAutocomplete(true)
             ).addStringOption(
                 opt => opt
                     .setName("message")
                     .setDescription("Owner only")
+                    .setAutocomplete(true)
             ).addStringOption(
                 opt => opt
                     .setName("split")
                     .setDescription("Owner only")
+                    .setAutocomplete(true)
             )
     ).addSubcommand(
         sCmd => sCmd

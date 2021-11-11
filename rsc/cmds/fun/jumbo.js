@@ -11,7 +11,8 @@ module.exports = class jumboCmd extends Command {
                 matchName: false,
                 commands: {
                     emoji: Command.constructCommandEmoteAutocomplete(interaction)
-                }
+                },
+                preview: false
             }
         });
     }

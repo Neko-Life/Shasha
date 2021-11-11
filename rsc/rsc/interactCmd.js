@@ -60,11 +60,11 @@ module.exports = async (interaction, query, user, text, msg, noCount, api = "nek
         else if (num === 2) countText = "Second";
         else if (num === 3) countText = "Third";
         else if (numStr.endsWith("1")) {
-            if (numStr.endsWith("11")) countText = numStr + "st";
+            if (!numStr.endsWith("11")) countText = numStr + "st";
         } else if (numStr.endsWith("2")) {
-            if (numStr.endsWith("12")) countText = numStr + "nd";
+            if (!numStr.endsWith("12")) countText = numStr + "nd";
         } else if (numStr.endsWith("3")) {
-            if (numStr.endsWith("13")) countText = numStr + "rd";
+            if (!numStr.endsWith("13")) countText = numStr + "rd";
         }
 
         if (!countText) countText = numStr + "th";

@@ -4,7 +4,7 @@ const { Db, Collection } = require("mongodb");
 const { logDev } = require("../debug");
 
 /**
- * @typedef {"activeSelectMenus"|"document"|"commandDisabled"|"bannedGuilds"|"bannedUsers"|"infractions"|"interactions"} ShaDbDocument
+ * @typedef {"activeSelectMenus"|"document"|"commandDisabled"|"bannedGuilds"|"bannedUsers"|"infractions"|"interactions"|"recentAutocomplete"} ShaDbDocument
  * @typedef {"String"|"Object"|"Number"|"Boolean"|"String[]"|"Object[]"|"Number[]"|"Boolean[]"|"{Id}"} ShaDbQuery
  * @typedef {"user/"|"guild/"|"member/"|"channel/"} ShaDbCollectionType - Types with "/" followed by Id
  */
@@ -34,7 +34,7 @@ class ShaBaseDb {
     async get(doc, query) {
         const find = {};
         if (doc !== undefined && query !== undefined) find[doc] = query;
-        logDev("get", doc, query);
+        logDev("get", this.col.collectionName, doc, query);
         const cursor = this.col.find(find);
         let i = 0;
         const map = new Map((await cursor.toArray()).map(r => [r[doc] || i++, r]));

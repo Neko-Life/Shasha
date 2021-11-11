@@ -3,7 +3,7 @@
 const { CommandInteraction, MessageOptions } = require("discord.js");
 const { Command } = require("../classes/Command");
 const { allowMention, isAdmin } = require("../functions");
-const { addUserExp } = require("../database");
+const { addUserExp, loadDb } = require("../database");
 
 module.exports = class CommandHandler {
     /**
@@ -31,17 +31,14 @@ module.exports = class CommandHandler {
             result = await cmd.run(interaction, interaction.args);
         } catch (e) {
             const mes = interaction.client.finalizeStr(
-                e.message,
-                isAdmin(interaction.member || interaction.user)
+                e.message
             );
             /**
              * @type {MessageOptions}
              */
             const send = { content: mes };
             if (interaction.guild)
-                send.allowedMentions = allowMention(
-                    { member: interaction.member, content: mes }
-                );
+                send.allowedMentions = { parse: [] };
             if (interaction.deferred || interaction.replied)
                 result = interaction.editReply(send);
             else result = interaction.reply(send);
@@ -66,6 +63,43 @@ module.exports = class CommandHandler {
             new Date().toUTCString(),
             { interaction: interaction, command: cmd }
         );
+        if (interaction.user.lastAutocomplete?.commandPath === interaction.commandPath.join("/")) {
+            const lac = interaction.user.lastAutocomplete;
+            const db = lac.db || {};
+            const commands = lac.autocomplete.commands;
+            const iterator = {};
+            for (const k in commands)
+                iterator[k] = Object.entries(commands[k]);
+            for (const k in interaction.args) {
+                /**
+                 * @type {[string, any][]}
+                 */
+                const iterate = iterator[k];
+                const found = iterate?.find(v => (v[1].value || v[1]) === interaction.args[k].value);
+                if (!db[k]) db[k] = [];
+                if (!db[k].find(r => r?.value === interaction.args[k].value)) {
+                    const add = {
+                        name: "Recent | " + (found
+                            ? (found[1]?.name || found[1])
+                            : interaction.args[k].value),
+                        value: interaction.args[k].value
+                    };
+                    db[k].splice(0, 0, add);
+                }
+                const limit = (
+                    lac.autocomplete.preview && iterate
+                        ? (
+                            iterate.length >= 20
+                                ? 5
+                                : 25 - iterate.length
+                        ) : 25
+                );
+                if (db[k].length > limit) db[k] = db[k].slice(0, limit);
+            }
+
+            const udb = loadDb(interaction.user, "user/" + interaction.user.id);
+            udb.db.set("recentAutocomplete", lac.commandPath, { value: db });
+        }
         console.log("Interaction",
             interaction.commandName,
             interaction.id, "run by",

@@ -1,6 +1,6 @@
 'use strict';
 
-const { PermissionString, CommandInteraction, TextBasedChannels, User, GuildMember, Guild, AutocompleteInteraction } = require("discord.js");
+const { PermissionString, CommandInteraction, TextBasedChannels, User, GuildMember, Guild, AutocompleteInteraction, Message } = require("discord.js");
 const ShaClient = require("./ShaClient");
 const configFile = require("../../config.json");
 const { loadDb } = require("../database");
@@ -12,6 +12,9 @@ const { isAdmin, allowMention, cleanMentionID } = require("../functions");
  * @property {{command:{key: string} | {key: {name: string, value: string}}}} commands
  * @property {boolean} matchKey - Match options key, `undefined` by default
  * @property {boolean} matchName - `true` by default
+ * @property {boolean} showRecent - `true` by default
+ * @property {boolean} preview - `true` by default
+ * 
  * 
  * @typedef {object} CommandData
  * @property {string} name
@@ -113,33 +116,58 @@ module.exports.Command = class ShaBaseCommand {
      * @param {AutocompleteInteraction} inter 
      * @param {import("discord.js").ApplicationCommandOptionChoice | string | number} focus
      */
-    handleAutocomplete(inter, focus) {
-        const cmd = this.autocomplete.commands?.[focus?.name || focus];
-        if (!cmd) return;
+    async handleAutocomplete(inter, focus) {
+        const cmd = this.autocomplete.commands?.[focus?.name];
+
+        if (typeof this.autocomplete.preview !== "boolean")
+            this.autocomplete.preview = true;
+        if (typeof this.autocomplete.showRecent !== "boolean")
+            this.autocomplete.showRecent = true;
+
         const res = [];
 
-        if (!focus.value) {
-            for (const k in cmd) {
-                if (typeof cmd[k] === "function") continue;
-                res.push({
-                    name: cmd[k].name || cmd[k],
-                    value: cmd[k].value || cmd[k]
-                });
+        if (cmd) {
+            if (!focus.value) {
+                if (this.autocomplete.preview)
+                    for (const k in cmd) {
+                        if (typeof cmd[k] === "function") continue;
+                        res.push({
+                            name: cmd[k].name || cmd[k],
+                            value: cmd[k].value || cmd[k]
+                        });
+                    }
+            } else {
+                if (typeof this.autocomplete.matchName !== "boolean")
+                    this.autocomplete.matchName = true;
+                if (!this.autocomplete.matchName && this.autocomplete.matchKey === undefined)
+                    this.autocomplete.matchKey = true;
+                const re = new RegExp(escapeRegExp(cleanMentionID(focus.value)), "i");
+                for (const k in cmd) {
+                    if (typeof cmd[k] === "function") continue;
+                    else if (typeof cmd[k] === "object") {
+                        if ((this.autocomplete.matchName ? re.test(cmd[k].name) : false) || (this.autocomplete.matchKey ? re.test(k) : false))
+                            res.push(cmd[k]);
+                    } else if ((this.autocomplete.matchName ? re.test(cmd[k]) : false) || (this.autocomplete.matchKey ? re.test(k) : false))
+                        res.push({ name: cmd[k], value: cmd[k] });
+                }
             }
-        } else {
-            if (typeof this.autocomplete.matchName !== "boolean")
-                this.autocomplete.matchName = true;
-            if (!this.autocomplete.matchName && this.autocomplete.matchKey === undefined)
-                this.autocomplete.matchKey = true;
-            const re = new RegExp(escapeRegExp(cleanMentionID(focus.value)), "i");
-            for (const k in cmd) {
-                if (typeof cmd[k] === "function") continue;
-                else if (typeof cmd[k] === "object") {
-                    if ((this.autocomplete.matchName ? re.test(cmd[k].name) : false) || (this.autocomplete.matchKey ? re.test(k) : false))
-                        res.push(cmd[k]);
-                } else if ((this.autocomplete.matchName ? re.test(cmd[k]) : false) || (this.autocomplete.matchKey ? re.test(k) : false))
-                    res.push({ name: cmd[k], value: cmd[k] });
-            }
+        }
+
+        const udb = loadDb(inter.user, "user/" + inter.user.id);
+        const dbPath = this.commandPath.join("/");
+        const get = new Array(...(await udb.db.get("recentAutocomplete", dbPath)));
+        const fullVal = get[0]?.[1].value;
+        const val = this.autocomplete.showRecent && !focus.value
+            ? fullVal?.[focus?.name]
+            : null;
+        if (val?.length) res.splice(0, 0, ...val);
+        if (focus.value && !res.length)
+            res.push({ name: focus.value, value: focus.value });
+
+        this.user.lastAutocomplete = {
+            autocomplete: this.autocomplete,
+            commandPath: dbPath,
+            db: fullVal
         }
 
         return inter.respond(res.slice(0, 25));
@@ -164,6 +192,31 @@ module.exports.Command = class ShaBaseCommand {
 
     get isOwner() {
         return this.client.isOwner(this.user);
+    }
+    /**
+     * Get message object from the message channel or provided channel
+     * @param {string} MainID - Message ID | Channel_[mention|ID] | Message link
+     * @param {string} SecondID - Message ID
+     * @returns {Promise<Message>} Message object | undefined
+     */
+    async getChannelMessage(MainID, SecondID) {
+        if (!MainID) return;
+        if (/\//.test(MainID)) {
+            const splitURL = MainID.split(/\/+/);
+            SecondID = splitURL[splitURL.length - 1];
+            MainID = splitURL[splitURL.length - 2];
+        }
+        MainID = cleanMentionID(MainID);
+        if (SecondID && !/\D/.test(SecondID)) {
+            try {
+                const meschannel = (this.isOwner ? this.client : this.guild).channels.cache.get(MainID);
+                return meschannel.messages.fetch(SecondID, true).catch(() => { });
+            } catch {
+                return null;
+            }
+        } else {
+            return this.channel.messages.fetch(MainID, true).catch(() => { });
+        }
     }
 
     #disabled = null;
