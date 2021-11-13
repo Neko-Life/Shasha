@@ -6,6 +6,7 @@ const { Command } = require("../classes/Command");
 const { getChannelMessage, allowMention, getColor } = require("../functions");
 const { reValidURL } = require("../constants");
 const createJSONEmbedFields = require("../rsc/createJSONEmbedFields");
+const { logDev } = require("../debug");
 const sortProchedure = [
     'json',
     'editField',
@@ -107,6 +108,7 @@ module.exports.build = class BuildEmbCmd extends Command {
                     const T = new MessageEmbed(JSON.parse(value));
                     this.buildEmbed = T;
                 } catch (e) {
+                    logDev(e);
                     this.error = true;
                     this.resultMsg += "**[JSON]** " + e.message + "\n";
                 }

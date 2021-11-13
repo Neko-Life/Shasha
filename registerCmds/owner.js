@@ -120,6 +120,7 @@ module.exports = new SlashCommandBuilder()
                 opt => opt
                     .setName("title")
                     .setDescription("Owner only")
+                    .setAutocomplete(true)
             ).addStringOption(
                 opt => opt
                     .setName("url")

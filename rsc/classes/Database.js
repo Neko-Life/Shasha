@@ -34,7 +34,7 @@ class ShaBaseDb {
     async get(doc, query) {
         const find = {};
         if (doc !== undefined && query !== undefined) find[doc] = query;
-        logDev("get", this.col.collectionName, doc, query);
+        logDev("get", this.col.collectionName, doc, query, find);
         const cursor = this.col.find(find);
         let i = 0;
         const map = new Map((await cursor.toArray()).map(r => [r[doc] || i++, r]));
@@ -48,6 +48,7 @@ class ShaBaseDb {
      * @returns {Promise<object>}
      */
     async getOne(doc, query) {
+        logDev("getOne", this.col.collectionName, doc, query);
         return this.col.findOne({ [doc]: query });
     }
 
@@ -60,6 +61,7 @@ class ShaBaseDb {
      * @returns 
      */
     async set(doc, query, val = { noData: true }, push) {
+        logDev("set", this.col.collectionName, doc, query, val, push);
         if (typeof val !== 'object') throw new TypeError("val must be a type of object. Got " + typeof val);
         return this.col.updateOne({ [doc]: query },
             push ? {
@@ -79,6 +81,7 @@ class ShaBaseDb {
      * @returns 
      */
     async delete(doc, query) {
+        logDev("delete", this.col.collectionName, doc, query);
         if (typeof query !== "string") throw new TypeError("query must be a type of string. Got " + typeof query);
         return this.col.deleteOne({ [doc]: query });
     }

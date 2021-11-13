@@ -3,6 +3,7 @@
 const { CommandInteraction, MessageEmbed, Client, Collection, Guild, User, Interaction, GuildMember, Invite, Role, GuildChannel } = require("discord.js");
 const { escapeRegExp } = require("lodash");
 const { ePerms } = require("./constants");
+const { logDev } = require("./debug");
 
 // ---------------- FUNCTIONS ----------------
 
@@ -145,12 +146,13 @@ async function getChannelMessage(msg, MainID, SecondID) {
     if (SecondID && !/\D/.test(SecondID)) {
         try {
             const meschannel = (msg.client.owners.map(r => r.id).includes(msg.author?.id || msg.user?.id || msg.id) ? msg.client : msg.guild).channels.cache.get(MainID);
-            return meschannel.messages.fetch(SecondID, true).catch(() => { });
-        } catch {
+            return meschannel.messages.fetch(SecondID, true).catch(logDev);
+        } catch (e) {
+            logDev(e);
             return null;
         }
     } else {
-        return msg.channel.messages.fetch(MainID, true).catch(() => { });
+        return msg.channel.messages.fetch(MainID, true).catch(logDev);
     }
 }
 
@@ -178,7 +180,8 @@ function cleanMentionID(key) {
 function createRegExp(pattern, flags) {
     try {
         return new RegExp(pattern, flags);
-    } catch {
+    } catch (e) {
+        logDev(e);
         return new RegExp(escapeRegExp(pattern), flags);
     }
 }
@@ -222,7 +225,8 @@ function isAdmin(member, bypassOwner) {
         return "USER";
     try {
         return member.permissions.serialize().ADMINISTRATOR;
-    } catch {
+    } catch (e) {
+        logDev(e);
         return;
     }
 }
@@ -310,14 +314,14 @@ async function getCommunityInvite(guild) {
     return guild.features.includes("COMMUNITY") && guild.rulesChannel
         ? (
             guild.me.permissionsIn(guild.rulesChannel).has("MANAGE_CHANNELS")
-                ? (await guild.invites.fetch({ channelId: guild.rulesChannel.id }).catch(() => { }))
+                ? (await guild.invites.fetch({ channelId: guild.rulesChannel.id }).catch(logDev))
                     ?.filter(
                         r => r.inviter.id === guild.client.user.id
                     )?.first()
                 : null
         ) || (
             guild.me.permissionsIn(guild.rulesChannel).has("CREATE_INSTANT_INVITE")
-                ? (await guild.invites.create(guild.rulesChannel).catch(() => { }))
+                ? (await guild.invites.create(guild.rulesChannel).catch(logDev))
                 : null
         ) : null
 }

@@ -77,7 +77,8 @@ module.exports = class CommandHandler {
                 const iterate = iterator[k];
                 const found = iterate?.find(v => (v[1].value || v[1]) === interaction.args[k].value);
                 if (!db[k]) db[k] = [];
-                if (!db[k].find(r => r?.value === interaction.args[k].value)) {
+                const foundSaved = db[k].findIndex(r => r?.value === interaction.args[k].value);
+                if (foundSaved === -1) {
                     const add = {
                         name: "Recent | " + (found
                             ? (found[1]?.name || found[1])
@@ -85,6 +86,8 @@ module.exports = class CommandHandler {
                         value: interaction.args[k].value
                     };
                     db[k].splice(0, 0, add);
+                } else {
+                    db[k].splice(0, 0, ...db[k].splice(foundSaved, 1));
                 }
                 const limit = (
                     lac.autocomplete.preview && iterate
@@ -96,7 +99,9 @@ module.exports = class CommandHandler {
                 );
                 if (db[k].length > limit) db[k] = db[k].slice(0, limit);
             }
-
+            if (!interaction.user.autocomplete[lac.commandPath])
+                interaction.user.autocomplete[lac.commandPath] = {};
+            interaction.user.autocomplete[lac.commandPath] = db;
             const udb = loadDb(interaction.user, "user/" + interaction.user.id);
             udb.db.set("recentAutocomplete", lac.commandPath, { value: db });
         }

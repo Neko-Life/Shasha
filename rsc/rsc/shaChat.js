@@ -1,5 +1,6 @@
 'use strict';
 
+const { logDev } = require("../debug");
 const { wait } = require("../functions");
 
 const axios = require("axios").default,
@@ -40,7 +41,7 @@ async function chatAnswer(message) {
 			text: u,
 			lang: "en"
 		}
-	}).then(r => r.data.success.replace(/Sim doesn't know what you are talking about. Please teach me/, "Sorry but i don't speak gibberish").replace(/kemon acho babu/, U[Math.floor(Math.random() * U.length)])).catch(console.error)
+	}).then(r => r.data.success.replace(/Sim doesn't know what you are talking about. Please teach me/, "Sorry but i don't speak gibberish").replace(/kemon acho babu/, U[Math.floor(Math.random() * U.length)])).catch(logDev)
 		.finally(() => ex--);
 }
 

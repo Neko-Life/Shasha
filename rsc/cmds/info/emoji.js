@@ -17,7 +17,8 @@ module.exports = class InfoEmojiCmd extends Command {
                     emoji: Command.constructCommandEmoteAutocomplete(interaction)
                 },
                 preview: false
-            }
+            },
+            clientPermissions: ["EMBED_LINKS", "VIEW_CHANNEL"]
         });
     }
     /**

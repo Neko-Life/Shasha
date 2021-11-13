@@ -16,7 +16,8 @@ module.exports = class OwnerServerInfoCmd extends Command {
             autocomplete: {
                 matchKey: true,
                 commands: toCommands
-            }
+            },
+            clientPermissions: ["EMBED_LINKS", "VIEW_CHANNEL"]
         });
     }
     async run(inter, { identifier }) {

@@ -7,6 +7,7 @@ const { inspect } = require("util");
 const req = require("axios").default;
 const { escapeRegExp } = require("lodash");
 const { join } = require("path");
+const { logDev } = require("../../debug");
 
 module.exports = class EvalCmd extends Command {
     constructor(interaction) {
@@ -41,6 +42,7 @@ module.exports = class EvalCmd extends Command {
             af = new Date();
             mes = inspect(res, this.inspectOpt);
         } catch (e) {
+            logDev(e);
             mes = e.stack;
         }
         let send;

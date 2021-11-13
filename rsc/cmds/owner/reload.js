@@ -1,6 +1,7 @@
 'use strict';
 
 const { Command } = require("../../classes/Command");
+const { logDev } = require("../../debug");
 
 module.exports = class ReloadCmd extends Command {
     constructor(interaction) {
@@ -15,7 +16,7 @@ module.exports = class ReloadCmd extends Command {
         try {
             inter.client.dispatch();
         } catch (e) {
-            console.error(e);
+            logDev(e);
             await inter.editReply("```js\n" + e.stack + "\nexiting...```");
             process.exit(1);
         }

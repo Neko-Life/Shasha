@@ -207,7 +207,7 @@ module.exports = class ShaClient extends Client {
         if (!query) return;
         if (/^\d{18,20}$/.test(query)) {
             let u = this.users.resolve(query);
-            if (!u) u = await this.users.fetch(query).catch(() => { });
+            if (!u) u = await this.users.fetch(query).catch(logDev);
             return u;
         } else {
             const re = createRegExp(query, reFlags);

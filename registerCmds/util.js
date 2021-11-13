@@ -28,4 +28,14 @@ module.exports = new SlashCommandBuilder()
                     .setName("message")
                     .setDescription("Translate this message: `<link>`, `<Id>`, `l` or `last`")
             )
+    ).addSubcommand(
+        sCmd => sCmd
+            .setName("define")
+            .setDescription("Define a word or term. Powered by Urban Dictionary")
+            .addStringOption(
+                opt => opt
+                    .setName("term")
+                    .setDescription("Term to define")
+                    .setAutocomplete(true)
+            )
     )

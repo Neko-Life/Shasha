@@ -1,6 +1,7 @@
 'use strict';
 
 const Bree = require("bree");
+const { logDev } = require("../debug");
 const { errLog } = require("../functions");
 
 const { join } = require("path"),
@@ -34,7 +35,7 @@ async function createSchedule(client, { guildID, userID, type, until }) {
         };
 
     try {
-        await jobManager.remove(NAME).catch(() => { });
+        await jobManager.remove(NAME).catch(logDev);
         if ((until.valueOf() - CHK) < new Date(24 * 60 * 60 * 1000)) {
             jobManager.add(SC);
             jobs.push(SC);
@@ -47,6 +48,7 @@ async function createSchedule(client, { guildID, userID, type, until }) {
         await col.updateOne({ document: NAME }, { $set: SC, $setOnInsert: { document: NAME } }, { upsert: true });
         return console.log("SCHEDULE " + NAME + " CREATED");
     } catch (e) {
+        logDev(e);
         return errLog(e, null, client);
     }
 }
@@ -62,9 +64,9 @@ async function init(client) {
 }
 
 async function reset() {
-    await jobManager.stop().catch(console.error);
+    await jobManager.stop().catch(logDev);
     for (const job of jobs) {
-        await jobManager.remove(job.name).catch(console.error);
+        await jobManager.remove(job.name).catch(logDev);
     }
 
     await jobLoad();

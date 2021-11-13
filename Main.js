@@ -9,6 +9,7 @@ const { Intents } = require("discord.js");
 const configFile = require("./config.json");
 const { ShaBaseDb } = require("./rsc/classes/Database");
 const ShaClient = require("./rsc/classes/ShaClient");
+const { logDev } = require("./rsc/debug");
 const { database } = require("./rsc/mongo");
 const dashboard = null; // exec("cd dashboard && npm run dev", (e) => console.error);
 const client = new ShaClient({
@@ -209,14 +210,14 @@ client.dispatch();
 // });
 
 process.on("uncaughtException", e => {
-    if (process.dev) console.error(e);
+    logDev(e);
     if (client.errorChannel) {
         client.errorChannel.send("`[ EXCEPTION ]` ```js\n" + e.stack + "```");
     }
     // errLog(e, null, client);
 });
 process.on("unhandledRejection", e => {
-    if (process.dev) console.error(e);
+    logDev(e);
     if (client.errorChannel) {
         client.errorChannel.send("`[ REJECTION ]` ```js\n" + e.stack + "```");
     }

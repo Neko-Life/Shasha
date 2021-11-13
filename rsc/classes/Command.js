@@ -6,6 +6,7 @@ const configFile = require("../../config.json");
 const { loadDb } = require("../database");
 const { escapeRegExp } = require("lodash");
 const { isAdmin, allowMention, cleanMentionID } = require("../functions");
+const { logDev } = require("../debug");
 
 /**
  * @typedef {object} AutocompleteData
@@ -117,7 +118,7 @@ module.exports.Command = class ShaBaseCommand {
      * @param {import("discord.js").ApplicationCommandOptionChoice | string | number} focus
      */
     async handleAutocomplete(inter, focus) {
-        const cmd = this.autocomplete.commands?.[focus?.name];
+        const cmd = this.autocomplete.commands?.[focus.name];
 
         if (typeof this.autocomplete.preview !== "boolean")
             this.autocomplete.preview = true;
@@ -145,22 +146,47 @@ module.exports.Command = class ShaBaseCommand {
                 for (const k in cmd) {
                     if (typeof cmd[k] === "function") continue;
                     else if (typeof cmd[k] === "object") {
-                        if ((this.autocomplete.matchName ? re.test(cmd[k].name) : false) || (this.autocomplete.matchKey ? re.test(k) : false))
-                            res.push(cmd[k]);
-                    } else if ((this.autocomplete.matchName ? re.test(cmd[k]) : false) || (this.autocomplete.matchKey ? re.test(k) : false))
-                        res.push({ name: cmd[k], value: cmd[k] });
+                        if (
+                            (
+                                this.autocomplete.matchName
+                                    ? re.test(cmd[k].name)
+                                    : false
+                            ) || (
+                                this.autocomplete.matchKey
+                                    ? re.test(k)
+                                    : false
+                            )
+                        ) res.push(cmd[k]);
+                    } else if (
+                        (
+                            this.autocomplete.matchName
+                                ? re.test(cmd[k])
+                                : false
+                        ) || (
+                            this.autocomplete.matchKey
+                                ? re.test(k)
+                                : false
+                        )
+                    ) res.push({ name: cmd[k], value: cmd[k] });
                 }
             }
         }
 
         const udb = loadDb(inter.user, "user/" + inter.user.id);
         const dbPath = this.commandPath.join("/");
-        const get = new Array(...(await udb.db.get("recentAutocomplete", dbPath)));
-        const fullVal = get[0]?.[1].value;
+        if (!this.user.autocomplete) this.user.autocomplete = {};
+        const get = this.user.autocomplete[dbPath]
+            ? null
+            : new Array(...(await udb.db.get("recentAutocomplete", dbPath)));
+        const fullVal = this.user.autocomplete[dbPath] || get[0]?.[1].value;
         const val = this.autocomplete.showRecent && !focus.value
-            ? fullVal?.[focus?.name]
+            ? fullVal?.[focus.name]
             : null;
-        if (val?.length) res.splice(0, 0, ...val);
+        if (val?.length) {
+            res.splice(0, 0, ...val);
+            if (!this.user.autocomplete[dbPath]) this.user.autocomplete[dbPath] = {};
+            this.user.autocomplete[dbPath][focus.name] = val;
+        }
         if (focus.value && !res.length)
             res.push({ name: focus.value, value: focus.value });
 
@@ -169,8 +195,13 @@ module.exports.Command = class ShaBaseCommand {
             commandPath: dbPath,
             db: fullVal
         }
+        const toRes = [];
+        for (const v of res.filter(r => r.value.length <= 100).slice(0, 25)) {
+            v.name = v.name.slice(0, 100);
+            toRes.push(v);
+        }
 
-        return inter.respond(res.slice(0, 25));
+        return inter.respond(toRes);
     }
 
     /**
@@ -210,12 +241,13 @@ module.exports.Command = class ShaBaseCommand {
         if (SecondID && !/\D/.test(SecondID)) {
             try {
                 const meschannel = (this.isOwner ? this.client : this.guild).channels.cache.get(MainID);
-                return meschannel.messages.fetch(SecondID, true).catch(() => { });
-            } catch {
+                return meschannel.messages.fetch(SecondID, true).catch(logDev);
+            } catch (e) {
+                logDev(e);
                 return null;
             }
         } else {
-            return this.channel.messages.fetch(MainID, true).catch(() => { });
+            return this.channel.messages.fetch(MainID, true).catch(logDev);
         }
     }
 

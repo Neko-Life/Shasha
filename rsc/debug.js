@@ -24,7 +24,8 @@ function makeJSONMessage(object) {
 
 function logDev(...debug) {
     if (!process.dev) return;
-    console.debug(...debug);
+    if (debug.some(r => r instanceof Error)) console.error(...debug);
+    else console.debug(...debug);
 }
 
 module.exports = {
