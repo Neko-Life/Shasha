@@ -21,6 +21,7 @@
     "luxon": "^2.0.1",
     "mongodb": "^4.1.3",
     "nekos-best.js": "^4.0.2",
+    "nekos.life": "^2.0.7",
     "node": "^17.0.1",
     "require-all": "^3.0.0",
     "translate-google": "^1.5.0",

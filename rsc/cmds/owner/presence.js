@@ -26,7 +26,7 @@ module.exports = class PresenceCmd extends Command {
         if (afk) use.afk = afk.value;
         const act = {};
         if (title) {
-            const toEval = title.value.match(/(?<=\$\{).+(?=\})/g);
+            const toEval = title.value.match(/(?<!\\)(?<=\$\{).+(?=\})/g);
             if (toEval?.length) {
                 const rep = [];
                 for (const k of toEval) {

@@ -23,6 +23,7 @@ module.exports = new SlashCommandBuilder()
                 opt => opt
                     .setName("channel")
                     .setDescription("Channel to send in")
+                    .addChannelType(0)
             ).addStringOption(
                 opt => opt
                     .setName("content")

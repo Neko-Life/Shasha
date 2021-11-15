@@ -12,8 +12,8 @@ module.exports = class TranslateCmd extends Command {
             autocomplete: {
                 matchKey: true,
                 commands: {
-                    "lang-to": translate.languages,
-                    "lang-from": translate.languages
+                    langTo: translate.languages,
+                    langFrom: translate.languages
                 }
             }
         });

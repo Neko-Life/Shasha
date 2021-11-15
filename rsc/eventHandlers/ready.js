@@ -24,7 +24,7 @@ async function handle(client) {
         if (owner) client.owners.push(owner);
     }
     // init(client);
-    console.log(client.user.tag + ` logged in to ${client.guilds.cache.size} guilds`);
+    console.log(client.user.tag + ` logged in ${client.guilds.cache.size} guilds`);
 }
 
 module.exports = { handle }

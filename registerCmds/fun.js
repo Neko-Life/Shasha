@@ -13,7 +13,6 @@ module.exports = new SlashCommandBuilder()
                 opt => opt
                     .setName("text")
                     .setDescription("Text to send")
-                    .setAutocomplete(true)
             ).addStringOption(
                 opt => opt
                     .setName("message")
@@ -23,6 +22,7 @@ module.exports = new SlashCommandBuilder()
                 opt => opt
                     .setName("channel")
                     .setDescription("Destination channel")
+                    .addChannelType(0)
             )
     ).addSubcommand(
         sCmd => sCmd
@@ -44,5 +44,14 @@ module.exports = new SlashCommandBuilder()
                     .setDescription("Emoji to get JUMBO-ed")
                     .setRequired(true)
                     .setAutocomplete(true)
+            )
+    ).addSubcommand(
+        sCmd => sCmd
+            .setName("afk")
+            .setDescription("Lemme tell anyone who are looking for you that you're afk")
+            .addStringOption(
+                opt => opt
+                    .setName("message")
+                    .setDescription("Message you want to tell")
             )
     );

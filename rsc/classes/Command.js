@@ -115,9 +115,19 @@ module.exports.Command = class ShaBaseCommand {
 
     /**
      * @param {AutocompleteInteraction} inter 
-     * @param {import("discord.js").ApplicationCommandOptionChoice | string | number} focus
+     * @param {import("discord.js").ApplicationCommandOptionChoice} focus
      */
     async handleAutocomplete(inter, focus) {
+        logDev(focus);
+        logDev(this.autocomplete);
+        const toVar = focus.name.split("-");
+        let newName = toVar[0] || focus.name;
+        if (toVar?.length)
+            for (let index = 0; index < toVar.length; index++) {
+                if (!index) continue;
+                newName = newName + toVar[index][0].toUpperCase() + toVar[index].slice(1);
+            }
+        focus.name = newName;
         const cmd = this.autocomplete.commands?.[focus.name];
 
         if (typeof this.autocomplete.preview !== "boolean")
@@ -173,6 +183,7 @@ module.exports.Command = class ShaBaseCommand {
         }
 
         const udb = loadDb(inter.user, "user/" + inter.user.id);
+        logDev(udb);
         const dbPath = this.commandPath.join("/");
         if (!this.user.autocomplete) this.user.autocomplete = {};
         const get = this.user.autocomplete[dbPath]
@@ -183,6 +194,8 @@ module.exports.Command = class ShaBaseCommand {
             ? fullVal?.[focus.name]
             : null;
         if (val?.length) {
+            logDev(val);
+            logDev(res);
             res.splice(0, 0, ...val);
             if (!this.user.autocomplete[dbPath]) this.user.autocomplete[dbPath] = {};
             this.user.autocomplete[dbPath][focus.name] = val;
@@ -200,7 +213,7 @@ module.exports.Command = class ShaBaseCommand {
             v.name = v.name.slice(0, 100);
             toRes.push(v);
         }
-
+        logDev(toRes);
         return inter.respond(toRes);
     }
 
@@ -249,6 +262,25 @@ module.exports.Command = class ShaBaseCommand {
         } else {
             return this.channel.messages.fetch(MainID, true).catch(logDev);
         }
+    }
+
+    /**
+     * 
+     * @param {string} arg 
+     * @param {TextBasedChannels} oldChannel 
+     * @returns {Promise<Message>}
+     */
+    async messageArg(arg, oldChannel) {
+        if (!arg) return;
+        if (!oldChannel) oldChannel = this.channel;
+        let msg;
+        if (["l", "last"].includes(arg.toLowerCase()))
+            msg = oldChannel.lastMessage;
+        else {
+            const SP = arg.split(/ +/);
+            msg = await this.getChannelMessage(SP[0], SP[1]);
+        }
+        return msg;
     }
 
     #disabled = null;

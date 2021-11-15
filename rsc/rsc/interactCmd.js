@@ -1,10 +1,10 @@
 'use strict';
 
 const { MessageEmbed, CommandInteraction, GuildMember, User } = require("discord.js");
-const { fetchNeko } = require("nekos-best.js");
-const lewds = require("./lewds");
-const { isAdmin, getColor } = require("../functions");
+const { isAdmin, getColor, replaceVars } = require("../functions");
 const { loadDb } = require("../database");
+const apis = require("./apis");
+const { NEKOSLIFE_INTERACT_ENDPOINTS, INTERACT_NO_INCLUDE_TARGET_NAMES } = require("../constants");
 
 /**
  * 
@@ -14,14 +14,19 @@ const { loadDb } = require("../database");
  * @param {string} text - Text between author name and target name [" kisses ", " spanked "]
  * @param {string} msg - Invoker message
  * @param {boolean} noCount - Doesn't count the interaction if true
- * @param {"lewds" | "nekos.best"} api - API to use, default "nekos.best"
+ * @param {import("./apis").ShaAPIs} api - API to use, default "nekosbest"
  * @returns 
  */
-module.exports = async (interaction, query, user, text, msg, noCount, api = "nekos.best") => {
+module.exports = async (interaction, query, user, text, msg, noCount, api = "nekosbest") => {
     await interaction.deferReply();
-    const q = query.query;
-    if (typeof query === "object") query = query.name;
-    const res = api === "lewds" ? await lewds.nsfw(q || query) : await fetchNeko(q || query);
+    const q = query.query || query;
+    if (query.name) query = query.name;
+    if (NEKOSLIFE_INTERACT_ENDPOINTS.includes(query))
+        api = ["nekosbest", "nekoslife.sfw"][Math.floor(Math.random() * 2)];
+    const { res, APIError } = await apis(q, api);
+
+    if (APIError) return interaction.editReply(APIError);
+
     let from;
     if (user) {
         user = user.member || user.user;
@@ -31,8 +36,13 @@ module.exports = async (interaction, query, user, text, msg, noCount, api = "nek
         from = interaction.guild?.me || interaction.client.user;
     }
 
+    if (text) text = replaceVars(text, { user });
+
     const emb = new MessageEmbed()
-        .setAuthor((from.displayName || from.username) + text + (user.displayName || user.username),
+        .setAuthor((from.displayName || from.username) + text
+            + (INTERACT_NO_INCLUDE_TARGET_NAMES.includes(query)
+                ? ""
+                : (user.displayName || user.username)),
             (from.user || from).displayAvatarURL({
                 size: 128,
                 format: "png",
@@ -71,7 +81,8 @@ module.exports = async (interaction, query, user, text, msg, noCount, api = "nek
 
         emb.setFooter(`${countText} ${query} from ${from.displayName || from.username}`);
     }
-    if (!res) return interaction.editReply("Oops sorry no room left, can't " + query + " today 😔😔😔");
-    emb.setImage(res?.url || res);
+
+    emb.setImage(res);
+
     return interaction.editReply({ content: `<@${user.id}>`, embeds: [emb] });
 }

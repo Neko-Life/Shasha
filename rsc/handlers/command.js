@@ -4,6 +4,7 @@ const { CommandInteraction, MessageOptions } = require("discord.js");
 const { Command } = require("../classes/Command");
 const { allowMention, isAdmin } = require("../functions");
 const { addUserExp, loadDb } = require("../database");
+const { logDev } = require("../debug");
 
 module.exports = class CommandHandler {
     /**
@@ -65,11 +66,14 @@ module.exports = class CommandHandler {
         );
         if (interaction.user.lastAutocomplete?.commandPath === interaction.commandPath.join("/")) {
             const lac = interaction.user.lastAutocomplete;
+            logDev(lac);
+            logDev(interaction.user.autocomplete);
             const db = lac.db || {};
             const commands = lac.autocomplete.commands;
             const iterator = {};
             for (const k in commands)
                 iterator[k] = Object.entries(commands[k]);
+            logDev(iterator);
             for (const k in interaction.args) {
                 /**
                  * @type {[string, any][]}
@@ -102,10 +106,11 @@ module.exports = class CommandHandler {
             if (!interaction.user.autocomplete[lac.commandPath])
                 interaction.user.autocomplete[lac.commandPath] = {};
             interaction.user.autocomplete[lac.commandPath] = db;
+            logDev(interaction.user.autocomplete);
             const udb = loadDb(interaction.user, "user/" + interaction.user.id);
             udb.db.set("recentAutocomplete", lac.commandPath, { value: db });
         }
-        console.log("Interaction",
+        logDev("Interaction",
             interaction.commandName,
             interaction.id, "run by",
             interaction.user.tag, "in",

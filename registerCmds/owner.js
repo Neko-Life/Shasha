@@ -31,12 +31,12 @@ module.exports = new SlashCommandBuilder()
                     .setAutocomplete(true)
             ).addStringOption(
                 opt => opt
-                    .setName("message")
+                    .setName("split")
                     .setDescription("Owner only")
                     .setAutocomplete(true)
             ).addStringOption(
                 opt => opt
-                    .setName("split")
+                    .setName("message")
                     .setDescription("Owner only")
                     .setAutocomplete(true)
             )

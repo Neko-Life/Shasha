@@ -412,6 +412,30 @@ function tickPadEnd(str, pad = 0) {
     return "`" + str.toString().padEnd(pad, " ") + "`";
 }
 
+/**
+ * 
+ * @param {string} str - String containing template literals
+ * @param {object} vars - Provided variables
+ * @returns {string} str
+ */
+function replaceVars(str, vars = {}) {
+    const toEval = str.match(/(?<!\\)(?<=\$\{).+(?=\})/g);
+    if (toEval?.length) {
+        const rep = [];
+        const varsN = [];
+        for (const k in vars)
+            varsN.push(k);
+        for (const k of toEval) {
+            const data = { match: k };
+            data.value = eval("const {" + varsN.join(",") + "} = vars;" + k);
+            rep.push(data);
+        }
+        for (const k of rep)
+            str = str.replace(new RegExp("(?<!\\\\)\\$\\{" + escapeRegExp(k.match) + "\\}"), k.value);
+    }
+    return str;
+}
+
 // ---------------- FNS IMPORTS ----------------
 
 const getColor = require("./fns/getColor");
@@ -442,6 +466,7 @@ module.exports = {
     findChannels,
     findMembers,
     tickPadEnd,
+    replaceVars,
 
     // ---------------- FNS IMPORTS ----------------
     // Functions too big to be put here so imported and has its own file instead

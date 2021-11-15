@@ -10,6 +10,10 @@ const { escapeRegExp } = require("lodash");
 const { logDev } = require("../debug");
 
 module.exports = class ShaClient extends Client {
+    /**
+     * 
+     * @param {import("discord.js").ClientOptions} options 
+     */
     constructor(options) {
         super(options);
         /**

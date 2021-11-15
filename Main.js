@@ -5,7 +5,7 @@ if (process.argv.includes("-d")) process.dev = true;
 const { exec } = require("child_process");
 // require("./rsc/mongo");
 // require("./rsc/structures");
-const { Intents } = require("discord.js");
+const { Intents, Options } = require("discord.js");
 const configFile = require("./config.json");
 const { ShaBaseDb } = require("./rsc/classes/Database");
 const ShaClient = require("./rsc/classes/ShaClient");
@@ -23,7 +23,12 @@ const client = new ShaClient({
         Intents.FLAGS.DIRECT_MESSAGES
     ],
     dashboard: dashboard,
-    db: new ShaBaseDb(database, "main")
+    db: new ShaBaseDb(database, "main"),
+    makeCache: Options.cacheWithLimits(
+        {
+            MessageManager: 1010
+        }
+    )
 });
 
 client.dispatch();
