@@ -61,7 +61,7 @@ module.exports = class CommandHandler {
         }
         await addUserExp(interaction.user, { maxRandom: 100, round: "floor", divide: 1000 });
         interaction.client.handledCommands.set(
-            new Date().toUTCString(),
+            interaction.id,
             { interaction: interaction, command: cmd }
         );
         if (interaction.user.lastAutocomplete?.commandPath === interaction.commandPath.join("/")) {
