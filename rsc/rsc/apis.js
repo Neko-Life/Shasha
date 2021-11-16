@@ -1,4 +1,4 @@
-'uuse strict';
+'use strict';
 
 const { fetchNeko } = require("nekos-best.js");
 const { logDev } = require("../debug");
