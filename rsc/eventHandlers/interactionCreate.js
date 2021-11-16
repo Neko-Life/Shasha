@@ -2,6 +2,7 @@
 
 const { Interaction } = require("discord.js");
 const ShaClient = require("../classes/ShaClient");
+const AFKCmd = require("../cmds/fun/afk");
 
 /**
  * @param {ShaClient} client
@@ -12,6 +13,7 @@ async function handle(client, interaction) {
         client.handlers.autocomplete.handle(interaction);
     } else if (interaction.isButton()) { } else if (interaction.isCommand()) {
         client.handlers.command.handle(interaction);
+        AFKCmd.unAfk(interaction);
     } else if (interaction.isSelectMenu()) {
         client.handlers.selectMenu.handle(interaction);
     }

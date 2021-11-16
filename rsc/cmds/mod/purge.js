@@ -135,7 +135,7 @@ module.exports = class PurgeCmd extends Command {
                     ) + "an only purge up to 100 messages. Sorry :c" : ""),
             fetchReply: true
         });
-        setTimeout(() => ret.delete(), 15000);
+        setTimeout(() => ret.deleted ? null : ret.delete(), 15000);
         logDev(deleted);
         return deleted;
 

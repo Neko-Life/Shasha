@@ -2,7 +2,7 @@
 
 const { Command } = require("../../classes/Command");
 
-module.exports = class jumboCmd extends Command {
+module.exports = class JumboCmd extends Command {
     constructor(interaction) {
         super(interaction, {
             name: "jumbo",

@@ -3,7 +3,7 @@
 const { Command } = require("../../classes/Command");
 const expressCmd = require("../../rsc/expressCmd");
 
-module.exports = class nekoCmd extends Command {
+module.exports = class NekoCmd extends Command {
     constructor(interaction) {
         super(interaction, {
             name: "neko"

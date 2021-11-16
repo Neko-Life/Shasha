@@ -422,9 +422,7 @@ function replaceVars(str, vars = {}) {
     const toEval = str.match(/(?<!\\)(?<=\$\{).+(?=\})/g);
     if (toEval?.length) {
         const rep = [];
-        const varsN = [];
-        for (const k in vars)
-            varsN.push(k);
+        const varsN = Object.keys(vars);
         for (const k of toEval) {
             const data = { match: k };
             data.value = eval("const {" + varsN.join(",") + "} = vars;" + k);
