@@ -22,11 +22,11 @@ module.exports = class AFKCmd extends Command {
         if (!this.member.displayName.startsWith("[AFK] "))
             if (this.guild.me.permissions.has("MANAGE_NICKNAMES") && this.member.manageable)
                 this.member.setNickname("[AFK] " + this.member.displayName);
-        const ret = await inter.reply({
+        const ret = inter.reply({
             content: "Okiee i will tell anyone who are looking for you about it! Cyaa enjoy :D",
             fetchReply: true
         });
-        setTimeout(() => ret.deleted ? null : ret.delete(), 15000);
+        setTimeout(() => ret.then(r => r.deleted ? null : r.delete()), 15000);
         return ret;
     }
 
