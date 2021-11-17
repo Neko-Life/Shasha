@@ -1,6 +1,6 @@
 'use strict';
 
-const { CommandInteraction, MessageOptions } = require("discord.js");
+const { CommandInteraction, MessageOptions, GuildChannel } = require("discord.js");
 const { Command } = require("../classes/Command");
 const { allowMention, isAdmin } = require("../functions");
 const { addUserExp, loadDb } = require("../database");
@@ -75,6 +75,7 @@ module.exports = class CommandHandler {
                 iterator[k] = Object.entries(commands[k]);
             logDev(iterator);
             for (const k in interaction.args) {
+                if (interaction.args[k].value?.length > 100) continue;
                 /**
                  * @type {[string, any][]}
                  */
@@ -179,32 +180,53 @@ module.exports = class CommandHandler {
     }
 
     /**
+     * @typedef {"USER_BANNED"|"OWNER_ONLY"|"GUILD_BANNED"|"COMMAND_DISABLED"|"NSFW_ONLY"|"NO_PERMISSIONS"|"NO_USER_PERMISSIONS"|"NO_CLIENT_PERMISSIONS"} CheckCmdNoReplyOpt
+     * 
+     * @typedef {object} CheckCmdOpts
+     * @property {CheckCmdNoReplyOpt[]} noReply
+     * @property {GuildChannel} overrideClientPermissionsToChannel
+     * @property {GuildChannel} overrideUserPermissionsToChannel
+     * @property {GuildChannel} overridePermissionsToChannel
      * 
      * @param {CommandInteraction} interaction 
      * @param {Command} cmd 
+     * @param {CheckCmdOpts} param2
      * @returns {Promise<Command>}
      */
-    static async checkCmd(interaction, cmd) {
+    static async checkCmd(interaction, cmd, { noReply = [], overridePermissionsToChannel, overrideClientPermissionsToChannel, overrideUserPermissionsToChannel } = {}) {
         if (!(cmd instanceof Command)) return;
-        if (await cmd.userBanned()) return interaction.reply("You can't command me anymore! Go away!");
+        if (await cmd.userBanned()) {
+            if (noReply.includes("USER_BANNED")) return false;
+            return interaction.reply("You can't command me anymore! Go away!");
+        }
 
         if (cmd.ownerOnly) {
-            if (!interaction.client.isOwner(interaction.user))
+            if (!interaction.client.isOwner(interaction.user)) {
+                if (noReply.includes("OWNER_ONLY")) return false;
                 return interaction.reply("Excuse me? I'm sorry who're you again?");
+            }
         }
 
         if (interaction.guild) {
-            if (await cmd.guildBanned()) return interaction.reply("Something's wrong, please contact the support server by running `/info support`");
-            if (await cmd.disabled()) return interaction.reply("You can't command me here...");
+            if (await cmd.guildBanned()) {
+                if (noReply.includes("GUILD_BANNED")) return false;
+                return interaction.reply("Something's wrong, please contact the support server by running `/info support`");
+            }
+            if (await cmd.disabled()) {
+                if (noReply.includes("COMMAND_DISABLED")) return false;
+                return interaction.reply("You can't command me here...");
+            }
             if (cmd.nsfwOnly)
-                if (!interaction.channel.nsfw)
+                if (!interaction.channel.nsfw) {
+                    if (noReply.includes("NSFW_ONLY")) return false;
                     return interaction.reply("This is not an NSFW channel baka!");
+                }
 
             const lackUser = [];
             const lackClient = [];
             if (!interaction.client.isOwner(interaction.user) &&
                 !cmd.bypass && cmd.userPermissions.length) {
-                const seri = interaction.channel.permissionsFor(interaction.user).serialize();
+                const seri = (overrideUserPermissionsToChannel || overridePermissionsToChannel || interaction.channel).permissionsFor(interaction.user).serialize();
                 const perms = [];
                 if (seri.ADMINISTRATOR) perms.push("ADMINISTRATOR");
                 else for (const D in seri) {
@@ -216,9 +238,11 @@ module.exports = class CommandHandler {
                         if (perms.includes(A)) continue;
                         lackUser.push(A);
                     }
+                if (lackUser.length)
+                    if (noReply.includes("NO_USER_PERMISSIONS")) return false;
             }
             if (cmd.clientPermissions.length) {
-                const seri = interaction.channel.permissionsFor(interaction.client.user).serialize();
+                const seri = (overrideClientPermissionsToChannel || overridePermissionsToChannel || interaction.channel).permissionsFor(interaction.client.user).serialize();
                 const perms = [];
                 if (seri.ADMINISTRATOR) perms.push("ADMINISTRATOR");
                 else for (const D in seri) {
@@ -230,6 +254,8 @@ module.exports = class CommandHandler {
                         if (perms.includes(A)) continue;
                         lackClient.push(A);
                     }
+                if (lackClient.length)
+                    if (noReply.includes("NO_CLIENT_PERMISSIONS")) return false;
             }
             if (lackUser.length || lackClient.length) {
                 let lackPermMsg = "";
@@ -242,6 +268,7 @@ module.exports = class CommandHandler {
                     + "```js\n" + lackUser.join(", ") + "```"
                 );
                 if (lackPermMsg.length) {
+                    if (noReply.includes("NO_PERMISSIONS")) return false;
                     return interaction.reply(lackPermMsg + "then we talk <:dunnoLife:853087375440871456>");
                 }
             }

@@ -38,17 +38,10 @@ module.exports = class PurgeCmd extends Command {
         if (channel) {
             if (!channel.channel.isText())
                 return inter.reply("That channel has no message in it :/");
-            const oriChan = inter.channel;
-
-            Object.defineProperty(inter, "channel", {
-                configurable: true,
-                value: channel.channel,
-                writable: true
-            });
-
-            const cmd = await checkCmd(inter, this);
+            const cmd = await checkCmd(inter, this,
+                { overridePermissionsToChannel: channel.channel }
+            );
             if (!cmd) return;
-            else inter.channel = oriChan;
             inChannel = channel.channel;
         } else inChannel = this.channel;
 

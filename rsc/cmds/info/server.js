@@ -12,7 +12,7 @@ module.exports = class ServerInfoCmd extends Command {
         const tocommands = {
             identifier: {}
         }
-        const mutual = interaction.client.findMutualGuilds(interaction.user);
+        const mutual = interaction.client?.findMutualGuilds(interaction.user) || [];
         for (const [k, v] of mutual)
             tocommands.identifier[k] = { name: v.name, value: v.id };
         super(interaction, {

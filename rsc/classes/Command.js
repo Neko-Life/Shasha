@@ -96,6 +96,7 @@ module.exports.Command = class ShaBaseCommand {
      * @returns 
      */
     static constructCommandEmoteAutocomplete({ client, user, guild }) {
+        if (!client || !user || !guild) return;
         const emoji = {};
         const mutual = client.findMutualGuilds(user);
         for (const [k, v] of client.emojis.cache) {

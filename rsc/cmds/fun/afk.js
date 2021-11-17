@@ -3,7 +3,7 @@
 const { Message, GuildMember, CommandInteraction } = require("discord.js");
 const { Command } = require("../../classes/Command");
 const { isAdmin } = require("../../functions");
-const NO_LONGER_AFK_MSG = "I see you're no longer afk, welcome back!";
+const NO_LONGER_AFK_MSG = "Welcome back ";
 
 module.exports = class AFKCmd extends Command {
     constructor(interaction) {
@@ -23,7 +23,7 @@ module.exports = class AFKCmd extends Command {
             if (this.guild.me.permissions.has("MANAGE_NICKNAMES") && this.member.manageable)
                 this.member.setNickname("[AFK] " + this.member.displayName);
         const ret = inter.reply({
-            content: "Okiee i will tell anyone who are looking for you about it! Cyaa enjoy :D",
+            content: "Okiee i will tell anyone who are looking for you about it! Cyaa enjoy!",
             fetchReply: true
         });
         setTimeout(() => ret.then(r => r.deleted ? null : r.delete()), 15000);
@@ -56,6 +56,7 @@ module.exports = class AFKCmd extends Command {
      * @returns 
      */
     static notif(member, msg) {
+        if (msg.author.bot) return false;
         if (!member?.afk?.state) return false;
         if (msg.member.id === member.id) return false;
         const m = "**" + member.displayName + "** is **currently `AFK`**"
@@ -64,12 +65,13 @@ module.exports = class AFKCmd extends Command {
                     ? (" and left a message:\n" + member.afk.message)
                     : ""
             );
-        msg.reply({
+        const ret = msg.reply({
             content: msg.client.finalizeStr(m, isAdmin(member)),
             allowedMentions: {
                 parse: []
             }
         });
+        setTimeout(() => ret.then(r => r.deleted ? null : r.delete()), 45000);
         return true;
     }
 
@@ -83,14 +85,19 @@ module.exports = class AFKCmd extends Command {
         if (!msg.guild) return;
         if (!msg.member.afk?.state) return;
         let greet;
-        if (msg.channel.permissionsFor(msg.guild.me).has("SEND_MESSAGES"))
-            if (msg instanceof CommandInteraction)
-                greet = msg.channel.send("<@" + msg.user.id + "> " + NO_LONGER_AFK_MSG);
-            else greet = msg.reply({ content: NO_LONGER_AFK_MSG, allowedMentions: { parse: [] } });
+        const dN = msg.member.displayName.startsWith("[AFK] ")
+            ? msg.member.displayName.slice("[AFK] ".length)
+            : msg.member.displayName;
 
-        if (msg.member.displayName.startsWith("[AFK] "))
+        if (msg.channel.permissionsFor(msg.guild.me).has("SEND_MESSAGES")) {
+            if (msg instanceof CommandInteraction)
+                greet = msg.channel.send(NO_LONGER_AFK_MSG + dN + "!");
+            else greet = msg.reply({ content: NO_LONGER_AFK_MSG + dN + "!", allowedMentions: { parse: [] } });
+        }
+
+        if (msg.member.displayName !== dN)
             if (msg.guild.me.permissions.has("MANAGE_NICKNAMES") && msg.member.manageable)
-                msg.member.setNickname(msg.member.displayName.slice("[AFK] ".length));
+                msg.member.setNickname(dN);
 
         msg.member.afk = {
             state: false,

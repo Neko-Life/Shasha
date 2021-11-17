@@ -8,7 +8,7 @@ module.exports = class OwnerServerInfoCmd extends Command {
         const toCommands = {
             identifier: {}
         }
-        for (const [k, v] of interaction.client.guilds.cache)
+        for (const [k, v] of interaction.client?.guilds.cache || [])
             toCommands.identifier[k] = { name: v.name, value: v.id };
         super(interaction, {
             name: "ownerserverinfo",

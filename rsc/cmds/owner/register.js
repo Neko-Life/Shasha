@@ -15,7 +15,7 @@ module.exports = class RegisterCommandsCmd extends Command {
         }
         for (const k in categories)
             toCommands.category[k] = k;
-        for (const [k, v] of interaction.client.guilds.cache)
+        for (const [k, v] of interaction.client?.guilds.cache || [])
             toCommands.guild[k] = { name: v.name, value: v.id };
         super(interaction, {
             name: "register",
