@@ -4,18 +4,24 @@ const { REST } = require("@discordjs/rest");
 const { Routes } = require("discord-api-types/v9");
 const { join } = require("path");
 const requireAll = require("require-all");
+const { parentPort } = require("worker_threads");
 const configFile = require("./config.json");
 const fetch = requireAll({ dirname: join(__dirname, "registerCmds") });
 const rest = new REST({ version: "9" }).setToken(configFile.token);
 
 const args = process.argv.slice(2);
 
-let commandCategories = [];
+const commandCategories = [];
 let parMes = "";
 
 if (args[0] && args[0] !== "null") {
-    parMes += "Command/category: " + fetch[args[0]].name + "\n";
-    commandCategories.push(fetch[args[0]]);
+    for (const k of args) {
+        if (!/\D/.test(k)) continue;
+        if (k.toLowerCase() === "home") continue;
+        if (!fetch[k]?.name) continue;
+        parMes += fetch[k].name + "\n";
+        commandCategories.push(fetch[k]);
+    }
 } else {
     for (const U in fetch) {
         if (!fetch[U].name) continue;
@@ -26,20 +32,26 @@ if (args[0] && args[0] !== "null") {
 }
 
 async function register() {
-    if (args[1]) parMes += "Registering in: " + args[1] + "\n";
+    const guild = args[args.length - 1] === "home"
+        ? configFile.home
+        : !/\D/.test(args[args.length - 1])
+            ? args[args.length - 1]
+            : null;
+    if (guild) parMes += "Registering in: " + guild + "\n";
     else parMes += "Registering globally\n";
     await rest.put(
-        args[1] ?
-            Routes.applicationGuildCommands(configFile.appId,
-                args[1] === "home" ?
-                    configFile.home : args[1]) :
+        guild ?
+            Routes.applicationGuildCommands(configFile.appId, guild) :
             Routes.applicationCommands(configFile.appId),
         { body: commandCategories }
     );
 }
 
 register().then(() => {
-    console.log(parMes + "Count:", commandCategories.length);
+    const message = "Commands/categories:\n" + parMes + "Count: " + commandCategories.length;
+    if (parentPort)
+        parentPort.postMessage(message);
+    else console.log(message);
     process.exit();
 });
 

@@ -13,6 +13,7 @@ module.exports = new SlashCommandBuilder()
                 opt => opt
                     .setName("text")
                     .setDescription("Text to translate")
+                    .setAutocomplete(true)
             ).addStringOption(
                 opt => opt
                     .setName("lang-to")

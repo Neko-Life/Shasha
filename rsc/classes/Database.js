@@ -3,10 +3,43 @@
 const { Db, Collection } = require("mongodb");
 const { logDev } = require("../debug");
 
+const ENUM_SHADOCS = {
+    schedules: 1,
+    activeMessageInteractions: 2,
+    document: 3,
+    commandDisabled: 4,
+    bannedGuilds: 5,
+    bannedUsers: 6,
+    infractions: 7,
+    interactions: 8,
+    recentAutocomplete: 9,
+    muted: 10,
+    muteSettings: 11
+};
+
+const ENUM_SHADOCSTYPES = {
+    "String": 1,
+    "Object": 2,
+    "Number": 3,
+    "Boolean": 4,
+    "String[]": 5,
+    "Object[]": 6,
+    "Number[]": 7,
+    "Boolean[]": 8,
+    "{Id}": 9
+};
+
+const ENUM_SHACOLTYPES = {
+    "user/": 1,
+    "guild/": 2,
+    "member/": 3,
+    "channel/": 4
+}
+
 /**
- * @typedef {"activeSelectMenus"|"document"|"commandDisabled"|"bannedGuilds"|"bannedUsers"|"infractions"|"interactions"|"recentAutocomplete"} ShaDbDocument
- * @typedef {"String"|"Object"|"Number"|"Boolean"|"String[]"|"Object[]"|"Number[]"|"Boolean[]"|"{Id}"} ShaDbQuery
- * @typedef {"user/"|"guild/"|"member/"|"channel/"} ShaDbCollectionType - Types with "/" followed by Id
+ * @typedef {keyof ENUM_SHADOCS} ShaDbDocument
+ * @typedef {keyof ENUM_SHADOCSTYPES} ShaDbQuery
+ * @typedef {keyof ENUM_SHACOLTYPES} ShaDbCollectionType - Types with "/" followed by Id
  */
 
 class ShaBaseDb {
@@ -37,7 +70,10 @@ class ShaBaseDb {
         logDev("get", this.col.collectionName, doc, query, find);
         const cursor = this.col.find(find);
         let i = 0;
-        const map = new Map((await cursor.toArray()).map(r => [r[doc] || i++, r]));
+        let arr = await cursor.toArray();
+        if (find[doc])
+            arr = arr.filter(r => r[doc]);
+        const map = new Map(arr.map(r => [r[doc] || i++, r]));
         return map;
     }
 

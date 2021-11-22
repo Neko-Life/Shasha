@@ -5,7 +5,7 @@ const { Interval, DateTime } = require("luxon");
 const { Command } = require("../../classes/Command");
 const { fetchAllMembers, strYesNo, maxStringsLength } = require("../../functions");
 const { getColor } = require("../../functions");
-const { intervalToStrings, createInterval } = require("../../rsc/Duration");
+const { intervalToStrings, createInterval } = require("../../util/Duration");
 
 class GetEmbed {
     static async GUILD_TEXT(channel, baseEmbed) {

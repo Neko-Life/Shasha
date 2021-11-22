@@ -4,7 +4,7 @@ const { MessageEmbed, MessageActionRow, MessageSelectMenu, CommandInteraction } 
 const { Interval, DateTime } = require("luxon");
 const { Command } = require("../../classes/Command");
 const { strYesNo, unixToSeconds, getColor } = require("../../functions");
-const { intervalToStrings } = require("../../rsc/Duration");
+const { intervalToStrings } = require("../../util/Duration");
 
 module.exports = class InfoEmojiCmd extends Command {
     constructor(interaction) {
@@ -56,7 +56,7 @@ module.exports = class InfoEmojiCmd extends Command {
         const menu = new MessageActionRow()
             .addComponents(
                 new MessageSelectMenu()
-                    .setCustomId("single")
+                    .setCustomId("pages")
                     .setMaxValues(1)
                     .setPlaceholder("Browse...")
                     .setOptions([
@@ -76,7 +76,7 @@ module.exports = class InfoEmojiCmd extends Command {
             }
         }
         const mes = await inter.reply({ ...selectMenuDatas.infoPage, fetchReply: true });
-        this.client.createSelectMenu(mes.id, selectMenuDatas);
+        this.client.createMessageInteraction(mes.id, { PAGES: selectMenuDatas });
         return mes;
     }
 }

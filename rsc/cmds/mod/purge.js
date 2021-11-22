@@ -29,7 +29,7 @@ module.exports = class PurgeCmd extends Command {
         includePinned
     }) {
         if (!(amount || toMessage))
-            return inter.reply("0 message purged wow tysm the chat already clean <33");
+            return this.saveMessages(inter.reply("0 message purged wow tysm the chat already clean <33"));
 
         /**
          * @type {import("discord.js").TextBasedChannels}
@@ -37,7 +37,7 @@ module.exports = class PurgeCmd extends Command {
         let inChannel;
         if (channel) {
             if (!channel.channel.isText())
-                return inter.reply("That channel has no message in it :/");
+                return this.saveMessages(inter.reply("That channel has no message in it :/"));
             const cmd = await checkCmd(inter, this,
                 { overridePermissionsToChannel: channel.channel }
             );
@@ -74,15 +74,15 @@ module.exports = class PurgeCmd extends Command {
             if (/^\d{18,20}$/.test(toMessage.value)) {
                 const compId = parseInt(toMessage.value);
                 useCache = useCache.filter(r => parseInt(r.id, 10) > compId)
-            } else return inter.reply("Invalid to-message argument. Provide message `Id` or `link` from the channel");
+            } else return this.saveMessages(inter.reply("Invalid to-message argument. Provide message `Id` or `link` from the channel"));
         }
 
-        let filtered = [];
+        this.filtered = [];
         if (filterUser) {
             useCache = useCache.filter(r => r.author?.id === filterUser.user.id);
             if (!(filterContent || filterRegex)) {
-                filtered = useCache.map(r => r);
-                if (noLenRet()) return;
+                this.filtered = useCache.map(r => r);
+                if (this.noLenRet()) return;
             }
         }
 
@@ -90,8 +90,8 @@ module.exports = class PurgeCmd extends Command {
             const re = new RegExp(escapeRegExp(filterContent.value), "i");
             for (const [k, v] of useCache)
                 if (re.test(v.content) || re.test(v.cleanContent))
-                    if (filtered.find(r => r.id === v.id)) continue;
-                    else filtered.push(v);
+                    if (this.filtered.find(r => r.id === v.id)) continue;
+                    else this.filtered.push(v);
         }
 
         if (filterRegex) {
@@ -99,22 +99,28 @@ module.exports = class PurgeCmd extends Command {
             const re = new RegExp(source[1], source[3] || "");
             for (const [k, v] of useCache)
                 if (re.test(v.content) || re.test(v.cleanContent))
-                    if (filtered.find(r => r.id === v.id)) continue;
-                    else filtered.push(v);
+                    if (this.filtered.find(r => r.id === v.id)) continue;
+                    else this.filtered.push(v);
         }
 
         if (filterUser
             || filterContent
             || filterRegex
         ) {
-            if (noLenRet()) return;
-        } else filtered = useCache.map(r => r);
+            if (this.noLenRet()) return;
+        } else if (
+            toMessage
+            || attachmentOnly
+            || botOnly
+            || webhookOnly
+            || includePinned?.value !== "1"
+        ) this.filtered = useCache.map(r => r);
 
-        let del = amount?.value ?? filtered.length;
+        let del = amount?.value ?? this.filtered.length;
 
         const deleted = await inChannel.bulkDelete(
-            filtered.length
-                ? filtered.reverse().slice(0, del > 100 ? 100 : del)
+            this.filtered.length
+                ? this.filtered.reverse().slice(0, del > 100 ? 100 : del)
                 : del, true);
 
         const ret = await inter.reply({
@@ -122,20 +128,21 @@ module.exports = class PurgeCmd extends Command {
                 + (deleted.size > 1 ? "s" : "")
                 + (del > 100
                     ? (
-                        filtered.length > 100
-                            ? "\nMatched " + filtered.length + " messages but c"
+                        this.filtered.length > 100
+                            ? "\nMatched " + this.filtered.length + " messages but c"
                             : "\nC"
                     ) + "an only purge up to 100 messages. Sorry :c" : ""),
             fetchReply: true
         });
-        setTimeout(() => ret.deleted ? null : ret.delete(), 15000);
+        ret.deleteAfter = 15000;
+        this.saveMessages(ret);
         logDev(deleted);
         return deleted;
+    }
 
-        function noLenRet() {
-            if (filtered.length) return false;
-            inter.reply("Your filter doesn't match any message");
-            return true;
-        }
+    noLenRet() {
+        if (this.filtered.length) return false;
+        this.saveMessages(inter.reply("Your filter doesn't match any message"));
+        return true;
     }
 }

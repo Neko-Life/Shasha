@@ -8,6 +8,7 @@ const { ShaBaseDb } = require("./Database");
 const { adCheck, cleanMentionID, createRegExp } = require("../functions");
 const { escapeRegExp } = require("lodash");
 const { logDev } = require("../debug");
+const { Scheduler } = require("./Scheduler");
 
 module.exports = class ShaClient extends Client {
     /**
@@ -23,10 +24,10 @@ module.exports = class ShaClient extends Client {
         this.eventHandlers = null;
         this.handlers = null;
         this.commands = null;
-        this.selectMenus = null;
+        this.messageInteraction = null;
         this.functions = null;
         this.handledCommands = new Map();
-        this.activeSelectMenus = new Map();
+        this.activeMessageInteractions = new Map();
         this.loadedListeners = {};
         /**
          * @type {ChildProcess}
@@ -38,6 +39,11 @@ module.exports = class ShaClient extends Client {
         this.db = options.db || null;
         this.bannedGuilds = null;
         this.bannedUsers = null;
+
+        /**
+         * @type {Scheduler}
+         */
+        this.scheduler = null;
     }
 
     dispatch() {
@@ -46,25 +52,30 @@ module.exports = class ShaClient extends Client {
             this.loadModules();
             this.dispatchListeners("on");
             this.dispatchDashboard();
-            this.loadDbSelectMenus();
+            this.loadDbMessageInteractions();
         } catch (e) { process.emit("error", e) }
         this.loadBannedGuilds();
         this.loadBannedUsers();
     }
 
     loadModules() {
+        logDev("Loading modules...");
         this.eventHandlers = requireAll({ dirname: join(__dirname, "../eventHandlers") });
         this.handlers = requireAll({ dirname: join(__dirname, "../handlers") });
         this.commands = requireAll({ dirname: join(__dirname, "../cmds"), recursive: true });
-        this.selectMenus = requireAll({ dirname: join(__dirname, "../selectMenus"), recursive: true });
+        this.messageInteraction = requireAll({ dirname: join(__dirname, "../messageInteraction"), recursive: true });
         this.functions = require("../functions");
         requireAll({ dirname: join(__dirname, "../rsc") });
+        requireAll({ dirname: join(__dirname, "../classes") });
+        requireAll({ dirname: join(__dirname, "../util") });
+        require("../constants");
         logDev("Modules unload/load done");
     }
 
     unloadModules() {
-        const modulesDirName = ["../eventHandlers", "../handlers", "../cmds", "../selectMenus", "../rsc"];
-        const modulesName = ["../functions.js"];
+        logDev("Unloading modules...");
+        const modulesDirName = ["../classes", "../eventHandlers", "../handlers", "../cmds", "../messageInteraction", "../rsc", "../util"];
+        const modulesName = ["../functions.js", "../constants.js"];
         const modulesDirPath = modulesDirName.map(r => join(__dirname, r));
         modulesDirPath.push(...modulesName.map(r => join(__dirname, r)));
         this.dispatchListeners();
@@ -81,6 +92,7 @@ module.exports = class ShaClient extends Client {
      * @param {"off"|"on"} opt
      */
     dispatchListeners(opt = "off") {
+        logDev((opt === "on" ? "Dispatching" : "Removing") + " listeners...");
         if (opt !== "on" && opt !== "off") throw new TypeError("Expected 'on' or 'off'. Got " + opt);
         let count = 0;
         for (const U in this.eventHandlers) {
@@ -123,6 +135,13 @@ module.exports = class ShaClient extends Client {
         //     console.log("[ DASHBOARD_STDERR ]\n%s", c, "\n[ END:DASHBOARD_STDERR ]"));
     }
 
+    async loadScheduler() {
+        logDev("Initializing scheduler...");
+        const schedules = await Scheduler.loadSchedules(this);
+        this.scheduler = new Scheduler(this, schedules);
+        logDev("Scheduler initialized");
+    }
+
     /**
      * Emotify str and check for ads
      * @param {string} str 
@@ -138,29 +157,30 @@ module.exports = class ShaClient extends Client {
     /**
      * 
      * @param {string} id
-     * @param {*} val - Value
-     * @param {number|boolean} timeout - Delete in ms
+     * @param {{TIMEOUT:number|boolean, CURRENT_PAGE:string|number, PAGES:{}|[]}} data
      * @returns 
      */
-    async createSelectMenu(id, val, timeout = true) {
-        const ret = this.activeSelectMenus.set(id, val);
-        if (timeout === true) timeout = 60 * 1000 * 15;
-        if (typeof timeout === "number" && timeout > 0)
-            setTimeout(() => this.activeSelectMenus.delete(id), timeout);
-        else await this.db.set("activeSelectMenus", id, val);
+    async createMessageInteraction(id, data) {
+        const ret = this.activeMessageInteractions.set(id, data);
+        if (typeof data.TIMEOUT !== "number" && typeof data.TIMEOUT !== "boolean")
+            data.TIMEOUT = true;
+        if (data.TIMEOUT === true) data.TIMEOUT = 60 * 1000 * 15;
+        if (typeof data.TIMEOUT === "number" && data.TIMEOUT > 0)
+            setTimeout(() => this.activeMessageInteractions.delete(id), data.TIMEOUT);
+        else await this.db.set("activeMessageInteractions", id, data);
         return ret;
     }
 
-    async loadDbSelectMenus() {
-        const get = await this.db.get("activeSelectMenus", String);
+    async loadDbMessageInteractions() {
+        const get = await this.db.get("activeMessageInteractions", String);
         if (get.size)
             for (const [k, v] of get)
-                this.activeSelectMenus.set(k, v);
+                this.activeMessageInteractions.set(k, v);
     }
 
-    async deleteSelectMenu(id) {
-        this.activeSelectMenus.delete(id);
-        return this.db.delete("activeSelectMenus", id);
+    async deleteMessageInteractions(id) {
+        this.activeMessageInteractions.delete(id);
+        return this.db.delete("activeMessageInteractions", id);
     }
 
     /**

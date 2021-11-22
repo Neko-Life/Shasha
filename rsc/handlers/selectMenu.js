@@ -1,8 +1,15 @@
 'use strict';
 
+const { SelectMenuInteraction } = require("discord.js");
+
+/**
+ * 
+ * @param {SelectMenuInteraction} interaction 
+ * @returns 
+ */
 async function handle(interaction) {
     const path = interaction.customId.split("/");
-    let cmd = interaction.client.selectMenus;
+    let cmd = interaction.client.messageInteraction.selectMenu;
     if (cmd) for (const U of path) {
         cmd = cmd[U];
         if (!cmd) break;

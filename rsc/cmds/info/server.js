@@ -5,7 +5,7 @@ const { Interval, DateTime } = require("luxon");
 const { Command } = require("../../classes/Command");
 const { fetchAllMembers, tickTag, maxStringsLength, getCommunityInvite } = require("../../functions");
 const { getColor } = require("../../functions");
-const { intervalToStrings } = require("../../rsc/Duration");
+const { intervalToStrings } = require("../../util/Duration");
 
 module.exports = class ServerInfoCmd extends Command {
     constructor(interaction) {
@@ -38,7 +38,7 @@ module.exports = class ServerInfoCmd extends Command {
          * @type {Guild}
          */
         let server = inter.guild;
-        if (identifier) server = inter.client.findGuilds(
+        if (identifier) server = this.client.findGuilds(
             identifier.value, "i",
             this.isOwner
         );
@@ -259,14 +259,14 @@ module.exports = class ServerInfoCmd extends Command {
                     .setPlaceholder("Browse...")
                     .addOptions(menuOptions)
                     .setMaxValues(1)
-                    .setCustomId("single")
+                    .setCustomId("pages")
             );
 
         for (const page in selectDatas)
             selectDatas[page].components = [menu];
 
         const mes = await inter.editReply(selectDatas.generalPage);
-        inter.client.createSelectMenu(mes.id, selectDatas);
+        this.client.createMessageInteraction(mes.id, { PAGES: selectDatas });
         return mes;
     }
 }

@@ -180,7 +180,7 @@ module.exports = class CommandHandler {
     }
 
     /**
-     * @typedef {"USER_BANNED"|"OWNER_ONLY"|"GUILD_BANNED"|"COMMAND_DISABLED"|"NSFW_ONLY"|"NO_PERMISSIONS"|"NO_USER_PERMISSIONS"|"NO_CLIENT_PERMISSIONS"} CheckCmdNoReplyOpt
+     * @typedef {"USER_BANNED"|"OWNER_ONLY"|"GUILD_BANNED"|"GUILD_ONLY"|"COMMAND_DISABLED"|"NSFW_ONLY"|"NO_PERMISSIONS"|"NO_USER_PERMISSIONS"|"NO_CLIENT_PERMISSIONS"} CheckCmdNoReplyOpt
      * 
      * @typedef {object} CheckCmdOpts
      * @property {CheckCmdNoReplyOpt[]} noReply
@@ -206,6 +206,12 @@ module.exports = class CommandHandler {
                 return interaction.reply("Excuse me? I'm sorry who're you again?");
             }
         }
+
+        if (cmd.guildOnly)
+            if (!interaction.guild) {
+                if (noReply.includes("GUILD_ONLY")) return false;
+                return interaction.reply("This command can only be run in servers");
+            }
 
         if (interaction.guild) {
             if (await cmd.guildBanned()) {

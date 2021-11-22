@@ -60,6 +60,39 @@ module.exports = new SlashCommandBuilder()
                 opt => opt
                     .setName("channel")
                     .setDescription("Execute in this channel")
-                    .addChannelType(0)
+                    .addChannelTypes([0, 5, 10, 12, 11, 6])
+            )
+    ).addSubcommand(
+        sCmd => sCmd
+            .setName("mute")
+            .setDescription("Render shut em criminals")
+            .addUserOption(
+                opt => opt
+                    .setName("user")
+                    .setDescription("User to moot")
+                    .setRequired(true)
+            ).addStringOption(
+                opt => opt
+                    .setName("duration")
+                    .setDescription("Ex `69y27mo7w8d122s420h`")
+                    .setAutocomplete(true)
+            ).addStringOption(
+                opt => opt
+                    .setName("reason")
+                    .setDescription("Reason")
+            )
+    ).addSubcommand(
+        sCmd => sCmd
+            .setName("unmute")
+            .setDescription("Render unshut em uncriminals")
+            .addUserOption(
+                opt => opt
+                    .setName("user")
+                    .setDescription("User to unmoot")
+                    .setRequired(true)
+            ).addStringOption(
+                opt => opt
+                    .setName("reason")
+                    .setDescription("Reason")
             )
     )

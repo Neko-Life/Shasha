@@ -22,7 +22,7 @@ module.exports = new SlashCommandBuilder()
                 opt => opt
                     .setName("channel")
                     .setDescription("Destination channel")
-                    .addChannelType(0)
+                    .addChannelTypes([0, 5, 10, 12, 11, 6])
             )
     ).addSubcommand(
         sCmd => sCmd
@@ -55,4 +55,19 @@ module.exports = new SlashCommandBuilder()
                     .setDescription("Message you want to tell")
                     .setAutocomplete(true)
             )
-    );
+    ).addSubcommand(
+        sCmd => sCmd
+            .setName("ascii")
+            .setDescription("Lemme show you the arts of _text_")
+            .addStringOption(
+                opt => opt
+                    .setName("text")
+                    .setDescription("Text to tranform")
+                    .setAutocomplete(true)
+            ).addStringOption(
+                opt => opt
+                    .setName("font")
+                    .setDescription("Font to use")
+                    .setAutocomplete(true)
+            )
+    )

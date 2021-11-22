@@ -1,11 +1,10 @@
 'use strict';
 
-const { MessageEmbed, Role, MessageActionRow, MessageSelectMenu, GuildMember, User } = require("discord.js");
+const { MessageEmbed, Role, MessageActionRow, MessageSelectMenu, GuildMember, User, MessageButton } = require("discord.js");
 const { Interval, DateTime } = require("luxon");
 const { Command } = require("../../classes/Command");
-const { tickTag } = require("../../functions");
 const { getColor } = require("../../functions");
-const { intervalToStrings } = require("../../rsc/Duration");
+const { intervalToStrings } = require("../../util/Duration");
 
 module.exports = class ProfileCmd extends Command {
     constructor(interaction) {
@@ -150,18 +149,34 @@ module.exports = class ProfileCmd extends Command {
             .addComponents(
                 new MessageSelectMenu()
                     .setPlaceholder("Browse...")
-                    .setCustomId("single")
+                    .setCustomId("pages")
                     .setMaxValues(1)
                     .setOptions(menuOptions)
             );
 
+        const button = new MessageActionRow()
+            .addComponents(
+                new MessageButton()
+                    .setCustomId("page/prev")
+                    .setEmoji("⬅️")
+                    .setStyle("PRIMARY")
+            ).addComponents(
+                new MessageButton()
+                    .setCustomId("page/next")
+                    .setEmoji("➡️")
+                    .setStyle("PRIMARY")
+            );
+
         if (menuOptions.length > 1) {
             for (const k in selectMenuDatas)
-                selectMenuDatas[k].components = [menu];
+                selectMenuDatas[k].components = [menu, button];
         }
 
         const mes = await inter.editReply(selectMenuDatas.generalPage);
-        await this.client.createSelectMenu(mes.id, selectMenuDatas);
+        await this.client.createMessageInteraction(mes.id, {
+            PAGES: selectMenuDatas,
+            CURRENT_PAGE: "generalPage"
+        });
         return mes;
 
         function addUserAvatarPage() {

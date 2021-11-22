@@ -25,6 +25,7 @@ async function handle(client) {
     }
     // init(client);
     console.log(client.user.tag + ` logged in ${client.guilds.cache.size} guilds`);
+    await client.loadScheduler();
 }
 
 module.exports = { handle }

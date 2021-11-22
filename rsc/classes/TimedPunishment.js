@@ -1,6 +1,6 @@
 'use strict';
 
-const { intervalToStrings } = require("../rsc/Duration");
+const { intervalToStrings } = require("../util/Duration");
 const { DateTime, Interval, Settings } = require("luxon");
 Settings.defaultZone = "utc";
 

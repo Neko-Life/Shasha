@@ -17,7 +17,7 @@ module.exports = class ReloadCmd extends Command {
             inter.client.dispatch();
         } catch (e) {
             logDev(e);
-            await inter.editReply("```js\n" + e.stack + "\nexiting...```");
+            await inter.editReply("```js\n" + e.stack + "\n\nexiting...```");
             process.exit(1);
         }
         return inter.editReply("Okkiie thank chu ❤️❤️");

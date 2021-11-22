@@ -25,5 +25,4 @@ module.exports = new SlashCommandBuilder()
         opt => opt
             .setName("message")
             .setDescription("Message you want to say")
-            .setAutocomplete(true)
     );

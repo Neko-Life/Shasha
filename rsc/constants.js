@@ -1,6 +1,8 @@
 'use strict';
 
 const { Permissions } = require("discord.js");
+const { readdirSync } = require("fs");
+const { join } = require("path");
 
 // ---------------- CONSTANTS ----------------
 
@@ -241,6 +243,30 @@ const INTERACT_NO_INCLUDE_TARGET_NAMES = ["baka"];
 
 const PERMISSION_NAMES = Object.keys(Permissions.FLAGS);
 
+const asciiFontsFiles = readdirSync(join(__dirname, "../node_modules/ascii-art-font/Fonts/"));
+const ASCII_FONTS = asciiFontsFiles.map(r => r.replace(/\.flf$/gi, ''));
+const ASCII_IGNORE_HASH = [
+    "Banner",
+    "Banner3",
+    "Banner3-D",
+    "Banner4",
+    "Bright",
+    "Caligraphy2",
+    "3x5",
+    "Alligator",
+    "Alligator2",
+    "alligator3",
+    "DANC4",
+    "Efti Chess",
+    "Efti Wall",
+    "Gradient",
+    "Katakana",
+    "Moscow",
+    "Old Banner",
+    "Slide"
+];
+const SCHEDULE_MESSAGER_PATH = join(__dirname, "./workers/schedule.js");
+
 module.exports = {
     randomColors,
     ePerms,
@@ -258,5 +284,8 @@ module.exports = {
     NEKOSLIFE_INTERACT_ENDPOINTS,
     NEKOSLIFE_NSFW_ENDPOINTS,
     INTERACT_NO_INCLUDE_TARGET_NAMES,
-    PERMISSION_NAMES
+    PERMISSION_NAMES,
+    ASCII_FONTS,
+    ASCII_IGNORE_HASH,
+    SCHEDULE_MESSAGER_PATH
 }

@@ -9,7 +9,8 @@ module.exports = class AFKCmd extends Command {
     constructor(interaction) {
         super(interaction, {
             name: "afk",
-            guildOnly: true
+            guildOnly: true,
+            deleteSavedMessagesAfter: 15000
         });
     }
 
@@ -26,15 +27,14 @@ module.exports = class AFKCmd extends Command {
             content: "Okiee i will tell anyone who are looking for you about it! Cyaa enjoy!",
             fetchReply: true
         });
-        setTimeout(() => ret.then(r => r.deleted ? null : r.delete()), 15000);
-        return ret;
+        return this.saveMessages(ret);
     }
 
     /**
      * 
      * @param {Message} msg 
      */
-    static pinged(msg) {
+    pinged(msg) {
         if (msg.author.bot) return;
         if (msg.webhookId) return;
         if (!msg.guild) return;
@@ -55,10 +55,11 @@ module.exports = class AFKCmd extends Command {
      * @param {Message} msg 
      * @returns 
      */
-    static notif(member, msg) {
+    notif(member, msg) {
         if (msg.author.bot) return false;
         if (!member?.afk?.state) return false;
         if (msg.member.id === member.id) return false;
+        if (!msg.channel.permissionsFor(msg.guild.me).has("SEND_MESSAGES")) return;
         const m = "**" + member.displayName + "** is **currently `AFK`**"
             + (
                 member.afk.message
@@ -71,8 +72,8 @@ module.exports = class AFKCmd extends Command {
                 parse: []
             }
         });
-        setTimeout(() => ret.then(r => r.deleted ? null : r.delete()), 45000);
-        return true;
+        ret.deleteAfter = 45000;
+        return this.saveMessages(ret);
     }
 
     /**
@@ -80,9 +81,10 @@ module.exports = class AFKCmd extends Command {
      * @param {CommandInteraction | Message} msg
      * @returns {void}
      */
-    static async unAfk(msg) {
+    async unAfk(msg) {
         if (msg.author?.bot) return;
         if (!msg.guild) return;
+        if (msg.commandPath?.[1] === "afk") return;
         if (!msg.member.afk?.state) return;
         let greet;
         const dN = msg.member.displayName.startsWith("[AFK] ")
@@ -91,8 +93,13 @@ module.exports = class AFKCmd extends Command {
 
         if (msg.channel.permissionsFor(msg.guild.me).has("SEND_MESSAGES")) {
             if (msg instanceof CommandInteraction)
-                greet = msg.channel.send(NO_LONGER_AFK_MSG + dN + "!");
-            else greet = msg.reply({ content: NO_LONGER_AFK_MSG + dN + "!", allowedMentions: { parse: [] } });
+                greet = msg.channel.send(
+                    msg.client.finalizeStr(NO_LONGER_AFK_MSG + dN + "!", isAdmin(msg.member))
+                );
+            else greet = msg.reply({
+                content: msg.client.finalizeStr(NO_LONGER_AFK_MSG + dN + "!", isAdmin(msg.member)),
+                allowedMentions: { parse: [] }
+            });
         }
 
         if (msg.member.displayName !== dN)
@@ -105,6 +112,6 @@ module.exports = class AFKCmd extends Command {
         }
 
         if (!greet) return;
-        setTimeout(() => greet.then(r => r.deleted ? null : r.delete()), 15000);
+        return this.saveMessages(greet);
     }
 }

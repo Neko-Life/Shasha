@@ -71,6 +71,7 @@ module.exports = new SlashCommandSubcommandBuilder()
         opt => opt
             .setName("channel")
             .setDescription("Destination channel")
+            .addChannelTypes([0, 5, 10, 12, 11, 6])
     ).addStringOption(
         opt => opt
             .setName("field-name")

@@ -5,7 +5,7 @@ const { Interval, DateTime } = require("luxon");
 const { Command } = require("../../classes/Command");
 const { fetchAllMembers, emphasizePerms } = require("../../functions");
 const { getColor } = require("../../functions");
-const { intervalToStrings } = require("../../rsc/Duration");
+const { intervalToStrings } = require("../../util/Duration");
 
 module.exports = class RoleInfoCmd extends Command {
     constructor(interaction) {

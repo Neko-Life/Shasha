@@ -1,6 +1,17 @@
 'use strict';
 
-const { PermissionString, CommandInteraction, TextBasedChannels, User, GuildMember, Guild, AutocompleteInteraction, Message } = require("discord.js");
+const {
+    PermissionString,
+    CommandInteraction,
+    TextBasedChannels,
+    User,
+    GuildMember,
+    Guild,
+    AutocompleteInteraction,
+    Message,
+    GuildCacheMessage,
+    Cached
+} = require("discord.js");
 const ShaClient = require("./ShaClient");
 const configFile = require("../../config.json");
 const { loadDb } = require("../database");
@@ -27,6 +38,7 @@ const { logDev } = require("../debug");
  * @property {AutocompleteData} autocomplete
  * @property {PermissionString[]} userPermissions
  * @property {PermissionString[]} clientPermissions
+ * @property {number} deleteSavedMessagesAfter - ms
  *
  * @typedef {object} allowMentionParam
  * @property {GuildMember} member - Guild Member
@@ -41,42 +53,44 @@ const { logDev } = require("../debug");
 
 module.exports.Command = class ShaBaseCommand {
     /**
-     * @param {CommandInteraction} interaction
+     * @param {CommandInteraction | undefined} interaction
      * @param {CommandData} data
      */
     constructor(interaction, data) {
         if (typeof data.autocomplete !== "object" && data.autocomplete !== undefined && data.autocomplete !== null)
             throw new TypeError("autocomplete must be a type of object, received " + typeof data.autocomplete);
-        /**
-         * @type {CommandInteraction}
-         */
-        this.interaction = interaction;
-        /**
-         * @type {ShaClient}
-         */
-        this.client = interaction.client;
-        /**
-         * @type {User}
-         */
-        this.user = interaction.user;
-        /**
-         * @type {GuildMember | import("discord-api-types").APIInteractionGuildMember}
-         */
-        this.member = interaction.member;
-        /**
-         * @type {Guild}
-         */
-        this.guild = interaction.guild;
-        /**
-         * @type {TextBasedChannels}
-         */
-        this.channel = interaction.channel;
-        /**
-         * @type {string[]}
-         */
-        this.commandPath = interaction.commandPath;
-        this.name = data.name;
-        this.description = data.description;
+        if (interaction) {
+            /**
+             * @type {CommandInteraction}
+             */
+            this.interaction = interaction;
+            /**
+             * @type {ShaClient}
+             */
+            this.client = interaction.client;
+            /**
+             * @type {User}
+             */
+            this.user = interaction.user;
+            /**
+             * @type {GuildMember | import("discord-api-types").APIInteractionGuildMember}
+             */
+            this.member = interaction.member;
+            /**
+             * @type {Guild}
+             */
+            this.guild = interaction.guild;
+            /**
+             * @type {TextBasedChannels}
+             */
+            this.channel = interaction.channel;
+            /**
+             * @type {string[]}
+             */
+            this.commandPath = interaction.commandPath || null;
+        }
+        this.name = data.name || null;
+        this.description = data.description || null;
         this.guildOnly = data.guildOnly || false;
         this.ownerOnly = data.ownerOnly || false;
         this.nsfwOnly = data.nsfwOnly || false;
@@ -88,6 +102,44 @@ module.exports.Command = class ShaBaseCommand {
         this.autocomplete = data.autocomplete || {};
         this.userPermissions = data.userPermissions || [];
         this.clientPermissions = data.clientPermissions || [];
+
+        /**
+         * @type {Promise<Message>[] | Promise<GuildCacheMessage<Cached>>[] | Message[] | GuildCacheMessage<Cached>[]}
+         */
+        this._savedMessages = this.saveMessages(data.savedMessages) || [];
+
+        /**
+         * @type {number} - ms
+         */
+        this.deleteSavedMessagesAfter = data.deleteSavedMessagesAfter || null;
+    }
+
+    /**
+     * @type {Promise<Message>[] | Promise<GuildCacheMessage<Cached>>[] | Message[] | GuildCacheMessage<Cached>[]}
+     */
+    get savedMessages() {
+        return this._savedMessages;
+    }
+
+    /**
+     * @param {Promise<Message>[] | Promise<GuildCacheMessage<Cached>>[] | Message[] | GuildCacheMessage<Cached>[]} messages
+     */
+    saveMessages(...messages) {
+        if (messages.every(r => !r)) return;
+        for (let i = 0; i < messages.length; i++) {
+            if (typeof messages[i].deleteAfter === "number" || typeof this.deleteSavedMessagesAfter === "number") {
+                setTimeout(
+                    async () => {
+                        if (messages[i] instanceof Promise)
+                            messages[i] = await messages[i];
+
+                        if (messages[i].deletable && messages[i].deleted === false)
+                            messages[i].delete();
+                    }, messages[i].deleteAfter ?? this.deleteSavedMessagesAfter);
+            }
+        }
+        this._savedMessages.push(...messages);
+        return messages;
     }
 
     /**

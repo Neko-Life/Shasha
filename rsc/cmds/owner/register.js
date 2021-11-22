@@ -1,10 +1,11 @@
 'use strict';
 
-const { exec } = require("child_process");
 const { join } = require("path");
 const requireAll = require("require-all");
 const { Command } = require("../../classes/Command");
 const configFile = require("../../../config.json");
+const { Worker } = require("worker_threads");
+const { logDev } = require("../../debug");
 
 module.exports = class RegisterCommandsCmd extends Command {
     constructor(interaction) {
@@ -31,10 +32,6 @@ module.exports = class RegisterCommandsCmd extends Command {
     async run(inter, { category, guild }) {
         await inter.deferReply();
 
-        if (category?.value && !this.categories[category.value])
-            throw new Error("No command/category: " + category.value +
-                "\nAvailable categories:```js\n" + Object.keys(this.categories).join("\n") + "```");
-
         if (!category) category = { value: "null" };
         let G;
         if (guild?.value) {
@@ -54,12 +51,22 @@ module.exports = class RegisterCommandsCmd extends Command {
         }
 
         const bf = new Date();
-        const child = exec("node registerCommands.js " + category.value + " " + (guild || ""));
-        child.stdout.on("data", async (msg) => {
-            await inter.channel.send(msg + "Registered in: `" + (G?.name || "GLOBAL") + "`");
+        const argv = (category.value + " " + (guild || "")).length
+            ? (category.value + " " + (guild || "")).split(" ")
+            : [];
+        const child = new Worker(join(__dirname, "../../../registerCommands.js"), {
+            argv: argv
         });
-        child.stderr.on("data", async (msg) => {
-            await inter.channel.send("```js\n" + msg + "```");
+        child.on("online", (...arg) => logDev("[ WORKER Register ] Online"
+            + (argv.length ? " with args \"" + argv.join(" ") + '"' : "")));
+        child.on("error", async (msg) => {
+            await inter.channel.send("```js\n" + msg.stack + "```");
+        });
+        child.on("message", async (msg) => {
+            await inter.channel.send(msg + "\nRegistered in: `" + (G?.name || "GLOBAL") + "`");
+        });
+        child.on("messageerror", async (msg) => {
+            await inter.channel.send("```js\n" + msg.stack + "```");
         });
         child.on("exit", () => {
             const af = new Date();

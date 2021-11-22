@@ -1,6 +1,6 @@
 'use strict';
 
-const { CommandInteraction, MessageEmbed, Client, Collection, Guild, User, Interaction, GuildMember, Invite, Role, GuildChannel } = require("discord.js");
+const { CommandInteraction, MessageEmbed, Client, Collection, Guild, User, Interaction, GuildMember, Invite, Role, GuildChannel, MessageActionRow, MessageButton } = require("discord.js");
 const { escapeRegExp } = require("lodash");
 const { ePerms } = require("./constants");
 const { logDev } = require("./debug");
@@ -434,9 +434,36 @@ function replaceVars(str, vars = {}) {
     return str;
 }
 
+async function disableMessageComponents(message) {
+    if (!message) throw new TypeError("message undefined");
+    if (!message.editable)
+        throw new Error("Can't edit message");
+    const R = Object.create(message);
+    const o = {};
+    for (const k in message)
+        if (k === "stickers") continue;
+        else o[k] = {
+            value: message[k] || null,
+            enumerable: true
+        };
+    Object.defineProperties(R, o);
+    for (const I of R.components)
+        for (const K of I.components)
+            K.setDisabled(true);
+    await message.edit(R);
+}
+
+function prevNextButton() {
+    return new MessageActionRow()
+        .addComponents([
+            new MessageButton().setCustomId("page/prev").setEmoji("⬅️").setStyle("PRIMARY"),
+            new MessageButton().setCustomId("page/next").setEmoji("➡️").setStyle("PRIMARY")
+        ]);
+}
+
 // ---------------- FNS IMPORTS ----------------
 
-const getColor = require("./fns/getColor");
+const getColor = require("./util/getColor");
 
 module.exports = {
     // ---------------- FUNCTIONS ---------------- 
@@ -465,6 +492,8 @@ module.exports = {
     findMembers,
     tickPadEnd,
     replaceVars,
+    disableMessageComponents,
+    prevNextButton,
 
     // ---------------- FNS IMPORTS ----------------
     // Functions too big to be put here so imported and has its own file instead

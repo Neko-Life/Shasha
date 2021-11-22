@@ -2,9 +2,10 @@
 
 if (process.argv.includes("-d")) process.dev = true;
 
-const { exec } = require("child_process");
+// const { exec } = require("child_process");
 // require("./rsc/mongo");
 // require("./rsc/structures");
+require("./rsc/util/Duration");
 const { Intents, Options } = require("discord.js");
 const configFile = require("./config.json");
 const { ShaBaseDb } = require("./rsc/classes/Database");

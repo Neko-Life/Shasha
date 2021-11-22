@@ -11,9 +11,11 @@ const AFKCmd = require("../cmds/fun/afk");
 async function handle(client, interaction) {
     if (interaction.isAutocomplete()) {
         client.handlers.autocomplete.handle(interaction);
-    } else if (interaction.isButton()) { } else if (interaction.isCommand()) {
+    } else if (interaction.isButton()) {
+        client.messageInteraction.button.handle(interaction);
+    } else if (interaction.isCommand()) {
         client.handlers.command.handle(interaction);
-        AFKCmd.unAfk(interaction);
+        new AFKCmd(interaction).unAfk(interaction);
     } else if (interaction.isSelectMenu()) {
         client.handlers.selectMenu.handle(interaction);
     }
