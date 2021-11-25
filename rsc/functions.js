@@ -65,7 +65,7 @@ function splitOnLength(arr, maxLength, joiner = "\n") {
 function footerColorEmbed(member) {
     const footerQuote = (member.guild.DB || member.user.DB).defaultEmbed?.footerQuote || "";
     const emb = new MessageEmbed()
-        .setColor(member ? getColor(member.displayColor) : randomColors[Math.floor(Math.random() * randomColors.length)])
+        .setColor(member ? getColor(member.displayColor) : RANDOM_COLOR[Math.floor(Math.random() * RANDOM_COLOR.length)])
         .setFooter(footerQuote);
     return emb;
 }
@@ -453,12 +453,15 @@ async function disableMessageComponents(message) {
     await message.edit(R);
 }
 
-function prevNextButton() {
-    return new MessageActionRow()
-        .addComponents([
-            new MessageButton().setCustomId("page/prev").setEmoji("⬅️").setStyle("PRIMARY"),
-            new MessageButton().setCustomId("page/next").setEmoji("➡️").setStyle("PRIMARY")
-        ]);
+function prevNextButton(homeButton) {
+    const ret = new MessageActionRow()
+        .addComponent(
+            new MessageButton().setCustomId("page/prev").setEmoji("⬅️").setStyle("PRIMARY")
+        );
+    if (homeButton)
+        ret.addComponent(new MessageButton().setCustomId("page/home").setEmoji("🏠").setStyle("PRIMARY"))
+    ret.addComponent(new MessageButton().setCustomId("page/next").setEmoji("➡️").setStyle("PRIMARY"));
+    return ret;
 }
 
 // ---------------- FNS IMPORTS ----------------

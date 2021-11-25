@@ -6,26 +6,6 @@ const { join } = require("path");
 
 // ---------------- CONSTANTS ----------------
 
-const randomColors = [
-    12357519,
-    16711935,
-    128,
-    32896,
-    15277667,
-    "00ff00",
-    "ff0000",
-    "ff94f2",
-    "f1e40f",
-    "ff8c00",
-    "a0522d",
-    3447003,
-    "0fffff",
-    "803c9d",
-    "faa775",
-    "000000",
-    16777214
-];
-
 const ePerms = [
     "KICK_MEMBERS",
     "BAN_MEMBERS",
@@ -265,10 +245,73 @@ const ASCII_IGNORE_HASH = [
     "Old Banner",
     "Slide"
 ];
+
 const SCHEDULE_MESSAGER_PATH = join(__dirname, "./workers/schedule.js");
 
+const COLORS = {
+    'rosy brown': 12357519,
+    'magenta': 16711935,
+    'navy blue': 128,
+    'teal': 32896,
+    'ruby': 15277667,
+    'green': '00ff00',
+    'red': 'ff0000',
+    'yellow': 'f1e40f',
+    'orange': 'ff8c00',
+    'blue': 3447003,
+    'light blue': '0fffff',
+    'black': '000000',
+    'white': 16777214,
+    'cyan': '0fffff',
+    'Blue': '00bfff',
+    'azure': '007fff',
+    'sapphire': '0f52ba',
+    'ultramarine': '120a8f',
+    'wheat': 'f5deb3',
+    'tan': 'd2b48c',
+    'rosybrown': 'bc8f8f',
+    'brown': 'a0522d',
+    'umber': '826644',
+    'tea green': 'd0f0c0',
+    'pale green': '98fb98',
+    'erin': '00ff40',
+    'mantis': '74c365',
+    'dark green': '355e3b',
+    'khaki': 'c3b091',
+    'peach': 'faa775',
+    'coral': 'ff7f50',
+    'orange': 'ff8c00',
+    'persimmon': 'b45e06',
+    'mimi pink': 'ffdae9',
+    'amaranth': 'f19cbb',
+    'pink purple': 'e62aed',
+    'red violet': 'c71585',
+    'raspberry': 'e30b5c',
+    'thistle': 'd8bfd8',
+    'orchid': 'da70d6',
+    'amethyst': '9966cc',
+    'purple': '803c9d',
+    'eminence': '6c3082',
+    'misty roses': 'ffe4e1',
+    'pink': 'ffc0cb',
+    'bright pink': 'ff91a4',
+    'crimson': 'dc143c',
+    'dark Red': '8b0000',
+    'champagne': 'f7e7ce',
+    'cream': 'fffdd0',
+    'gold': 'ffd700',
+    'dark yellow': '999900',
+    'olive': '808000',
+    'silver': 'c0c0c0',
+    'gray': 'a9a9a9',
+    'dark gray': 808080,
+    'dim gray': 696969,
+    'midnight': '000001',
+}
+
+const RANDOM_COLOR = Object.values(COLORS);
+
 module.exports = {
-    randomColors,
     ePerms,
     reValidURL,
     reParseQuote,
@@ -287,5 +330,7 @@ module.exports = {
     PERMISSION_NAMES,
     ASCII_FONTS,
     ASCII_IGNORE_HASH,
-    SCHEDULE_MESSAGER_PATH
+    SCHEDULE_MESSAGER_PATH,
+    COLORS,
+    RANDOM_COLOR
 }

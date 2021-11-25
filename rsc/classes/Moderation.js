@@ -5,7 +5,7 @@ const { GuildResolvable, GuildMemberResolvable, GuildMember, Guild, User, Messag
 const { loadDb } = require("../database");
 const { logDev } = require("../debug");
 const { getColor, unixToSeconds } = require("../functions");
-const { createInterval, intervalToStrings } = require("../util/Duration");
+const { createInterval, intervalToStrings, parseDuration } = require("../util/Duration");
 const { SCHEDULE_MESSAGER_PATH } = require("../constants");
 const ENUM_ACTIONS = {
     ban: 1,
@@ -45,10 +45,10 @@ const ENUM_ACTIONS = {
 
 class Infraction {
     /**
-     * @param {ShaClient} client
+     * @param {Guild} guild
      * @param {InfractionConstructor} param1 
      */
-    constructor(client, {
+    constructor(guild, {
         offender,
         cases,
         action,
@@ -57,22 +57,56 @@ class Infraction {
         reason = "No reason provided",
         moderator
     } = {}) {
+        /**
+         * @type {ShaClient}
+         */
+        this.client = guild.client;
+        /**
+         * @type {Guild}
+         */
+        this.guild = guild;
+
+        /**
+         * @type {GuildMember[] | User[] | string[]}
+         */
         this.offender = [];
         for (const k of offender) {
+            const member = guild.members.resolve(k);
             const user = client.users.resolve(k);
-            this.offender.push(user || k);
+            this.offender.push(member || user || k);
         }
         if (typeof cases !== "number") throw new TypeError("cases isn't number " + typeof cases);
+        /**
+         * @type {number} - Case number
+         */
         this.cases = cases;
-        if (!ACTIONS[action]) throw new TypeError("Unknown action");
+        if (!ENUM_ACTIONS[action]) throw new TypeError("Unknown action " + action);
+        /**
+         * @type {keyof ENUM_ACTIONS} - Action taken
+         */
         this.action = action;
         if (end)
+            /**
+             * @type {Date} - When this punishment will expire
+             */
             this.end = (end instanceof Date) ? end : new Date(end);
         else this.end = null;
+        /**
+         * @type {boolean} - Wether this punishment is timed
+         */
         this.timed = this.end ? true : false;
+        /**
+         * @type {Date} - When this punishment invoked
+         */
         this.invoked = (invoked instanceof Date) ? invoked : new Date(invoked);
+        /**
+         * @type {string} - Reason
+         */
         this.reason = reason;
-        this.moderator = client.users.resolve(moderator) || moderator;
+        /**
+         * @type {GuildMember | User | string} - Moderator who invoked this infraction
+         */
+        this.moderator = guild.members.resolve(moderator) || client.users.resolve(moderator) || moderator;
     }
 
     toJSON() {
@@ -167,19 +201,25 @@ class BaseModeration {
     async _execMute(user, opt) {
         const ud = loadDb(user, "member/" + this.guild.id + "/" + user.id);
         if (!opt.reason) opt.reason = "No reason provided";
+
+        const get = await ud.db.getOne("muted", "Object");
+        const oldMute = get?.value || {};
+
+        const takeRoles = user.roles?.cache.filter(
+            r => !r.managed && r.id !== r.guild.id && r.id !== opt.muteRole
+        );
+
         if (user instanceof GuildMember) {
-            const takeRoles = user.roles.cache.filter(r =>
-                !r.managed && r.id !== r.guild.id && r.id !== opt.muteRole);
             if (takeRoles.size)
                 await user.roles.remove(takeRoles, opt.reason);
             if (!user.roles.resolve(opt.muteRole))
                 await user.roles.add(opt.muteRole, opt.reason);
-            const get = await ud.db.getOne("muted", "Object");
-            const oldMute = get?.value || {};
-            if (oldMute.state && oldMute.takenRoles)
-                opt.takenRoles = oldMute.takenRoles;
-            else opt.takenRoles = takeRoles.map(r => r.id);
         }
+
+        if (oldMute.takenRoles)
+            opt.takenRoles = oldMute.takenRoles;
+        else opt.takenRoles = takeRoles?.map(r => r.id);
+
         if (typeof opt.notify !== "boolean") opt.notify = true;
         if (opt.notify) {
             const emb = new MessageEmbed()
@@ -229,22 +269,26 @@ class BaseModeration {
     async _execUnmute(user, opt) {
         const ud = loadDb(user, "member/" + this.guild.id + "/" + user.id);
         const get = await ud.db.getOne("muted", "Object");
-        const options = get?.value;
-        if (!options?.state) throw new Error("This user isn't muted");
+        const oldOpt = get?.value || {};
+        if (!oldOpt.state && !oldOpt.takenRoles?.length) throw new Error("This user isn't muted");
         if (!opt.reason) opt.reason = "No reason provided";
         if (user instanceof GuildMember) {
-            if (options.takenRoles?.length)
-                await user.roles.add(options.takenRoles, opt.reason);
-            if (user.roles.resolve(options.muteRole))
-                await user.roles.remove(options.muteRole, opt.reason);
+            if (oldOpt.takenRoles?.length)
+                await user.roles.add(oldOpt.takenRoles, opt.reason);
+            if (user.roles.resolve(oldOpt.muteRole))
+                await user.roles.remove(oldOpt.muteRole, opt.reason);
+        } else {
+            opt.muteRole = oldOpt.muteRole;
+            opt.takenRoles = oldOpt.takenRoles;
         }
         if (typeof opt.notify !== "boolean") opt.notify = true;
-        if (opt.notify) {
+        if ((oldOpt.state && opt.notify) || (!oldOpt.state && oldOpt.notified === false)) {
             const emb = new MessageEmbed()
                 .setAuthor(this.guild.name, this.guild.iconURL({ size: 128, format: "png", dynamic: true }))
                 .setDescription(opt.reason)
                 .setColor(getColor((user.user || user).accentColor, true) || getColor(user.displayColor, true))
-                .setTitle("Unmute");
+                .setTitle("Unmute")
+                .addField("At", "<t:" + unixToSeconds(opt.invoked.valueOf()) + ":F>");
             try {
                 if (await user.send({ embeds: [emb] }))
                     opt.notified = true;
@@ -256,6 +300,33 @@ class BaseModeration {
             try { await this.client.scheduler.remove("unmute/" + this.guild.id + "/" + user.id); }
             catch (e) { logDev(e) };
         return { user, val };
+    }
+
+    /**
+     * 
+     * @param {Date} invoked - Invoked at
+     * @param {string} durationArg - 425y98w98s87h989mo
+     * @param {number} defaultDuration - Fallback
+     * @returns 
+     */
+    static defaultParseDuration(invoked, durationArg, defaultDuration) {
+        let end, duration, ms, dur;
+        if (durationArg) {
+            dur = parseDuration(invoked, durationArg);
+            ms = dur.interval.toDuration().toMillis();
+        } else ms = defaultDuration;
+        if (ms < 10000) {
+            throw new RangeError("Duration less than 10000 ms");
+        } else {
+            if (dur) {
+                end = dur.end.toJSDate();
+                duration = dur.duration;
+            } else {
+                end = new Date(invoked.valueOf() + ms);
+                duration = intervalToStrings(createInterval(invoked, end));
+            }
+        }
+        return { end, duration };
     }
 }
 
@@ -300,19 +371,19 @@ class Moderation extends BaseModeration {
         /**
          * @type {number}
          */
-        this.moderatorPosition = moderator.roles.highest.position;
+        this.moderatorPosition = client.isOwner(moderator) ? 9999 : moderator.roles.highest.position;
         /**
          * @type {boolean}
          */
-        this.moderatorBanPerm = moderator.permissions.has("BAN_MEMBERS");
+        this.moderatorBanPerm = client.isOwner(moderator) || moderator.permissions.has("BAN_MEMBERS");
         /**
          * @type {boolean}
          */
-        this.moderatorKickPerm = moderator.permissions.has("KICK_MEMBERS");
+        this.moderatorKickPerm = client.isOwner(moderator) || moderator.permissions.has("KICK_MEMBERS");
         /**
          * @type {boolean}
          */
-        this.moderatorManageRolesPerm = moderator.permissions.has("MANAGE_ROLES");
+        this.moderatorManageRolesPerm = client.isOwner(moderator) || moderator.permissions.has("MANAGE_ROLES");
         /**
          * @type {number}
          */
@@ -510,16 +581,18 @@ class Moderation extends BaseModeration {
         const higherThanClient = [];
         const higherThanModerator = [];
         for (const a of this.target.users) {
-            if (this.higherThanClient.some(r => r.id === a.id)) {
-                higherThanClient.push(a);
-                continue;
+            const m = await this.guild.members.fetch({ user: a }).catch(() => { });
+            if (m) {
+                if (this.higherThanClient.some(r => r.id === m.id)) {
+                    higherThanClient.push(m);
+                    continue;
+                }
+                if (this.higherThanModerator.some(r => r.id === m.id)) {
+                    higherThanModerator.push(m);
+                    continue;
+                }
             }
-            if (this.higherThanModerator.some(r => r.id === a.id)) {
-                higherThanModerator.push(a);
-                continue;
-            }
-            const m = this.target.members.find(r => r.id === a.id);
-            unmuted.push(await this._execUnmute(m || a, opt))
+            unmuted.push(await this._execUnmute(m || a, opt));
         }
         return { unmuted, higherThanClient, higherThanModerator };
     }

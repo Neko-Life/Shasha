@@ -2,13 +2,12 @@
 
 const { CommandInteraction, MessageOptions, GuildChannel } = require("discord.js");
 const { Command } = require("../classes/Command");
-const { allowMention, isAdmin } = require("../functions");
 const { addUserExp, loadDb } = require("../database");
 const { logDev } = require("../debug");
 
 module.exports = class CommandHandler {
     /**
-     * @param {CommandInteraction} interaction 
+     * @param {import("../typins").ShaInteraction} interaction 
      */
     static async handle(interaction) {
         // try {
@@ -27,9 +26,11 @@ module.exports = class CommandHandler {
                 + interaction.commandPath.join(" ")
                 + "` not found, maybe got hacked or somethin");
 
-        let result;
+        let result, dST, dSE;
         try {
+            dST = new Date();
             result = await cmd.run(interaction, interaction.args);
+            dSE = new Date();
         } catch (e) {
             const mes = interaction.client.finalizeStr(
                 e.message
@@ -116,7 +117,11 @@ module.exports = class CommandHandler {
             interaction.id, "run by",
             interaction.user.tag, "in",
             interaction.channel.name,
-            interaction.guild?.name);
+            interaction.guild?.name,
+            "\nin",
+            dSE && dST
+                ? (dSE.valueOf() - dST.valueOf()).toString() + " ms"
+                : "Error");
     }
 
     /**

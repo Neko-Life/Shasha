@@ -43,14 +43,20 @@ module.exports = class ButtonHandler {
         }
         if (!isInteractionInvoker(inter)) {
             // Send ephemeral message contain selected info
-            const send = pages.PAGES[page];
+            const send = typeof pages.PAGES[page] === "function"
+                ? await pages.PAGES[page]()
+                : pages.PAGES[page];
             delete send.components;
             send.ephemeral = true;
             return inter.reply(send);
         }
         logDev(pages, page);
         inter.client.createMessageInteraction(inter.message.id, pages);
-        await inter.message.edit(pages.PAGES[page]);
+        await inter.message.edit(
+            typeof pages.PAGES[page] === "function"
+                ? await pages.PAGES[page]()
+                : pages.PAGES[page]
+        );
         await inter.deferUpdate();
     }
 
@@ -61,7 +67,8 @@ module.exports = class ButtonHandler {
      * @param {number} length 
      */
     static getNewPage(key, currentPage, length) {
-        if (key === "next")
+        if (key === "home") return currentPage = 0;
+        else if (key === "next")
             if (currentPage === length - 1)
                 currentPage = 0;
             else currentPage++;
@@ -70,5 +77,15 @@ module.exports = class ButtonHandler {
                 currentPage = length - 1;
             else currentPage--;
         return currentPage;
+    }
+
+    static settings(inter, args) {
+        try {
+            inter.message.buttonHandler[args[0]](args.slice(1));
+        } catch (e) {
+            // await disableMessageComponents(inter.message);
+            process.emit("error", e);
+            return inter.reply("This session's expired");
+        }
     }
 }

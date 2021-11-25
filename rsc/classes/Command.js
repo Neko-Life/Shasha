@@ -20,8 +20,10 @@ const { isAdmin, allowMention, cleanMentionID } = require("../functions");
 const { logDev } = require("../debug");
 
 /**
+ * @typedef {{[k:string]:{[k:string]: string} | {[k:string]: {name: string, value: string}}}} AutocompleteCommandArgs
+ * 
  * @typedef {object} AutocompleteData
- * @property {{command:{key: string} | {key: {name: string, value: string}}}} commands
+ * @property {AutocompleteCommandArgs} commands
  * @property {boolean} matchKey - Match options key, `undefined` by default
  * @property {boolean} matchName - `true` by default
  * @property {boolean} showRecent - `true` by default
@@ -242,6 +244,9 @@ module.exports.Command = class ShaBaseCommand {
         const get = this.user.autocomplete[dbPath]
             ? null
             : new Array(...(await udb.db.get("recentAutocomplete", dbPath)));
+        /**
+         * @type {AutocompleteCommandArgs}
+         */
         const fullVal = this.user.autocomplete[dbPath] || get[0]?.[1].value;
         const val = this.autocomplete.showRecent && !focus.value
             ? fullVal?.[focus.name]

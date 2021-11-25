@@ -11,7 +11,7 @@ module.exports = class DisableEnableCmd extends Command {
         super(interaction, {
             name: "disableenable",
             guildOnly: true,
-            userPermissions: ["MANAGE_GUILD"],
+            userPermissions: ["ADMINISTRATOR"],
             guarded: true
         });
         this.resultMes = "";
@@ -24,34 +24,7 @@ module.exports = class DisableEnableCmd extends Command {
         await inter.deferReply();
 
         if (!command) {
-            const gd = loadDb(inter.guild, "guild/" + inter.guild.id);
-            const data = await gd.db.get("commandDisabled", String);
-            const emb = new MessageEmbed()
-                .setTitle("Disabled Commands")
-                .setColor(getColor(inter.member.displayColor));
-            if (data.size) for (const [k, v] of data) {
-                let res = "";
-                if (v.channels.length)
-                    res += "**For channels**:\n<#"
-                        + v.channels.join(">, <#") + ">\n";
-                if (v.bypass.roles?.length)
-                    res += "**Bypass roles**:\n<@&"
-                        + v.bypass.roles.join(">, <@&") + ">\n";
-                if (v.bypass.users?.length)
-                    res += "**Bypass users**:\n<@"
-                        + v.bypass.users.join(">, <@") + ">";
-                if (v.bypass.permissions?.length) {
-                    const emph = [];
-                    for (const K of v.bypass.permissions)
-                        emph.push(emphasizePerms(K));
-                    res += "**Bypass permissions**:```js\n"
-                        + emph.join(", ") + "```";
-                }
-                emb.addField("`/" + k.replace(/\//g, " ") + "`", res);
-            }
-            if (!emb.fields.length)
-                emb.setDescription("No disabled command for this server");
-            return inter.editReply({ embeds: [emb] });
+            return this.showDisabled();
         }
 
         if (command.value.startsWith("/")) command.value = command.value.slice(1);
@@ -170,5 +143,36 @@ module.exports = class DisableEnableCmd extends Command {
                 return this.resultMes += "`/" + opt.commandPath.join(" ") + `\` ${this.enable ? "enabled" : "disabled"}\n`;
             }
         }
+    }
+
+    async showDisabled() {
+        const gd = loadDb(this.guild, "guild/" + this.guild.id);
+        const data = await gd.db.get("commandDisabled", String);
+        const emb = new MessageEmbed()
+            .setTitle("Disabled Commands")
+            .setColor(getColor(this.user.accentColor, true) || getColor(this.member.displayColor, true));
+        if (data.size) for (const [k, v] of data) {
+            let res = "";
+            if (v.channels.length)
+                res += "**For channels**:\n<#"
+                    + v.channels.join(">, <#") + ">\n";
+            if (v.bypass.roles?.length)
+                res += "**Bypass roles**:\n<@&"
+                    + v.bypass.roles.join(">, <@&") + ">\n";
+            if (v.bypass.users?.length)
+                res += "**Bypass users**:\n<@"
+                    + v.bypass.users.join(">, <@") + ">";
+            if (v.bypass.permissions?.length) {
+                const emph = [];
+                for (const K of v.bypass.permissions)
+                    emph.push(emphasizePerms(K));
+                res += "**Bypass permissions**:```js\n"
+                    + emph.join(", ") + "```";
+            }
+            emb.addField("`/" + k.replace(/\//g, " ") + "`", res);
+        }
+        if (!emb.fields.length)
+            emb.setDescription("No disabled command for this server");
+        return this.interaction.editReply({ embeds: [emb] });
     }
 }

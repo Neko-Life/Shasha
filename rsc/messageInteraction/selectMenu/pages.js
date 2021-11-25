@@ -17,7 +17,9 @@ async function handle(inter, args) {
     }
     if (!isInteractionInvoker(inter)) {
         // Send ephemeral message contain selected info
-        const send = pages.PAGES[args[0]];
+        const send = typeof pages.PAGES[args[0]] === "function"
+            ? await pages.PAGES[args[0]]()
+            : pages.PAGES[args[0]];
         delete send.components;
         send.ephemeral = true;
         return inter.reply(send);
@@ -40,9 +42,17 @@ async function handle(inter, args) {
         inter.client.createMessageInteraction(inter.message.id, pages);
     }
     if (!(inter.replied || inter.deferred)) {
-        await inter.message.edit(pages.PAGES[args[0]]);
+        await inter.message.edit(
+            typeof pages.PAGES[args[0]] === "function"
+                ? await pages.PAGES[args[0]]()
+                : pages.PAGES[args[0]]
+        );
         await inter.deferUpdate();
-    } else await inter.editReply(pages.PAGES[args[0]]);
+    } else await inter.editReply(
+        typeof pages.PAGES[args[0]] === "function"
+            ? await pages.PAGES[args[0]]()
+            : pages.PAGES[args[0]]
+    );
 }
 
 module.exports = { handle }

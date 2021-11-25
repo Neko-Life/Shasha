@@ -8,7 +8,11 @@ const { ShaBaseDb } = require("./Database");
 const { adCheck, cleanMentionID, createRegExp } = require("../functions");
 const { escapeRegExp } = require("lodash");
 const { logDev } = require("../debug");
-const { Scheduler } = require("./Scheduler");
+const { Events } = require("discord.js/src/util/Constants");
+/**
+ * @type {import("./Scheduler").Scheduler}
+ */
+let Scheduler;
 
 module.exports = class ShaClient extends Client {
     /**
@@ -29,6 +33,7 @@ module.exports = class ShaClient extends Client {
         this.handledCommands = new Map();
         this.activeMessageInteractions = new Map();
         this.loadedListeners = {};
+        this.devListeners = {};
         /**
          * @type {ChildProcess}
          */
@@ -41,7 +46,7 @@ module.exports = class ShaClient extends Client {
         this.bannedUsers = null;
 
         /**
-         * @type {Scheduler}
+         * @type {import("./Scheduler").Scheduler}
          */
         this.scheduler = null;
     }
@@ -69,6 +74,7 @@ module.exports = class ShaClient extends Client {
         requireAll({ dirname: join(__dirname, "../classes") });
         requireAll({ dirname: join(__dirname, "../util") });
         require("../constants");
+        Scheduler = require("./Scheduler").Scheduler;
         logDev("Modules unload/load done");
     }
 
@@ -78,6 +84,7 @@ module.exports = class ShaClient extends Client {
         const modulesName = ["../functions.js", "../constants.js"];
         const modulesDirPath = modulesDirName.map(r => join(__dirname, r));
         modulesDirPath.push(...modulesName.map(r => join(__dirname, r)));
+        Scheduler = null;
         this.dispatchListeners();
         for (const R in require.cache) {
             if (modulesDirPath.some(r => new RegExp("^" + escapeRegExp(r)).test(R))) {
@@ -97,12 +104,19 @@ module.exports = class ShaClient extends Client {
         let count = 0;
         for (const U in this.eventHandlers) {
             if (opt === "on") this.loadedListeners[U] = async (...args) => {
-                logDev("[ EVENT", U, "]", ...args);
+                // logDev("[ EVENT", U, "]", ...args);
                 this.eventHandlers[U].handle(this, ...args);
             }
             this[opt](U, this.loadedListeners[U]);
             logDev("Listener", U, (opt === "on" ? "dispatched" : "removed"));
             count++;
+        }
+        if (process.dev) for (const k in Events) {
+            if (k === "RAW" || k === "PRESENCE_UPDATE") continue;
+            this.devListeners[k] = (...args) => {
+                logDev("[%s]", Events[k], ...args);
+            }
+            this[opt](Events[k], this.devListeners[k]);
         }
         logDev(count, `listeners ${opt === "off" ? "un" : ""}loaded`);
     }

@@ -4,6 +4,7 @@ const { MessageEmbed } = require("discord.js");
 const { Command } = require("../../classes/Command");
 const { Moderation } = require("../../classes/Moderation");
 const { loadDb } = require("../../database");
+const { logDev } = require("../../debug");
 const { getColor, unixToSeconds, tickTag } = require("../../functions");
 const { parseDuration, intervalToStrings, createInterval } = require("../../util/Duration");
 
@@ -25,38 +26,36 @@ module.exports = class MuteCmd extends Command {
         const settings = get?.value || {};
         if (!settings.muteRole)
             return inter.editReply("No mute role configured! Run `/admin settings` to set one");
-        Moderation.loadModeration(this.guild);
-        const moderation = new Moderation(this.client, {
+        const mod = new Moderation(this.client, {
             guild: this.guild, targets: user.user, moderator: this.member
         });
         let end, durFor;
         if (duration?.value || settings.duration) {
-            let ms, dur;
-            if (duration.value) {
-                dur = parseDuration(invoked, duration.value);
-                ms = dur.interval.toDuration().toMillis();
-            } else ms = settings.duration;
-            if (ms < 10000) {
+            try {
+                const res = Moderation.defaultParseDuration(invoked, duration?.value, settings.duration);
+                end = res.end;
+                durFor = res.duration.strings.join(" ");
+            } catch (e) {
+                logDev(e);
                 return inter.editReply("I refuse to abuse the discord API just for less than 10 seconds mute <:deadLife:796323537937367050>");
-            } else {
-                if (dur) {
-                    end = dur.end.toJSDate();
-                    durFor = dur.duration.strings.join(" ");
-                } else {
-                    end = new Date(invoked.valueOf() + ms);
-                    const D = intervalToStrings(createInterval(invoked, end));
-                    durFor = D.strings.join(" ");
-                }
             }
         }
-        const res = await moderation.mute({ reason: reason?.value, invoked: invoked, end: end, muteRole: settings.muteRole });
+        const dST = new Date();
+        const res = await mod.mute({ reason: reason?.value, invoked: invoked, end: end, muteRole: settings.muteRole });
+        const dSE = new Date();
+        logDev(dSE.valueOf() - dST.valueOf());
         if (!res.muted.length)
-            return inter.editReply("Can't mute them :(");
+            if (res.higherThanClient.length)
+                return inter.editReply("Can't mute someone in higher position than me");
+            else if (res.higherThanModerator.length)
+                return inter.editReply("You can't mute someone higher than you");
         const emb = new MessageEmbed()
             .setTitle("Mute")
             .setColor(getColor(this.user.accentColor, true) || getColor(this.member.displayColor, true))
             .setThumbnail(res.muted[0].user.displayAvatarURL({ size: 4096, format: "png", dynamic: true }))
-            .addField("User", tickTag(res.muted[0].user.user || res.muted[0].user) + `\n(${res.muted[0].user.id})`)
+            .addField("User", tickTag(res.muted[0].user.user || res.muted[0].user)
+                + `\n<@${res.muted[0].user.id}>`
+                + `\n(${res.muted[0].user.id})`)
             .addField("At", "<t:" + unixToSeconds(invoked.valueOf()) + ":F>", true)
             .setDescription(res.muted[0].val.reason);
         if (end)
