@@ -2,11 +2,7 @@
 
 const {
     PermissionString,
-    CommandInteraction,
     TextBasedChannels,
-    User,
-    GuildMember,
-    Guild,
     AutocompleteInteraction,
     Message,
     GuildCacheMessage,
@@ -43,7 +39,7 @@ const { logDev } = require("../debug");
  * @property {number} deleteSavedMessagesAfter - ms
  *
  * @typedef {object} allowMentionParam
- * @property {GuildMember} member - Guild Member
+ * @property {import("../typins").ShaGuildMember} member - Guild Member
  * @property {string} content - String containing mentions
  *
  * @typedef {object} CmdDisableOpt
@@ -55,7 +51,7 @@ const { logDev } = require("../debug");
 
 module.exports.Command = class ShaBaseCommand {
     /**
-     * @param {CommandInteraction | undefined} interaction
+     * @param {import("../typins").ShaCommandInteraction | undefined} interaction
      * @param {CommandData} data
      */
     constructor(interaction, data) {
@@ -63,7 +59,7 @@ module.exports.Command = class ShaBaseCommand {
             throw new TypeError("autocomplete must be a type of object, received " + typeof data.autocomplete);
         if (interaction) {
             /**
-             * @type {CommandInteraction}
+             * @type {import("../typins").ShaCommandInteraction}
              */
             this.interaction = interaction;
             /**
@@ -71,15 +67,15 @@ module.exports.Command = class ShaBaseCommand {
              */
             this.client = interaction.client;
             /**
-             * @type {User}
+             * @type {import("../typins").ShaUser}
              */
             this.user = interaction.user;
             /**
-             * @type {GuildMember | import("discord-api-types").APIInteractionGuildMember}
+             * @type {import("../typins").ShaGuildMember}
              */
             this.member = interaction.member;
             /**
-             * @type {Guild}
+             * @type {import("../typins").ShaGuild}
              */
             this.guild = interaction.guild;
             /**
@@ -106,7 +102,7 @@ module.exports.Command = class ShaBaseCommand {
         this.clientPermissions = data.clientPermissions || [];
 
         /**
-         * @type {Promise<Message>[] | Promise<GuildCacheMessage<Cached>>[] | Message[] | GuildCacheMessage<Cached>[]}
+         * @type {Promise<import("../typins").ShaMessage>[] | Promise<GuildCacheMessage<Cached>>[] | import("../typins").ShaMessage[] | GuildCacheMessage<Cached>[]}
          */
         this._savedMessages = this.saveMessages(data.savedMessages) || [];
 
@@ -117,14 +113,14 @@ module.exports.Command = class ShaBaseCommand {
     }
 
     /**
-     * @type {Promise<Message>[] | Promise<GuildCacheMessage<Cached>>[] | Message[] | GuildCacheMessage<Cached>[]}
+     * @type {Promise<import("../typins").ShaMessage>[] | Promise<GuildCacheMessage<Cached>>[] | import("../typins").ShaMessage[] | GuildCacheMessage<Cached>[]}
      */
     get savedMessages() {
         return this._savedMessages;
     }
 
     /**
-     * @param {Promise<Message>[] | Promise<GuildCacheMessage<Cached>>[] | Message[] | GuildCacheMessage<Cached>[]} messages
+     * @param {Promise<import("../typins").ShaMessage>[] | Promise<GuildCacheMessage<Cached>>[] | import("../typins").ShaMessage[] | GuildCacheMessage<Cached>[]} messages
      */
     saveMessages(...messages) {
         if (messages.every(r => !r)) return;
@@ -146,7 +142,7 @@ module.exports.Command = class ShaBaseCommand {
 
     /**
      * 
-     * @param {{client:ShaClient, user: User, guild: Guild}} param0 
+     * @param {{client:ShaClient, user: import("../typins").ShaUser, guild: import("../typins").ShaGuild}} param0
      * @returns 
      */
     static constructCommandEmoteAutocomplete({ client, user, guild }) {
@@ -299,7 +295,7 @@ module.exports.Command = class ShaBaseCommand {
      * Get message object from the message channel or provided channel
      * @param {string} MainID - Message ID | Channel_[mention|ID] | Message link
      * @param {string} SecondID - Message ID
-     * @returns {Promise<Message>} Message object | undefined
+     * @returns {Promise<import("../typins").ShaMessage>} Message object | undefined
      */
     async getChannelMessage(MainID, SecondID) {
         if (!MainID) return;
@@ -326,7 +322,7 @@ module.exports.Command = class ShaBaseCommand {
      * 
      * @param {string} arg 
      * @param {TextBasedChannels} oldChannel 
-     * @returns {Promise<Message>}
+     * @returns {Promise<import("../typins").ShaMessage>}
      */
     async messageArg(arg, oldChannel) {
         if (!arg) return;

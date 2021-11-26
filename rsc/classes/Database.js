@@ -14,7 +14,9 @@ const ENUM_SHADOCS = {
     interactions: 8,
     recentAutocomplete: 9,
     muted: 10,
-    muteSettings: 11
+    muteSettings: 11,
+    banned: 12,
+    banSettings: 13
 };
 
 const ENUM_SHADOCSTYPES = {

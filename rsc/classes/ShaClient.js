@@ -10,7 +10,7 @@ const { escapeRegExp } = require("lodash");
 const { logDev } = require("../debug");
 const { Events } = require("discord.js/src/util/Constants");
 /**
- * @type {import("./Scheduler").Scheduler}
+ * @type {typeof import("./Scheduler").Scheduler}
  */
 let Scheduler;
 
@@ -113,10 +113,11 @@ module.exports = class ShaClient extends Client {
         }
         if (process.dev) for (const k in Events) {
             if (k === "RAW" || k === "PRESENCE_UPDATE") continue;
-            this.devListeners[k] = (...args) => {
+            if (opt === "on") this.devListeners[k] = (...args) => {
                 logDev("[%s]", Events[k], ...args);
             }
-            this[opt](Events[k], this.devListeners[k]);
+            if (this.devListeners[k])
+                this[opt](Events[k], this.devListeners[k]);
         }
         logDev(count, `listeners ${opt === "off" ? "un" : ""}loaded`);
     }

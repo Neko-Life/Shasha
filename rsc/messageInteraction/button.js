@@ -62,7 +62,7 @@ module.exports = class ButtonHandler {
 
     /**
      * 
-     * @param {"prev"|"next"} key 
+     * @param {"prev"|"next"|"home"} key 
      * @param {number} currentPage 
      * @param {number} length 
      */
@@ -79,13 +79,15 @@ module.exports = class ButtonHandler {
         return currentPage;
     }
 
-    static settings(inter, args) {
-        try {
+    static async settings(inter, args) {
+        if (!isInteractionInvoker(inter))
+            return inter.reply({ content: "Wha?! eh? ehmmm etto, anata ha dare?", ephemeral: true });
+        if (!inter.message.buttonHandler) {
+            await disableMessageComponents(inter.message);
+            return inter.reply({ content: "This session's expired", ephemeral: true });
+        } else {
+            inter.deferUpdate();
             inter.message.buttonHandler[args[0]](args.slice(1));
-        } catch (e) {
-            // await disableMessageComponents(inter.message);
-            process.emit("error", e);
-            return inter.reply("This session's expired");
         }
     }
 }

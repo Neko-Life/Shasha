@@ -51,46 +51,46 @@ function parseDuration(base, string) {
         DURATION_ARGS = string.match(DURATION_REGEXP);
 
     let changed = false;
-
-    for (const value of DURATION_ARGS) {
-        const val = parseInt(value.match(/[\-]?\d+/)[0], 10);
-        if (!val) continue;
-        if (value.endsWith("h") || value.endsWith("ho")) {
-            DURATION.hour = DURATION.hour + val;
-            changed = true;
-            continue;
+    if (DURATION_ARGS?.length)
+        for (const value of DURATION_ARGS) {
+            const val = parseInt(value.match(/[\-]?\d+/)[0], 10);
+            if (!val) continue;
+            if (value.endsWith("h") || value.endsWith("ho")) {
+                DURATION.hour = DURATION.hour + val;
+                changed = true;
+                continue;
+            }
+            if (value.endsWith("y")) {
+                DURATION.year = DURATION.year + val;
+                changed = true;
+                continue;
+            }
+            if (value.endsWith("mo")) {
+                DURATION.month = DURATION.month + val;
+                changed = true;
+                continue;
+            }
+            if (value.endsWith("w")) {
+                DURATION.day = DURATION.day + 7 * val;
+                changed = true;
+                continue;
+            }
+            if (value.endsWith("d")) {
+                DURATION.day = DURATION.day + val;
+                changed = true;
+                continue;
+            }
+            if (value.endsWith("m") || !/[^\d\-\+]/.test(value)) {
+                DURATION.minute = DURATION.minute + val;
+                changed = true;
+                continue;
+            }
+            if (value.endsWith("s")) {
+                DURATION.second = DURATION.second + val;
+                changed = true;
+                continue;
+            }
         }
-        if (value.endsWith("y")) {
-            DURATION.year = DURATION.year + val;
-            changed = true;
-            continue;
-        }
-        if (value.endsWith("mo")) {
-            DURATION.month = DURATION.month + val;
-            changed = true;
-            continue;
-        }
-        if (value.endsWith("w")) {
-            DURATION.day = DURATION.day + 7 * val;
-            changed = true;
-            continue;
-        }
-        if (value.endsWith("d")) {
-            DURATION.day = DURATION.day + val;
-            changed = true;
-            continue;
-        }
-        if (value.endsWith("m") || !/[^\d\-\+]/.test(value)) {
-            DURATION.minute = DURATION.minute + val;
-            changed = true;
-            continue;
-        }
-        if (value.endsWith("s")) {
-            DURATION.second = DURATION.second + val;
-            changed = true;
-            continue;
-        }
-    }
     let DT_END, DT_INTERVAL;
 
     if (changed) {

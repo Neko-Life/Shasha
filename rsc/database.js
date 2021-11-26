@@ -28,7 +28,7 @@ function loadDb(instance, collection) {
  * @property {number} divide - Divide rounded maxRandom result
  * @property {number} add - Value to add
  * 
- * @param {User} user 
+ * @param {import("./typins").ShaUser} user 
  * @param {AddUserExpOpt} opt
  * @returns 
  */

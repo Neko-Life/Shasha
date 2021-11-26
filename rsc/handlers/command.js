@@ -7,7 +7,7 @@ const { logDev } = require("../debug");
 
 module.exports = class CommandHandler {
     /**
-     * @param {import("../typins").ShaInteraction} interaction 
+     * @param {import("../typins").ShaCommandInteraction} interaction 
      */
     static async handle(interaction) {
         // try {

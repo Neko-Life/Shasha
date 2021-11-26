@@ -1,6 +1,6 @@
 'use strict';
 
-const { CommandInteraction, MessageEmbed, Client, Collection, Guild, User, Interaction, GuildMember, Invite, Role, GuildChannel, MessageActionRow, MessageButton } = require("discord.js");
+const { MessageEmbed, Client, Collection, Guild, User, Interaction, GuildMember, Invite, Role, GuildChannel, MessageActionRow, MessageButton } = require("discord.js");
 const { escapeRegExp } = require("lodash");
 const { ePerms } = require("./constants");
 const { logDev } = require("./debug");
@@ -455,12 +455,12 @@ async function disableMessageComponents(message) {
 
 function prevNextButton(homeButton) {
     const ret = new MessageActionRow()
-        .addComponent(
+        .addComponents(
             new MessageButton().setCustomId("page/prev").setEmoji("⬅️").setStyle("PRIMARY")
         );
     if (homeButton)
-        ret.addComponent(new MessageButton().setCustomId("page/home").setEmoji("🏠").setStyle("PRIMARY"))
-    ret.addComponent(new MessageButton().setCustomId("page/next").setEmoji("➡️").setStyle("PRIMARY"));
+        ret.addComponents(new MessageButton().setCustomId("page/home").setEmoji("🏠").setStyle("PRIMARY"))
+    ret.addComponents(new MessageButton().setCustomId("page/next").setEmoji("➡️").setStyle("PRIMARY"));
     return ret;
 }
 

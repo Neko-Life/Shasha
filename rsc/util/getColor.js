@@ -10,7 +10,7 @@ const { RANDOM_COLOR, COLORS } = require("../constants");
  * @returns {string | number} Color hex | Color number
  */
 module.exports = function getColor(name, returnNull, fallback) {
-    if (!name)
+    if (!name && !fallback)
         if (returnNull) return null;
         else return RANDOM_COLOR[Math.floor(Math.random() * RANDOM_COLOR.length)];
     if (typeof name === 'number') {

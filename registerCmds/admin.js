@@ -39,4 +39,8 @@ module.exports = new SlashCommandBuilder()
                     .setName("bypass-users")
                     .setDescription("User bypass. Mentions, names or Ids separated with ` ` (space). `none` to reset")
             )
+    ).addSubcommand(
+        sCmd => sCmd
+            .setName("settings")
+            .setDescription("Configure my settings")
     )

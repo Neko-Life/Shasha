@@ -11,6 +11,7 @@ async function handle(interaction) {
     const path = interaction.customId.split("/");
     let cmd = interaction.client.messageInteraction.selectMenu;
     if (cmd) for (const U of path) {
+        if (!U) continue;
         cmd = cmd[U];
         if (!cmd) break;
     }
