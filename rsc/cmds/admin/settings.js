@@ -4,7 +4,7 @@ const { MessageEmbed, MessageActionRow, MessageButton, MessageSelectMenu, Collec
 const { Command } = require("../../classes/Command");
 const { loadDb } = require("../../database");
 const { logDev } = require("../../debug");
-const { getColor, findRoles } = require("../../functions");
+const { getColor, findRoles, replyError } = require("../../functions");
 const { intervalToStrings, createInterval, parseDuration } = require("../../util/Duration");
 
 module.exports = class SettingsCmd extends Command {
@@ -12,6 +12,7 @@ module.exports = class SettingsCmd extends Command {
         super(interaction, {
             name: "settings",
             userPermissions: ["ADMINISTRATOR"],
+            clientPermissions: ["VIEW_CHANNEL", "EMBED_LINKS"],
             guildOnly: true
         });
     }
@@ -163,13 +164,14 @@ module.exports = class SettingsCmd extends Command {
                     let errmes;
                     let role = findRoles(m.guild, setMsg.content, "i");
                     if (role instanceof Collection) {
-                        const filter = role.filter(r => !r.managed);
-                        if (!filter.size && role.size)
-                            errmes = `Role <@&${role.first().id}> is managed by discord and cannot be given to members!`;
-                        role = filter.first();
+                        const filter = role.filter(r => !r.managed && r.position < r.guild.me.roles.highest.position);
+                        role = filter.first() || role.first();
                     }
                     if (role?.managed) {
                         errmes = `Role <@&${role.id}> is managed by discord and cannot be given to members!`;
+                        role = null;
+                    } else if (role?.position >= role?.guild.me.roles.highest.position) {
+                        errmes = `Role <@&${role.id}> is in the same or higher position than me so i can't manage it!`;
                         role = null;
                     }
                     if (!role) {
@@ -193,40 +195,41 @@ module.exports = class SettingsCmd extends Command {
                     const m = await mes.channel.send("Provide duration. Ex `69h420m666y96mo444s`:");
                     const c = await m.channel.awaitMessages({ filter: (m2) => (m2.author.id === inter.user.id) && m2.content?.length, max: 1 });
                     const setMsg = c.first();
-                    const parsed = parseDuration(new Date(), setMsg.content);
-                    if (!parsed.end) {
+                    let parsed;
+                    try { parsed = parseDuration(new Date(), setMsg.content); }
+                    catch (e) {
                         blockSet = false;
-                        return m.edit("Invalid duration! Try `5y` or `1h` or `3h15m23s`").then(
+                        logDev(e);
+                        return m.edit(replyError(e)).then(
                             r => delMes(m, r, setMsg, 10000)
                         );
-                    } else {
-                        const ms = parsed.interval.toDuration().toMillis();
-                        if (ms < 10000) {
-                            blockSet = false;
-                            return m.edit(`Duration can't be less than 10 seconds!`).then(
-                                r => delMes(m, r, setMsg)
-                            );
-                        }
-                        const gd = loadDb(mes.guild, "guild/" + mes.guild.id);
-
-                        let p;
-                        if (args[1] === "mute") {
-                            const get = await gd.db.getOne("muteSettings", "Object");
-                            const data = get?.value || {};
-                            await gd.db.set("muteSettings", "Object", { value: { muteRole: data.muteRole, duration: ms } });
-                            p = moderationMutePage;
-                        } else if (args[1] === "ban") {
-                            await gd.db.set("banSettings", "Object", { value: { duration: ms } });
-                            p = moderationBanPage;
-                        }
-
-                        if (m.guild.me.permissionsIn(m.channel).has("MANAGE_MESSAGES"))
-                            m.channel.bulkDelete([m, setMsg]).catch(logDev);
-                        else m.deleted ? null : m.delete();
-                        blockSet = false;
-                        if (mes.deleted) return;
-                        return mes.edit(await p());
                     }
+                    const ms = parsed.interval.toDuration().toMillis();
+                    if (ms < 10000) {
+                        blockSet = false;
+                        return m.edit(`Duration can't be less than 10 seconds!`).then(
+                            r => delMes(m, r, setMsg)
+                        );
+                    }
+                    const gd = loadDb(mes.guild, "guild/" + mes.guild.id);
+
+                    let p;
+                    if (args[1] === "mute") {
+                        const get = await gd.db.getOne("muteSettings", "Object");
+                        const data = get?.value || {};
+                        await gd.db.set("muteSettings", "Object", { value: { muteRole: data.muteRole, duration: ms } });
+                        p = moderationMutePage;
+                    } else if (args[1] === "ban") {
+                        await gd.db.set("banSettings", "Object", { value: { duration: ms } });
+                        p = moderationBanPage;
+                    }
+
+                    if (m.guild.me.permissionsIn(m.channel).has("MANAGE_MESSAGES"))
+                        m.channel.bulkDelete([m, setMsg]).catch(logDev);
+                    else m.deleted ? null : m.delete();
+                    blockSet = false;
+                    if (mes.deleted) return;
+                    return mes.edit(await p());
                 }
             },
             remove: async (args) => {

@@ -23,7 +23,7 @@ module.exports = class ButtonHandler {
     static async page(inter, args) {
         const pages = inter.client.activeMessageInteractions.get(inter.message.id);
         if (!pages) {
-            await disableMessageComponents(inter.message);
+            disableMessageComponents(inter.message);
             return inter.reply({ content: "This session's expired", ephemeral: true });
         }
         if (typeof pages.CURRENT_PAGE !== "string"
@@ -52,12 +52,12 @@ module.exports = class ButtonHandler {
         }
         logDev(pages, page);
         inter.client.createMessageInteraction(inter.message.id, pages);
-        await inter.message.edit(
+        inter.message.edit(
             typeof pages.PAGES[page] === "function"
                 ? await pages.PAGES[page]()
                 : pages.PAGES[page]
         );
-        await inter.deferUpdate();
+        inter.deferUpdate();
     }
 
     /**
@@ -83,7 +83,7 @@ module.exports = class ButtonHandler {
         if (!isInteractionInvoker(inter))
             return inter.reply({ content: "Wha?! eh? ehmmm etto, anata ha dare?", ephemeral: true });
         if (!inter.message.buttonHandler) {
-            await disableMessageComponents(inter.message);
+            disableMessageComponents(inter.message);
             return inter.reply({ content: "This session's expired", ephemeral: true });
         } else {
             inter.deferUpdate();

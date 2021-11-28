@@ -143,4 +143,8 @@ module.exports = new SlashCommandBuilder()
                             .setAutocomplete(true)
                     )
             )
+    ).addSubcommand(
+        sCmd => sCmd
+            .setName("list-server")
+            .setDescription("Owner only")
     )

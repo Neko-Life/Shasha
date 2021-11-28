@@ -12,7 +12,7 @@ const { isInteractionInvoker, disableMessageComponents } = require("../../functi
 async function handle(inter, args) {
     const pages = inter.client.activeMessageInteractions.get(inter.message.id);
     if (!pages) {
-        await disableMessageComponents(inter.message);
+        disableMessageComponents(inter.message);
         return inter.reply({ content: "This session's expired", ephemeral: true });
     }
     if (!isInteractionInvoker(inter)) {
@@ -42,13 +42,13 @@ async function handle(inter, args) {
         inter.client.createMessageInteraction(inter.message.id, pages);
     }
     if (!(inter.replied || inter.deferred)) {
-        await inter.message.edit(
+        inter.message.edit(
             typeof pages.PAGES[args[0]] === "function"
                 ? await pages.PAGES[args[0]]()
                 : pages.PAGES[args[0]]
         );
-        await inter.deferUpdate();
-    } else await inter.editReply(
+        inter.deferUpdate();
+    } else inter.editReply(
         typeof pages.PAGES[args[0]] === "function"
             ? await pages.PAGES[args[0]]()
             : pages.PAGES[args[0]]

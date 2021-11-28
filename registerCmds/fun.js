@@ -70,4 +70,14 @@ module.exports = new SlashCommandBuilder()
                     .setDescription("Font to use")
                     .setAutocomplete(true)
             )
+    ).addSubcommand(
+        sCmd => sCmd
+            .setName("snipe")
+            .setDescription("Do some undelete magik")
+            .addChannelOption(
+                opt => opt
+                    .setName("channel")
+                    .setDescription("Snipe this channel")
+                    .addChannelTypes([0, 5, 10, 12, 11, 6])
+            )
     )

@@ -311,6 +311,11 @@ const COLORS = {
 
 const RANDOM_COLOR = Object.values(COLORS);
 
+const REPLY_ERROR = {
+    "Can't parse string": "Invalid duration! Try `3h` or `5m16s` or `69y`",
+    "Duration less than 10000 ms": "I refuse to abuse the discord API just for less than 10 seconds mute <:deadLife:796323537937367050>"
+}
+
 module.exports = {
     ePerms,
     reValidURL,
@@ -332,5 +337,6 @@ module.exports = {
     ASCII_IGNORE_HASH,
     SCHEDULE_MESSAGER_PATH,
     COLORS,
-    RANDOM_COLOR
+    RANDOM_COLOR,
+    REPLY_ERROR
 }

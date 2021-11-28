@@ -310,7 +310,7 @@ class BaseModeration {
      * @returns 
      */
     static defaultParseDuration(invoked, durationArg, defaultDuration) {
-        let end, duration, ms, dur;
+        let end, duration, ms, dur, interval;
         if (durationArg) {
             dur = parseDuration(invoked, durationArg);
             ms = dur.interval.toDuration().toMillis();
@@ -323,10 +323,11 @@ class BaseModeration {
                 duration = dur.duration;
             } else {
                 end = new Date(invoked.valueOf() + ms);
-                duration = intervalToStrings(createInterval(invoked, end));
+                interval = createInterval(invoked, end);
+                duration = intervalToStrings(interval);
             }
         }
-        return { end, duration };
+        return { end, duration, interval, ms };
     }
 }
 

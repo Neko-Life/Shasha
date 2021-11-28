@@ -319,7 +319,7 @@ module.exports.Command = class ShaBaseCommand {
     }
 
     /**
-     * 
+     * Parse `message` string arg
      * @param {string} arg 
      * @param {TextBasedChannels} oldChannel 
      * @returns {Promise<import("../typins").ShaMessage>}
@@ -335,6 +335,16 @@ module.exports.Command = class ShaBaseCommand {
             msg = await this.getChannelMessage(SP[0], SP[1]);
         }
         return msg;
+    }
+
+    /**
+     * 
+     * @param {string} str 
+     * @param {boolean} [noAdCheck=false] 
+     * @returns 
+     */
+    finalizeStr(str, noAdCheck) {
+        return this.client.finalizeStr(str, noAdCheck);
     }
 
     #disabled = null;

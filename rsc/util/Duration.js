@@ -91,6 +91,7 @@ function parseDuration(base, string) {
                 continue;
             }
         }
+    else throw new Error("Can't parse string");
     let DT_END, DT_INTERVAL;
 
     if (changed) {

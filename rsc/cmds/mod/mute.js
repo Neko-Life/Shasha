@@ -5,7 +5,7 @@ const { Command } = require("../../classes/Command");
 const { Moderation } = require("../../classes/Moderation");
 const { loadDb } = require("../../database");
 const { logDev } = require("../../debug");
-const { getColor, unixToSeconds, tickTag } = require("../../functions");
+const { getColor, unixToSeconds, tickTag, replyError } = require("../../functions");
 const { parseDuration, intervalToStrings, createInterval } = require("../../util/Duration");
 
 module.exports = class MuteCmd extends Command {
@@ -37,7 +37,7 @@ module.exports = class MuteCmd extends Command {
                 durFor = res.duration.strings.join(" ");
             } catch (e) {
                 logDev(e);
-                return inter.editReply("I refuse to abuse the discord API just for less than 10 seconds mute <:deadLife:796323537937367050>");
+                return inter.editReply(replyError(e));
             }
         }
         const dST = new Date();
@@ -46,9 +46,9 @@ module.exports = class MuteCmd extends Command {
         logDev(dSE.valueOf() - dST.valueOf());
         if (!res.muted.length)
             if (res.higherThanClient.length)
-                return inter.editReply("Can't mute someone in higher position than me");
+                return inter.editReply("Can't mute someone in the same or higher position than me");
             else if (res.higherThanModerator.length)
-                return inter.editReply("You can't mute someone higher than you");
+                return inter.editReply("You can't mute someone in the same or higher position than you");
         const emb = new MessageEmbed()
             .setTitle("Mute")
             .setColor(getColor(this.user.accentColor, true) || getColor(this.member.displayColor, true))

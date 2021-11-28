@@ -65,7 +65,7 @@ module.exports = new SlashCommandBuilder()
     ).addSubcommand(
         sCmd => sCmd
             .setName("mute")
-            .setDescription("Render shut em criminals")
+            .setDescription("Render shut em criminal")
             .addUserOption(
                 opt => opt
                     .setName("user")
@@ -84,12 +84,65 @@ module.exports = new SlashCommandBuilder()
     ).addSubcommand(
         sCmd => sCmd
             .setName("unmute")
-            .setDescription("Render unshut em uncriminals")
+            .setDescription("Render unshut em uncriminal")
             .addUserOption(
                 opt => opt
                     .setName("user")
                     .setDescription("User to unmoot")
                     .setRequired(true)
+            ).addStringOption(
+                opt => opt
+                    .setName("reason")
+                    .setDescription("Reason")
+            )
+    ).addSubcommand(
+        sCmd => sCmd
+            .setName("ban")
+            .setDescription("Lets put them at rest")
+            .addUserOption(
+                opt => opt
+                    .setName("user")
+                    .setDescription("User to put at rest")
+            ).addStringOption(
+                opt => opt
+                    .setName("duration")
+                    .setDescription("Ex `432y876w75s87mo`")
+            ).addStringOption(
+                opt => opt
+                    .setName("reason")
+                    .setDescription("Reason")
+            )
+    ).addSubcommand(
+        sCmd => sCmd
+            .setName("unban")
+            .setDescription("Sometimes somebody deserve a second chance")
+            .addUserOption(
+                opt => opt
+                    .setName("user")
+                    .setDescription("User to give a second chance")
+            ).addStringOption(
+                opt => opt
+                    .setName("reason")
+                    .setDescription("Reason")
+            )
+    ).addSubcommand(
+        sCmd => sCmd
+            .setName("vc-deafen")
+            .setDescription("Deafen users in a VC")
+            .addChannelOption(
+                opt => opt
+                    .setName("channel")
+                    .setDescription("Deafen all user in this VC")
+                    .addChannelTypes([2])
+            ).addUserOption(
+                opt => opt
+                    .setName("user")
+                    .setDescription("Deafen this specific user")
+            ).addStringOption(
+                opt => opt
+                    .setName("duration")
+                    .setDescription("Ex `78m5s1h3w")
+                    .setAutocomplete(true)
             ).addStringOption(
                 opt => opt
                     .setName("reason")

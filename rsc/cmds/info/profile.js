@@ -154,28 +154,14 @@ module.exports = class ProfileCmd extends Command {
                     .setOptions(menuOptions)
             );
 
-        const button = new MessageActionRow()
-            .addComponents(
-                new MessageButton()
-                    .setCustomId("page/prev")
-                    .setEmoji("⬅️")
-                    .setStyle("PRIMARY")
-            ).addComponents(
-                new MessageButton()
-                    .setCustomId("page/next")
-                    .setEmoji("➡️")
-                    .setStyle("PRIMARY")
-            );
-
         if (menuOptions.length > 1) {
             for (const k in selectMenuDatas)
-                selectMenuDatas[k].components = [menu, button];
+                selectMenuDatas[k].components = [menu];
         }
 
         const mes = await inter.editReply(selectMenuDatas.generalPage);
         await this.client.createMessageInteraction(mes.id, {
-            PAGES: selectMenuDatas,
-            CURRENT_PAGE: "generalPage"
+            PAGES: selectMenuDatas
         });
         return mes;
 

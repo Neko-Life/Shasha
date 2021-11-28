@@ -1,4 +1,4 @@
-import { CommandInteraction, CommandInteractionOption, Guild, GuildMember, Message, User } from "discord.js";
+import { BaseGuildTextChannel, Collection, CommandInteraction, CommandInteractionOption, Guild, GuildMember, Message, User } from "discord.js";
 import { AutocompleteCommandArgs, AutocompleteData } from "./classes/Command";
 import { ShaBaseDb } from "./classes/Database";
 import ShaClient from "./classes/ShaClient";
@@ -7,6 +7,7 @@ export declare class ShaMessage extends Message {
     public readonly client: ShaClient;
     public buttonHandler: { [k: string]: () => Promise<void | boolean> };
     public deleteAfter: number;
+    public readonly channel: ShaTextChannel;
 }
 
 export declare class ShaCommandInteraction extends CommandInteraction {
@@ -41,4 +42,8 @@ export declare class ShaGuild extends Guild {
 export declare class ShaGuildMember extends GuildMember {
     public readonly client: ShaClient;
     public db: ShaBaseDb;
+}
+
+export declare class ShaTextChannel extends BaseGuildTextChannel {
+    public deletedMessages: Collection<string, ShaMessage>;
 }

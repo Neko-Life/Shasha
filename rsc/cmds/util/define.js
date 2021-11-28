@@ -2,7 +2,7 @@
 
 const { Command } = require("../../classes/Command");
 const ud = require("urban-dictionary");
-const { MessageEmbed, MessageActionRow, MessageButton, Message } = require("discord.js");
+const { MessageEmbed, Message } = require("discord.js");
 const { getColor, prevNextButton } = require("../../functions");
 const { logDev } = require("../../debug");
 const ascii = "[```\n    _|_  _  _    _|. __|_. _  _  _  _\n|_|| |_)(_|| |  (_||(_ | |(_)| |(_|| \\/\n                                     /```](https://www.urbandictionary.com/)";
@@ -25,7 +25,7 @@ module.exports = class DefineCmd extends Command {
             .setColor(getColor(this.user.accentColor, true) || getColor(this.member?.displayColor, true));
 
         const av = (this.member || this.user).displayAvatarURL({ size: 128, format: "png", dynamic: true })
-        const button = defined.length > 1 ? prevNextButton() : null;
+        const button = defined.length > 1 ? prevNextButton(true) : null;
 
         for (const v of defined) {
             const def = v.definition.length > 4000
