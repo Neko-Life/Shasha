@@ -1,10 +1,9 @@
 'use strict';
 
-const { MessageEmbed, Role, MessageActionRow, MessageSelectMenu, GuildMember, User, MessageButton } = require("discord.js");
-const { Interval, DateTime } = require("luxon");
+const { MessageEmbed, Role, MessageActionRow, MessageSelectMenu, GuildMember, User } = require("discord.js");
 const { Command } = require("../../classes/Command");
 const { getColor } = require("../../functions");
-const { intervalToStrings } = require("../../util/Duration");
+const { intervalToStrings, createInterval } = require("../../util/Duration");
 
 module.exports = class ProfileCmd extends Command {
     constructor(interaction) {
@@ -54,10 +53,7 @@ module.exports = class ProfileCmd extends Command {
             .addField("Identifier", `<@${user.id}>\n(${user.id})`, true)
             .addField("Registered", "<t:" + Math.floor(user.createdTimestamp / 1000) + ":F>\n"
                 + `(${intervalToStrings(
-                    Interval.fromDateTimes(
-                        DateTime.fromJSDate(user.createdAt),
-                        DateTime.fromJSDate(new Date())
-                    )
+                    createInterval(user.createdAt, new Date())
                 ).strings.join(" ")} ago)`);
 
         if (fStr.length) generalEmbed.addField("Badges", "```js\n" + fStr.join(", ") + "```");
@@ -80,10 +76,9 @@ module.exports = class ProfileCmd extends Command {
         if (member) {
             generalEmbed
                 .addField("Joined", "<t:" + Math.floor(member.joinedTimestamp / 1000) + ":F>\n"
-                    + `(${intervalToStrings(Interval.fromDateTimes(
-                        DateTime.fromJSDate(member.joinedAt),
-                        DateTime.fromJSDate(new Date())
-                    )).strings.join(" ")} ago)`)
+                    + `(${intervalToStrings(
+                        createInterval(member.joinedAt, new Date())
+                    ).strings.join(" ")} ago)`)
                 .fields.splice(1, 0, { name: "Nick", value: `\`${member.displayName}\``, inline: true });
 
             /**

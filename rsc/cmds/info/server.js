@@ -1,11 +1,11 @@
 'use strict';
 
 const { MessageSelectMenu, MessageActionRow, MessageEmbed, Guild } = require("discord.js");
-const { Interval, DateTime } = require("luxon");
+const { Interval } = require("luxon");
 const { Command } = require("../../classes/Command");
 const { fetchAllMembers, tickTag, maxStringsLength, getCommunityInvite } = require("../../functions");
 const { getColor } = require("../../functions");
-const { intervalToStrings } = require("../../util/Duration");
+const { intervalToStrings, createInterval } = require("../../util/Duration");
 
 module.exports = class ServerInfoCmd extends Command {
     constructor(interaction) {
@@ -95,10 +95,8 @@ module.exports = class ServerInfoCmd extends Command {
             .addField("Created",
                 "<t:" + Math.floor(server.createdTimestamp / 1000) + ":F>\n"
                 + `(${intervalToStrings(
-                    Interval.fromDateTimes(
-                        DateTime.fromJSDate(server.createdAt),
-                        DateTime.fromJSDate(new Date())
-                    )).strings.join(" ")} ago)`)
+                    createInterval(server.createdAt, new Date())
+                ).strings.join(" ")} ago)`)
             .addField("Explicit Content Filter", "`" + server.explicitContentFilter + "`")
             .addField("Member Count", `\`${server.memberCount}\``, true)
             .addField("Channel Count", `\`${generalInfo.channelCount}\``, true)

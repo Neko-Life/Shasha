@@ -1,7 +1,7 @@
 'use strict';
 
 const { MessageEmbed, StageChannel } = require("discord.js");
-const { Interval, DateTime } = require("luxon");
+const { Interval } = require("luxon");
 const { Command } = require("../../classes/Command");
 const { fetchAllMembers, strYesNo, maxStringsLength } = require("../../functions");
 const { getColor } = require("../../functions");
@@ -168,9 +168,9 @@ module.exports = class ChannelInfoCmd extends Command {
             .addField("Identifier", `\`${channel.name}\`\n(${channel.id})`)
             .addField("Created", `<t:${Math.floor(channel.createdTimestamp / 1000)}:F>\n`
                 + `(${intervalToStrings(
-                    Interval.fromDateTimes(
-                        DateTime.fromJSDate(channel.createdAt),
-                        DateTime.fromJSDate(new Date())
+                    createInterval(
+                        channel.createdAt,
+                        new Date()
                     )
                 ).strings.join(" ")} ago)`)
             .setColor(getColor(inter.member.displayColor));

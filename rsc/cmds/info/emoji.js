@@ -1,10 +1,9 @@
 'use strict';
 
 const { MessageEmbed, MessageActionRow, MessageSelectMenu, CommandInteraction } = require("discord.js");
-const { Interval, DateTime } = require("luxon");
 const { Command } = require("../../classes/Command");
 const { strYesNo, unixToSeconds, getColor } = require("../../functions");
-const { intervalToStrings } = require("../../util/Duration");
+const { intervalToStrings, createInterval } = require("../../util/Duration");
 
 module.exports = class InfoEmojiCmd extends Command {
     constructor(interaction) {
@@ -40,11 +39,10 @@ module.exports = class InfoEmojiCmd extends Command {
             .setColor(getColor(this.user.accentColor, true) || getColor(this.member.displayColor, true));
         const emb = new MessageEmbed(baseEmbed)
             .addField("Identifier", `\`${find.name}\`\n(${find.id})`)
-            .addField("Registered", `<t:${unixToSeconds(find.createdTimestamp)}:F>\n(${intervalToStrings(
-                Interval.fromDateTimes(
-                    DateTime.fromJSDate(find.createdAt),
-                    DateTime.fromJSDate(new Date())
-                )
+            .addField("Registered", `<t:${unixToSeconds(
+                find.createdTimestamp
+            )}:F>\n(${intervalToStrings(
+                createInterval(find.createdAt, new Date())
             ).strings.join(" ")})`)
             .addField("Server", `\`${find.guild.name}\``)
             .addField("Animated", strYesNo(find.animated), true)

@@ -1,6 +1,6 @@
 'use strict';
 
-const { DateTime, Settings, Interval, DurationObject } = require("luxon");
+const { Settings, Interval, DurationObject } = require("luxon");
 const DURATION_REGEXP = /[\-]?\d+(?![^ymwdhs])[ymwdhs]?o?/gi;
 const DT_PRINT_FORMAT = "DDD'\n'cccc',' tt";
 const CHECK_FOR_DURATION_REGEXP = /^[\-\+]?\d{1,16}(?![^ymwdhs])[ymwdhs]?o?/i;
@@ -47,51 +47,37 @@ function parseDuration(base, string) {
         minute: base.getMinutes(),
         second: base.getSeconds() + 1
     },
-        DT_INVOKED = DateTime.fromJSDate(base),
+        DT_INVOKED = base,
         DURATION_ARGS = string.match(DURATION_REGEXP);
 
     let changed = false;
-    if (DURATION_ARGS?.length)
-        for (const value of DURATION_ARGS) {
-            const val = parseInt(value.match(/[\-]?\d+/)[0], 10);
-            if (!val) continue;
-            if (value.endsWith("h") || value.endsWith("ho")) {
-                DURATION.hour = DURATION.hour + val;
-                changed = true;
-                continue;
-            }
-            if (value.endsWith("y")) {
-                DURATION.year = DURATION.year + val;
-                changed = true;
-                continue;
-            }
-            if (value.endsWith("mo")) {
-                DURATION.month = DURATION.month + val;
-                changed = true;
-                continue;
-            }
-            if (value.endsWith("w")) {
-                DURATION.day = DURATION.day + 7 * val;
-                changed = true;
-                continue;
-            }
-            if (value.endsWith("d")) {
-                DURATION.day = DURATION.day + val;
-                changed = true;
-                continue;
-            }
-            if (value.endsWith("m") || !/[^\d\-\+]/.test(value)) {
-                DURATION.minute = DURATION.minute + val;
-                changed = true;
-                continue;
-            }
-            if (value.endsWith("s")) {
-                DURATION.second = DURATION.second + val;
-                changed = true;
-                continue;
-            }
+    if (!DURATION_ARGS?.length) throw new Error("Can't parse string");
+    for (const value of DURATION_ARGS) {
+        const val = parseInt(value.match(/[\-]?\d+/)[0], 10);
+        if (!val) continue;
+        else if (value.endsWith("h") || value.endsWith("ho")) {
+            DURATION.hour = DURATION.hour + val;
+            changed = true;
+        } else if (value.endsWith("y")) {
+            DURATION.year = DURATION.year + val;
+            changed = true;
+        } else if (value.endsWith("mo")) {
+            DURATION.month = DURATION.month + val;
+            changed = true;
+        } else if (value.endsWith("w")) {
+            DURATION.day = DURATION.day + 7 * val;
+            changed = true;
+        } else if (value.endsWith("d")) {
+            DURATION.day = DURATION.day + val;
+            changed = true;
+        } else if (value.endsWith("m") || !/[^\d\-\+]/.test(value)) {
+            DURATION.minute = DURATION.minute + val;
+            changed = true;
+        } else if (value.endsWith("s")) {
+            DURATION.second = DURATION.second + val;
+            changed = true;
         }
-    else throw new Error("Can't parse string");
+    }
     let DT_END, DT_INTERVAL;
 
     if (changed) {
@@ -105,10 +91,10 @@ function parseDuration(base, string) {
         );
         if (date.toString() === "Invalid Date")
             date = new Date(8639900000000000);
-        DT_END = DateTime.fromJSDate(date);
+        DT_END = date;
     };
     if (DT_END)
-        DT_INTERVAL = Interval.fromDateTimes(DT_INVOKED, DT_END);
+        DT_INTERVAL = Interval.fromISO(DT_INVOKED.toISOString() + "/" + DT_END.toISOString());
 
     return {
         invoked: DT_INVOKED,
@@ -125,7 +111,7 @@ function parseDuration(base, string) {
  * @returns {Interval}
  */
 function createInterval(startDate, endDate) {
-    return Interval.fromDateTimes(DateTime.fromJSDate(startDate), DateTime.fromJSDate(endDate));
+    return Interval.fromISO(startDate.toISOString() + "/" + endDate.toISOString());
 }
 
 /**
@@ -134,8 +120,8 @@ function createInterval(startDate, endDate) {
  * @property {string[]} string
  * 
  * @typedef {object} DurationOut
- * @property {DateTime} invoked
- * @property {DateTime} until
+ * @property {Date} invoked
+ * @property {Date} until
  * @property {Interval} interval
  * @property {DurationStr} duration
  */

@@ -1,11 +1,10 @@
 'use strict';
 
 const { MessageEmbed } = require("discord.js");
-const { Interval, DateTime } = require("luxon");
 const { Command } = require("../../classes/Command");
 const { fetchAllMembers, emphasizePerms } = require("../../functions");
 const { getColor } = require("../../functions");
-const { intervalToStrings } = require("../../util/Duration");
+const { intervalToStrings, createInterval } = require("../../util/Duration");
 
 module.exports = class RoleInfoCmd extends Command {
     constructor(interaction) {
@@ -49,10 +48,7 @@ module.exports = class RoleInfoCmd extends Command {
             .addField("Identifier", `${id === inter.guild.id ? "@everyone" : `<@&${id}>`}\n(${id})`)
             .addField("Created", "<t:" + Math.floor(createdTimestamp / 1000) + ":F>\n"
                 + `(${intervalToStrings(
-                    Interval.fromDateTimes(
-                        DateTime.fromJSDate(createdAt),
-                        DateTime.fromJSDate(new Date())
-                    )
+                    createInterval(createdAt, new Date())
                 ).strings.join(" ")} ago)`)
             .addField("Managed by Discord", managed ? "`Yes`" : "`No`", true)
             .addField("Hoisted", hoist ? "`Yes`" : "`No`", true)
