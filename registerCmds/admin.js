@@ -43,4 +43,18 @@ module.exports = new SlashCommandBuilder()
         sCmd => sCmd
             .setName("settings")
             .setDescription("Configure my settings")
+    ).addSubcommand(
+        sCmd => sCmd
+            .setName("unban")
+            .setDescription("Sometimes somebody deserve a second chance")
+            .addUserOption(
+                opt => opt
+                    .setName("user")
+                    .setDescription("User to give a second chance")
+                    .setRequired(true)
+            ).addStringOption(
+                opt => opt
+                    .setName("reason")
+                    .setDescription("Reason")
+            )
     )

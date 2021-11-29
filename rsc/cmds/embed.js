@@ -199,7 +199,7 @@ module.exports.build = class BuildEmbCmd extends Command {
                     }
                     messages.push(msg);
                 }
-                let jsonData = ""
+                let jsonData = "";
                 for (const msg of messages) {
                     if (jsonData.endsWith("]```")) {
                         jsonData = jsonData.slice(0, -4);

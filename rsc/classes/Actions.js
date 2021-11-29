@@ -28,6 +28,19 @@ class Actions {
             } catch (e) { logDev(e) };
         }
     }
+
+    async unban(data) {
+        const guild = this.client.guilds.cache.get(data.guild);
+        const target = await this.client.findUsers(data.target, "i");
+        if (guild && target) {
+            const mod = new Moderation(this.client, {
+                guild: guild, targets: target, moderator: guild.me
+            });
+            try {
+                await mod.unban({ invoked: new Date(), reason: "Punishment expired" });
+            } catch (e) { logDev(e) };
+        }
+    }
 }
 
 module.exports = { Actions }

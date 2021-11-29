@@ -55,7 +55,7 @@ module.exports = class SettingsCmd extends Command {
         const moderationEmb = new MessageEmbed(baseEmb)
             .setTitle("Moderation Settings")
             .addField("Mute", "Setting up mute role and default duration for mute")
-            .addField("Ban", "Set up timed ban as default ban behavior");
+            .addField("Ban", "Set up timed ban as default ban behavior and default purge message on ban");
 
         const moderationSelectmenu = new MessageActionRow()
             .addComponents(
@@ -104,8 +104,8 @@ module.exports = class SettingsCmd extends Command {
             const button = new MessageActionRow()
                 .addComponents([
                     new MessageButton().setCustomId("settings/set/muteRole").setStyle("PRIMARY").setLabel("Set Role"),
-                    new MessageButton().setCustomId("settings/set/duration/mute").setStyle("PRIMARY").setLabel("Set Duration"),
                     new MessageButton().setCustomId("settings/remove/muteRole").setStyle("SECONDARY").setLabel("Remove Role"),
+                    new MessageButton().setCustomId("settings/set/duration/mute").setStyle("PRIMARY").setLabel("Set Duration"),
                     new MessageButton().setCustomId("settings/remove/duration/mute").setStyle("SECONDARY").setLabel("Remove Duration")
                 ]);
             const components = [selectMenu, moderationSelectmenu, button];
@@ -115,13 +115,13 @@ module.exports = class SettingsCmd extends Command {
         async function moderationBanPage() {
             const get = await inter.guild.db.getOne("banSettings", "Object");
             /**
-             * @type {{duration:number}}
+             * @type {{duration:number, purge:number}}
              */
             const data = get?.value || {};
             const date = new Date();
             const emb = new MessageEmbed(baseEmb)
                 .setTitle("Ban Settings")
-                .setDescription("Configure timed ban")
+                .setDescription("Configure timed ban and purge on ban")
                 .addField("Duration", "`"
                     + (data.duration
                         ? intervalToStrings(
@@ -131,11 +131,14 @@ module.exports = class SettingsCmd extends Command {
                             )
                         ).strings.join(" ")
                         : "Forever")
-                    + "`");
+                    + "`")
+                .addField("Purge", (data.purge ? "`Up to " + data.purge + ` day${data.purge > 1 ? "s" : ""} old messages\`` : "`No`"));
             const button = new MessageActionRow()
                 .addComponents([
                     new MessageButton().setCustomId("settings/set/duration/ban").setStyle("PRIMARY").setLabel("Set Duration"),
-                    new MessageButton().setCustomId("settings/remove/duration/ban").setStyle("SECONDARY").setLabel("Remove Duration")
+                    new MessageButton().setCustomId("settings/remove/duration/ban").setStyle("SECONDARY").setLabel("Remove Duration"),
+                    new MessageButton().setCustomId("settings/set/purge/ban").setStyle("PRIMARY").setLabel("Set Purge"),
+                    new MessageButton().setCustomId("settings/remove/purge/ban").setStyle("SECONDARY").setLabel("Remove Purge")
                 ]);
             const components = [selectMenu, moderationSelectmenu, button];
             return { embeds: [emb], components };
@@ -220,7 +223,39 @@ module.exports = class SettingsCmd extends Command {
                         await gd.db.set("muteSettings", "Object", { value: { muteRole: data.muteRole, duration: ms } });
                         p = moderationMutePage;
                     } else if (args[1] === "ban") {
-                        await gd.db.set("banSettings", "Object", { value: { duration: ms } });
+                        const get = await gd.db.getOne("banSettings", "Object");
+                        const data = get?.value || {};
+                        await gd.db.set("banSettings", "Object", { value: { duration: ms, purge: data.purge } });
+                        p = moderationBanPage;
+                    }
+
+                    if (m.guild.me.permissionsIn(m.channel).has("MANAGE_MESSAGES"))
+                        m.channel.bulkDelete([m, setMsg]).catch(logDev);
+                    else m.deleted ? null : m.delete();
+                    blockSet = false;
+                    if (mes.deleted) return;
+                    return mes.edit(await p());
+                } else if (args[0] === "purge") {
+                    const m = await mes.channel.send("Provide oldest message age in days to include as number. From 1 up to 7:");
+                    const c = await m.channel.awaitMessages({ filter: (m2) => (m2.author.id === inter.user.id) && m2.content?.length, max: 1 });
+                    const setMsg = c.first();
+
+                    if (/[^\d]/.test(setMsg.content)) {
+                        blockSet = false;
+                        return m.edit("It's NUMBER omg don't put other _thingy_!").then(
+                            r => delMes(m, r, setMsg)
+                        );
+                    }
+                    const par = parseInt(setMsg.content);
+                    const purge = par > 0 ? par : null;
+
+                    const gd = loadDb(mes.guild, "guild/" + mes.guild.id);
+
+                    let p;
+                    if (args[1] === "ban") {
+                        const get = await gd.db.getOne("banSettings", "Object");
+                        const data = get?.value || {};
+                        await gd.db.set("banSettings", "Object", { value: { duration: data.duration, purge: purge > 7 ? 7 : purge } });
                         p = moderationBanPage;
                     }
 
@@ -253,7 +288,23 @@ module.exports = class SettingsCmd extends Command {
                         await gd.db.set("muteSettings", "Object", { value: { muteRole: set.muteRole, duration: null } });
                         p = moderationMutePage;
                     } else if (args[1] === "ban") {
-                        await gd.db.set("banSettings", "Object", { value: { duration: null } });
+                        const get = await gd.db.getOne("banSettings", "Object");
+                        const data = get?.value || {};
+                        await gd.db.set("banSettings", "Object", { value: { duration: null, purge: data.purge } });
+                        p = moderationBanPage;
+                    }
+
+                    blockRem = false;
+                    if (mes.deleted) return;
+                    return mes.edit(await p());
+                } else if (args[0] === "purge") {
+                    const gd = loadDb(mes.guild, "guild/" + mes.guild.id);
+
+                    let p;
+                    if (args[1] === "ban") {
+                        const get = await gd.db.getOne("banSettings", "Object");
+                        const data = get?.value || {};
+                        await gd.db.set("banSettings", "Object", { value: { duration: data.duration, purge: null } });
                         p = moderationBanPage;
                     }
 

@@ -316,6 +316,49 @@ const REPLY_ERROR = {
     "Duration less than 10000 ms": "I refuse to abuse the discord API just for less than 10 seconds mute <:deadLife:796323537937367050>"
 }
 
+const LETTER_EMOTES = {
+    "1": "1️⃣",
+    "2": "2️⃣",
+    "3": "3️⃣",
+    "4": "4️⃣",
+    "5": "5️⃣",
+    "6": "6️⃣",
+    "7": "7️⃣",
+    "8": "8️⃣",
+    "9": "9️⃣",
+    "0": "0️⃣",
+    a: "🇦",
+    b: "🇧",
+    c: "🇨",
+    d: "🇩",
+    e: "🇪",
+    f: "🇫",
+    g: "🇬",
+    h: "🇭",
+    i: "🇮",
+    j: "🇯",
+    k: "🇰",
+    l: "🇱",
+    m: "🇲",
+    n: "🇳",
+    o: "🇴",
+    p: "🇵",
+    q: "🇶",
+    r: "🇷",
+    s: "🇸",
+    t: "🇹",
+    u: "🇺",
+    v: "🇻",
+    w: "🇼",
+    x: "🇽",
+    y: "🇾",
+    z: "🇿",
+    " ": " ",
+    "\n": "\n"
+};
+
+const ZWS = "​";
+
 module.exports = {
     ePerms,
     reValidURL,
@@ -338,5 +381,7 @@ module.exports = {
     SCHEDULE_MESSAGER_PATH,
     COLORS,
     RANDOM_COLOR,
-    REPLY_ERROR
+    REPLY_ERROR,
+    LETTER_EMOTES,
+    ZWS
 }

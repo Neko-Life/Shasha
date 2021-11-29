@@ -4,7 +4,7 @@ const ShaClient = require("./ShaClient");
 const { GuildResolvable, GuildMemberResolvable, GuildMember, Guild, User, MessageEmbed } = require("discord.js");
 const { loadDb } = require("../database");
 const { logDev } = require("../debug");
-const { getColor, unixToSeconds } = require("../functions");
+const { getColor, unixToSeconds, isAdmin } = require("../functions");
 const { createInterval, intervalToStrings, parseDuration } = require("../util/Duration");
 const { SCHEDULE_MESSAGER_PATH } = require("../constants");
 const ENUM_ACTIONS = {
@@ -36,6 +36,13 @@ const ENUM_ACTIONS = {
  * @property {string} [reason="No reason provided"]
  * @property {string} muteRole
  * @property {boolean} [notify=true]
+ * 
+ * @typedef {object} ExtendsBanOpts
+ * @property {Date} invoked
+ * @property {Date} end
+ * @property {boolean} [notify=true]
+ * 
+ * @typedef {import("discord.js").BanOptions & ExtendsBanOpts} BanOpts
  * 
  * @typedef {object} UnmuteOpts
  * @property {Date} invoked
@@ -194,6 +201,85 @@ class BaseModeration {
     }
 
     /**
+     * @param {GuildMember | User} user 
+     * @param {BanOpts} opt
+     */
+    async _execBan(user, opt) {
+        if (!opt.reason) opt.reason = "No reason provided";
+        if (typeof opt.notify !== "boolean") opt.notify = true;
+        if (opt.notify) {
+            const emb = new MessageEmbed()
+                .setAuthor(this.guild.name, this.guild.iconURL({ size: 128, format: "png", dynamic: true }))
+                .setColor(getColor((user.user || user).accentColor, true) || getColor(user.displayColor, true))
+                .setDescription(opt.reason)
+                .setTitle("Ban")
+                .addField("At", "<t:" + unixToSeconds(opt.invoked) + ":F>", true);
+            if (opt.end) {
+                const interval = createInterval(opt.invoked, opt.end);
+                const duration = intervalToStrings(interval);
+                emb.addField("Until", "<t:" + unixToSeconds(opt.end) + ":F>", true)
+                    .addField("For", "`" + duration.strings.join(" ") + "`");
+            } else emb.addField("Until", "`Never`", true)
+                .addField("For", "`Ever`");
+            try {
+                if (await user.send({ embeds: [emb] }))
+                    opt.notified = true;
+            } catch (e) { logDev(e); opt.notified = false; };
+        }
+
+        await this.guild.bans.create(user, { days: opt.days ?? 0, reason: opt.reason });
+
+        if (opt.end) {
+            const data = {
+                action: "unban",
+                guild: this.guild.id,
+                target: user.id,
+                targetType: "user"
+            }
+            await this.client.scheduler.add({
+                name: "unban/" + this.guild.id + "/" + user.id,
+                date: opt.end,
+                path: SCHEDULE_MESSAGER_PATH,
+                worker: {
+                    workerData: data
+                }
+            });
+        }
+        return { user, opt };
+    }
+
+    /**
+     * @param {GuildMember | User} user 
+     * @param {{reason: string, notify: boolean, invoked: Date}} param1
+     */
+    async _execUnban(user, { reason = "No reason provided", notify = true, invoked } = {}) {
+        await this.guild.bans.remove(user, reason);
+        const res = {
+            reason: reason,
+            notify: notify,
+            invoked: invoked
+        };
+        if (notify) {
+            const emb = new MessageEmbed()
+                .setAuthor(this.guild.name, this.guild.iconURL({ size: 128, format: "png", dynamic: true }))
+                .setColor(getColor((user.user || user).accentColor, true) || getColor(user.displayColor, true))
+                .setDescription(reason)
+                .setTitle("Unban")
+                .addField("At", "<t:" + unixToSeconds(invoked) + ":F>", true);
+
+            try {
+                if (await user.send({ embeds: [emb] }))
+                    res.notified = true;
+            } catch (e) { logDev(e); res.notified = false; };
+        }
+        if (this.client.scheduler.jobs.find(r => r.name === ("unban/" + this.guild.id + "/" + user.id)))
+            try { await this.client.scheduler.remove("unban/" + this.guild.id + "/" + user.id); }
+            catch (e) { logDev(e) };
+
+        return { user, res };
+    }
+
+    /**
      * 
      * @param {GuildMember | User} user 
      * @param {MuteOpts} opt
@@ -319,7 +405,7 @@ class BaseModeration {
             throw new RangeError("Duration less than 10000 ms");
         } else {
             if (dur) {
-                end = dur.end.toJSDate();
+                end = dur.end;
                 duration = dur.duration;
             } else {
                 end = new Date(invoked.valueOf() + ms);
@@ -376,6 +462,10 @@ class Moderation extends BaseModeration {
         /**
          * @type {boolean}
          */
+        this.moderatorAdmin = isAdmin(moderator, true);
+        /**
+         * @type {boolean}
+         */
         this.moderatorBanPerm = client.isOwner(moderator) || moderator.permissions.has("BAN_MEMBERS");
         /**
          * @type {boolean}
@@ -389,6 +479,10 @@ class Moderation extends BaseModeration {
          * @type {number}
          */
         this.clientPosition = this.me.roles.highest.position;
+        /**
+         * @type {boolean}
+         */
+        this.clientAdmin = isAdmin(this.me);
         /**
          * @type {boolean}
          */
@@ -489,7 +583,7 @@ class Moderation extends BaseModeration {
 
     /**
      * 
-     * @param {import("discord.js").BanOptions} opt 
+     * @param {BanOpts} opt 
      */
     async ban(opt) {
         if (!this.moderatorBanPerm)
@@ -508,9 +602,25 @@ class Moderation extends BaseModeration {
                 higherThanModerator.push(a);
                 continue;
             }
-            banned.push(await this.guild.bans.create(a, opt));
+            banned.push(await this._execBan(a, opt));
         }
         return { banned, higherThanModerator, higherThanClient };
+    }
+
+    /**
+     * 
+     * @param {{reason: string, notify: boolean, invoked: Date}} opt
+     */
+    async unban(opt) {
+        if (!this.moderatorAdmin)
+            throw new Error("Moderator lack ADMINISTRATOR permission");
+        if (!this.clientAdmin)
+            throw new Error("Client lack ADMINISTRATOR permission");
+        const unbanned = [];
+        for (const a of this.target.users) {
+            unbanned.push(await this._execUnban(a, opt));
+        }
+        return { unbanned };
     }
 
     async kick(reason) {
@@ -537,7 +647,7 @@ class Moderation extends BaseModeration {
 
     /**
      * 
-     * @param {MuteOpts} opt 
+     * @param {MuteOpts} opt
      */
     async mute(opt) {
         if (!this.moderatorManageRolesPerm)

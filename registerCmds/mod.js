@@ -107,19 +107,21 @@ module.exports = new SlashCommandBuilder()
                 opt => opt
                     .setName("duration")
                     .setDescription("Ex `432y876w75s87mo`")
+                    .setAutocomplete(true)
             ).addStringOption(
                 opt => opt
-                    .setName("reason")
-                    .setDescription("Reason")
-            )
-    ).addSubcommand(
-        sCmd => sCmd
-            .setName("unban")
-            .setDescription("Sometimes somebody deserve a second chance")
-            .addUserOption(
-                opt => opt
-                    .setName("user")
-                    .setDescription("User to give a second chance")
+                    .setName("purge")
+                    .setDescription("Clean the user's mess(ages)")
+                    .addChoices([
+                        ["Up to 7 days old", "7"],
+                        ["Up to 6 days old", "6"],
+                        ["Up to 5 days old", "5"],
+                        ["Up to 4 days old", "4"],
+                        ["Up to 3 days old", "3"],
+                        ["Up to 2 days old", "2"],
+                        ["Up to 1 day old", "1"],
+                        ["Don't purge anything", "0"]
+                    ])
             ).addStringOption(
                 opt => opt
                     .setName("reason")

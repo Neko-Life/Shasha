@@ -330,7 +330,7 @@ async function disableMessageComponents(message) {
     const R = Object.create(message);
     const o = {};
     for (const k in message)
-        if (k === "stickers") continue;
+        if (k === "stickers" || k === "nonce") continue;
         else o[k] = {
             value: message[k] || null,
             enumerable: true

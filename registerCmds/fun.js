@@ -80,4 +80,14 @@ module.exports = new SlashCommandBuilder()
                     .setDescription("Snipe this channel")
                     .addChannelTypes([0, 5, 10, 12, 11, 6])
             )
+    ).addSubcommand(
+        sCmd => sCmd
+            .setName("big-text")
+            .setDescription("MAKE IT BEEEG")
+            .addStringOption(
+                opt => opt
+                    .setName("text")
+                    .setDescription("TEXT TO MAKE BEEEEEG")
+                    .setRequired(true)
+            )
     )
