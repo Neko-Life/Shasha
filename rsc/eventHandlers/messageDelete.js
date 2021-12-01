@@ -1,6 +1,7 @@
 'use strict';
 
 const { Collection } = require("discord.js");
+const messageLinkPreview = require("../handlers/messageLinkPreview");
 
 /**
  * 
@@ -12,6 +13,7 @@ function handle(client, msg) {
     msg.channel.deletedMessages.set(msg.id, msg);
     if (msg.channel.deletedMessages.size > 20)
         msg.channel.deletedMessages.delete(msg.channel.deletedMessages.firstKey());
+    messageLinkPreview(msg);
 }
 
 module.exports = { handle }

@@ -19,10 +19,10 @@ function parseComa(str) {
 
 /**
  * Get message object from the message channel or provided channel
- * @param {Message | Interaction} msg - Message object (msg)
+ * @param {import("./typins").ShaMessage | Interaction} msg - Message object (msg)
  * @param {string} MainID - Message ID | Channel_[mention|ID] | Message link
  * @param {string} SecondID - Message ID
- * @returns {Promise<Message>} Message object | undefined
+ * @returns {Promise<import("./typins").ShaMessage>} Message object | undefined
  */
 async function getChannelMessage(msg, MainID, SecondID) {
     if (!MainID || !msg) return;
@@ -35,7 +35,7 @@ async function getChannelMessage(msg, MainID, SecondID) {
     if (SecondID && !/\D/.test(SecondID)) {
         try {
             const meschannel = (msg.client.owners.map(r => r.id).includes(msg.author?.id || msg.user?.id || msg.id) ? msg.client : msg.guild).channels.cache.get(MainID);
-            return meschannel.messages.fetch(SecondID, true).catch(logDev);
+            return meschannel.messages.cache.get(SecondID) || meschannel.messages.fetch(SecondID, true).catch(logDev);
         } catch (e) {
             logDev(e);
             return null;
@@ -93,9 +93,9 @@ function tickTag(user) {
  */
 function adCheck(str) {
     if (str?.length > 8) {
-        if (/(https:\/\/)?(www\.)?discord\.gg\/(?:\w{2,15}(?!\w)(?= *))/.test(str)) str = str
-            .replace(/(https:\/\/)?(www\.)?discord\.gg\/(?:\w{2,15}(?!\w)(?= *))/g,
-                '`Some invite link goes here`');
+        if (/(?:https?:\/\/)?(?:www\.|canary\.)?discord(?:app)?\.(?:gg|com)\/(?:\w{2,17}(?!\w)(?= *))/.test(str)) str = str
+            .replace(/(?:https?:\/\/)?(?:www\.|canary\.)?discord(?:app)?\.(?:gg|com)\/(?:\w{2,17}(?!\w)(?= *))/g,
+                '`[BAD_LINK]`');
     }
     return str;
 }
@@ -314,7 +314,7 @@ function replaceVars(str, vars = {}) {
         const varsN = Object.keys(vars);
         for (const k of toEval) {
             const data = { match: k };
-            data.value = eval("const {" + varsN.join(",") + "} = vars;" + k);
+            data.value = eval("const {" + varsN.join() + "} = vars;" + k);
             rep.push(data);
         }
         for (const k of rep)
@@ -353,8 +353,8 @@ function prevNextButton(homeButton) {
     return ret;
 }
 
-function replyError(e) {
-    let reply = REPLY_ERROR[e.message];
+function replyError(e, vars) {
+    let reply = replaceVars(REPLY_ERROR[e.message], vars);
     if (!reply) {
         process.emit("error", e);
         reply = e.message;

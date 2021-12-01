@@ -16,7 +16,8 @@ const ENUM_SHADOCS = {
     muted: 10,
     muteSettings: 11,
     banned: 12,
-    banSettings: 13
+    banSettings: 13,
+    afkState: 14
 };
 
 const ENUM_SHADOCSTYPES = {

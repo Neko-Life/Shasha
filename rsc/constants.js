@@ -313,7 +313,9 @@ const RANDOM_COLOR = Object.values(COLORS);
 
 const REPLY_ERROR = {
     "Can't parse string": "Invalid duration! Try `3h` or `5m16s` or `69y`",
-    "Duration less than 10000 ms": "I refuse to abuse the discord API just for less than 10 seconds mute <:deadLife:796323537937367050>"
+    "Duration less than 10000 ms": "I refuse to abuse the discord API just for less than 10 seconds mute <:deadLife:796323537937367050>",
+    "Unknown Ban": "That user isn't banned. Consider banning them first <:senkoStareLife:853238498223325204>",
+    "Unknown Mute": "That user isn't muted. Consider muting them first <:senkoStareLife:853238498223325204>"
 }
 
 const LETTER_EMOTES = {

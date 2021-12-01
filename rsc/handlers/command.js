@@ -47,18 +47,16 @@ module.exports = class CommandHandler {
             process.emit("error", e);
         }
         interaction.commandResults = [];
-        if (Array.isArray(result)) for (const res of result) {
+        if (!Array.isArray(result))
+            result = [result];
+
+        for (let res of result) {
             if (res) {
-                if (res instanceof Promise) await res;
+                if (res instanceof Promise)
+                    res = await res;
                 res.invoker = interaction.user;
             }
             interaction.commandResults.push(res);
-        } else {
-            if (result) {
-                if (result instanceof Promise) await result;
-                result.invoker = interaction.user;
-            }
-            interaction.commandResults.push(result);
         }
         await addUserExp(interaction.user, { maxRandom: 100, round: "floor", divide: 1000 });
         interaction.client.handledCommands.set(

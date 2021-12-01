@@ -142,7 +142,7 @@ module.exports = class PurgeCmd extends Command {
 
     noLenRet() {
         if (this.filtered.length) return false;
-        this.saveMessages(inter.reply("Your filter doesn't match any message"));
+        this.saveMessages(this.interaction.reply("Your filter doesn't match any message"));
         return true;
     }
 }

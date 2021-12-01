@@ -5,7 +5,7 @@ const { Command } = require("../../classes/Command");
 const { Moderation } = require("../../classes/Moderation");
 const { loadDb } = require("../../database");
 const { logDev } = require("../../debug");
-const { getColor, tickTag, unixToSeconds } = require("../../functions");
+const { getColor, tickTag, unixToSeconds, replyError } = require("../../functions");
 
 module.exports = class UnmuteCmd extends Command {
     constructor(interaction) {
@@ -23,7 +23,7 @@ module.exports = class UnmuteCmd extends Command {
         const get = await ud.db.getOne("muted", "Object");
         const muted = get?.value || {};
         if (!muted.state)
-            return inter.editReply("That user isn't muted. Consider muting them first <:senkoStareLife:853238498223325204>");
+            return inter.editReply(replyError({ message: "Unknown Mute" }));
         const mod = new Moderation(this.client, {
             guild: this.guild, targets: user.user, moderator: this.member
         });

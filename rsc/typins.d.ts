@@ -8,6 +8,7 @@ export declare class ShaMessage extends Message {
     public buttonHandler: { [k: string]: () => Promise<void | boolean> };
     public deleteAfter: number;
     public readonly channel: ShaTextChannel;
+    public messageLinkPreview: ShaMessage;
 }
 
 export declare class ShaCommandInteraction extends CommandInteraction {

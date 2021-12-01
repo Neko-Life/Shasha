@@ -4,11 +4,9 @@ const {
     PermissionString,
     TextBasedChannels,
     AutocompleteInteraction,
-    Message,
     GuildCacheMessage,
     Cached
 } = require("discord.js");
-const ShaClient = require("./ShaClient");
 const configFile = require("../../config.json");
 const { loadDb } = require("../database");
 const { escapeRegExp } = require("lodash");
@@ -63,7 +61,7 @@ module.exports.Command = class ShaBaseCommand {
              */
             this.interaction = interaction;
             /**
-             * @type {ShaClient}
+             * @type {import("./ShaClient")}
              */
             this.client = interaction.client;
             /**
@@ -142,7 +140,7 @@ module.exports.Command = class ShaBaseCommand {
 
     /**
      * 
-     * @param {{client:ShaClient, user: import("../typins").ShaUser, guild: import("../typins").ShaGuild}} param0
+     * @param {{client:import("./ShaClient"), user: import("../typins").ShaUser, guild: import("../typins").ShaGuild}} param0
      * @returns 
      */
     static constructCommandEmoteAutocomplete({ client, user, guild }) {

@@ -2,6 +2,7 @@
 
 const { Message, GuildMember, CommandInteraction } = require("discord.js");
 const { Command } = require("../../classes/Command");
+const { loadDb } = require("../../database");
 const { isAdmin } = require("../../functions");
 const NO_LONGER_AFK_MSG = "Welcome back ";
 
@@ -14,12 +15,12 @@ module.exports = class AFKCmd extends Command {
         });
     }
 
-    run(inter, { message }) {
+    async run(inter, { message }) {
         const afk = {
             state: true,
             message: message?.value
         }
-        this.member.afk = afk;
+        await AFKCmd.setAfk(this.member, afk);
         if (!this.member.displayName.startsWith("[AFK] "))
             if (this.guild.me.permissions.has("MANAGE_NICKNAMES") && this.member.manageable)
                 this.member.setNickname("[AFK] " + this.member.displayName);
@@ -41,6 +42,7 @@ module.exports = class AFKCmd extends Command {
         if (msg.mentions.everyone) return;
         if (msg.mentions.repliedUser) {
             const replied = msg.guild.members.resolve(msg.mentions.repliedUser);
+            if (!replied) return;
             if (this.notif(replied, msg)) return;
         }
         if (msg.mentions.roles.size) return;
@@ -55,11 +57,13 @@ module.exports = class AFKCmd extends Command {
      * @param {Message} msg 
      * @returns 
      */
-    notif(member, msg) {
+    async notif(member, msg) {
+        if (!msg.author) return;
         if (msg.author.bot) return false;
-        if (!member?.afk?.state) return false;
         if (msg.member.id === member.id) return false;
         if (!msg.channel.permissionsFor(msg.guild.me).has("SEND_MESSAGES")) return;
+        await AFKCmd.loadAfk(member);
+        if (!member?.afk?.state) return false;
         const m = "**" + member.displayName + "** is **currently `AFK`**"
             + (
                 member.afk.message
@@ -85,6 +89,7 @@ module.exports = class AFKCmd extends Command {
         if (msg.author?.bot) return;
         if (!msg.guild) return;
         if (msg.commandPath?.[1] === "afk") return;
+        await AFKCmd.loadAfk(msg.member);
         if (!msg.member.afk?.state) return;
         let greet;
         const dN = msg.member.displayName.startsWith("[AFK] ")
@@ -106,12 +111,40 @@ module.exports = class AFKCmd extends Command {
             if (msg.guild.me.permissions.has("MANAGE_NICKNAMES") && msg.member.manageable)
                 msg.member.setNickname(dN);
 
-        msg.member.afk = {
-            state: false,
-            mesage: null
-        }
+        AFKCmd.removeAfk(msg.member);
 
         if (!greet) return;
         return this.saveMessages(greet);
+    }
+
+    static async loadAfk(member) {
+        if (member.afk) return member;
+        const gd = loadDb(member, "member/" + member.guild.id + "/" + member.id);
+        const get = await gd.db.getOne("afkState", "Object");
+        const data = get?.value || {};
+        member.afk = data;
+        return member;
+    }
+
+    /**
+     * 
+     * @param {*} member 
+     * @param {{state: boolean, message: string}} data 
+     */
+    static setAfk(member, data) {
+        const gd = loadDb(member, "member/" + member.guild.id + "/" + member.id);
+        member.afk = data;
+        gd.db.set("afkState", "Object", { value: data });
+        return member;
+    }
+
+    static removeAfk(member) {
+        const gd = loadDb(member, "member/" + member.guild.id + "/" + member.id);
+        member.afk = {
+            state: false,
+            mesage: null
+        }
+        gd.db.set("afkState", "Object", { value: member.afk });
+        return member;
     }
 }

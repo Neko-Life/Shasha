@@ -24,18 +24,20 @@ module.exports = class SayCmd extends Command {
     async run(inter, { text, channel, message }) {
         if (!(text || message)) return inter.reply("Tell me what to say <:bruhLife:798789686242967554>");
         const oldCh = inter.channel;
+        let deffered;
         if (!text && message) {
+            deffered = true;
             await inter.deferReply();
             text = {
                 value: (await this.messageArg(message.value, oldCh))?.content
             }
         }
-        if (!text.value) return inter[message ? "editReply" : "reply"]("Nothin found :/");
+        if (!text.value) return inter[deffered ? "editReply" : "reply"]("Nothin found :/");
         if (channel && (
             !channel.channel.isText()
             || !channel.channel.permissionsFor(this.user).has("SEND_MESSAGES")
             || !channel.channel.permissionsFor(this.client.user).has("SEND_MESSAGES")
-        )) return inter[message ? "editReply" : "reply"]("Can't send message to **<#" + channel.channel.id + ">**");
+        )) return inter[deffered ? "editReply" : "reply"]("Can't send message to **<#" + channel.channel.id + ">**");
 
         /**
          * @type {import("discord.js").MessageOptions}
@@ -47,8 +49,8 @@ module.exports = class SayCmd extends Command {
         let ret;
         if (channel) {
             ret = await channel.channel.send(send);
-            inter[message ? "editReply" : "reply"]("Said 🙏");
-        } else inter[message ? "editReply" : "reply"](send);
+            inter[deffered ? "editReply" : "reply"]("Said 🙏");
+        } else inter[deffered ? "editReply" : "reply"](send);
         return ret;
     }
 }
