@@ -102,8 +102,9 @@ module.exports.Command = class ShaBaseCommand {
         /**
          * @type {Promise<import("../typins").ShaMessage>[] | Promise<GuildCacheMessage<Cached>>[] | import("../typins").ShaMessage[] | GuildCacheMessage<Cached>[]}
          */
-        this._savedMessages = this.saveMessages(data.savedMessages) || [];
-
+        this._savedMessages = [];
+        if (data.savedMessages)
+            this.saveMessages(data.savedMessages)
         /**
          * @type {number} - ms
          */
@@ -119,16 +120,17 @@ module.exports.Command = class ShaBaseCommand {
 
     /**
      * @param {Promise<import("../typins").ShaMessage>[] | Promise<GuildCacheMessage<Cached>>[] | import("../typins").ShaMessage[] | GuildCacheMessage<Cached>[]} messages
+     * @return {Promise<import("../typins").ShaMessage>[] | Promise<GuildCacheMessage<Cached>>[] | import("../typins").ShaMessage[] | GuildCacheMessage<Cached>[]}
      */
     saveMessages(...messages) {
-        if (messages.every(r => !r)) return;
         for (let i = 0; i < messages.length; i++) {
+            if (!messages[i]) continue;
             if (typeof messages[i].deleteAfter === "number" || typeof this.deleteSavedMessagesAfter === "number") {
                 setTimeout(
                     async () => {
                         if (messages[i] instanceof Promise)
                             messages[i] = await messages[i];
-
+                        if (!messages[i]) return;
                         if (messages[i].deletable && messages[i].deleted === false)
                             messages[i].delete();
                     }, messages[i].deleteAfter ?? this.deleteSavedMessagesAfter);
@@ -293,9 +295,10 @@ module.exports.Command = class ShaBaseCommand {
      * Get message object from the message channel or provided channel
      * @param {string} MainID - Message ID | Channel_[mention|ID] | Message link
      * @param {string} SecondID - Message ID
+     * @param {boolean} bypass - Bypass to use all client visible channels
      * @returns {Promise<import("../typins").ShaMessage>} Message object | undefined
      */
-    async getChannelMessage(MainID, SecondID) {
+    async getChannelMessage(MainID, SecondID, bypass) {
         if (!MainID) return;
         if (/\//.test(MainID)) {
             const splitURL = MainID.split(/\/+/);
@@ -305,14 +308,14 @@ module.exports.Command = class ShaBaseCommand {
         MainID = cleanMentionID(MainID);
         if (SecondID && !/\D/.test(SecondID)) {
             try {
-                const meschannel = (this.isOwner ? this.client : this.guild).channels.cache.get(MainID);
-                return meschannel.messages.fetch(SecondID, true).catch(logDev);
+                const meschannel = ((bypass || this.isOwner) ? this.client : this.guild)?.channels.cache.get(MainID);
+                return meschannel?.messages.cache.get(SecondID) || meschannel?.messages.fetch(SecondID, true).catch(logDev);
             } catch (e) {
                 logDev(e);
                 return null;
             }
         } else {
-            return this.channel.messages.fetch(MainID, true).catch(logDev);
+            return this.channel.messages.cache.get(MainID) || this.channel.messages.fetch(MainID, true).catch(logDev);
         }
     }
 
@@ -382,18 +385,24 @@ module.exports.Command = class ShaBaseCommand {
      * @param {CmdDisableOpt} opt
      */
     async setDisabled(opt) {
-        let { bypass = {}, all, channels = [], remove = false } = opt;
-        if (!remove) {
-            if (typeof all !== "boolean")
-                if (!channels.length) opt.all = true;
-                else opt.all = false;
-            opt.channels = channels;
-            opt.bypass = bypass;
-        }
+        const { bypass = {}, all, channels = [], remove = false } = opt;
+        const toDb = {};
 
         const gd = loadDb(this.guild, "guild/" + this.guild.id);
         if (remove) return gd.db.delete("commandDisabled", this.commandPath.join("/"));
-        return gd.db.set("commandDisabled", this.commandPath.join("/"), opt);
+        const get = await gd.db.getOne("commandDisabled", this.commandPath.join("/"));
+        if (get?.channels?.length)
+            for (const k of get.channels)
+                if (channels.includes(k)) continue;
+                else channels.push(k);
+
+        if (typeof all !== "boolean")
+            if (!channels.length) toDb.all = true;
+            else toDb.all = false;
+        toDb.channels = channels;
+        toDb.bypass = bypass;
+
+        return gd.db.set("commandDisabled", this.commandPath.join("/"), toDb);
     }
 
     async banGuild(guild) {

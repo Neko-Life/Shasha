@@ -17,7 +17,7 @@ module.exports = class UnbanCmd extends Command {
     }
 
     async run(inter, { user, reason }) {
-        if (!user?.user) return inter.reply("Who you gonna unban the wind?");
+        if (!user?.user) return inter.reply("Who you gonna unban daddy?");
         const invoked = new Date();
         await inter.deferReply();
         const mod = new Moderation(this.client, {
@@ -33,7 +33,7 @@ module.exports = class UnbanCmd extends Command {
                 .addField("User", tickTag(res.unbanned[0].user.user || res.unbanned[0].user)
                     + `\n<@${res.unbanned[0].user.id}>`
                     + `\n(${res.unbanned[0].user.id})`)
-                .addField("At", "<t:" + unixToSeconds(invoked.valueOf()) + ":F>")
+                .addField("At", "<t:" + unixToSeconds(invoked) + ":F>")
                 .setDescription(res.unbanned[0].res.reason);
             return inter.editReply({ embeds: [emb] });
         } catch (e) {

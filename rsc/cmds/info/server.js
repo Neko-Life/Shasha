@@ -33,6 +33,11 @@ module.exports = class ServerInfoCmd extends Command {
      * @returns 
      */
     async run(inter, { identifier }) {
+        if (!inter.guild && !identifier) {
+            const ret = inter.reply("What server to show info about?");
+            ret.deleteAfter = 10000;
+            return this.saveMessages(ret);
+        }
         await inter.deferReply();
         /**
          * @type {Guild}
@@ -40,7 +45,8 @@ module.exports = class ServerInfoCmd extends Command {
         let server = inter.guild;
         if (identifier) server = this.client.findGuilds(
             identifier.value, "i",
-            this.isOwner
+            this.isOwner,
+            true
         );
         if (server instanceof Map) server = server.first();
         if (!server) return inter.editReply("Can't find that server :c");
@@ -149,6 +155,20 @@ module.exports = class ServerInfoCmd extends Command {
                 + `\`${"Bot".padEnd(15, " ")}\`: \`${moreInfo.botCount}\`\n`
                 + `\`${"Total".padEnd(15, " ")}\`: \`${server.memberCount}\`\n`
                 + `\`${"Maximum Member".padEnd(15, " ")}\`: \`${server.maximumMembers}\``, true)
+            .addField("Members Client",
+                `\`${"PC".padEnd(7, " ")}\`: \`${server.members.cache.filter(r => r.presence?.clientStatus.desktop).size}\`\n`
+                + `\`${"WEB".padEnd(7, " ")}\`: \`${server.members.cache.filter(r => r.presence?.clientStatus.web).size}\`\n`
+                + `\`${"MOBILE".padEnd(7, " ")}\`: \`${server.members.cache.filter(r => r.presence?.clientStatus.mobile).size}\``, true)
+            .addField("Members Status",
+                `\`${"ONLINE".padEnd(13, " ")}\`: \`${server.members.cache.filter(r => r.presence?.status === "online").size}\`\n`
+                + `\`${"IDLE".padEnd(13, " ")}\`: \`${server.members.cache.filter(r => r.presence?.status === "idle").size}\`\n`
+                + `\`${"DND".padEnd(13, " ")}\`: \`${server.members.cache.filter(r => r.presence?.status === "dnd").size}\`\n`
+                + `\`${"OFFLINE".padEnd(13, " ")}\`: \`${server.members.cache.filter(r => !r.presence || r.presence.status === "invisible" || r.presence.status === "offline").size}\`\n\n`
+
+                + `\`${"IN_VC".padEnd(13, " ")}\`: \`${server.members.cache.filter(r => r.voice.channel).size}\`\n`
+                + `\`${"VC_STREAM".padEnd(13, " ")}\`: \`${server.members.cache.filter(r => r.voice.streaming).size}\`\n`
+                + `\`${"OTHER_STREAM".padEnd(13, " ")}\`: \`${server.members.cache.filter(r => r.presence?.activities.some(r => r.type === "STREAMING")).size}\``
+                , true)
             .addField("Emoji Count",
                 `\`${"Default".padEnd(9, " ")}\`: \`${moreInfo.emojiStatic}\`\n`
                 + `\`${"Animated".padEnd(9, " ")}\`: \`${moreInfo.emojiAnimated}\`\n`

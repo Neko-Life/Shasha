@@ -32,7 +32,7 @@ module.exports = class EvalCmd extends Command {
             }
         } else script = script?.value;
 
-        script = script.replace(/^```(js)?\n|```$/g, "");
+        script = script?.replace(/^```(js)?\n|```$/g, "");
 
         if (!script) return inter.editReply({ content: "No script OwO", ephemeral: true });
         let mes, bf, af;

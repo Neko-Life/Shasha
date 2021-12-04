@@ -1,12 +1,14 @@
 'use strict';
 
 const ShaClient = require("./ShaClient");
-const { GuildResolvable, GuildMemberResolvable, GuildMember, Guild, User, MessageEmbed } = require("discord.js");
+const { GuildResolvable, GuildMemberResolvable, GuildMember, Guild, User, MessageEmbed, Channel, VoiceChannel } = require("discord.js");
 const { loadDb } = require("../database");
 const { logDev } = require("../debug");
 const { getColor, unixToSeconds, isAdmin } = require("../functions");
 const { createInterval, intervalToStrings, parseDuration } = require("../util/Duration");
 const { SCHEDULE_MESSAGER_PATH } = require("../constants");
+const { ShaBaseDb } = require("./Database");
+const { database } = require("../mongo");
 const ENUM_ACTIONS = {
     ban: 1,
     mute: 2,
@@ -19,6 +21,7 @@ const ENUM_ACTIONS = {
  * @property {GuildResolvable} guild
  * @property {User[] | User | GuildMember[] | GuildMember} targets
  * @property {GuildMemberResolvable} moderator
+ * @property {Channel} channel
  * 
  * @typedef {object} InfractionConstructor
  * @property {string[]|User[]} offender
@@ -30,24 +33,22 @@ const ENUM_ACTIONS = {
  * @property {string} reason
  * @property {User|string} moderator
  *
- * @typedef {object} MuteOpts
- * @property {Date} invoked
- * @property {Date} end
- * @property {string} [reason="No reason provided"]
+ * @typedef {DefaultExecModOpts & MuteExtendOpts} MuteOpts
+ * 
+ * @typedef {object} MuteExtendOpts
  * @property {string} muteRole
- * @property {boolean} [notify=true]
- * 
- * @typedef {object} ExtendsBanOpts
+ *
+ * @typedef {object} DefaultExecModOpts
  * @property {Date} invoked
- * @property {Date} end
- * @property {boolean} [notify=true]
- * 
- * @typedef {import("discord.js").BanOptions & ExtendsBanOpts} BanOpts
- * 
- * @typedef {object} UnmuteOpts
- * @property {Date} invoked
+ * @property {Date} [end=null]
  * @property {string} [reason="No reason provided"]
  * @property {boolean} [notify=true]
+ * 
+ * @typedef {object} ExtendExecVCOpts
+ * @property {import("../typins").ShaGuildMember} moderator
+ * @property {boolean} force
+ *
+ * @typedef {import("discord.js").BanOptions & DefaultExecModOpts} BanOpts
  */
 
 class Infraction {
@@ -132,9 +133,10 @@ class Infraction {
 class BaseModeration {
     /**
      * @param {ShaClient} client 
-     * @param {GuildResolvable} guild 
+     * @param {GuildResolvable} guild
+     * @param {import("discord.js").TextBasedChannels | VoiceChannel} channel
      */
-    constructor(client, guild) {
+    constructor(client, guild, channel) {
         if (!client) throw new TypeError("client undefined");
         guild = client.guilds.resolve(guild);
         if (!guild) throw new TypeError("guild undefined");
@@ -150,6 +152,10 @@ class BaseModeration {
          * @type {GuildMember}
          */
         this.me = guild.me;
+        /**
+         * @type {import("discord.js").TextBasedChannels | VoiceChannel}
+         */
+        this.channel = channel;
         /**
          * @type {object[]}
          */
@@ -285,10 +291,10 @@ class BaseModeration {
      * @param {MuteOpts} opt
      */
     async _execMute(user, opt) {
-        const ud = loadDb(user, "member/" + this.guild.id + "/" + user.id);
+        const db = new ShaBaseDb(database, "member/" + this.guild.id + "/" + user.id);
         if (!opt.reason) opt.reason = "No reason provided";
 
-        const get = await ud.db.getOne("muted", "Object");
+        const get = await db.getOne("muted", "Object");
         const oldMute = get?.value || {};
 
         const takeRoles = user.roles?.cache.filter(
@@ -327,7 +333,7 @@ class BaseModeration {
             } catch (e) { logDev(e); opt.notified = false; };
         }
         const val = { ...opt, state: true };
-        ud.db.set("muted", "Object", { value: val });
+        db.set("muted", "Object", { value: val });
         if (opt.end) {
             const data = {
                 action: "unmute",
@@ -350,11 +356,11 @@ class BaseModeration {
     /**
      *
      * @param {GuildMember | User} user
-     * @param {UnmuteOpts} opt
+     * @param {DefaultExecModOpts} opt
      */
     async _execUnmute(user, opt) {
-        const ud = loadDb(user, "member/" + this.guild.id + "/" + user.id);
-        const get = await ud.db.getOne("muted", "Object");
+        const db = new ShaBaseDb(database, "member/" + this.guild.id + "/" + user.id);
+        const get = await db.getOne("muted", "Object");
         const oldOpt = get?.value || {};
         if (!oldOpt.state && !oldOpt.takenRoles?.length) throw new Error("This user isn't muted");
         if (!opt.reason) opt.reason = "No reason provided";
@@ -374,18 +380,112 @@ class BaseModeration {
                 .setDescription(opt.reason)
                 .setColor(getColor((user.user || user).accentColor, true) || getColor(user.displayColor, true))
                 .setTitle("Unmute")
-                .addField("At", "<t:" + unixToSeconds(opt.invoked.valueOf()) + ":F>");
+                .addField("At", "<t:" + unixToSeconds(opt.invoked) + ":F>");
             try {
                 if (await user.send({ embeds: [emb] }))
                     opt.notified = true;
             } catch (e) { logDev(e); opt.notified = false; };
         }
         const val = { ...opt, state: false };
-        ud.db.set("muted", "Object", { value: val });
+        db.set("muted", "Object", { value: val });
         if (this.client.scheduler.jobs.find(r => r.name === ("unmute/" + this.guild.id + "/" + user.id)))
             try { await this.client.scheduler.remove("unmute/" + this.guild.id + "/" + user.id); }
             catch (e) { logDev(e) };
         return { user, val };
+    }
+
+    /**
+     * @param {GuildMember} member
+     * @param {DefaultExecModOpts} opt
+     */
+    async _execKick(member, opt) {
+        if (!opt.reason) opt.reason = "No reason provided";
+        if (typeof opt.notify !== "boolean") opt.notify = true;
+        if (opt.notify) {
+            const emb = new MessageEmbed()
+                .setAuthor(this.guild.name, this.guild.iconURL({ size: 128, format: "png", dynamic: true }))
+                .setColor(getColor(member.user.accentColor, true, member.displayColor))
+                .setDescription(opt.reason)
+                .setTitle("Kick")
+                .addField("At", "<t:" + unixToSeconds(opt.invoked) + ":F>", true);
+            try {
+                if (await member.send({ embeds: [emb] }))
+                    opt.notified = true;
+            } catch (e) { logDev(e); opt.notified = false; };
+        }
+
+        await member.kick(opt.reason);
+
+        return { member, opt };
+    }
+
+    /**
+     * 
+     * @param {import("../typins").ShaGuildMember} member
+     * @param {DefaultExecModOpts & ExtendExecVCOpts} opt
+     */
+    async _execVCDeafen(member, opt) {
+        if (!member.voice.channel) return;
+        if (!member.voice.channel.permissionsFor(opt.moderator).has("DEAFEN_MEMBERS"))
+            throw new Error("Moderator lack DEAFEN_MEMBERS permission");
+        if (!member.voice.channel.permissionsFor(member.guild.me).has("DEAFEN_MEMBERS"))
+            throw new Error("Client lack DEAFEN_MEMBERS permission");
+        if (!opt.reason) opt.reason = "No reason provided";
+        if (member.voice.serverDeaf) return;
+        await member.voice.setDeaf(true, opt.reason);
+        return { member, opt };
+    }
+
+    /**
+     *
+     * @param {import("../typins").ShaGuildMember} member
+     * @param {DefaultExecModOpts & ExtendExecVCOpts} opt
+     */
+    async _execVCUndeafen(member, opt) {
+        if (!member.voice.channel) return;
+        if (!member.voice.channel.permissionsFor(opt.moderator).has("DEAFEN_MEMBERS"))
+            throw new Error("Moderator lack DEAFEN_MEMBERS permission");
+        if (!member.voice.channel.permissionsFor(member.guild.me).has("DEAFEN_MEMBERS"))
+            throw new Error("Client lack DEAFEN_MEMBERS permission");
+        if (!opt.reason) opt.reason = "No reason provided";
+        if (!member.voice.serverDeaf) return;
+        await member.voice.setDeaf(false, opt.reason);
+        return { member, opt };
+    }
+
+    /**
+     * 
+     * @param {import("../typins").ShaGuildMember} member
+     * @param {DefaultExecModOpts & ExtendExecVCOpts} opt
+     */
+    async _execVCMute(member, opt) {
+        if (!member.voice.channel) return;
+        if (!member.voice.channel.permissionsFor(opt.moderator).has("MUTE_MEMBERS"))
+            throw new Error("Moderator lack MUTE_MEMBERS permission");
+        if (!member.voice.channel.permissionsFor(member.guild.me).has("MUTE_MEMBERS"))
+            throw new Error("Client lack MUTE_MEMBERS  permission");
+        if (!opt.reason) opt.reason = "No reason provided";
+        if (member.voice.serverMute) return;
+        await member.voice.setMute(true, opt.reason);
+
+        return { member, opt };
+    }
+
+    /**
+     *
+     * @param {import("../typins").ShaGuildMember} member
+     * @param {DefaultExecModOpts & ExtendExecVCOpts} opt
+     */
+    async _execVCUnmute(member, opt) {
+        if (!member.voice.channel) return;
+        if (!member.voice.channel.permissionsFor(opt.moderator).has("MUTE_MEMBERS"))
+            throw new Error("Moderator lack MUTE_MEMBERS permission");
+        if (!member.voice.channel.permissionsFor(member.guild.me).has("MUTE_MEMBERS"))
+            throw new Error("Client lack MUTE_MEMBERS permission");
+        if (!opt.reason) opt.reason = "No reason provided";
+        if (!member.voice.serverMute) return;
+        await member.voice.setMute(false, opt.reason);
+        return { member, opt };
     }
 
     /**
@@ -422,27 +522,33 @@ class Moderation extends BaseModeration {
      * @param {ShaClient} client
      * @param {ModerationOpt} param0
      */
-    constructor(client, { guild, targets, moderator }) {
-        super(client, guild);
-        if (!Array.isArray(targets)) targets = [targets];
-        if (targets.some(r => !(r instanceof User) && !(r instanceof GuildMember)))
-            throw new TypeError("some target isn't User or GuildMember");
+    constructor(client, { guild, targets, moderator, channel }) {
+        super(client, guild, channel);
+
         if (!(moderator instanceof GuildMember))
             throw new TypeError("moderator isn't GuildMember");
 
         const targetUs = [];
-        for (const r of targets) {
-            if (targetUs.some(a => a.id === r.id)) continue;
-            if (r instanceof User) targetUs.push(r);
-            else targetUs.push(r.user);
-        }
         const targetMs = [];
-        for (const r of targets) {
-            if (targetMs.some(a => a.id === r.id)) continue;
-            const get = this.guild.members.resolve(r);
-            if (!(get instanceof GuildMember)) continue;
-            targetMs.push(get);
+
+        if (targets?.length || targets) {
+            if (!Array.isArray(targets)) targets = [targets];
+            if (targets.some(r => !(r instanceof User) && !(r instanceof GuildMember)))
+                throw new TypeError("some target isn't User or GuildMember");
+
+            for (const r of targets) {
+                if (targetUs.some(a => a.id === r.id)) continue;
+                if (r instanceof User) targetUs.push(r);
+                else targetUs.push(r.user);
+            }
+            for (const r of targets) {
+                if (targetMs.some(a => a.id === r.id)) continue;
+                const get = this.guild.members.resolve(r);
+                if (!(get instanceof GuildMember)) continue;
+                targetMs.push(get);
+            }
         }
+
         /**
          * @type {{users: User[], members: GuildMember[]}}
          */
@@ -476,6 +582,14 @@ class Moderation extends BaseModeration {
          */
         this.moderatorManageRolesPerm = client.isOwner(moderator) || moderator.permissions.has("MANAGE_ROLES");
         /**
+         * @type {boolean}
+         */
+        this.moderatorVCDeafenPerm = client.isOwner(moderator) || this.channel?.permissionsFor(moderator).has("DEAFEN_MEMBERS");
+        /**
+         * @type {boolean}
+         */
+        this.moderatorVCMutePerm = client.isOwner(moderator) || this.channel?.permissionsFor(moderator).has("MUTE_MEMBERS");
+        /**
          * @type {number}
          */
         this.clientPosition = this.me.roles.highest.position;
@@ -495,6 +609,14 @@ class Moderation extends BaseModeration {
          * @type {boolean}
          */
         this.clientManageRolesPerm = this.me.permissions.has("MANAGE_ROLES");
+        /**
+         * @type {boolean}
+         */
+        this.clientVCDeafenPerm = this.channel?.permissionsFor(this.me).has("DEAFEN_MEMBERS");
+        /**
+         * @type {boolean}
+         */
+        this.clientVCMutePerm = this.channel?.permissionsFor(this.me).has("MUTE_MEMBERS");
 
         /**
          * @type {GuildMember[]}
@@ -623,7 +745,12 @@ class Moderation extends BaseModeration {
         return { unbanned };
     }
 
-    async kick(reason) {
+    /**
+     * 
+     * @param {DefaultExecModOpts} opt 
+     * @returns 
+     */
+    async kick(opt) {
         if (!this.moderatorKickPerm)
             throw new Error("Moderator lack KICK_MEMBERS permission");
         if (!this.clientKickPerm)
@@ -640,7 +767,7 @@ class Moderation extends BaseModeration {
                 higherThanModerator.push(a);
                 continue;
             }
-            kicked.push(await a.kick(reason));
+            kicked.push(await this._execKick(a, opt));
         }
         return { kicked, higherThanClient, higherThanModerator };
     }
@@ -660,7 +787,6 @@ class Moderation extends BaseModeration {
         if (muteRole.position >= this.clientPosition)
             throw new RangeError("Mute role is higher than client");
         if (!opt.invoked) throw new RangeError("invoked hasn't set");
-        opt.moderator = this.moderator.id;
         const muted = [];
         const higherThanClient = [];
         const higherThanModerator = [];
@@ -680,14 +806,13 @@ class Moderation extends BaseModeration {
     }
 
     /**
-     * @param {UnmuteOpts} opt 
+     * @param {DefaultExecModOpts} opt
      */
     async unmute(opt) {
         if (!this.moderatorManageRolesPerm)
             throw new Error("Moderator lack MANAGE_ROLES permission");
         if (!this.clientManageRolesPerm)
             throw new Error("Client lack MANAGE_ROLES permission");
-        opt.moderator = this.moderator.id;
         const unmuted = [];
         const higherThanClient = [];
         const higherThanModerator = [];
@@ -706,6 +831,130 @@ class Moderation extends BaseModeration {
             unmuted.push(await this._execUnmute(m || a, opt));
         }
         return { unmuted, higherThanClient, higherThanModerator };
+    }
+
+    /**
+     * 
+     * @param {DefaultExecModOpts & ExtendExecVCOpts} opt 
+     * @returns 
+     */
+    async vcDeafen(opt) {
+        // if (!this.moderatorVCDeafenPerm)
+        //     throw new Error("Moderator lack DEAFEN_MEMBERS permission");
+        // if (!this.clientVCDeafenPerm)
+        //     throw new Error("Client lack DEAFEN_MEMBERS permission");
+        if (!opt.moderator) opt.moderator = this.moderator;
+        const deafened = [];
+        const higherThanClient = [];
+        const higherThanModerator = [];
+        const noVoice = [];
+        // if (this.channel instanceof VoiceChannel) {
+        //     this.addTargets(this.channel.members.filter(r => r.id !== this.moderator.id).map(r => r));
+        // }
+        for (const a of this.target.members) {
+            if (!opt.force && a.id === opt.moderator.id) continue;
+            if (this.higherThanModerator.some(r => r.id === a.id)) {
+                higherThanModerator.push(a);
+                continue;
+            }
+            const res = await this._execVCDeafen(a, opt);
+            if (!res) noVoice.push(a);
+            else deafened.push(res);
+        }
+        return { deafened, higherThanClient, higherThanModerator, noVoice };
+    }
+
+    /**
+     * 
+     * @param {DefaultExecModOpts & ExtendExecVCOpts} opt 
+     * @returns 
+     */
+    async vcUndeafen(opt) {
+        // if (!this.moderatorVCDeafenPerm)
+        //     throw new Error("Moderator lack DEAFEN_MEMBERS permission");
+        // if (!this.clientVCDeafenPerm)
+        //     throw new Error("Client lack DEAFEN_MEMBERS permission");
+        if (!opt.moderator) opt.moderator = this.moderator;
+        const undeafened = [];
+        const higherThanClient = [];
+        const higherThanModerator = [];
+        const noVoice = [];
+        // if (this.channel instanceof VoiceChannel) {
+        //     this.addTargets(this.channel.members.filter(r => r.id !== this.moderator.id).map(r => r));
+        // }
+        for (const a of this.target.members) {
+            if (!opt.force && a.id === opt.moderator.id) continue;
+            if (this.higherThanModerator.some(r => r.id === a.id)) {
+                higherThanModerator.push(a);
+                continue;
+            }
+            const res = await this._execVCUndeafen(a, opt);
+            if (!res) noVoice.push(a);
+            else undeafened.push(res);
+        }
+        return { undeafened, higherThanClient, higherThanModerator, noVoice };
+    }
+
+    /**
+     * 
+     * @param {DefaultExecModOpts & ExtendExecVCOpts} opt 
+     * @returns 
+     */
+    async vcMute(opt) {
+        // if (!this.moderatorVCMutePerm)
+        //     throw new Error("Moderator lack MUTE_MEMBERS permission");
+        // if (!this.clientVCMutePerm)
+        //     throw new Error("Client lack MUTE_MEMBERS permission");
+        if (!opt.moderator) opt.moderator = this.moderator;
+        const muted = [];
+        const higherThanClient = [];
+        const higherThanModerator = [];
+        const noVoice = [];
+        // if (this.channel instanceof VoiceChannel) {
+        //     this.addTargets(this.channel.members.filter(r => r.id !== this.moderator.id).map(r => r));
+        // }
+        for (const a of this.target.members) {
+            if (!opt.force && a.id === opt.moderator.id) continue;
+            if (this.higherThanModerator.some(r => r.id === a.id)) {
+                higherThanModerator.push(a);
+                continue;
+            }
+            const res = await this._execVCMute(a, opt);
+            if (!res) noVoice.push(a);
+            else muted.push(res);
+        }
+        return { muted, higherThanClient, higherThanModerator, noVoice };
+    }
+
+    /**
+     * 
+     * @param {DefaultExecModOpts & ExtendExecVCOpts} opt 
+     * @returns 
+     */
+    async vcUnmute(opt) {
+        // if (!this.moderatorVCMutePerm)
+        //     throw new Error("Moderator lack MUTE_MEMBERS permission");
+        // if (!this.clientVCMutePerm)
+        //     throw new Error("Client lack MUTE_MEMBERS permission");
+        if (!opt.moderator) opt.moderator = this.moderator;
+        const unmuted = [];
+        const higherThanClient = [];
+        const higherThanModerator = [];
+        const noVoice = [];
+        // if (this.channel instanceof VoiceChannel) {
+        //     this.addTargets(this.channel.members.filter(r => r.id !== this.moderator.id).map(r => r));
+        // }
+        for (const a of this.target.members) {
+            if (!opt.force && a.id === opt.moderator.id) continue;
+            if (this.higherThanModerator.some(r => r.id === a.id)) {
+                higherThanModerator.push(a);
+                continue;
+            }
+            const res = await this._execVCUnmute(a, opt);
+            if (!res) noVoice.push(a);
+            else unmuted.push(res);
+        }
+        return { unmuted, higherThanClient, higherThanModerator, noVoice };
     }
 }
 

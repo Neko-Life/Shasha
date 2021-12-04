@@ -2,7 +2,7 @@
 
 const { MessageEmbed, Guild } = require("discord.js");
 const { Command } = require("../classes/Command");
-const { emphasizePerms, getColor } = require("../functions");
+const { emphasizePerms, getColor, prevNextButton } = require("../functions");
 const { loadDb } = require("../database");
 const ArgsParser = require("../classes/ArgsParser");
 
@@ -23,9 +23,8 @@ module.exports = class DisableEnableCmd extends Command {
     async run(inter, { command, channels, bypassRoles, bypassPermissions, bypassUsers, enable }) {
         await inter.deferReply();
 
-        if (!command) {
+        if (!command)
             return this.showDisabled();
-        }
 
         if (command.value.startsWith("/")) command.value = command.value.slice(1);
         const commandPath = command.value.toLowerCase().split(/ +/);
@@ -36,8 +35,7 @@ module.exports = class DisableEnableCmd extends Command {
         if (commandPath[0] === "all") {
             cmd = inter.client.commands;
             commandPath.shift();
-        }
-        else {
+        } else {
             cmd = inter.client.commands[commandPath[0]];
             if (!cmd) throw new Error("No category found: " + commandPath[0]);
             const iterScmd = commandPath.slice(1);
@@ -49,7 +47,24 @@ module.exports = class DisableEnableCmd extends Command {
         }
 
         if (channels) {
-            const parsed = ArgsParser.channels(this.guild, channels.value);
+            const parsed = await ArgsParser.channels(
+                this.guild,
+                channels.value
+                    .replace(
+                        /(?:\s|^)here(?:\s|$)/g,
+                        " "
+                        + this.channel.id
+                        + " "
+                    ).replace(
+                        /(?:\s|^)all(?:\s|$)/g,
+                        " "
+                        + this.guild.channels.cache.filter(
+                            r => r.isText()
+                        ).map(r => r.id)
+                            .join(" ")
+                        + " "
+                    )
+            );
             this.disableOpt.channels = parsed.channels.map(r => r.id);
             if (this.disableOpt.channels?.length)
                 this.resultMes += "**Setting up for channels**:\n<#" + this.disableOpt.channels.join(">, <#") + ">\n";
@@ -61,7 +76,7 @@ module.exports = class DisableEnableCmd extends Command {
             this.resultMes += "**Setting up for whole server**\n";
 
         if (bypassRoles) {
-            const parsed = ArgsParser.roles(this.guild, bypassRoles.value);
+            const parsed = await ArgsParser.roles(this.guild, bypassRoles.value);
             this.disableOpt.bypass.roles = parsed.roles.map(r => r.id);
             if (this.disableOpt.bypass.roles.length)
                 this.resultMes += "**Bypass roles**:\n<@&" + this.disableOpt.bypass.roles.join(">, <@&") + ">\n";
@@ -148,31 +163,56 @@ module.exports = class DisableEnableCmd extends Command {
     async showDisabled() {
         const gd = loadDb(this.guild, "guild/" + this.guild.id);
         const data = await gd.db.get("commandDisabled", String);
-        const emb = new MessageEmbed()
+        const pages = [];
+        const baseEmbed = new MessageEmbed()
             .setTitle("Disabled Commands")
-            .setColor(getColor(this.user.accentColor, true) || getColor(this.member.displayColor, true));
-        if (data.size) for (const [k, v] of data) {
-            let res = "";
-            if (v.channels.length)
-                res += "**For channels**:\n<#"
-                    + v.channels.join(">, <#") + ">\n";
-            if (v.bypass.roles?.length)
-                res += "**Bypass roles**:\n<@&"
-                    + v.bypass.roles.join(">, <@&") + ">\n";
-            if (v.bypass.users?.length)
-                res += "**Bypass users**:\n<@"
-                    + v.bypass.users.join(">, <@") + ">";
-            if (v.bypass.permissions?.length) {
-                const emph = [];
-                for (const K of v.bypass.permissions)
-                    emph.push(emphasizePerms(K));
-                res += "**Bypass permissions**:```js\n"
-                    + emph.join(", ") + "```";
+            .setColor(getColor(this.user.accentColor, true, this.member.displayColor));
+        let pageEmb = new MessageEmbed(baseEmbed);
+        if (data.size) {
+            const arr = new Array(...data);
+            for (let i = 0; i < arr.length; i++) {
+                const [k, v] = arr[i];
+                let res = "";
+                if (v.channels.length) {
+                    const show = v.channels.slice(0, 10);
+                    const left = v.channels.slice(10);
+                    res += "**For channels**:\n<#"
+                        + show.join(">, <#") + ">\n"
+                        + (left.length ? `and ${left.length} more...\n` : "");
+                }
+                if (v.bypass.roles?.length)
+                    res += "**Bypass roles**:\n<@&"
+                        + v.bypass.roles.join(">, <@&") + ">\n";
+                if (v.bypass.users?.length)
+                    res += "**Bypass users**:\n<@"
+                        + v.bypass.users.join(">, <@") + ">";
+                if (v.bypass.permissions?.length) {
+                    const emph = [];
+                    for (const K of v.bypass.permissions)
+                        emph.push(emphasizePerms(K));
+                    res += "**Bypass permissions**:```js\n"
+                        + emph.join(", ") + "```";
+                }
+                pageEmb.addField("`/" + k.replace(/\//g, " ") + "`", res || "Disabled in all channels and no bypass");
+
+                if (pageEmb.fields.length === 10 || !arr[i + 1]) {
+                    pages.push({ embeds: [pageEmb] });
+                    pageEmb = new MessageEmbed(baseEmbed);
+                }
             }
-            emb.addField("`/" + k.replace(/\//g, " ") + "`", res);
         }
-        if (!emb.fields.length)
-            emb.setDescription("No disabled command for this server");
-        return this.interaction.editReply({ embeds: [emb] });
+
+        if (!pages.length) {
+            baseEmbed.setDescription("No disabled command for this server");
+            pages.push({ embeds: [baseEmbed] });
+        } else if (pages.length > 1) {
+            const button = prevNextButton(true);
+            for (let i = 0; i < pages.length; i++)
+                pages[i].components = [button];
+        }
+
+        const mes = await this.interaction.editReply(pages[0]);
+        this.client.createMessageInteraction(mes.id, { PAGES: pages, CURRENT_PAGE: 0 });
+        return mes;
     }
 }

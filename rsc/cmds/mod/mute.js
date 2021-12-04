@@ -5,7 +5,7 @@ const { Command } = require("../../classes/Command");
 const { Moderation } = require("../../classes/Moderation");
 const { loadDb } = require("../../database");
 const { logDev } = require("../../debug");
-const { getColor, unixToSeconds, tickTag, replyError } = require("../../functions");
+const { getColor, unixToSeconds, tickTag, replyError, replyHigherThanMod } = require("../../functions");
 
 module.exports = class MuteCmd extends Command {
     constructor(interaction) {
@@ -18,6 +18,7 @@ module.exports = class MuteCmd extends Command {
     }
 
     async run(inter, { user, duration, reason }) {
+        if (!user) return inter.reply("unknown server pls provide fish");
         const invoked = new Date();
         await inter.deferReply();
         const gd = loadDb(this.guild, "guild/" + this.guild.id);
@@ -44,21 +45,20 @@ module.exports = class MuteCmd extends Command {
         const dSE = new Date();
         logDev(dSE.valueOf() - dST.valueOf());
         if (!res.muted.length)
-            if (res.higherThanClient.length)
-                return inter.editReply("Can't mute someone in the same or higher position than me");
-            else if (res.higherThanModerator.length)
-                return inter.editReply("You can't mute someone in the same or higher position than you");
+            if (replyHigherThanMod(inter, "mute", res))
+                return;
+        const ex = res.muted[0];
         const emb = new MessageEmbed()
             .setTitle("Mute")
-            .setColor(getColor(this.user.accentColor, true) || getColor(this.member.displayColor, true))
-            .setThumbnail(res.muted[0].user.displayAvatarURL({ size: 4096, format: "png", dynamic: true }))
-            .addField("User", tickTag(res.muted[0].user.user || res.muted[0].user)
-                + `\n<@${res.muted[0].user.id}>`
-                + `\n(${res.muted[0].user.id})`)
-            .addField("At", "<t:" + unixToSeconds(invoked.valueOf()) + ":F>", true)
-            .setDescription(res.muted[0].val.reason);
+            .setColor(getColor(this.user.accentColor, true, this.member.displayColor))
+            .setThumbnail(ex.user.displayAvatarURL({ size: 4096, format: "png", dynamic: true }))
+            .addField("User", tickTag(ex.user.user || ex.user)
+                + `\n<@${ex.user.id}>`
+                + `\n(${ex.user.id})`)
+            .addField("At", "<t:" + unixToSeconds(invoked) + ":F>", true)
+            .setDescription(ex.val.reason);
         if (end)
-            emb.addField("Until", "<t:" + unixToSeconds(end.valueOf()) + ":F>", true)
+            emb.addField("Until", "<t:" + unixToSeconds(end) + ":F>", true)
                 .addField("For", "`" + durFor + "`");
         else emb.addField("Until", "`Never`", true)
             .addField("For", "`Ever`");

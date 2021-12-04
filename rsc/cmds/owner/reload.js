@@ -7,7 +7,8 @@ module.exports = class ReloadCmd extends Command {
     constructor(interaction) {
         super(interaction, {
             name: "reload",
-            ownerOnly: true
+            ownerOnly: true,
+            deleteSavedMessagesAfter: 5000
         });
     }
 
@@ -20,6 +21,6 @@ module.exports = class ReloadCmd extends Command {
             await inter.editReply("```js\n" + e.stack + "\n\nexiting...```");
             process.exit(1);
         }
-        return inter.editReply("Okkiie thank chu ❤️❤️");
+        return this.saveMessages(inter.editReply("Okkiie thank chu ❤️❤️"));
     }
 }

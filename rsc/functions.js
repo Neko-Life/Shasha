@@ -22,9 +22,10 @@ function parseComa(str) {
  * @param {import("./typins").ShaMessage | Interaction} msg - Message object (msg)
  * @param {string} MainID - Message ID | Channel_[mention|ID] | Message link
  * @param {string} SecondID - Message ID
+ * @param {boolean} bypass - Bypass to use all client visible channels
  * @returns {Promise<import("./typins").ShaMessage>} Message object | undefined
  */
-async function getChannelMessage(msg, MainID, SecondID) {
+async function getChannelMessage(msg, MainID, SecondID, bypass) {
     if (!MainID || !msg) return;
     if (/\//.test(MainID)) {
         const splitURL = MainID.split(/\/+/);
@@ -34,14 +35,14 @@ async function getChannelMessage(msg, MainID, SecondID) {
     MainID = cleanMentionID(MainID);
     if (SecondID && !/\D/.test(SecondID)) {
         try {
-            const meschannel = (msg.client.owners.map(r => r.id).includes(msg.author?.id || msg.user?.id || msg.id) ? msg.client : msg.guild).channels.cache.get(MainID);
-            return meschannel.messages.cache.get(SecondID) || meschannel.messages.fetch(SecondID, true).catch(logDev);
+            const meschannel = ((bypass || msg.client.isOwner(msg.author || msg.user)) ? msg.client : msg.guild)?.channels.cache.get(MainID);
+            return meschannel?.messages.cache.get(SecondID) || meschannel?.messages.fetch(SecondID, true).catch(logDev);
         } catch (e) {
             logDev(e);
             return null;
         }
     } else {
-        return msg.channel.messages.fetch(MainID, true).catch(logDev);
+        return msg.channel.messages.cache.get(MainID) || msg.channel.messages.fetch(MainID, true).catch(logDev);
     }
 }
 
@@ -64,11 +65,12 @@ function cleanMentionID(key) {
  * Create RegExp, invalid symbols will be escaped if any making it an exact match
  * @param {string} pattern 
  * @param {string} flags 
+ * @param {boolean} exact
  * @returns 
  */
-function createRegExp(pattern, flags) {
+function createRegExp(pattern, flags, exact) {
     try {
-        return new RegExp(pattern, flags);
+        return new RegExp(exact ? escapeRegExp(pattern) : pattern, flags);
     } catch (e) {
         logDev(e);
         return new RegExp(escapeRegExp(pattern), flags);
@@ -93,8 +95,8 @@ function tickTag(user) {
  */
 function adCheck(str) {
     if (str?.length > 8) {
-        if (/(?:https?:\/\/)?(?:www\.|canary\.)?discord(?:app)?\.(?:gg|com)\/(?:\w{2,17}(?!\w)(?= *))/.test(str)) str = str
-            .replace(/(?:https?:\/\/)?(?:www\.|canary\.)?discord(?:app)?\.(?:gg|com)\/(?:\w{2,17}(?!\w)(?= *))/g,
+        if (/(?:https?:\/\/)?(?:www\.|canary\.)?discord(?:app)?\.(?:gg|com)\/(?!channels|attachments)(?:\w{2,17}(?!\w)(?= *))/.test(str)) str = str
+            .replace(/(?:https?:\/\/)?(?:www\.|canary\.)?discord(?:app)?\.(?:gg|com)\/(?!channels|attachments)(?:\w{2,17}(?!\w)(?= *))/g,
                 '`[BAD_LINK]`');
     }
     return str;
@@ -362,6 +364,14 @@ function replyError(e, vars) {
     return reply;
 }
 
+function replyHigherThanMod(inter, action, { higherThanClient, higherThanModerator }) {
+    if (higherThanClient.length) {
+        return inter[(inter.deferred || inter.replied) ? "editReply" : "reply"](`Can't ${action} someone in the same or higher position than me`);
+    } else if (higherThanModerator.length) {
+        return inter[(inter.deferred || inter.replied) ? "editReply" : "reply"](`You can't ${action} someone in the same or higher position than you`);
+    } else return false;
+}
+
 // ---------------- FNS IMPORTS ----------------
 
 const getColor = require("./util/getColor");
@@ -395,6 +405,7 @@ module.exports = {
     disableMessageComponents,
     prevNextButton,
     replyError,
+    replyHigherThanMod,
 
     // ---------------- FNS IMPORTS ----------------
     // Functions too big to be put here so imported and has its own file instead

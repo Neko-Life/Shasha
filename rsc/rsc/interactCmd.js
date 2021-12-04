@@ -48,20 +48,20 @@ module.exports = async (interaction, query, user, text, msg, noCount, api = "nek
                 format: "png",
                 dynamic: true
             }))
-        .setColor(getColor(from.displayColor));
+        .setColor(getColor((from.user || from).accentColor, true, from.displayColor));
 
     if (msg) emb.setDescription(interaction.client.finalizeStr(msg, isAdmin(from)));
 
     if (!noCount) {
-        loadDb(from, "user/" + from.id);
-        const fetInters = await from.db.getOne("interactions", "Object");
+        const ud = loadDb(from.user || from, "user/" + from.id);
+        const fetInters = await ud.db.getOne("interactions", "Object");
         const interactionDatas = fetInters?.value || {};
 
         if (typeof interactionDatas[query] !== "number")
             interactionDatas[query] = 0;
         interactionDatas[query]++;
 
-        from.db.set("interactions", "Object", { value: interactionDatas });
+        ud.db.set("interactions", "Object", { value: interactionDatas });
 
         let countText;
         const num = interactionDatas[query];

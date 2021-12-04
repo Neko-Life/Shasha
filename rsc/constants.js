@@ -312,10 +312,20 @@ const COLORS = {
 const RANDOM_COLOR = Object.values(COLORS);
 
 const REPLY_ERROR = {
+    // DURATION ERRORS
     "Can't parse string": "Invalid duration! Try `3h` or `5m16s` or `69y`",
     "Duration less than 10000 ms": "I refuse to abuse the discord API just for less than 10 seconds mute <:deadLife:796323537937367050>",
-    "Unknown Ban": "That user isn't banned. Consider banning them first <:senkoStareLife:853238498223325204>",
-    "Unknown Mute": "That user isn't muted. Consider muting them first <:senkoStareLife:853238498223325204>"
+
+    // UNKNOWN ERROES
+    "Unknown Ban": "They're not banned. Consider banning them first <:senkoStareLife:853238498223325204>",
+    "Unknown Mute": "They're not muted. Consider muting them first <:senkoStareLife:853238498223325204>",
+
+    // MODERATION ERRORS
+    "Client lack DEAFEN_MEMBERS permission": "I don't have the `DEAFEN_MEMBERS` permission in that voice channel",
+    "Client lack MUTE_MEMBERS permission": "I don't have the `MUTE_MEMBERS` permission in that voice channel",
+
+    "Moderator lack DEAFEN_MEMBERS permission": "You don't have the `DEAFEN_MEMBERS` permission in that voice channel",
+    "Moderator lack MUTE_MEMBERS permission": "You don't have the `MUTE_MEMBERS` permission in that voice channel",
 }
 
 const LETTER_EMOTES = {

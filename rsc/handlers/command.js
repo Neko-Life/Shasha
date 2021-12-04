@@ -22,7 +22,7 @@ module.exports = class CommandHandler {
         // }
         if (!(cmd instanceof Command))
             if (interaction.replied) return;
-            else return interaction.reply("Command `/"
+            else return CommandHandler.replyDel(interaction, "Command `/"
                 + interaction.commandPath.join(" ")
                 + "` not found, maybe got hacked or somethin");
 
@@ -54,7 +54,8 @@ module.exports = class CommandHandler {
             if (res) {
                 if (res instanceof Promise)
                     res = await res;
-                res.invoker = interaction.user;
+                if (res)
+                    res.invoker = interaction.user;
             }
             interaction.commandResults.push(res);
         }
@@ -130,7 +131,7 @@ module.exports = class CommandHandler {
     static getInteractionCmd(interaction) {
         const category = interaction.client.commands[interaction.commandName];
         if (!category)
-            return interaction.reply(
+            return CommandHandler.replyDel(interaction,
                 `Category/command \`${interaction.commandName}\` not found. Maybe removed/hacked or somethin`
             );
         interaction.commandPath = [];
@@ -139,7 +140,7 @@ module.exports = class CommandHandler {
         if (interaction.options._group) {
             subCategory = category[interaction.options._group];
             if (!subCategory)
-                return interaction.reply(
+                return CommandHandler.replyDel(interaction,
                     `Sub-category \`${interaction.options._group}\` got sucked into a blackhole and gone forever`
                 );
             interaction.commandPath.push(interaction.options._group);
@@ -157,7 +158,7 @@ module.exports = class CommandHandler {
                 toArgs = interaction.options.data[0].options;
             }
             if (!cmd)
-                return interaction.reply(
+                return CommandHandler.replyDel(interaction,
                     `Command \`${interaction.options._subcommand}\` was eaten by _me_. I'm not sorry cuz i'm hungry`
                 );
             interaction.commandPath.push(interaction.options._subcommand);
@@ -200,35 +201,35 @@ module.exports = class CommandHandler {
         if (!(cmd instanceof Command)) return;
         if (await cmd.userBanned()) {
             if (noReply.includes("USER_BANNED")) return false;
-            return interaction.reply("You can't command me anymore! Go away!");
+            return CommandHandler.replyDel(interaction, "You can't command me anymore! Go away!");
         }
 
         if (cmd.ownerOnly) {
             if (!interaction.client.isOwner(interaction.user)) {
                 if (noReply.includes("OWNER_ONLY")) return false;
-                return interaction.reply("Excuse me? I'm sorry who're you again?");
+                return CommandHandler.replyDel(interaction, "Excuse me? I'm sorry who're you again?");
             }
         }
 
         if (cmd.guildOnly)
             if (!interaction.guild) {
                 if (noReply.includes("GUILD_ONLY")) return false;
-                return interaction.reply("This command can only be run in servers");
+                return CommandHandler.replyDel(interaction, "This command can only be run in servers");
             }
 
         if (interaction.guild) {
             if (await cmd.guildBanned()) {
                 if (noReply.includes("GUILD_BANNED")) return false;
-                return interaction.reply("Something's wrong, please contact the support server by running `/info support`");
+                return CommandHandler.replyDel(interaction, "Something's wrong, please contact the support server by running `/info support`");
             }
             if (await cmd.disabled()) {
                 if (noReply.includes("COMMAND_DISABLED")) return false;
-                return interaction.reply("You can't command me here...");
+                return CommandHandler.replyDel(interaction, "You can't command me here...");
             }
             if (cmd.nsfwOnly)
                 if (!interaction.channel.nsfw) {
                     if (noReply.includes("NSFW_ONLY")) return false;
-                    return interaction.reply("This is not an NSFW channel baka!");
+                    return CommandHandler.replyDel(interaction, "This is not an NSFW channel baka!");
                 }
 
             const lackUser = [];
@@ -278,10 +279,16 @@ module.exports = class CommandHandler {
                 );
                 if (lackPermMsg.length) {
                     if (noReply.includes("NO_PERMISSIONS")) return false;
-                    return interaction.reply(lackPermMsg + "then we talk <:dunnoLife:853087375440871456>");
+                    return CommandHandler.replyDel(interaction, lackPermMsg + "then we talk <:dunnoLife:853087375440871456>");
                 }
             }
         }
         return cmd;
+    }
+
+    static async replyDel(interaction, message, timeout = 15000) {
+        const mes = await interaction.reply({ content: message, fetchReply: true });
+        setTimeout(() => mes.deleted ? null : mes.delete(), timeout);
+        return mes;
     }
 }

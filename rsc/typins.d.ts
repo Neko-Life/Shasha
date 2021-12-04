@@ -9,12 +9,13 @@ export declare class ShaMessage extends Message {
     public deleteAfter: number;
     public readonly channel: ShaTextChannel;
     public messageLinkPreview: ShaMessage;
+    public readonly guild: ShaGuild;
 }
 
 export declare class ShaCommandInteraction extends CommandInteraction {
     public readonly client: ShaClient;
     public autocomplete: AutocompleteData;
-    public commandResults: Array<Promise<Message | unknown> | Message | unknown>;
+    public commandResults: Array<Promise<ShaMessage | unknown> | ShaMessage | unknown>;
     public commandPath: Array<string>;
     public user: ShaUser;
     public message: ShaMessage;
@@ -37,6 +38,7 @@ export declare class ShaUser extends User {
 
 export declare class ShaGuild extends Guild {
     public readonly client: ShaClient;
+    messageLinkPreviewSettings: { state: boolean };
     db: ShaBaseDb;
 }
 

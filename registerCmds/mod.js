@@ -64,12 +64,26 @@ module.exports = new SlashCommandBuilder()
             )
     ).addSubcommand(
         sCmd => sCmd
+            .setName("kick")
+            .setDescription("Kick someone's ass")
+            .addUserOption(
+                opt => opt
+                    .setName("member")
+                    .setDescription("Ass to kick")
+                    .setRequired(true)
+            ).addStringOption(
+                opt => opt
+                    .setName("reason")
+                    .setDescription("Reason")
+            )
+    ).addSubcommand(
+        sCmd => sCmd
             .setName("mute")
-            .setDescription("Render shut em criminal")
+            .setDescription("Render shut em bulli")
             .addUserOption(
                 opt => opt
                     .setName("user")
-                    .setDescription("User to moot")
+                    .setDescription("Bulli to moot")
                     .setRequired(true)
             ).addStringOption(
                 opt => opt
@@ -84,11 +98,11 @@ module.exports = new SlashCommandBuilder()
     ).addSubcommand(
         sCmd => sCmd
             .setName("unmute")
-            .setDescription("Render unshut em uncriminal")
+            .setDescription("Render unshut em unbulli")
             .addUserOption(
                 opt => opt
                     .setName("user")
-                    .setDescription("User to unmoot")
+                    .setDescription("Unbulli to unmoot")
                     .setRequired(true)
             ).addStringOption(
                 opt => opt
@@ -103,6 +117,7 @@ module.exports = new SlashCommandBuilder()
                 opt => opt
                     .setName("user")
                     .setDescription("User to put at rest")
+                    .setRequired(true)
             ).addStringOption(
                 opt => opt
                     .setName("duration")
@@ -142,9 +157,58 @@ module.exports = new SlashCommandBuilder()
                     .setDescription("Deafen this specific user")
             ).addStringOption(
                 opt => opt
-                    .setName("duration")
-                    .setDescription("Ex `78m5s1h3w")
-                    .setAutocomplete(true)
+                    .setName("reason")
+                    .setDescription("Reason")
+            )
+    ).addSubcommand(
+        sCmd => sCmd
+            .setName("vc-undeafen")
+            .setDescription("Undeafen users in a VC")
+            .addChannelOption(
+                opt => opt
+                    .setName("channel")
+                    .setDescription("Undeafen all user in this VC")
+                    .addChannelTypes([2])
+            ).addUserOption(
+                opt => opt
+                    .setName("user")
+                    .setDescription("Undeafen this specific user")
+            ).addStringOption(
+                opt => opt
+                    .setName("reason")
+                    .setDescription("Reason")
+            )
+    ).addSubcommand(
+        sCmd => sCmd
+            .setName("vc-mute")
+            .setDescription("Mute users in a VC")
+            .addChannelOption(
+                opt => opt
+                    .setName("channel")
+                    .setDescription("Mute all user in this VC")
+                    .addChannelTypes([2])
+            ).addUserOption(
+                opt => opt
+                    .setName("user")
+                    .setDescription("Mute this specific user")
+            ).addStringOption(
+                opt => opt
+                    .setName("reason")
+                    .setDescription("Reason")
+            )
+    ).addSubcommand(
+        sCmd => sCmd
+            .setName("vc-unmute")
+            .setDescription("Unmute users in a VC")
+            .addChannelOption(
+                opt => opt
+                    .setName("channel")
+                    .setDescription("Unmute all user in this VC")
+                    .addChannelTypes([2])
+            ).addUserOption(
+                opt => opt
+                    .setName("user")
+                    .setDescription("Unmute this specific user")
             ).addStringOption(
                 opt => opt
                     .setName("reason")

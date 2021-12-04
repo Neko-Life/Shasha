@@ -5,7 +5,7 @@ const { Command } = require("../../classes/Command");
 const { Moderation } = require("../../classes/Moderation");
 const { loadDb } = require("../../database");
 const { logDev } = require("../../debug");
-const { getColor, unixToSeconds, tickTag, replyError } = require("../../functions");
+const { getColor, unixToSeconds, tickTag, replyError, replyHigherThanMod } = require("../../functions");
 
 module.exports = class BanCmd extends Command {
     constructor(interaction) {
@@ -18,6 +18,7 @@ module.exports = class BanCmd extends Command {
     }
 
     async run(inter, { user, duration, purge, reason }) {
+        if (!user) return inter.reply("beep boopError can'tput at _rest 404gf not::found");
         const invoked = new Date();
         await inter.deferReply();
         const gd = loadDb(this.guild, "guild/" + this.guild.id);
@@ -46,26 +47,25 @@ module.exports = class BanCmd extends Command {
         const dSE = new Date();
         logDev(dSE.valueOf() - dST.valueOf());
         if (!res.banned.length)
-            if (res.higherThanClient.length)
-                return inter.editReply("Can't ban someone in the same or higher position than me");
-            else if (res.higherThanModerator.length)
-                return inter.editReply("You can't ban someone in the same or higher position than you");
+            if (replyHigherThanMod(inter, "ban", res))
+                return;
+        const ex = res.banned[0];
         const emb = new MessageEmbed()
             .setTitle("Ban")
-            .setColor(getColor(this.user.accentColor, true) || getColor(this.member.displayColor, true))
-            .setThumbnail(res.banned[0].user.displayAvatarURL({ size: 4096, format: "png", dynamic: true }))
-            .addField("User", tickTag(res.banned[0].user.user || res.banned[0].user)
-                + `\n<@${res.banned[0].user.id}>`
-                + `\n(${res.banned[0].user.id})`)
-            .addField("At", "<t:" + unixToSeconds(invoked.valueOf()) + ":F>", true)
-            .setDescription(res.banned[0].opt.reason);
+            .setColor(getColor(this.user.accentColor, true, this.member.displayColor))
+            .setThumbnail(ex.user.displayAvatarURL({ size: 4096, format: "png", dynamic: true }))
+            .addField("User", tickTag(ex.user.user || ex.user)
+                + `\n<@${ex.user.id}>`
+                + `\n(${ex.user.id})`)
+            .addField("At", "<t:" + unixToSeconds(invoked) + ":F>", true)
+            .setDescription(ex.opt.reason);
         if (end)
-            emb.addField("Until", "<t:" + unixToSeconds(end.valueOf()) + ":F>", true)
+            emb.addField("Until", "<t:" + unixToSeconds(end) + ":F>", true)
                 .addField("For", "`" + durFor + "`");
         else emb.addField("Until", "`Never`", true)
             .addField("For", "`Ever`");
-        if (res.banned[0].opt.days)
-            emb.addField("Purged", "`Up to " + res.banned[0].opt.days + ` day${res.banned[0].opt.days > 1 ? "s" : ""} old messages from now\``)
+        if (ex.opt.days)
+            emb.addField("Purged", "`Up to " + ex.opt.days + ` day${ex.opt.days > 1 ? "s" : ""} old messages from now\``)
         return inter.editReply({ embeds: [emb] });
     }
 }

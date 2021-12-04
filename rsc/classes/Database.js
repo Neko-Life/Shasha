@@ -17,7 +17,9 @@ const ENUM_SHADOCS = {
     muteSettings: 11,
     banned: 12,
     banSettings: 13,
-    afkState: 14
+    afkState: 14,
+    messageLinkPreviewSettings: 15,
+    // vcDeafen: 16
 };
 
 const ENUM_SHADOCSTYPES = {
@@ -29,14 +31,14 @@ const ENUM_SHADOCSTYPES = {
     "Object[]": 6,
     "Number[]": 7,
     "Boolean[]": 8,
-    "{Id}": 9
+    "${Id}": 9
 };
 
 const ENUM_SHACOLTYPES = {
-    "user/": 1,
-    "guild/": 2,
-    "member/": 3,
-    "channel/": 4
+    "user/${user.id}": 1,
+    "guild/${guild.id}": 2,
+    "member/${guild.id}/${member.id}": 3,
+    "channel/${channel.id}": 4
 }
 
 /**

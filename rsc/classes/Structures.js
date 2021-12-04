@@ -557,7 +557,7 @@ initTypes = {
 }
 
 module.exports = {
-    GuildDBManager,
-    UserDBManager,
-    BaseDBManager
+    // GuildDBManager,
+    // UserDBManager,
+    // BaseDBManager
 }

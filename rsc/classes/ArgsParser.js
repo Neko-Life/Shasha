@@ -98,7 +98,7 @@ module.exports = class ArgsParser {
      * @returns {Promise<{found: any[], unknown:string[]}>}
      */
     static async baseParserGuild({ guild, arg, argSplit, findReFlags, fn } = {}) {
-        const val = arg.split(argSplit);
+        const val = arg.trim().split(argSplit);
         const found = [];
         const unknown = [];
         for (const str of val) {

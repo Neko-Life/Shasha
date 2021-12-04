@@ -97,4 +97,6 @@ class TimedPunishment {
     }
 }
 
-module.exports = { TimedPunishment }
+module.exports = {
+    // TimedPunishment
+}

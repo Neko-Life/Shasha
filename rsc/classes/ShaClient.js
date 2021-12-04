@@ -1,7 +1,7 @@
 'use strict';
 
 const { ChildProcess } = require("child_process");
-const { Client, User, Guild, Collection } = require("discord.js");
+const { Client, User, Guild, Collection, MessageEmbed } = require("discord.js");
 const { join } = require("path");
 const requireAll = require("require-all");
 const { ShaBaseDb } = require("./Database");
@@ -171,6 +171,32 @@ module.exports = class ShaClient extends Client {
 
     /**
      * 
+     * @param {MessageEmbed} embed 
+     * @param {boolean} noAdCheck 
+     * @returns 
+     */
+    finalizeEmbed(embed, noAdCheck = false) {
+        const newEmb = new MessageEmbed(embed);
+        if (embed.description?.length) newEmb.setDescription(this.finalizeStr(embed.description, noAdCheck));
+        if (embed.title?.length) newEmb.setTitle(this.finalizeStr(embed.title, noAdCheck));
+        if (embed.author?.name?.length) newEmb.author.name = this.finalizeStr(embed.author.name, noAdCheck);
+        if (embed.footer?.text?.length) newEmb.footer.text = this.finalizeStr(embed.footer.text, noAdCheck);
+        for (let i = 0; i < embed.fields.length; i++) {
+            newEmb.fields[i] = {
+                name: this.finalizeStr(embed.fields[i].name, noAdCheck),
+                value: this.finalizeStr(embed.fields[i].value, noAdCheck),
+                inline: embed.fields[i].inline
+            }
+        }
+        if (!noAdCheck) {
+            delete newEmb.author?.url;
+            delete newEmb.url;
+        }
+        return newEmb;
+    }
+
+    /**
+     * 
      * @param {string} id
      * @param {{TIMEOUT:number|boolean, CURRENT_PAGE:string|number, PAGES:{}|[]}} data
      * @returns 
@@ -215,16 +241,17 @@ module.exports = class ShaClient extends Client {
      * @param {string} query
      * @param {string} reFlags - RegExp flags (force)
      * @param {boolean} force
+     * @param {boolean} exact
      * @returns {Collection<string, Guild> | Guild}
      */
-    findGuilds(query, reFlags, force = false) {
+    findGuilds(query, reFlags, force = false, exact = false) {
         if (typeof query !== "string") throw new TypeError("query must be a string!");
         query = cleanMentionID(query);
         if (!query) return;
         if (/^\d{18,20}$/.test(query))
             return this.guilds.resolve(query);
         else if (force) {
-            const re = createRegExp(query, reFlags);
+            const re = createRegExp(query, reFlags, exact);
             return this.guilds.cache.filter(v =>
                 re.test(v.name)
             );

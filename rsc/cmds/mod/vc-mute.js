@@ -2,14 +2,14 @@
 
 const { Command } = require("../../classes/Command");
 const { Moderation } = require("../../classes/Moderation");
-const { replyHigherThanMod, replyError } = require("../../functions");
+const { replyHigherThanMod } = require("../../functions");
 
-module.exports = class DeafenCmd extends Command {
+module.exports = class VCMuteCmd extends Command {
     constructor(interaction) {
         super(interaction, {
-            name: "vcdeafen",
-            userPermissions: ["DEAFEN_MEMBERS"],
-            clientPermissions: ["DEAFEN_MEMBERS"],
+            name: "vcmute",
+            userPermissions: ["MUTE_MEMBERS"],
+            clientPermissions: ["MUTE_MEMBERS"],
             guildOnly: true,
             deleteSavedMessagesAfter: 15000
         });
@@ -23,7 +23,7 @@ module.exports = class DeafenCmd extends Command {
         if (!(user || channel))
             if (this.member.voice.channel)
                 channel = { channel: this.member.voice.channel };
-        if (!(user || channel)) return this.saveMessages(inter.reply("wher?!? WEHERER??!?!?"));
+        if (!(user || channel)) return this.saveMessages(inter.reply("Nothin to mute ima mute you instead"));
         await inter.deferReply();
         let force = false;
         const targets = [];
@@ -36,14 +36,14 @@ module.exports = class DeafenCmd extends Command {
             guild: this.guild, targets: targets, moderator: this.member
         });
         try {
-            const res = await mod.vcDeafen({ reason: reason.value, moderator: this.member, force });
-            if (!res.deafened.length) {
-                const ret = this.saveMessages(replyHigherThanMod(inter, "deafen", res));
+            const res = await mod.vcMute({ reason: reason.value, moderator: this.member, force });
+            if (!res.muted.length) {
+                const ret = this.saveMessages(replyHigherThanMod(inter, "mute", res));
                 if (ret[0])
                     return;
-                else return this.saveMessages(inter.editReply("No one to deafen, might as well deafen yourself"));
+                else return this.saveMessages(inter.editReply("No one to mute, might as well mute yourself"));
             }
-            return this.saveMessages(inter.editReply(`Deafened \`${res.deafened.length}\` user${res.deafened.length > 1 ? "s" : ""}`));
+            return this.saveMessages(inter.editReply(`Muted \`${res.muted.length}\` user${res.muted.length > 1 ? "s" : ""}`));
         } catch (e) {
             return this.saveMessages(inter.editReply(replyError(e)));
         }

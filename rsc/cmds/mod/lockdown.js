@@ -11,7 +11,7 @@ module.exports = class LockdownCmd extends Command {
             guildOnly: true
         });
     }
-    async run(inter, { channel, bypassRoles, bypassUsers, bypassPermissions }) {
+    async run(inter, { channel }) {
 
     }
 }
