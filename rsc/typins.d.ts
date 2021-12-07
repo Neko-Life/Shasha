@@ -1,6 +1,7 @@
-import { BaseGuildTextChannel, Collection, CommandInteraction, CommandInteractionOption, Guild, GuildMember, Message, User } from "discord.js";
+import { ApplicationCommandPermissions, BaseGuildTextChannel, Collection, CommandInteraction, CommandInteractionOption, Guild, GuildMember, Message, User } from "discord.js";
 import { AutocompleteCommandArgs, AutocompleteData } from "./classes/Command";
 import { ShaBaseDb } from "./classes/Database";
+import { MessageConstruct } from "./classes/MessageConstruct";
 import ShaClient from "./classes/ShaClient";
 
 export declare class ShaMessage extends Message {
@@ -10,6 +11,7 @@ export declare class ShaMessage extends Message {
     public readonly channel: ShaTextChannel;
     public messageLinkPreview: ShaMessage;
     public readonly guild: ShaGuild;
+    public messageConstruct: MessageConstruct;
 }
 
 export declare class ShaCommandInteraction extends CommandInteraction {
@@ -33,13 +35,14 @@ export declare class ShaUser extends User {
     public readonly client: ShaClient;
     public lastAutocomplete: UserLastAutocomplete;
     public autocomplete: { [k: string]: AutocompleteData };
-    db: ShaBaseDb;
+    public db: ShaBaseDb;
 }
 
 export declare class ShaGuild extends Guild {
     public readonly client: ShaClient;
-    messageLinkPreviewSettings: { state: boolean };
-    db: ShaBaseDb;
+    public messageLinkPreviewSettings: { state: boolean };
+    public db: ShaBaseDb;
+    public commandPermissions: ApplicationCommandPermissions[];
 }
 
 export declare class ShaGuildMember extends GuildMember {

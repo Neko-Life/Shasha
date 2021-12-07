@@ -7,6 +7,10 @@ module.exports = new SlashCommandBuilder()
     .setDescription("Guild Settings and Administration")
     .addSubcommand(
         sCmd => sCmd
+            .setName("message-constructor")
+            .setDescription("Wanna create some custom message? Try it!")
+    ).addSubcommand(
+        sCmd => sCmd
             .setName("enable")
             .setDescription("Reset command/category setting for every channel. Default command permissions requirement apply")
             .addStringOption(

@@ -309,6 +309,8 @@ module.exports.Command = class ShaBaseCommand {
         if (SecondID && !/\D/.test(SecondID)) {
             try {
                 const meschannel = ((bypass || this.isOwner) ? this.client : this.guild)?.channels.cache.get(MainID);
+                if (meschannel && meschannel.guild && !meschannel.permissionsFor(this.client.user).has("VIEW_CHANNEL"))
+                    return meschannel.messages.cache.get(SecondID);
                 return meschannel?.messages.cache.get(SecondID) || meschannel?.messages.fetch(SecondID, true).catch(logDev);
             } catch (e) {
                 logDev(e);

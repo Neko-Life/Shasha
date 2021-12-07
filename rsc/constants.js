@@ -326,6 +326,8 @@ const REPLY_ERROR = {
 
     "Moderator lack DEAFEN_MEMBERS permission": "You don't have the `DEAFEN_MEMBERS` permission in that voice channel",
     "Moderator lack MUTE_MEMBERS permission": "You don't have the `MUTE_MEMBERS` permission in that voice channel",
+
+    "Permissions override can't be more than 10": "Sorry but permission override can't exceed the total amount of 10, try remove some role/user from bypass",
 }
 
 const LETTER_EMOTES = {
@@ -371,6 +373,18 @@ const LETTER_EMOTES = {
 
 const ZWS = "​";
 
+const ELEVATED_PERMISSIONS = [
+    "KICK_MEMBERS",
+    "BAN_MEMBERS",
+    "ADMINISTRATOR",
+    "MANAGE_CHANNELS",
+    "MANAGE_GUILD",
+    "MANAGE_MESSAGES",
+    "MANAGE_ROLES",
+    "MANAGE_WEBHOOKS",
+    "MANAGE_EMOJIS"
+]
+
 module.exports = {
     ePerms,
     reValidURL,
@@ -395,5 +409,6 @@ module.exports = {
     RANDOM_COLOR,
     REPLY_ERROR,
     LETTER_EMOTES,
-    ZWS
+    ZWS,
+    ELEVATED_PERMISSIONS
 }

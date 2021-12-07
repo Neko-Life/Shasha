@@ -229,7 +229,7 @@ module.exports = class CommandHandler {
             if (cmd.nsfwOnly)
                 if (!interaction.channel.nsfw) {
                     if (noReply.includes("NSFW_ONLY")) return false;
-                    return CommandHandler.replyDel(interaction, "This is not an NSFW channel baka!");
+                    return CommandHandler.replyDel(interaction, "This is not a NSFW channel baka!");
                 }
 
             const lackUser = [];

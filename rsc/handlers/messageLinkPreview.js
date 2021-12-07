@@ -30,33 +30,59 @@ module.exports = async (msg) => {
         }
         if (!msg.guild.messageLinkPreviewSettings.state) return;
     }
-    const link = msg.content.match(/https?:\/\/(?:www\.|canary\.)?discord(?:app)?\.(?:gg|com)\/channels\/(?:\d{18,20}|@me)\/\d{18,20}\/\d{18,20}/);
+    const link = msg.content.match(/https?:\/\/(?:www\.|canary\.|ptb\.)?discord(?:app)?\.(?:gg|com)\/channels\/(?:\d{18,20}|@me)\/\d{18,20}\/\d{18,20}/);
     if (!link?.length || msg.deleted)
         return delOldPrev(msg);
     const toPrev = await getChannelMessage(msg, link[0], null, true);
     if (!toPrev || !(toPrev.content?.length || toPrev.embeds?.length || toPrev.attachments?.size))
         return delOldPrev(msg);
+    const color = getColor(toPrev.author.accentColor, true, this.member?.displayColor);
     const emb = new MessageEmbed()
         .setAuthor(
             tickTag(toPrev.member?.displayName || toPrev.author).replace(/`/g, ""),
             (toPrev.member || toPrev.author).displayAvatarURL({ size: 128, format: "png", dynamic: true }),
             toPrev.url
-        ).setColor(getColor(toPrev.author.accentColor, true, toPrev.member?.displayColor));
+        ).setColor(color);
     const alEmb = [emb];
+    let content = "";
     if (toPrev.channel?.nsfw && !msg.channel?.nsfw) {
         emb.setDescription("Can't preview NSFW content in Non-NSFW channel");
     } else {
         const memberAdmin = isAdmin(msg.member || msg.author);
         if (toPrev.content?.length) emb.setDescription(msg.client.finalizeStr(toPrev.content, memberAdmin));
         if (toPrev.attachments.size) {
-            const att = toPrev.attachments.first().url;
-            emb.setImage(att);
+            let att = toPrev.attachments.filter(r => r.contentType.startsWith("image")).map(r => r);
+            if (!emb.image) {
+                emb.setImage(att[0].url);
+                att = att.slice(1);
+            }
+            for (const a of att)
+                alEmb.push(
+                    new MessageEmbed()
+                        .setImage(a.url)
+                        .setColor(color)
+                );
         } else emb.setImage(null);
-        if (toPrev.embeds?.length) alEmb.push(
-            ...toPrev.embeds.map(r => msg.client.finalizeEmbed(r, memberAdmin))
-        );
+        if (toPrev.embeds?.length) {
+            alEmb.push(
+                ...toPrev.embeds.filter(r => !r.video && !r.description && !r.title && !(r.type === "video" || r.type === "image"))
+                    .map(r => msg.client.finalizeEmbed(r, memberAdmin))
+            );
+            let images = toPrev.embeds.filter(r => r.type === "image").map(r => r);
+            if (!emb.image) {
+                emb.setImage(images[0].url);
+                images = images.slice(1);
+            }
+            for (const a of images)
+                alEmb.push(
+                    new MessageEmbed()
+                        .setImage(a.url)
+                        .setColor(color)
+                );
+        }
     }
     const send = { embeds: alEmb, allowedMentions: { parse: [] } };
+    if (content.length) send.content = content;
     let m;
     if (!msg.messageLinkPreview || msg.messageLinkPreview?.deleted) {
         m = await msg.reply(send);

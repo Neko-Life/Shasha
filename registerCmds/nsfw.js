@@ -14,6 +14,7 @@ for (const U of NSFW_ENDPOINTS) {
 module.exports = new SlashCommandBuilder()
     .setName("nsfw")
     .setDescription("Have some lewds")
+    .setDefaultPermission(false)
     .addSubcommand(
         sCmd => sCmd
             .setName("image")

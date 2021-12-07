@@ -2,6 +2,8 @@
 
 const { Collection, Guild, User, Interaction, GuildMember, Invite, Role, GuildChannel, MessageActionRow, MessageButton } = require("discord.js");
 const { escapeRegExp } = require("lodash");
+const { join } = require("path");
+const { Worker } = require("worker_threads");
 const { ePerms, REPLY_ERROR } = require("./constants");
 const { logDev } = require("./debug");
 
@@ -36,6 +38,8 @@ async function getChannelMessage(msg, MainID, SecondID, bypass) {
     if (SecondID && !/\D/.test(SecondID)) {
         try {
             const meschannel = ((bypass || msg.client.isOwner(msg.author || msg.user)) ? msg.client : msg.guild)?.channels.cache.get(MainID);
+            if (meschannel && meschannel.guild && !meschannel.permissionsFor(msg.client.user).has("VIEW_CHANNEL"))
+                return meschannel.messages.cache.get(SecondID);
             return meschannel?.messages.cache.get(SecondID) || meschannel?.messages.fetch(SecondID, true).catch(logDev);
         } catch (e) {
             logDev(e);
@@ -95,8 +99,8 @@ function tickTag(user) {
  */
 function adCheck(str) {
     if (str?.length > 8) {
-        if (/(?:https?:\/\/)?(?:www\.|canary\.)?discord(?:app)?\.(?:gg|com)\/(?!channels|attachments)(?:\w{2,17}(?!\w)(?= *))/.test(str)) str = str
-            .replace(/(?:https?:\/\/)?(?:www\.|canary\.)?discord(?:app)?\.(?:gg|com)\/(?!channels|attachments)(?:\w{2,17}(?!\w)(?= *))/g,
+        if (/(?:https?:\/\/)?(?:www\.|canary\.|ptb\.)?discord(?:app)?\.(?:gg|com)\/(?!channels|attachments)(?:\w{2,17}(?!\w)(?= *))/.test(str)) str = str
+            .replace(/(?:https?:\/\/)?(?:www\.|canary\.|ptb\.)?discord(?:app)?\.(?:gg|com)\/(?!channels|attachments)(?:\w{2,17}(?!\w)(?= *))/g,
                 '`[BAD_LINK]`');
     }
     return str;
@@ -148,7 +152,11 @@ function maxStringsLength(arrStr) {
  * @returns {boolean}
  */
 function isInteractionInvoker(interaction) {
-    if (interaction.message.interaction.user.id !== interaction.user.id) {
+    let message;
+    if (interaction.message.reference?.messageId) {
+        message = interaction.channel.messages.resolve(interaction.message.reference.messageId);
+    } else message = interaction.message;
+    if (message?.interaction.user.id !== interaction.user.id) {
         return false;
     } else return true;
 }
@@ -325,19 +333,37 @@ function replaceVars(str, vars = {}) {
     return str;
 }
 
+/**
+ * @template T
+ * @param {T} o 
+ * @param {Array<keyof T>} ignores 
+ * @param {PropertyDescriptor} descriptor 
+ * @returns {T}
+ */
+function copyProps(o, ignores = [], descriptor = { enumerable: true }) {
+    const R = Object.create(o);
+    const no = {};
+    for (const k in o)
+        if (ignores.includes(k)) continue;
+        else no[k] = {
+            value: o[k] || null,
+            ...descriptor
+        };
+    Object.defineProperties(R, no);
+    return R;
+}
+
+/**
+ * 
+ * @param {import("./typins").ShaMessage} message 
+ * @returns 
+ */
 async function disableMessageComponents(message) {
     if (!message) throw new TypeError("message undefined");
     if (!message.editable)
         throw new Error("Can't edit message");
-    const R = Object.create(message);
-    const o = {};
-    for (const k in message)
-        if (k === "stickers" || k === "nonce") continue;
-        else o[k] = {
-            value: message[k] || null,
-            enumerable: true
-        };
-    Object.defineProperties(R, o);
+
+    const R = copyProps(message, ["stickers", "nonce"]);
     for (const I of R.components)
         for (const K of I.components)
             K.setDisabled(true);
@@ -356,11 +382,9 @@ function prevNextButton(homeButton) {
 }
 
 function replyError(e, vars) {
-    let reply = replaceVars(REPLY_ERROR[e.message], vars);
-    if (!reply) {
+    let reply = replaceVars(REPLY_ERROR[e.message] || e.message, vars);
+    if (!REPLY_ERROR[e.message])
         process.emit("error", e);
-        reply = e.message;
-    }
     return reply;
 }
 
@@ -371,6 +395,18 @@ function replyHigherThanMod(inter, action, { higherThanClient, higherThanModerat
         return inter[(inter.deferred || inter.replied) ? "editReply" : "reply"](`You can't ${action} someone in the same or higher position than you`);
     } else return false;
 }
+
+/** @param {import("./classes/ShaClient")} client */
+// async function reRegisterAll(client) {
+//     for (const [k, v] of client.guilds.cache) {
+//         // const worker = new Worker(join(__dirname, "../registerCommands.js"), {
+//         //     argv: ["null", v.id]
+//         // });
+//         // logDev("Re-registering in", v.name, v.id);
+//         // worker.on("message", logDev);
+//         v.commands.set([]);
+//     }
+// }
 
 // ---------------- FNS IMPORTS ----------------
 
@@ -402,10 +438,12 @@ module.exports = {
     findMembers,
     tickPadEnd,
     replaceVars,
+    copyProps,
     disableMessageComponents,
     prevNextButton,
     replyError,
     replyHigherThanMod,
+    // reRegisterAll,
 
     // ---------------- FNS IMPORTS ----------------
     // Functions too big to be put here so imported and has its own file instead

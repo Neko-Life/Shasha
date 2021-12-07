@@ -10,6 +10,10 @@ const { isInteractionInvoker, disableMessageComponents } = require("../../functi
  * @returns 
  */
 async function handle(inter, args) {
+    const newArgs = [];
+    for (const k of args)
+        newArgs.push(k.split("/"));
+    args = newArgs;
     const pages = inter.client.activeMessageInteractions.get(inter.message.id);
     if (!pages) {
         disableMessageComponents(inter.message);
@@ -17,9 +21,9 @@ async function handle(inter, args) {
     }
     if (!isInteractionInvoker(inter)) {
         // Send ephemeral message contain selected info
-        const send = typeof pages.PAGES[args[0]] === "function"
-            ? await pages.PAGES[args[0]]()
-            : pages.PAGES[args[0]];
+        const send = typeof pages.PAGES[args[0][0]] === "function"
+            ? await pages.PAGES[args[0][0]](inter, args[0].slice(1))
+            : pages.PAGES[args[0][0]];
         delete send.components;
         send.ephemeral = true;
         return inter.reply(send);
@@ -33,25 +37,25 @@ async function handle(inter, args) {
         //     ePages[U] = pages[U];
         //     ePages[U].ephemeral = true;
         // }
-        // const mes = await inter.reply(ePages[args[0]]);
+        // const mes = await inter.reply(ePages[args[0][0]]);
         // inter.client.createMessageInteraction(mes.id, ePages);
         // return mes;
     }
     if (pages.CURRENT_PAGE) {
-        pages.CURRENT_PAGE = args[0];
+        pages.CURRENT_PAGE = args[0][0];
         inter.client.createMessageInteraction(inter.message.id, pages);
     }
     if (!(inter.replied || inter.deferred)) {
         inter.message.edit(
-            typeof pages.PAGES[args[0]] === "function"
-                ? await pages.PAGES[args[0]]()
-                : pages.PAGES[args[0]]
+            typeof pages.PAGES[args[0][0]] === "function"
+                ? await pages.PAGES[args[0][0]](inter, args[0].slice(1))
+                : pages.PAGES[args[0][0]]
         );
-        inter.deferUpdate();
+        if (typeof pages.PAGES[args[0][0]] !== "function") inter.deferUpdate();
     } else inter.editReply(
-        typeof pages.PAGES[args[0]] === "function"
-            ? await pages.PAGES[args[0]]()
-            : pages.PAGES[args[0]]
+        typeof pages.PAGES[args[0][0]] === "function"
+            ? await pages.PAGES[args[0][0]](inter, args[0].slice(1))
+            : pages.PAGES[args[0][0]]
     );
 }
 

@@ -20,6 +20,7 @@ for (const k in ENUM_ACTIVITY_TYPES)
 module.exports = new SlashCommandBuilder()
     .setName("owner")
     .setDescription("Owner only")
+    .setDefaultPermission(false)
     .addSubcommand(
         sCmd => sCmd
             .setName("eval")

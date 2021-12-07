@@ -31,7 +31,7 @@ module.exports = class ArgsParser {
      */
     static async roles(guild, arg, argSplit = / +/, findReFlags = "i") {
         const { found: roles, unknown } = await this.baseParserGuild({
-            guild, arg, argSplit, findReFlags, fn: findRoles
+            guild, arg: arg.replace(/(?:\s|^)everyone(?:\s|$)/g, " " + guild.id + " "), argSplit, findReFlags, fn: findRoles
         });
         return { roles, unknown };
     }

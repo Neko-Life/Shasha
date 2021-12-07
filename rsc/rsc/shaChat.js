@@ -45,4 +45,6 @@ async function chatAnswer(message) {
 		.finally(() => ex--);
 }
 
-module.exports = { chatAnswer }
+module.exports = {
+	// chatAnswer
+}

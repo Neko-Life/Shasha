@@ -2,10 +2,101 @@
 
 const { MessageEmbed, MessageActionRow, MessageButton, MessageSelectMenu, Collection } = require("discord.js");
 const { Command } = require("../../classes/Command");
+const { CommandSettingsHelper } = require("../../classes/CommandSettingsHelper");
 const { loadDb } = require("../../database");
 const { logDev } = require("../../debug");
 const { getColor, findRoles, replyError } = require("../../functions");
 const { intervalToStrings, createInterval, parseDuration } = require("../../util/Duration");
+
+const mainSelectMenu = new MessageActionRow()
+    .addComponents(
+        new MessageSelectMenu()
+            .setCustomId("pages")
+            .setMaxValues(1)
+            .setOptions([
+                {
+                    label: "Home",
+                    description: "Home page",
+                    value: "homePage"
+                },
+                {
+                    label: "Command",
+                    description: "Configure setting and permissions for each command",
+                    value: "commandPage"
+                },
+                {
+                    label: "Moderation",
+                    description: "Moderation settings",
+                    value: "moderationPage"
+                },
+                {
+                    label: "Miscellaneous",
+                    description: "Additional features settings",
+                    value: "miscPage"
+                }
+            ]).setPlaceholder("Browse main pages...")
+    );
+
+const moderationSelectmenu = new MessageActionRow()
+    .addComponents(
+        new MessageSelectMenu()
+            .setCustomId("/pages")
+            .setMaxValues(1)
+            .setPlaceholder("Browse settings...")
+            .addOptions([
+                {
+                    label: "Mute",
+                    description: "Configure mute settings",
+                    value: "moderationMutePage"
+                },
+                {
+                    label: "Ban",
+                    description: "Configure ban settings",
+                    value: "moderationBanPage"
+                }
+            ])
+    );
+
+
+const moderationMutePageButton = new MessageActionRow()
+    .addComponents([
+        new MessageButton().setCustomId("settings/set/muteRole").setStyle("PRIMARY").setLabel("Set Role"),
+        new MessageButton().setCustomId("settings/remove/muteRole").setStyle("SECONDARY").setLabel("Remove Role"),
+        new MessageButton().setCustomId("settings/set/duration/mute").setStyle("PRIMARY").setLabel("Set Duration"),
+        new MessageButton().setCustomId("settings/remove/duration/mute").setStyle("SECONDARY").setLabel("Remove Duration")
+    ]);
+
+const moderationBanPageButton = new MessageActionRow()
+    .addComponents([
+        new MessageButton().setCustomId("settings/set/duration/ban").setStyle("PRIMARY").setLabel("Set Duration"),
+        new MessageButton().setCustomId("settings/remove/duration/ban").setStyle("SECONDARY").setLabel("Remove Duration"),
+        new MessageButton().setCustomId("settings/set/purge/ban").setStyle("PRIMARY").setLabel("Set Purge"),
+        new MessageButton().setCustomId("settings/remove/purge/ban").setStyle("SECONDARY").setLabel("Remove Purge")
+    ]);
+
+
+const miscSelectMenu = new MessageActionRow()
+    .addComponents(
+        new MessageSelectMenu()
+            .setCustomId("/pages")
+            .setMaxValues(1)
+            .setPlaceholder("Browse settings...")
+            .addOptions([
+                {
+                    label: "Message Preview",
+                    description: "Enable or disable message link preview",
+                    value: "miscMessagePreviewPage"
+                }
+            ])
+    );
+
+const miscMessagePreviewPageButton = new MessageActionRow()
+    .addComponents([
+        new MessageButton().setCustomId("settings/set/messagePreview").setStyle("PRIMARY").setLabel("Enable"),
+        new MessageButton().setCustomId("settings/remove/messagePreview").setStyle("SECONDARY").setLabel("Disable")
+    ]);
+
+
 
 module.exports = class SettingsCmd extends Command {
     constructor(interaction) {
@@ -26,30 +117,6 @@ module.exports = class SettingsCmd extends Command {
             .setAuthor("Settings")
             .setColor(getColor(inter.user.accentColor, true, inter.member.displayColor));
 
-        const mainSelectMenu = new MessageActionRow()
-            .addComponents(
-                new MessageSelectMenu()
-                    .setCustomId("pages")
-                    .setMaxValues(1)
-                    .setOptions([
-                        {
-                            label: "Home",
-                            description: "Home page",
-                            value: "homePage"
-                        },
-                        {
-                            label: "Moderation",
-                            description: "Moderation settings",
-                            value: "moderationPage"
-                        },
-                        {
-                            label: "Miscellaneous",
-                            description: "Additional features settings",
-                            value: "miscPage"
-                        }
-                    ]).setPlaceholder("Browse main pages...")
-            );
-
         const pages = {};
 
         const homeEmb = new MessageEmbed(baseEmb)
@@ -63,27 +130,8 @@ module.exports = class SettingsCmd extends Command {
             .addField("Mute", "Setting up mute role and default duration for mute")
             .addField("Ban", "Set up timed ban as default ban behavior and default purge message on ban");
 
-        const moderationSelectmenu = new MessageActionRow()
-            .addComponents(
-                new MessageSelectMenu()
-                    .setCustomId("/pages")
-                    .setMaxValues(1)
-                    .setPlaceholder("Browse settings...")
-                    .addOptions([
-                        {
-                            label: "Mute",
-                            description: "Configure mute settings",
-                            value: "moderationMutePage"
-                        },
-                        {
-                            label: "Ban",
-                            description: "Configure ban settings",
-                            value: "moderationBanPage"
-                        }
-                    ])
-            );
-
-        const moderationMutePage = async () => {
+        const moderationMutePage = async (inter) => {
+            await inter.deferUpdate();
             const get = await inter.guild.db.getOne("muteSettings", "Object");
             /**
              * @type {{muteRole:string, duration:number}}
@@ -109,19 +157,12 @@ module.exports = class SettingsCmd extends Command {
                         : "Forever")
                     + "`");
 
-            const button = new MessageActionRow()
-                .addComponents([
-                    new MessageButton().setCustomId("settings/set/muteRole").setStyle("PRIMARY").setLabel("Set Role"),
-                    new MessageButton().setCustomId("settings/remove/muteRole").setStyle("SECONDARY").setLabel("Remove Role"),
-                    new MessageButton().setCustomId("settings/set/duration/mute").setStyle("PRIMARY").setLabel("Set Duration"),
-                    new MessageButton().setCustomId("settings/remove/duration/mute").setStyle("SECONDARY").setLabel("Remove Duration")
-                ]);
-
-            const components = [mainSelectMenu, moderationSelectmenu, button];
+            const components = [mainSelectMenu, moderationSelectmenu, moderationMutePageButton];
             return { embeds: [emb], components };
         }
 
-        const moderationBanPage = async () => {
+        const moderationBanPage = async (inter) => {
+            await inter.deferUpdate();
             const get = await inter.guild.db.getOne("banSettings", "Object");
             /**
              * @type {{duration:number, purge:number}}
@@ -144,15 +185,7 @@ module.exports = class SettingsCmd extends Command {
                     + "`")
                 .addField("Purge", (data.purge ? "`Up to " + data.purge + ` day${data.purge > 1 ? "s" : ""} old messages\`` : "`No`"));
 
-            const button = new MessageActionRow()
-                .addComponents([
-                    new MessageButton().setCustomId("settings/set/duration/ban").setStyle("PRIMARY").setLabel("Set Duration"),
-                    new MessageButton().setCustomId("settings/remove/duration/ban").setStyle("SECONDARY").setLabel("Remove Duration"),
-                    new MessageButton().setCustomId("settings/set/purge/ban").setStyle("PRIMARY").setLabel("Set Purge"),
-                    new MessageButton().setCustomId("settings/remove/purge/ban").setStyle("SECONDARY").setLabel("Remove Purge")
-                ]);
-
-            const components = [mainSelectMenu, moderationSelectmenu, button];
+            const components = [mainSelectMenu, moderationSelectmenu, moderationBanPageButton];
             return { embeds: [emb], components };
         }
 
@@ -164,22 +197,8 @@ module.exports = class SettingsCmd extends Command {
             .setTitle("Miscellaneous")
             .addField("Message Preview", "Enable or disable preview when member sent a link to a message");
 
-        const miscSelectMenu = new MessageActionRow()
-            .addComponents(
-                new MessageSelectMenu()
-                    .setCustomId("/pages")
-                    .setMaxValues(1)
-                    .setPlaceholder("Browse settings...")
-                    .addOptions([
-                        {
-                            label: "Message Preview",
-                            description: "Enable or disable message link preview",
-                            value: "miscMessagePreviewPage"
-                        }
-                    ])
-            );
-
-        const miscMessagePreviewPage = async () => {
+        const miscMessagePreviewPage = async (inter) => {
+            await inter.deferUpdate();
             const get = await inter.guild.db.getOne("messageLinkPreviewSettings", "Object");
             /**
              * @type {{state: boolean}}
@@ -191,18 +210,116 @@ module.exports = class SettingsCmd extends Command {
                 .setDescription("Enable or disable preview when member sent a message containing link to a message. It's also moderated to prevent abuse.")
                 .addField("State", data.state ? "`Enabled`" : "`Disabled`");
 
-            const button = new MessageActionRow()
-                .addComponents([
-                    new MessageButton().setCustomId("settings/set/messagePreview").setStyle("PRIMARY").setLabel("Enable"),
-                    new MessageButton().setCustomId("settings/remove/messagePreview").setStyle("SECONDARY").setLabel("Disable")
-                ]);
-
-            const components = [mainSelectMenu, miscSelectMenu, button];
+            const components = [mainSelectMenu, miscSelectMenu, miscMessagePreviewPageButton];
             return { embeds: [emb], components };
         };
 
         pages.miscPage = { embeds: [miscEmb], components: [mainSelectMenu, miscSelectMenu] };
         pages.miscMessagePreviewPage = miscMessagePreviewPage;
+
+        const cmdsFetch = this.client.application.commands.cache.size
+            ? this.client.application.commands.cache
+            : await this.client.application.commands.fetch();
+
+        pages.commandPage = async (inter, args = []) => {
+            if (!args.length) {
+                let waitMes;
+                const commandEmb = new MessageEmbed(baseEmb)
+                    .setTitle("Command")
+                    .setDescription("Edit command permissions");
+
+                const commandRows = [];
+                const commandSelectMenuOpts = [];
+
+                for (const [k, v] of cmdsFetch) {
+                    if (v.name === "owner") continue;
+
+                    if (!this.guild.commandPermissions?.[v.id]) {
+                        if (inter && !waitMes && !(inter.replied || inter.deferred)) waitMes = await inter.reply({ content: "Fetching permissions settings. Please wait...", fetchReply: true });
+                        if (!this.guild.commandPermissions)
+                            this.guild.commandPermissions = {};
+                        this.guild.commandPermissions[v.id] = await v.permissions.fetch({ guild: this.guild }).catch(logDev) || [];
+                    }
+                    const perms = this.guild.commandPermissions[v.id];
+                    const findEveryone = perms?.find(r => r.id === this.guild.id)?.permission;
+                    const everyonePerm = typeof findEveryone === "boolean" ? findEveryone : v.defaultPermission;
+
+                    const bypassRoles = perms?.filter(r => r.type === "ROLE" && r.permission === true);
+                    const bypassUsers = perms?.filter(r => r.type === "USER" && r.permission === true);
+
+                    commandEmb.addField(
+                        v.name.toUpperCase(),
+                        v.description + "\n\n**" + (everyonePerm ? "ENABLED" : "DISABLED") + `** (this category/command is ${v.defaultPermission ? "enabled" : "disabled"} by default)`
+                        + (
+                            bypassRoles?.length ? `\nBypass Roles: <@&${bypassRoles.map(r => r.id).join(">, <@&")}>`.replace(`<@&${this.guild.id}>`, "@everyone") : ""
+                        ) + (
+                            bypassUsers?.length ? `\nBypass Users: <@${bypassUsers.map(r => r.id).join(">, <@")}>` : ""
+                        )
+                    );
+                    commandSelectMenuOpts.push(
+                        {
+                            label: v.name.toUpperCase(),
+                            description: `Edit \`${v.name}\` category/command`,
+                            value: `commandPage/${v.id}`
+                        }
+                    );
+                }
+                if (inter && !(inter.replied || inter.deferred))
+                    inter.deferUpdate();
+                for (let i = 0; i < commandSelectMenuOpts.length; i = i + 10) {
+                    commandRows.push(
+                        new MessageActionRow()
+                            .addComponents(
+                                new MessageSelectMenu()
+                                    .setCustomId(Array(commandRows.length + 1).fill("/").join("") + "pages")
+                                    .setMaxValues(1)
+                                    .setPlaceholder("Browse category/command...")
+                                    .addOptions(commandSelectMenuOpts.slice(i, i + 10))
+                            )
+                    );
+                }
+
+                if (waitMes && waitMes.deleted === false) waitMes.delete();
+                return { embeds: [commandEmb], components: [mainSelectMenu, ...commandRows] };
+            } else {
+                const cmd = cmdsFetch.get(args[0]);
+                const emb = new MessageEmbed(baseEmb)
+                    .setTitle(cmd.name.toUpperCase())
+                    .setDescription(cmd.description + `\n\nThis category/command is ${cmd.defaultPermission ? "enabled" : "disabled"} for everyone by default`);
+                for (const k of cmd.options) {
+                    if (!["SUB_COMMAND_GROUP", "SUB_COMMAND"].includes(k.type)) continue;
+                    if (k.type === "SUB_COMMAND_GROUP") {
+                        let desc = "";
+                        for (const i of k.options) {
+                            if (i.type !== "SUB_COMMAND") continue;
+                            desc += `**${i.type}:\`${i.name}\`:\n${i.description}\n\n`;
+                        }
+                        emb.addField(`${k.type}:\`${k.name}\``, desc.trim());
+                    } else emb.addField(`${k.type}:\`${k.name}\``, k.description);
+                }
+                const firstRowButtons = [
+                    new MessageButton().setCustomId(`settings/command/enable/category/${cmd.id}`).setLabel("Enable").setStyle("PRIMARY"),
+                    new MessageButton().setCustomId(`settings/command/disable/category/${cmd.id}`).setLabel("Disable").setStyle("SECONDARY")
+                ];
+                if (emb.fields.length) {
+                    firstRowButtons.push(
+                        new MessageButton().setCustomId(`settings/command/enable/command/${cmd.name}`).setLabel("Enable Sub-Command").setStyle("PRIMARY"),
+                        new MessageButton().setCustomId(`settings/command/disable/command/${cmd.name}`).setLabel("Disable Sub-Command").setStyle("SECONDARY"));
+                }
+                const buttons = [
+                    new MessageActionRow().addComponents(firstRowButtons),
+                    new MessageActionRow().addComponents([
+                        new MessageButton().setCustomId(`settings/command/set/bypassRoles/${cmd.id}`).setLabel("Set Bypass Roles").setStyle("PRIMARY"),
+                        new MessageButton().setCustomId(`settings/command/set/bypassUsers/${cmd.id}`).setLabel("Set Bypass Users").setStyle("PRIMARY"),
+                        new MessageButton().setCustomId(`settings/command/remove/bypass/${cmd.id}`).setLabel("Remove Bypasses").setStyle("SECONDARY"),
+                        new MessageButton().setCustomId(`settings/command/close`).setLabel("Done").setStyle("SUCCESS")
+                    ])
+                ];
+                const send = { embeds: [emb], components: buttons };
+                if (!(inter.deferred || inter.replied)) inter.reply(send);
+                else return send;
+            }
+        }
 
         /**
          * @type {import("../../typins").ShaMessage}
@@ -213,7 +330,8 @@ module.exports = class SettingsCmd extends Command {
         let blockSet, blockRem;
 
         SETTING_MESSAGE.buttonHandler = {
-            set: async (args) => {
+            set: async (inter, args) => {
+                inter.deferUpdate();
                 if (blockSet) return;
                 blockSet = true;
 
@@ -329,7 +447,8 @@ module.exports = class SettingsCmd extends Command {
                     return SETTING_MESSAGE.edit(await miscMessagePreviewPage());
                 }
             },
-            remove: async (args) => {
+            remove: async (inter, args) => {
+                inter.deferUpdate();
                 if (blockRem) return;
                 blockRem = true;
                 if (args[0] === "muteRole") {
@@ -378,18 +497,34 @@ module.exports = class SettingsCmd extends Command {
                     if (SETTING_MESSAGE.deleted) return;
                     return SETTING_MESSAGE.edit(await miscMessagePreviewPage());
                 }
+            },
+            command: async (inter, args) => {
+                if (blockRem) return inter.deferUpdate();
+                blockRem = true;
+                try {
+                    const update = await CommandSettingsHelper[args[0]](inter, args.slice(1));
+                    blockRem = false;
+                    if (update && !SETTING_MESSAGE.deleted) return SETTING_MESSAGE.edit(await pages.commandPage());
+                } catch (e) {
+                    logDev(e);
+                    const mes = replyError(e);
+                    blockRem = false;
+                    if (inter.deferred || inter.replied)
+                        return inter.editReply(mes);
+                    else return inter.reply(mes);
+                }
             }
         }
         return SETTING_MESSAGE;
     }
 }
 
-function delMes(m, r, setMsg, dur) {
+function delMes(m, r, setMsg, dur = 5000) {
     setTimeout(
         () => {
             if (m.guild.me.permissionsIn(m.channel).has("MANAGE_MESSAGES"))
                 m.channel.bulkDelete([r, setMsg]).catch(logDev);
             else m.deleted ? null : m.delete();
-        }, dur || 5000
+        }, dur
     )
 }

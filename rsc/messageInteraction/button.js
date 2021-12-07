@@ -1,6 +1,7 @@
 'use strict';
 
 const { ButtonInteraction } = require("discord.js");
+const { MessageConstruct } = require("../classes/MessageConstruct");
 const { logDev } = require("../debug");
 const { disableMessageComponents, isInteractionInvoker } = require("../functions");
 
@@ -80,14 +81,38 @@ module.exports = class ButtonHandler {
     }
 
     static async settings(inter, args) {
+        let message;
+        if (inter.message.reference?.messageId)
+            message = inter.channel.messages.resolve(inter.message.reference.messageId);
+        else message = inter.message;
         if (!isInteractionInvoker(inter))
             return inter.reply({ content: "Wha?! eh? ehmmm etto, anata ha dare?", ephemeral: true });
-        if (!inter.message.buttonHandler) {
+        if (!message.buttonHandler) {
             disableMessageComponents(inter.message);
             return inter.reply({ content: "This session's expired", ephemeral: true });
         } else {
-            inter.deferUpdate();
-            inter.message.buttonHandler[args[0]](args.slice(1));
+            message.buttonHandler[args[0]](inter, args.slice(1));
         }
+    }
+
+    /**
+     * 
+     * @param {ButtonInteraction} inter 
+     * @param {*} args 
+     * @returns 
+     */
+    static async messageConstructor(inter) {
+        if (!isInteractionInvoker(inter))
+            return inter.reply({ content: "no UwU", ephemeral: true });
+        inter.deferUpdate();
+        const construct = new MessageConstruct(inter);
+        return construct.start();
+    }
+
+    static async messageConstruct(inter, args) {
+        if (!isInteractionInvoker(inter))
+            return inter.reply({ content: "DON'T DISTURB the admin pls they tryna make the best server for you here", ephemeral: true });
+        inter.deferUpdate();
+        return inter.message.messageConstruct[args[0]](args.slice(1));
     }
 }

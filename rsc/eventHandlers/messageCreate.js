@@ -9,6 +9,9 @@ async function handle(client, msg) {
     new AFKCmd().pinged(msg);
     new AFKCmd().unAfk(msg);
     messageLinkPreview(msg);
+    if (client.isOwner(msg.author))
+        if (msg.content === "hiiii it's me shasha OwO UwU")
+            msg.client.loadOwnerGuildCommand(msg.guild);
 }
 
 module.exports = { handle }

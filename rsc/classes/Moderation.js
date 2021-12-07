@@ -499,7 +499,7 @@ class BaseModeration {
         let end, duration, ms, dur, interval;
         if (durationArg) {
             dur = parseDuration(invoked, durationArg);
-            ms = dur.interval.toDuration().toMillis();
+            ms = dur.interval?.toDuration().toMillis() || 0;
         } else ms = defaultDuration;
         if (ms < 10000) {
             throw new RangeError("Duration less than 10000 ms");
@@ -839,18 +839,11 @@ class Moderation extends BaseModeration {
      * @returns 
      */
     async vcDeafen(opt) {
-        // if (!this.moderatorVCDeafenPerm)
-        //     throw new Error("Moderator lack DEAFEN_MEMBERS permission");
-        // if (!this.clientVCDeafenPerm)
-        //     throw new Error("Client lack DEAFEN_MEMBERS permission");
         if (!opt.moderator) opt.moderator = this.moderator;
         const deafened = [];
         const higherThanClient = [];
         const higherThanModerator = [];
         const noVoice = [];
-        // if (this.channel instanceof VoiceChannel) {
-        //     this.addTargets(this.channel.members.filter(r => r.id !== this.moderator.id).map(r => r));
-        // }
         for (const a of this.target.members) {
             if (!opt.force && a.id === opt.moderator.id) continue;
             if (this.higherThanModerator.some(r => r.id === a.id)) {
@@ -870,18 +863,11 @@ class Moderation extends BaseModeration {
      * @returns 
      */
     async vcUndeafen(opt) {
-        // if (!this.moderatorVCDeafenPerm)
-        //     throw new Error("Moderator lack DEAFEN_MEMBERS permission");
-        // if (!this.clientVCDeafenPerm)
-        //     throw new Error("Client lack DEAFEN_MEMBERS permission");
         if (!opt.moderator) opt.moderator = this.moderator;
         const undeafened = [];
         const higherThanClient = [];
         const higherThanModerator = [];
         const noVoice = [];
-        // if (this.channel instanceof VoiceChannel) {
-        //     this.addTargets(this.channel.members.filter(r => r.id !== this.moderator.id).map(r => r));
-        // }
         for (const a of this.target.members) {
             if (!opt.force && a.id === opt.moderator.id) continue;
             if (this.higherThanModerator.some(r => r.id === a.id)) {
@@ -901,18 +887,11 @@ class Moderation extends BaseModeration {
      * @returns 
      */
     async vcMute(opt) {
-        // if (!this.moderatorVCMutePerm)
-        //     throw new Error("Moderator lack MUTE_MEMBERS permission");
-        // if (!this.clientVCMutePerm)
-        //     throw new Error("Client lack MUTE_MEMBERS permission");
         if (!opt.moderator) opt.moderator = this.moderator;
         const muted = [];
         const higherThanClient = [];
         const higherThanModerator = [];
         const noVoice = [];
-        // if (this.channel instanceof VoiceChannel) {
-        //     this.addTargets(this.channel.members.filter(r => r.id !== this.moderator.id).map(r => r));
-        // }
         for (const a of this.target.members) {
             if (!opt.force && a.id === opt.moderator.id) continue;
             if (this.higherThanModerator.some(r => r.id === a.id)) {
@@ -932,18 +911,11 @@ class Moderation extends BaseModeration {
      * @returns 
      */
     async vcUnmute(opt) {
-        // if (!this.moderatorVCMutePerm)
-        //     throw new Error("Moderator lack MUTE_MEMBERS permission");
-        // if (!this.clientVCMutePerm)
-        //     throw new Error("Client lack MUTE_MEMBERS permission");
         if (!opt.moderator) opt.moderator = this.moderator;
         const unmuted = [];
         const higherThanClient = [];
         const higherThanModerator = [];
         const noVoice = [];
-        // if (this.channel instanceof VoiceChannel) {
-        //     this.addTargets(this.channel.members.filter(r => r.id !== this.moderator.id).map(r => r));
-        // }
         for (const a of this.target.members) {
             if (!opt.force && a.id === opt.moderator.id) continue;
             if (this.higherThanModerator.some(r => r.id === a.id)) {

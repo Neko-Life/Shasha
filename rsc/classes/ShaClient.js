@@ -158,6 +158,29 @@ module.exports = class ShaClient extends Client {
     }
 
     /**
+     * 
+     * @param {import("../typins").ShaGuild} guild 
+     */
+    async loadOwnerGuildCommand(guild) {
+        logDev("Enabling owner in guild", guild.name, guild.id);
+        this.application.commands.fetch().then(
+            async r => {
+                const log = await r.find(r => r.name === "owner")
+                    ?.permissions.set({
+                        guild: guild,
+                        permissions: [{
+                            id: "750335181285490760",
+                            type: "USER",
+                            permission: true
+                        }]
+                    });
+                logDev(log);
+                logDev("Enabled owner in guild", guild.name, guild.id);
+            }
+        );
+    }
+
+    /**
      * Emotify str and check for ads
      * @param {string} str 
      * @param {boolean} noAdCheck 
