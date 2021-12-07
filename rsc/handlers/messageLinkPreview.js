@@ -65,7 +65,7 @@ module.exports = async (msg) => {
         } else emb.setImage(null);
         if (toPrev.embeds?.length) {
             alEmb.push(
-                ...toPrev.embeds.filter(r => !r.video && !r.description && !r.title && !(r.type === "video" || r.type === "image"))
+                ...toPrev.embeds.filter(r => r.type === "rich" || (r.type === "video" && (r.description || r.title)))
                     .map(r => msg.client.finalizeEmbed(r, memberAdmin))
             );
             let images = toPrev.embeds.filter(r => r.type === "image").map(r => r);
@@ -81,7 +81,7 @@ module.exports = async (msg) => {
                 );
         }
     }
-    const send = { embeds: alEmb, allowedMentions: { parse: [] } };
+    const send = { embeds: alEmb.slice(0, 10), allowedMentions: { parse: [] } };
     if (content.length) send.content = content;
     let m;
     if (!msg.messageLinkPreview || msg.messageLinkPreview?.deleted) {
