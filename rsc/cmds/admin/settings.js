@@ -5,7 +5,8 @@ const { Command } = require("../../classes/Command");
 const { CommandSettingsHelper } = require("../../classes/CommandSettingsHelper");
 const { loadDb } = require("../../database");
 const { logDev } = require("../../debug");
-const { getColor, findRoles, replyError } = require("../../functions");
+const { getColor, findRoles, replyError, prevNextButton } = require("../../functions");
+const ButtonHandler = require("../../messageInteraction/button");
 const { intervalToStrings, createInterval, parseDuration } = require("../../util/Duration");
 
 const mainSelectMenu = new MessageActionRow()
@@ -61,16 +62,16 @@ const moderationSelectmenu = new MessageActionRow()
 const moderationMutePageButton = new MessageActionRow()
     .addComponents([
         new MessageButton().setCustomId("settings/set/muteRole").setStyle("PRIMARY").setLabel("Set Role"),
-        new MessageButton().setCustomId("settings/remove/muteRole").setStyle("SECONDARY").setLabel("Remove Role"),
         new MessageButton().setCustomId("settings/set/duration/mute").setStyle("PRIMARY").setLabel("Set Duration"),
+        new MessageButton().setCustomId("settings/remove/muteRole").setStyle("SECONDARY").setLabel("Remove Role"),
         new MessageButton().setCustomId("settings/remove/duration/mute").setStyle("SECONDARY").setLabel("Remove Duration")
     ]);
 
 const moderationBanPageButton = new MessageActionRow()
     .addComponents([
         new MessageButton().setCustomId("settings/set/duration/ban").setStyle("PRIMARY").setLabel("Set Duration"),
-        new MessageButton().setCustomId("settings/remove/duration/ban").setStyle("SECONDARY").setLabel("Remove Duration"),
         new MessageButton().setCustomId("settings/set/purge/ban").setStyle("PRIMARY").setLabel("Set Purge"),
+        new MessageButton().setCustomId("settings/remove/duration/ban").setStyle("SECONDARY").setLabel("Remove Duration"),
         new MessageButton().setCustomId("settings/remove/purge/ban").setStyle("SECONDARY").setLabel("Remove Purge")
     ]);
 
@@ -96,7 +97,12 @@ const miscMessagePreviewPageButton = new MessageActionRow()
         new MessageButton().setCustomId("settings/remove/messagePreview").setStyle("SECONDARY").setLabel("Disable")
     ]);
 
-
+const commandPagesPageButtons = new MessageActionRow()
+    .addComponents([
+        new MessageButton().setCustomId(`settings/command/page/prev`).setLabel("⬅️").setStyle("PRIMARY"),
+        new MessageButton().setCustomId(`settings/command/page/home`).setLabel("🏠").setStyle("PRIMARY"),
+        new MessageButton().setCustomId(`settings/command/page/next`).setLabel("➡️").setStyle("PRIMARY"),
+    ]);
 
 module.exports = class SettingsCmd extends Command {
     constructor(interaction) {
@@ -221,66 +227,72 @@ module.exports = class SettingsCmd extends Command {
             ? this.client.application.commands.cache
             : await this.client.application.commands.fetch();
 
+        const commandPages = [];
+        let curCommandPage = 0;
+
         pages.commandPage = async (inter, args = []) => {
             if (!args.length) {
                 let waitMes;
-                const commandEmb = new MessageEmbed(baseEmb)
+                const baseCommandEmb = new MessageEmbed(baseEmb)
                     .setTitle("Command")
                     .setDescription("Edit command permissions");
 
-                const commandRows = [];
-                const commandSelectMenuOpts = [];
+                const useFetch = cmdsFetch.map(r => r).filter(r => r.name !== "owner");
+                for (let i = 0; i < useFetch.length; i = i + 4) {
+                    const nU = i + 4;
+                    commandPages[commandPages.length] = async (inter) => {
+                        const commandEmb = new MessageEmbed(baseCommandEmb);
+                        const commandSelectMenuOpts = [];
 
-                for (const [k, v] of cmdsFetch) {
-                    if (v.name === "owner") continue;
+                        for (let nI = i; nI < nU; nI++) {
+                            if (!useFetch[nI]) break;
+                            const v = useFetch[nI];
+                            if (!this.guild.commandPermissions?.[v.id]) {
+                                if (inter && !waitMes && !(inter.replied || inter.deferred)) waitMes = await inter.reply({ content: "Fetching permissions settings. Please wait...", fetchReply: true });
+                                if (!this.guild.commandPermissions)
+                                    this.guild.commandPermissions = {};
+                                this.guild.commandPermissions[v.id] = await v.permissions.fetch({ guild: this.guild }).catch(logDev) || [];
+                            }
+                            const perms = this.guild.commandPermissions[v.id];
+                            const findEveryone = perms?.find(r => r.id === this.guild.id)?.permission;
+                            const everyonePerm = typeof findEveryone === "boolean" ? findEveryone : v.defaultPermission;
 
-                    if (!this.guild.commandPermissions?.[v.id]) {
-                        if (inter && !waitMes && !(inter.replied || inter.deferred)) waitMes = await inter.reply({ content: "Fetching permissions settings. Please wait...", fetchReply: true });
-                        if (!this.guild.commandPermissions)
-                            this.guild.commandPermissions = {};
-                        this.guild.commandPermissions[v.id] = await v.permissions.fetch({ guild: this.guild }).catch(logDev) || [];
-                    }
-                    const perms = this.guild.commandPermissions[v.id];
-                    const findEveryone = perms?.find(r => r.id === this.guild.id)?.permission;
-                    const everyonePerm = typeof findEveryone === "boolean" ? findEveryone : v.defaultPermission;
+                            const bypassRoles = perms?.filter(r => r.type === "ROLE" && r.permission === true);
+                            const bypassUsers = perms?.filter(r => r.type === "USER" && r.permission === true);
 
-                    const bypassRoles = perms?.filter(r => r.type === "ROLE" && r.permission === true);
-                    const bypassUsers = perms?.filter(r => r.type === "USER" && r.permission === true);
-
-                    commandEmb.addField(
-                        v.name.toUpperCase(),
-                        v.description + "\n\n**" + (everyonePerm ? "ENABLED" : "DISABLED") + `** (this category/command is ${v.defaultPermission ? "enabled" : "disabled"} by default)`
-                        + (
-                            bypassRoles?.length ? `\nBypass Roles: <@&${bypassRoles.map(r => r.id).join(">, <@&")}>`.replace(`<@&${this.guild.id}>`, "@everyone") : ""
-                        ) + (
-                            bypassUsers?.length ? `\nBypass Users: <@${bypassUsers.map(r => r.id).join(">, <@")}>` : ""
-                        )
-                    );
-                    commandSelectMenuOpts.push(
-                        {
-                            label: v.name.toUpperCase(),
-                            description: `Edit \`${v.name}\` category/command`,
-                            value: `commandPage/${v.id}`
+                            commandEmb.addField(
+                                v.name.toUpperCase(),
+                                v.description + "\n\n**" + (everyonePerm ? "Enabled" : "Disabled") + `** (this category/command is ${v.defaultPermission ? "enabled" : "disabled"} by default)`
+                                + (
+                                    bypassRoles?.length ? `\nBypass Roles: <@&${bypassRoles.map(r => r.id).join(">, <@&")}>`.replace(`<@&${this.guild.id}>`, "@everyone") : ""
+                                ) + (
+                                    bypassUsers?.length ? `\nBypass Users: <@${bypassUsers.map(r => r.id).join(">, <@")}>` : ""
+                                )
+                            );
+                            commandSelectMenuOpts.push(
+                                {
+                                    label: v.name.toUpperCase(),
+                                    description: `Edit \`${v.name}\` category/command`,
+                                    value: `commandPage/${v.id}`
+                                }
+                            );
                         }
-                    );
-                }
-                if (inter && !(inter.replied || inter.deferred))
-                    inter.deferUpdate();
-                for (let i = 0; i < commandSelectMenuOpts.length; i = i + 10) {
-                    commandRows.push(
-                        new MessageActionRow()
+                        if (inter && !(inter.replied || inter.deferred))
+                            inter.deferUpdate();
+
+                        const row = new MessageActionRow()
                             .addComponents(
                                 new MessageSelectMenu()
-                                    .setCustomId(Array(commandRows.length + 1).fill("/").join("") + "pages")
+                                    .setCustomId("/pages")
                                     .setMaxValues(1)
                                     .setPlaceholder("Browse category/command...")
-                                    .addOptions(commandSelectMenuOpts.slice(i, i + 10))
-                            )
-                    );
+                                    .addOptions(commandSelectMenuOpts)
+                            );
+                        if (waitMes && waitMes.deleted === false) waitMes.delete();
+                        return { embeds: [commandEmb], components: [mainSelectMenu, row, commandPagesPageButtons] };
+                    }
                 }
-
-                if (waitMes && waitMes.deleted === false) waitMes.delete();
-                return { embeds: [commandEmb], components: [mainSelectMenu, ...commandRows] };
+                return commandPages[curCommandPage](inter);
             } else {
                 const cmd = cmdsFetch.get(args[0]);
                 const emb = new MessageEmbed(baseEmb)
@@ -297,27 +309,36 @@ module.exports = class SettingsCmd extends Command {
                         emb.addField(`${k.type}:\`${k.name}\``, desc.trim());
                     } else emb.addField(`${k.type}:\`${k.name}\``, k.description);
                 }
-                const firstRowButtons = [
-                    new MessageButton().setCustomId(`settings/command/enable/category/${cmd.id}`).setLabel("Enable").setStyle("PRIMARY"),
-                    new MessageButton().setCustomId(`settings/command/disable/category/${cmd.id}`).setLabel("Disable").setStyle("SECONDARY")
-                ];
+                const lastRowButtons = [];
                 if (emb.fields.length) {
-                    firstRowButtons.push(
-                        new MessageButton().setCustomId(`settings/command/enable/command/${cmd.name}`).setLabel("Enable Sub-Command").setStyle("PRIMARY"),
-                        new MessageButton().setCustomId(`settings/command/disable/command/${cmd.name}`).setLabel("Disable Sub-Command").setStyle("SECONDARY"));
+                    lastRowButtons.push(
+                        new MessageButton().setCustomId(`settings/command/subCommand/${cmd.name}`).setLabel("Sub-Command Settings").setStyle("PRIMARY")
+                    );
                 }
+                lastRowButtons.push(new MessageButton().setCustomId(`settings/command/close`).setLabel("Done").setStyle("SUCCESS"),);
                 const buttons = [
-                    new MessageActionRow().addComponents(firstRowButtons),
                     new MessageActionRow().addComponents([
+                        new MessageButton().setCustomId(`settings/command/enable/category/${cmd.id}`).setLabel("Enable").setStyle("PRIMARY"),
                         new MessageButton().setCustomId(`settings/command/set/bypassRoles/${cmd.id}`).setLabel("Set Bypass Roles").setStyle("PRIMARY"),
                         new MessageButton().setCustomId(`settings/command/set/bypassUsers/${cmd.id}`).setLabel("Set Bypass Users").setStyle("PRIMARY"),
+                    ]),
+                    new MessageActionRow().addComponents([
+                        new MessageButton().setCustomId(`settings/command/disable/category/${cmd.id}`).setLabel("Disable").setStyle("SECONDARY"),
                         new MessageButton().setCustomId(`settings/command/remove/bypass/${cmd.id}`).setLabel("Remove Bypasses").setStyle("SECONDARY"),
-                        new MessageButton().setCustomId(`settings/command/close`).setLabel("Done").setStyle("SUCCESS")
-                    ])
+                    ]),
+                    new MessageActionRow().addComponents(lastRowButtons),
                 ];
-                const send = { embeds: [emb], components: buttons };
-                if (!(inter.deferred || inter.replied)) inter.reply(send);
-                else return send;
+                const send = { embeds: [emb], components: buttons, fetchReply: true };
+                if (!(inter.deferred || inter.replied)) {
+                    const mes = await inter.reply(send);
+                    const buttonHandler = {
+                        subCommand: async (inter, args) => {
+                            const res = await inter.reply({ content: "This feature is still in development and isn't ready yet. We're sorry for the incovenience", fetchReply: true });
+                            purgeRet(res);
+                        }
+                    };
+                    mes.buttonHandler = buttonHandler;
+                } else return send;
             }
         }
 
@@ -327,16 +348,14 @@ module.exports = class SettingsCmd extends Command {
         const SETTING_MESSAGE = await inter.reply({ ...pages.homePage, fetchReply: true });
         this.client.createMessageInteraction(SETTING_MESSAGE.id, { TIMEOUT: 1000 * 60 * 60, PAGES: pages });
 
-        let blockSet, blockRem;
-
-        SETTING_MESSAGE.buttonHandler = {
+        let blockSet, blockRem, blockCom;
+        const buttonHandler = {
             set: async (inter, args) => {
-                inter.deferUpdate();
-                if (blockSet) return;
+                if (blockSet) return inter.deferUpdate();
                 blockSet = true;
 
                 if (args[0] === "muteRole") {
-                    const m = await SETTING_MESSAGE.channel.send("Provide role Id, mention or name to be set as mute role:");
+                    const m = await inter.reply({ content: "Provide role Id, mention or name to be set as mute role:", fetchReply: true });
                     const c = await m.channel.awaitMessages({ filter: (m2) => (m2.author.id === inter.user.id) && m2.content?.length, max: 1 });
                     const setMsg = c.first();
                     let errmes;
@@ -365,12 +384,12 @@ module.exports = class SettingsCmd extends Command {
                             m.channel.bulkDelete([m, setMsg]).catch(logDev);
                         else m.deleted ? null : m.delete();
                         blockSet = false;
-                        if (SETTING_MESSAGE.deleted) return;
+                        if (SETTING_MESSAGE && SETTING_MESSAGE.deleted) return;
                         return SETTING_MESSAGE.edit(await moderationMutePage());
                     }
 
                 } else if (args[0] === "duration") {
-                    const m = await SETTING_MESSAGE.channel.send("Provide duration. Ex `69h420m666y96mo444s`:");
+                    const m = await inter.reply({ content: "Provide duration. Ex `69h420m666y96mo444s`:", fetchReply: true });
                     const c = await m.channel.awaitMessages({ filter: (m2) => (m2.author.id === inter.user.id) && m2.content?.length, max: 1 });
                     const setMsg = c.first();
                     let parsed;
@@ -407,11 +426,11 @@ module.exports = class SettingsCmd extends Command {
                         m.channel.bulkDelete([m, setMsg]).catch(logDev);
                     else m.deleted ? null : m.delete();
                     blockSet = false;
-                    if (SETTING_MESSAGE.deleted) return;
+                    if (SETTING_MESSAGE && SETTING_MESSAGE.deleted) return;
                     return SETTING_MESSAGE.edit(await p());
 
                 } else if (args[0] === "purge") {
-                    const m = await SETTING_MESSAGE.channel.send("Provide oldest message age in days to include as number. From 1 up to 7:");
+                    const m = await inter.reply({ content: "Provide oldest message age in days to include as number. From 1 up to 7:", fetchReply: true });
                     const c = await m.channel.awaitMessages({ filter: (m2) => (m2.author.id === inter.user.id) && m2.content?.length, max: 1 });
                     const setMsg = c.first();
 
@@ -436,14 +455,14 @@ module.exports = class SettingsCmd extends Command {
                         m.channel.bulkDelete([m, setMsg]).catch(logDev);
                     else m.deleted ? null : m.delete();
                     blockSet = false;
-                    if (SETTING_MESSAGE.deleted) return;
+                    if (SETTING_MESSAGE && SETTING_MESSAGE.deleted) return;
                     return SETTING_MESSAGE.edit(await p());
 
                 } else if (args[0] === "messagePreview") {
                     SETTING_MESSAGE.guild.messageLinkPreviewSettings = { state: true };
                     await THE_GUILD.db.set("messageLinkPreviewSettings", "Object", { value: { state: true } });
                     blockSet = false;
-                    if (SETTING_MESSAGE.deleted) return;
+                    if (SETTING_MESSAGE && SETTING_MESSAGE.deleted) return;
                     return SETTING_MESSAGE.edit(await miscMessagePreviewPage());
                 }
             },
@@ -456,7 +475,7 @@ module.exports = class SettingsCmd extends Command {
                     const set = get?.value || {};
                     await THE_GUILD.db.set("muteSettings", "Object", { value: { muteRole: null, duration: set.duration } });
                     blockRem = false;
-                    if (SETTING_MESSAGE.deleted) return;
+                    if (SETTING_MESSAGE && SETTING_MESSAGE.deleted) return;
                     return SETTING_MESSAGE.edit(await moderationMutePage());
                 } else if (args[0] === "duration") {
 
@@ -474,7 +493,7 @@ module.exports = class SettingsCmd extends Command {
                     }
 
                     blockRem = false;
-                    if (SETTING_MESSAGE.deleted) return;
+                    if (SETTING_MESSAGE && SETTING_MESSAGE.deleted) return;
                     return SETTING_MESSAGE.edit(await p());
                 } else if (args[0] === "purge") {
 
@@ -487,34 +506,44 @@ module.exports = class SettingsCmd extends Command {
                     }
 
                     blockRem = false;
-                    if (SETTING_MESSAGE.deleted) return;
+                    if (SETTING_MESSAGE && SETTING_MESSAGE.deleted) return;
                     return SETTING_MESSAGE.edit(await p());
 
                 } else if (args[0] === "messagePreview") {
                     SETTING_MESSAGE.guild.messageLinkPreviewSettings = { state: false };
                     await THE_GUILD.db.set("messageLinkPreviewSettings", "Object", { value: { state: false } });
                     blockRem = false;
-                    if (SETTING_MESSAGE.deleted) return;
+                    if (SETTING_MESSAGE && SETTING_MESSAGE.deleted) return;
                     return SETTING_MESSAGE.edit(await miscMessagePreviewPage());
                 }
             },
             command: async (inter, args) => {
-                if (blockRem) return inter.deferUpdate();
-                blockRem = true;
+                if (args[0] === "page") {
+                    const key = args.pop();
+                    const nP = ButtonHandler.getNewPage(key, curCommandPage, commandPages.length);
+                    if (SETTING_MESSAGE && SETTING_MESSAGE.deleted) return;
+                    curCommandPage = nP;
+                    return SETTING_MESSAGE.edit(await commandPages[nP](inter));
+                }
+                if (blockCom) return inter.deferUpdate();
+                blockCom = true;
                 try {
                     const update = await CommandSettingsHelper[args[0]](inter, args.slice(1));
-                    blockRem = false;
-                    if (update && !SETTING_MESSAGE.deleted) return SETTING_MESSAGE.edit(await pages.commandPage());
+                    blockCom = false;
+                    if (SETTING_MESSAGE && SETTING_MESSAGE.deleted) return;
+                    if (update) return SETTING_MESSAGE.edit(await pages.commandPage());
                 } catch (e) {
                     logDev(e);
                     const mes = replyError(e);
-                    blockRem = false;
+                    blockCom = false;
                     if (inter.deferred || inter.replied)
                         return inter.editReply(mes);
                     else return inter.reply(mes);
                 }
             }
         }
+        SETTING_MESSAGE.buttonHandler = buttonHandler;
+        setTimeout(() => delete SETTING_MESSAGE.buttonHandler, 60 * 60 * 1000);
         return SETTING_MESSAGE;
     }
 }

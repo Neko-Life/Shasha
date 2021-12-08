@@ -34,6 +34,26 @@ class CommandSettingsHelper {
         }
     }
 
+    /**
+     * 
+     * @param {ButtonInteraction} inter 
+     * @param {*} args 
+     */
+    static async subCommand(inter, args) {
+        /** @type {import("../typins").ShaMessage} */
+        const prompt = await inter.reply({ content: "Provide the sub-command name you wanna set up:", fetchReply: true });
+        const collect = await prompt.channel.awaitMessages({ filter: (m) => m.author.id === inter.user.id && m.content?.length, max: 1 });
+        const got = collect.first();
+        const cmd = inter.client.commands[args[0]][got.content.trim()];
+        if (!cmd) {
+            inter.editReply("No sub-command exist with that name <:bruhLife:798789686242967554>");
+            purgeRet(prompt, got);
+            return;
+        }
+        const res = await inter.channel.send({ content: "This feature is still in development and isn't ready yet. We're sorry for the incovenience", fetchReply: true });
+        purgeRet(res);
+    }
+
     static async categoryEveryonePermissionsUpdate({ guild, client }, id, bool) {
         const cmd = client.application.commands.cache.get(id);
         let newPerms;
@@ -85,7 +105,7 @@ class CommandSettingsHelper {
             rType = "ROLE";
         }
         const prompt = await inter.reply({ content: `Provide ${sName} \`<Id>\`, \`<name>\` or \`<mention>\` to bypass separated with \` \` (space):`, fetchReply: true });
-        const collect = await prompt.channel.awaitMessages({ max: 1, filter: (m) => m.author.id === inter.user.id });
+        const collect = await prompt.channel.awaitMessages({ max: 1, filter: (m) => m.author.id === inter.user.id && m.content?.length });
         const got = collect.first();
         const roles = await ArgsParser.roles(inter.guild, got.content);
         let timeout;
@@ -124,7 +144,7 @@ class CommandSettingsHelper {
             const res = await inter.client.application.commands.permissions.set({
                 command: args[1], // cmd.id,
                 guild: inter.guild.id,
-                permissions: []
+                permissions: inter.guild.commandPermissions?.[args[1]]?.filter(r => r.permission === false) || []
             });
             this.updateGuildCommandPermissions(args[1], inter.guild, res);
             return true;
@@ -148,7 +168,7 @@ function purgeRet(clMsg, usMsg, timeout = 5000) {
     setTimeout(
         () => {
             if (usMsg && clMsg.channel.permissionsFor(clMsg.author).has("MANAGE_MESSAGES"))
-                return clMsg.channel.bulkDelete([clMsg, usMsg]);
+                return clMsg.channel.bulkDelete([clMsg, usMsg]).catch(logDev);
             else if (!clMsg.deleted) return clMsg.delete();
         }, timeout
     );

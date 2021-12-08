@@ -13,7 +13,8 @@ module.exports = class MuteCmd extends Command {
             name: "mute",
             userPermissions: ["MANAGE_ROLES"],
             clientPermissions: ["MANAGE_ROLES"],
-            guildOnly: true
+            guildOnly: true,
+            deleteSavedMessagesAfter: 15000
         });
     }
 
@@ -25,7 +26,7 @@ module.exports = class MuteCmd extends Command {
         const get = await gd.db.getOne("muteSettings", "Object");
         const settings = get?.value || {};
         if (!settings.muteRole)
-            return inter.editReply("No mute role configured! Run `/admin settings` to set one");
+            return this.saveMessages(inter.editReply({ content: "No mute role configured! Run `/admin settings` to set one", fetchReply: true }));
         const mod = new Moderation(this.client, {
             guild: this.guild, targets: user.user, moderator: this.member
         });
@@ -37,7 +38,7 @@ module.exports = class MuteCmd extends Command {
                 durFor = res.duration.strings.join(" ");
             } catch (e) {
                 logDev(e);
-                return inter.editReply(replyError(e));
+                return this.saveMessages(inter.editReply(replyError(e)));
             }
         }
         const dST = new Date();
