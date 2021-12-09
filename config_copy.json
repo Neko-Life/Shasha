@@ -1,7 +1,9 @@
 {
   "appId": "",
+  "devAppId": "",
   "invite": "https://discord.com/oauth2/authorize?client_id=788006279837909032&scope=bot&permissions=8",
   "token": "",
+  "devToken": "",
   "lewdsAPIkey": "",
   "mongoServer": "",
   "globalCommandPrefix": "s.",

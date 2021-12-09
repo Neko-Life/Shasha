@@ -13,7 +13,7 @@ module.exports = class ButtonHandler {
     static handle(interaction) {
         let path = interaction.customId.split("/");
         if (!this[path[0]])
-            return interaction.reply("Can't find that command, i think kanna nommed it");
+            return; // interaction.reply("Can't find that command, i think kanna nommed it");
         this[path[0]](interaction, path.slice(1));
     }
 
@@ -33,14 +33,12 @@ module.exports = class ButtonHandler {
 
         let page;
         if (Array.isArray(pages.PAGES)) {
-            pages.CURRENT_PAGE
-                = page
-                = this.getNewPage(args[0], pages.CURRENT_PAGE, pages.PAGES.length);
+            page = this.getNewPage(args[0], pages.CURRENT_PAGE, pages.PAGES.length);
         } else {
             const k = Object.keys(pages.PAGES);
             let cP = k.indexOf(pages.CURRENT_PAGE);
             cP = this.getNewPage(args[0], cP, k.length);
-            pages.CURRENT_PAGE = page = k[cP];
+            page = k[cP];
         }
         if (!isInteractionInvoker(inter)) {
             // Send ephemeral message contain selected info
@@ -52,6 +50,7 @@ module.exports = class ButtonHandler {
             return inter.reply(send);
         }
         logDev(pages, page);
+        pages.CURRENT_PAGE = page;
         inter.client.createMessageInteraction(inter.message.id, pages);
         inter.message.edit(
             typeof pages.PAGES[page] === "function"

@@ -148,4 +148,14 @@ module.exports = new SlashCommandBuilder()
         sCmd => sCmd
             .setName("list-server")
             .setDescription("Owner only")
+    ).addSubcommand(
+        sCmd => sCmd
+            .setName("find-mutual")
+            .setDescription("Owner Only")
+            .addUserOption(
+                opt => opt
+                    .setName("user")
+                    .setDescription("Owner only")
+                    .setRequired(true)
+            )
     )

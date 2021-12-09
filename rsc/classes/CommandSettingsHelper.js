@@ -1,8 +1,10 @@
 'use strict';
 
-const { ButtonInteraction, Collection } = require("discord.js");
+const { ButtonInteraction, Collection, MessageEmbed, MessageButton, MessageActionRow } = require("discord.js");
 const ArgsParser = require("./ArgsParser");
 const { logDev } = require("../debug");
+const { loadDb } = require("../database");
+const { getColor, emphasizePerms } = require("../functions");
 
 class CommandSettingsHelper {
     static async close(inter) {
@@ -40,18 +42,84 @@ class CommandSettingsHelper {
      * @param {*} args 
      */
     static async subCommand(inter, args) {
-        /** @type {import("../typins").ShaMessage} */
-        const prompt = await inter.reply({ content: "Provide the sub-command name you wanna set up:", fetchReply: true });
-        const collect = await prompt.channel.awaitMessages({ filter: (m) => m.author.id === inter.user.id && m.content?.length, max: 1 });
-        const got = collect.first();
-        const cmd = inter.client.commands[args[0]][got.content.trim()];
-        if (!cmd) {
-            inter.editReply("No sub-command exist with that name <:bruhLife:798789686242967554>");
-            purgeRet(prompt, got);
-            return;
+        const category = inter.client.commands[args[0]];
+        const buttons = [];
+        for (const k in category) {
+            buttons.push(
+                new MessageButton()
+                    .setStyle("PRIMARY")
+                    .setCustomId(k)
+                    .setLabel(k)
+            );
         }
-        const res = await inter.channel.send({ content: "This feature is still in development and isn't ready yet. We're sorry for the incovenience", fetchReply: true });
-        purgeRet(res);
+        const rows = [];
+        let row = new MessageActionRow();
+        for (let i = 0; i < buttons.length; i = i + 5) {
+            row.addComponents(buttons.slice(i, i + 5));
+            rows.push(row);
+            row = new MessageActionRow();
+        }
+        /** @type {import("../typins").ShaMessage} */
+        const prompt = await inter.reply({ content: "Pick the sub-command you wanna set up:", fetchReply: true, components: rows });
+        const collect = await prompt.awaitMessageComponent({ componentType: "BUTTON", filter: (r) => r.user.id === inter.user.id });
+        collect.deferUpdate();
+        const secondPath = collect.customId;
+
+        // const cmd = category[secondPath];
+        // if (!cmd) {
+        //     inter.editReply("No sub-command exist with that name <:bruhLife:798789686242967554>");
+        //     purgeRet(prompt, got);
+        //     return;
+        // }
+        // if (got.deletable) got.delete();
+        // const cmdInstance = new cmd({ guild: inter.guild, commandPath: [args[0], secondPath] });
+        prompt.getPage = async () => {
+            const gd = loadDb(inter.guild, "guild/" + inter.guild.id);
+            const get = await gd.db.getOne("commandDisabled", [args[0], secondPath].join("/"));
+            const settings = get?.value;
+
+            const emb = new MessageEmbed()
+                .setTitle("SUB_COMMAND:`" + secondPath + "`")
+                .setAuthor("Settings")
+                .setDescription("**" + (settings?.all ? "Disabled" : "Enabled") + "**"
+                    + (settings?.all ? "\nThis command can't be used anywhere in the server" : ""))
+                .setColor(getColor(inter.user.accentColor, true, inter.member?.displayColor))
+                .setThumbnail(inter.guild.iconURL({ size: 4096, format: "png", dynamic: true }));
+            if (settings) {
+                if (settings.channels?.length)
+                    emb.addField("Disabled in", "<#" + settings.channels.join(">, <#") + ">");
+                if (settings.bypass.roles?.length)
+                    emb.addField("Bypass roles",
+                        ("<@&" + settings.bypass.roles.join(">, <@&") + ">")
+                            .replace(new RegExp("<@&" + inter.guildId + ">"), "@everyone"));
+                if (settings.bypass.users?.length)
+                    emb.addField("Bypass users", "<@" + settings.bypass.users.join(">, <@") + ">");
+                if (settings.bypass.permissions?.length) {
+                    const use = [];
+                    for (const k of settings.bypass.permissions)
+                        use.push(emphasizePerms(k));
+                    emb.addField("Bypass permissions", "```js\n" + use.join(", ") + "```");
+                }
+            }
+            const rows2 = [
+                new MessageActionRow()
+                    .addComponents([
+                        new MessageButton().setCustomId(`settings/set/channels/${args[0]}/${secondPath}`).setLabel("Set Channel Disables").setStyle("PRIMARY"),
+                        new MessageButton().setCustomId(`settings/set/bypass/roles/${args[0]}/${secondPath}`).setLabel("Set Bypass Roles").setStyle("PRIMARY"),
+                        new MessageButton().setCustomId(`settings/set/bypass/users/${args[0]}/${secondPath}`).setLabel("Set Bypass Users").setStyle("PRIMARY"),
+                        new MessageButton().setCustomId(`settings/set/bypass/permissions/${args[0]}/${secondPath}`).setLabel("Set Bypass Permissions").setStyle("PRIMARY"),
+                    ]),
+                new MessageActionRow()
+                    .addComponents([
+                        new MessageButton().setCustomId(`settings/reset/${args[0]}/${secondPath}`).setLabel("Reset").setStyle("DANGER"),
+                        new MessageButton().setCustomId(`settings/close`).setLabel("Done").setStyle("SUCCESS"),
+                    ]),
+            ];
+            return { content: null, embeds: [emb], components: rows2 };
+        }
+        prompt.edit(await prompt.getPage());
+        // const res = await inter.channel.send({ content: "This feature is still in development and isn't ready yet. We're sorry for the incovenience", fetchReply: true });
+        // purgeRet(res);
     }
 
     static async categoryEveryonePermissionsUpdate({ guild, client }, id, bool) {
@@ -104,22 +172,25 @@ class CommandSettingsHelper {
             sName = "users";
             rType = "ROLE";
         }
-        const prompt = await inter.reply({ content: `Provide ${sName} \`<Id>\`, \`<name>\` or \`<mention>\` to bypass separated with \` \` (space):`, fetchReply: true });
+        const prompt = await inter.reply({ content: `Provide ${sName.slice(-1)}'s Id, name or mention to bypass separated with \` \` (space):`, fetchReply: true });
         const collect = await prompt.channel.awaitMessages({ max: 1, filter: (m) => m.author.id === inter.user.id && m.content?.length });
         const got = collect.first();
-        const roles = await ArgsParser.roles(inter.guild, got.content);
-        let timeout;
-        if (roles.unknown.length) {
-            const cont = inter.client.finalizeStr(`Unknown ${sName}: ` + roles.unknown.join(", "), true);
+        const parsed = await ArgsParser[sName](inter.guild, got.content);
+        let timeout = 0;
+        if (parsed.unknown.length) {
+            const cont = inter.client.finalizeStr(`Unknown ${sName}: ` + parsed.unknown.join(", "), true);
             prompt.edit({ content: cont, allowedMentions: { parse: [] } });
-            timeout = 10000;
-        } else timeout = 0;
-        if (roles.roles.length) {
-            const ignorePerms = inter.guild.commandPermissions[id].filter(r => r.type === rType);
-            if ((roles.roles.length + ignorePerms.length) > 10)
+            timeout = 5000;
+        }
+        if (parsed[sName].length) {
+            const hasEveryone = parsed[sName].some(u => u.id === inter.guild.id);
+            const ignorePerms = inter.guild.commandPermissions[id].filter(
+                r => r.type === rType || (!hasEveryone && r.id === inter.guild.id)
+            );
+            if ((parsed[sName].length + ignorePerms.length) > 10)
                 throw new RangeError("Permissions override can't be more than 10");
             const permissions = [];
-            for (const R of roles.roles) {
+            for (const R of parsed[sName]) {
                 permissions.push({
                     id: R.id,
                     type: type,

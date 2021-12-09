@@ -152,11 +152,11 @@ function maxStringsLength(arrStr) {
  * @returns {boolean}
  */
 function isInteractionInvoker(interaction) {
-    let message;
+    let inter;
     if (interaction.message.reference?.messageId) {
-        message = interaction.channel.messages.resolve(interaction.message.reference.messageId);
-    } else message = interaction.message;
-    if (message?.interaction.user.id !== interaction.user.id) {
+        inter = interaction.channel.messages.resolve(interaction.message.reference.messageId).interaction;
+    } else inter = interaction.message.interaction;
+    if (inter?.user.id !== interaction.user.id) {
         return false;
     } else return true;
 }

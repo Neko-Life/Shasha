@@ -237,4 +237,4 @@ process.on("unhandledRejection", e => {
 //     errLog(e, null, client);
 // });
 
-client.login(configFile.token);
+client.login(process.dev ? configFile.devToken : configFile.token);

@@ -9,7 +9,8 @@ module.exports = class SnipeCmd extends Command {
     constructor(interaction) {
         super(interaction, {
             name: "snipe",
-            clientPermissions: ["VIEW_CHANNEL", "EMBED_LINKS"]
+            clientPermissions: ["VIEW_CHANNEL", "EMBED_LINKS"],
+            deleteSavedMessagesAfter: 15000
         });
     }
     async run(inter, { channel }) {
@@ -40,7 +41,7 @@ module.exports = class SnipeCmd extends Command {
                 else emb.setImage(null);
                 pages.push({ embeds: [emb] });
             }
-        if (!pages.length) return inter.editReply("Nothin to snipe");
+        if (!pages.length) return this.saveMessages(inter.editReply("Nothin to snipe"));
         if (pages.length > 1 && (this.isOwner || this.member?.permissionsIn(this.channel).has("MANAGE_MESSAGES"))) {
             const button = prevNextButton(true);
             for (let i = 0; i < pages.length; i++) pages[i].components = [button];

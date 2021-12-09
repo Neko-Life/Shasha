@@ -12,7 +12,7 @@ module.exports = new SlashCommandBuilder()
             .addIntegerOption(
                 opt => opt
                     .setName("amount")
-                    .setDescription("Amount of message to delete")
+                    .setDescription("Amount of message to delete. Up to 100")
             ).addStringOption(
                 opt => opt
                     .setName("to-message")

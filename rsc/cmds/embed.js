@@ -417,26 +417,26 @@ module.exports.join = class EmbedJoinCmd extends Command {
     }
 }
 
-module.exports["role-menu"] = class RoleMenuCmd extends Command {
-    constructor(interaction) {
-        super(interaction, {
-            name: "role-menu",
-            clientPermissions: ["EMBED_LINKS"],
-            userPermissions: ["MANAGE_MESSAGES"]
-        });
-    }
-    async run(inter, { roleMenuDatas }) { }
-}
+// module.exports["role-menu"] = class RoleMenuCmd extends Command {
+//     constructor(interaction) {
+//         super(interaction, {
+//             name: "role-menu",
+//             clientPermissions: ["EMBED_LINKS"],
+//             userPermissions: ["MANAGE_MESSAGES"]
+//         });
+//     }
+//     async run(inter, { roleMenuDatas }) { }
+// }
 
-module.exports["create-role-menu-datas"] = class CreateRMDatasCmd extends Command {
-    constructor(interaction) {
-        super(interaction, {
-            name: "create-role-menu-datas",
-            clientPermissions: ["SEND_MESSAGES"],
-            userPermissions: [
-                "SEND_MESSAGES"
-            ]
-        });
-    }
-    async run(inter, { }) { }
-}
+// module.exports["create-role-menu-datas"] = class CreateRMDatasCmd extends Command {
+//     constructor(interaction) {
+//         super(interaction, {
+//             name: "create-role-menu-datas",
+//             clientPermissions: ["SEND_MESSAGES"],
+//             userPermissions: [
+//                 "SEND_MESSAGES"
+//             ]
+//         });
+//     }
+//     async run(inter, { }) { }
+// }

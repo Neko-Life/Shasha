@@ -7,7 +7,13 @@ const requireAll = require("require-all");
 const { parentPort } = require("worker_threads");
 const configFile = require("./config.json");
 const fetch = requireAll({ dirname: join(__dirname, "registerCmds") });
-const rest = new REST({ version: "9" }).setToken(configFile.token);
+
+const dev = true;
+
+const appId = dev ? configFile.devAppId : configFile.appId;
+const token = dev ? configFile.devToken : configFile.token;
+
+const rest = new REST({ version: "9" }).setToken(token);
 
 const args = process.argv.slice(2);
 
@@ -40,8 +46,8 @@ async function register() {
     else parMes += "Registering globally\n";
     await rest.put(
         guild ?
-            Routes.applicationGuildCommands(configFile.appId, guild) :
-            Routes.applicationCommands(configFile.appId),
+            Routes.applicationGuildCommands(appId, guild) :
+            Routes.applicationCommands(appId),
         { body: commandCategories }
     );
 }

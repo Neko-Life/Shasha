@@ -1,11 +1,12 @@
 'use strict';
 
 const { MessageEmbed, MessageActionRow, MessageButton, MessageSelectMenu, Collection } = require("discord.js");
+const ArgsParser = require("../../classes/ArgsParser");
 const { Command } = require("../../classes/Command");
 const { CommandSettingsHelper } = require("../../classes/CommandSettingsHelper");
 const { loadDb } = require("../../database");
 const { logDev } = require("../../debug");
-const { getColor, findRoles, replyError, prevNextButton } = require("../../functions");
+const { getColor, findRoles, replyError } = require("../../functions");
 const ButtonHandler = require("../../messageInteraction/button");
 const { intervalToStrings, createInterval, parseDuration } = require("../../util/Duration");
 
@@ -59,7 +60,7 @@ const moderationSelectmenu = new MessageActionRow()
     );
 
 
-const moderationMutePageButton = new MessageActionRow()
+const moderationMutePageButtons = new MessageActionRow()
     .addComponents([
         new MessageButton().setCustomId("settings/set/muteRole").setStyle("PRIMARY").setLabel("Set Role"),
         new MessageButton().setCustomId("settings/set/duration/mute").setStyle("PRIMARY").setLabel("Set Duration"),
@@ -67,7 +68,7 @@ const moderationMutePageButton = new MessageActionRow()
         new MessageButton().setCustomId("settings/remove/duration/mute").setStyle("SECONDARY").setLabel("Remove Duration")
     ]);
 
-const moderationBanPageButton = new MessageActionRow()
+const moderationBanPageButtons = new MessageActionRow()
     .addComponents([
         new MessageButton().setCustomId("settings/set/duration/ban").setStyle("PRIMARY").setLabel("Set Duration"),
         new MessageButton().setCustomId("settings/set/purge/ban").setStyle("PRIMARY").setLabel("Set Purge"),
@@ -91,7 +92,7 @@ const miscSelectMenu = new MessageActionRow()
             ])
     );
 
-const miscMessagePreviewPageButton = new MessageActionRow()
+const miscMessagePreviewPageButtons = new MessageActionRow()
     .addComponents([
         new MessageButton().setCustomId("settings/set/messagePreview").setStyle("PRIMARY").setLabel("Enable"),
         new MessageButton().setCustomId("settings/remove/messagePreview").setStyle("SECONDARY").setLabel("Disable")
@@ -110,7 +111,8 @@ module.exports = class SettingsCmd extends Command {
             name: "settings",
             userPermissions: ["ADMINISTRATOR"],
             clientPermissions: ["VIEW_CHANNEL", "EMBED_LINKS"],
-            guildOnly: true
+            guildOnly: true,
+            guarded: true
         });
     }
     /**
@@ -163,7 +165,7 @@ module.exports = class SettingsCmd extends Command {
                         : "Forever")
                     + "`");
 
-            const components = [mainSelectMenu, moderationSelectmenu, moderationMutePageButton];
+            const components = [mainSelectMenu, moderationSelectmenu, moderationMutePageButtons];
             return { embeds: [emb], components };
         }
 
@@ -191,7 +193,7 @@ module.exports = class SettingsCmd extends Command {
                     + "`")
                 .addField("Purge", (data.purge ? "`Up to " + data.purge + ` day${data.purge > 1 ? "s" : ""} old messages\`` : "`No`"));
 
-            const components = [mainSelectMenu, moderationSelectmenu, moderationBanPageButton];
+            const components = [mainSelectMenu, moderationSelectmenu, moderationBanPageButtons];
             return { embeds: [emb], components };
         }
 
@@ -216,7 +218,7 @@ module.exports = class SettingsCmd extends Command {
                 .setDescription("Enable or disable preview when member sent a message containing link to a message. It's also moderated to prevent abuse.")
                 .addField("State", data.state ? "`Enabled`" : "`Disabled`");
 
-            const components = [mainSelectMenu, miscSelectMenu, miscMessagePreviewPageButton];
+            const components = [mainSelectMenu, miscSelectMenu, miscMessagePreviewPageButtons];
             return { embeds: [emb], components };
         };
 
@@ -232,7 +234,6 @@ module.exports = class SettingsCmd extends Command {
 
         pages.commandPage = async (inter, args = []) => {
             if (!args.length) {
-                let waitMes;
                 const baseCommandEmb = new MessageEmbed(baseEmb)
                     .setTitle("Command")
                     .setDescription("Edit command permissions");
@@ -243,6 +244,7 @@ module.exports = class SettingsCmd extends Command {
                     commandPages[commandPages.length] = async (inter) => {
                         const commandEmb = new MessageEmbed(baseCommandEmb);
                         const commandSelectMenuOpts = [];
+                        let waitMes;
 
                         for (let nI = i; nI < nU; nI++) {
                             if (!useFetch[nI]) break;
@@ -285,10 +287,11 @@ module.exports = class SettingsCmd extends Command {
                                 new MessageSelectMenu()
                                     .setCustomId("/pages")
                                     .setMaxValues(1)
-                                    .setPlaceholder("Browse category/command...")
+                                    .setPlaceholder("Settings category/command...")
                                     .addOptions(commandSelectMenuOpts)
                             );
-                        if (waitMes && waitMes.deleted === false) waitMes.delete();
+                        if (waitMes && waitMes.deleted === false)
+                            waitMes.delete();
                         return { embeds: [commandEmb], components: [mainSelectMenu, row, commandPagesPageButtons] };
                     }
                 }
@@ -309,13 +312,12 @@ module.exports = class SettingsCmd extends Command {
                         emb.addField(`${k.type}:\`${k.name}\``, desc.trim());
                     } else emb.addField(`${k.type}:\`${k.name}\``, k.description);
                 }
-                const lastRowButtons = [];
+                const lastRowButtons = [new MessageButton().setCustomId(`settings/command/close`).setLabel("Done").setStyle("SUCCESS"),];
                 if (emb.fields.length) {
                     lastRowButtons.push(
                         new MessageButton().setCustomId(`settings/command/subCommand/${cmd.name}`).setLabel("Sub-Command Settings").setStyle("PRIMARY")
                     );
                 }
-                lastRowButtons.push(new MessageButton().setCustomId(`settings/command/close`).setLabel("Done").setStyle("SUCCESS"),);
                 const buttons = [
                     new MessageActionRow().addComponents([
                         new MessageButton().setCustomId(`settings/command/enable/category/${cmd.id}`).setLabel("Enable").setStyle("PRIMARY"),
@@ -332,12 +334,113 @@ module.exports = class SettingsCmd extends Command {
                 if (!(inter.deferred || inter.replied)) {
                     const mes = await inter.reply(send);
                     const buttonHandler = {
-                        subCommand: async (inter, args) => {
+                        set: async (inter, args) => {
+                            if (args[0] === "channels") {
+                                /** @type {import("../../typins").ShaMessage} */
+                                const prompt = await inter.reply({ content: "Provide every channel's Id, name or mention where you want this sub-command to be disabled in, you can provide `all` to disable it for the whole server:", fetchReply: true });
+                                const collect = await this.channel.awaitMessages({ max: 1, filter: (r) => r.author.id === inter.user.id && r.content.length });
+                                const got = collect.first();
+
+                                const opts = {};
+                                let tm = 0;
+                                if (/(?:\s|^)all(?:\s|$)/.test(got.content)) {
+                                    opts.all = true;
+                                    opts.channels = [];
+                                } else {
+                                    const parsed = await ArgsParser.channels(this.guild, got.content.replace(/(?:\s|^)here(?:\s|$)/, " " + this.channel.id + " "));
+                                    if (parsed.unknown.length) {
+                                        prompt.edit({ content: `Unknown channels: ${parsed.unknown.join(", ")}`, allowedMentions: { parse: [] } });
+                                        tm = 5000;
+                                    }
+                                    opts.channels = parsed.channels.map(r => r.id);
+                                    opts.all = false;
+                                }
+                                const commandPath = args.slice(1).join("/");
+                                const gd = loadDb(this.guild, "guild/" + this.guild.id);
+                                const get = await gd.db.getOne("commandDisabled", commandPath);
+                                const setting = get?.value || { bypass: {} };
+                                await gd.db.set("commandDisabled", commandPath, { value: { ...setting, ...opts } });
+                                delMes(prompt, got, tm);
+                                if (inter.message.deleted) return;
+                                return inter.message.edit(await inter.message.getPage());
+                            } else if (args[0] === "bypass") {
+                                args = args.slice(1);
+                                if (args[0] === "roles") {
+                                    const prompt = await inter.reply({ content: "Provide role's Id, name or mention to bypass:", fetchReply: true });
+                                    const collect = await this.channel.awaitMessages({ max: 1, filter: (r) => r.author.id === inter.user.id && r.content.length });
+                                    const got = collect.first();
+                                    const parsed = await ArgsParser.roles(this.guild, got.content);
+                                    let tm = 0;
+                                    if (parsed.unknown.length) {
+                                        prompt.edit({ content: `Unknown roles: ${parsed.unknown.join(", ")}`, allowedMentions: { parse: [] } });
+                                        tm = 5000;
+                                    }
+                                    const bypass = { roles: parsed.roles.map(r => r.id) };
+                                    const commandPath = args.slice(1).join("/");
+                                    const gd = loadDb(this.guild, "guild/" + this.guild.id);
+                                    const get = await gd.db.getOne("commandDisabled", commandPath);
+                                    const setting = get?.value || { bypass: {} };
+                                    await gd.db.set("commandDisabled", commandPath, { value: { ...setting, bypass: { ...setting.bypass, ...bypass } } });
+                                    delMes(prompt, got, tm);
+                                    if (inter.message.deleted) return;
+                                    return inter.message.edit(await inter.message.getPage());
+
+                                } else if (args[0] === "users") {
+                                    const prompt = await inter.reply({ content: "Provide user's Id, name or mention to bypass:", fetchReply: true });
+                                    const collect = await this.channel.awaitMessages({ max: 1, filter: (r) => r.author.id === inter.user.id && r.content.length });
+                                    const got = collect.first();
+                                    const parsed = await ArgsParser.users(this.guild, got.content);
+                                    let tm = 0;
+                                    if (parsed.unknown.length) {
+                                        prompt.edit({ content: `Unknown users: ${parsed.unknown.join(", ")}`, allowedMentions: { parse: [] } });
+                                        tm = 5000;
+                                    }
+                                    const bypass = { users: parsed.users.map(r => r.id) };
+                                    const commandPath = args.slice(1).join("/");
+                                    const gd = loadDb(this.guild, "guild/" + this.guild.id);
+                                    const get = await gd.db.getOne("commandDisabled", commandPath);
+                                    const setting = get?.value || { bypass: {} };
+                                    await gd.db.set("commandDisabled", commandPath, { value: { ...setting, bypass: { ...setting.bypass, ...bypass } } });
+                                    delMes(prompt, got, tm);
+                                    if (inter.message.deleted) return;
+                                    return inter.message.edit(await inter.message.getPage());
+                                } else if (args[0] === "permissions") {
+                                    const prompt = await inter.reply({ content: "Provide permissions to bypass:", fetchReply: true });
+                                    const collect = await this.channel.awaitMessages({ max: 1, filter: (r) => r.author.id === inter.user.id && r.content.length });
+                                    const got = collect.first();
+                                    const parsed = ArgsParser.permissions(got.content);
+                                    let tm = 0;
+                                    if (parsed.noMatch.length) {
+                                        prompt.edit({ content: `Unknown permissions: ${parsed.noMatch.join(", ")}`, allowedMentions: { parse: [] } });
+                                        tm = 5000;
+                                    }
+                                    const bypass = { permissions: parsed.perms };
+                                    const commandPath = args.slice(1).join("/");
+                                    const gd = loadDb(this.guild, "guild/" + this.guild.id);
+                                    const get = await gd.db.getOne("commandDisabled", commandPath);
+                                    const setting = get?.value || { bypass: {} };
+                                    await gd.db.set("commandDisabled", commandPath, { value: { ...setting, bypass: { ...setting.bypass, ...bypass } } });
+                                    delMes(prompt, got, tm);
+                                    if (inter.message.deleted) return;
+                                    return inter.message.edit(await inter.message.getPage());
+                                }
+                            }
                             const res = await inter.reply({ content: "This feature is still in development and isn't ready yet. We're sorry for the incovenience", fetchReply: true });
-                            purgeRet(res);
+                            delMes(res);
+                        },
+                        reset: async (inter, args) => {
+                            inter.deferUpdate();
+                            const gd = loadDb(this.guild, "guild/" + this.guild.id);
+                            await gd.db.delete("commandDisabled", args.join("/"));
+                            return inter.message.edit(await inter.message.getPage());
+                        },
+                        close: async (inter) => {
+                            if (inter.message.deleted) return;
+                            inter.message.delete();
                         }
                     };
                     mes.buttonHandler = buttonHandler;
+                    mes.interaction = inter;
                 } else return send;
             }
         }
@@ -355,7 +458,7 @@ module.exports = class SettingsCmd extends Command {
                 blockSet = true;
 
                 if (args[0] === "muteRole") {
-                    const m = await inter.reply({ content: "Provide role Id, mention or name to be set as mute role:", fetchReply: true });
+                    const m = await inter.reply({ content: "Provide role's Id, mention or name to be set as mute role:", fetchReply: true });
                     const c = await m.channel.awaitMessages({ filter: (m2) => (m2.author.id === inter.user.id) && m2.content?.length, max: 1 });
                     const setMsg = c.first();
                     let errmes;
@@ -374,7 +477,7 @@ module.exports = class SettingsCmd extends Command {
                     if (!role) {
                         blockSet = false;
                         return m.edit(errmes || `No role found with that name!`).then(
-                            r => delMes(m, r, setMsg)
+                            r => delMes(m, setMsg)
                         );
                     } else {
                         const get = await THE_GUILD.db.getOne("muteSettings", "Object");
@@ -398,14 +501,14 @@ module.exports = class SettingsCmd extends Command {
                         blockSet = false;
                         logDev(e);
                         return m.edit(replyError(e)).then(
-                            r => delMes(m, r, setMsg, 10000)
+                            r => delMes(m, setMsg, 10000)
                         );
                     }
                     const ms = parsed.interval.toDuration().toMillis();
                     if (ms < 10000) {
                         blockSet = false;
                         return m.edit(`Duration can't be less than 10 seconds!`).then(
-                            r => delMes(m, r, setMsg)
+                            r => delMes(m, setMsg)
                         );
                     }
 
@@ -430,14 +533,14 @@ module.exports = class SettingsCmd extends Command {
                     return SETTING_MESSAGE.edit(await p());
 
                 } else if (args[0] === "purge") {
-                    const m = await inter.reply({ content: "Provide oldest message age in days to include as number. From 1 up to 7:", fetchReply: true });
+                    const m = await inter.reply({ content: "Provide oldest message's age in days to include as number. From 1 up to 7:", fetchReply: true });
                     const c = await m.channel.awaitMessages({ filter: (m2) => (m2.author.id === inter.user.id) && m2.content?.length, max: 1 });
                     const setMsg = c.first();
 
                     if (/[^\d]/.test(setMsg.content)) {
                         blockSet = false;
                         return m.edit("It's NUMBER omg don't put other _thingy_!").then(
-                            r => delMes(m, r, setMsg)
+                            r => delMes(m, setMsg)
                         );
                     }
                     const par = parseInt(setMsg.content);
@@ -548,11 +651,11 @@ module.exports = class SettingsCmd extends Command {
     }
 }
 
-function delMes(m, r, setMsg, dur = 5000) {
+function delMes(m, setMsg, dur = 5000) {
     setTimeout(
         () => {
-            if (m.guild.me.permissionsIn(m.channel).has("MANAGE_MESSAGES"))
-                m.channel.bulkDelete([r, setMsg]).catch(logDev);
+            if (setMsg && m.guild.me.permissionsIn(m.channel).has("MANAGE_MESSAGES"))
+                m.channel.bulkDelete([m, setMsg]).catch(logDev);
             else m.deleted ? null : m.delete();
         }, dur
     )

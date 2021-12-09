@@ -357,7 +357,8 @@ module.exports.Command = class ShaBaseCommand {
         if (!this.guild) return this.#disabled = false;
 
         const gd = loadDb(this.guild, "guild/" + this.guild.id);
-        const setting = await gd.db.getOne("commandDisabled", this.commandPath.join("/"));
+        const get = await gd.db.getOne("commandDisabled", this.commandPath.join("/"));
+        const setting = get?.value;
         if (!setting) return this.#disabled = false;
 
         const bypassIds = [];
@@ -404,7 +405,7 @@ module.exports.Command = class ShaBaseCommand {
         toDb.channels = channels;
         toDb.bypass = bypass;
 
-        return gd.db.set("commandDisabled", this.commandPath.join("/"), toDb);
+        return gd.db.set("commandDisabled", this.commandPath.join("/"), { value: toDb });
     }
 
     async banGuild(guild) {

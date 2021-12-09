@@ -4,6 +4,7 @@ const { Message, GuildMember, CommandInteraction } = require("discord.js");
 const { Command } = require("../../classes/Command");
 const { loadDb } = require("../../database");
 const { isAdmin } = require("../../functions");
+const { intervalToStrings, createInterval } = require("../../util/Duration");
 const NO_LONGER_AFK_MSG = "Welcome back ";
 
 module.exports = class AFKCmd extends Command {
@@ -18,8 +19,9 @@ module.exports = class AFKCmd extends Command {
     async run(inter, { message }) {
         const afk = {
             state: true,
-            message: message?.value
-        }
+            message: message?.value,
+            since: new Date()
+        };
         await AFKCmd.setAfk(this.member, afk);
         if (!this.member.displayName.startsWith("[AFK] "))
             if (this.guild.me.permissions.has("MANAGE_NICKNAMES") && this.member.manageable)
@@ -64,7 +66,8 @@ module.exports = class AFKCmd extends Command {
         if (!msg.channel.permissionsFor(msg.guild.me).has("SEND_MESSAGES")) return;
         await AFKCmd.loadAfk(member);
         if (!member?.afk?.state) return false;
-        const m = "**" + member.displayName + "** is **currently `AFK`**"
+        const m = "**" + member.displayName + "** is **currently `AFK`** "
+            + (`since ${intervalToStrings(createInterval(member.afk.since, new Date())).strings.join(" ")} ago`)
             + (
                 member.afk.message
                     ? (" and left a message:\n" + member.afk.message)
@@ -140,10 +143,7 @@ module.exports = class AFKCmd extends Command {
 
     static removeAfk(member) {
         const gd = loadDb(member, "member/" + member.guild.id + "/" + member.id);
-        member.afk = {
-            state: false,
-            mesage: null
-        }
+        member.afk = {};
         gd.db.set("afkState", "Object", { value: member.afk });
         return member;
     }

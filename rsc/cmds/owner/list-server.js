@@ -11,8 +11,8 @@ module.exports = class ListServerCmd extends Command {
             ownerOnly: true
         });
     }
-    async run(inter) {
-        const guilds = this.client.guilds.cache.map(r => r);
+    async run(inter, mutual) {
+        const guilds = (mutual ? this.client.findMutualGuilds(mutual) : this.client.guilds.cache).map(r => r);
         guilds.sort((a, b) => b.me.joinedTimestamp - a.me.joinedTimestamp);
         const pages = [];
         const button = prevNextButton(true);
