@@ -18,6 +18,10 @@ module.exports = new SlashCommandBuilder()
                     .setName("to-message")
                     .setDescription("Stop at this message")
                     .setAutocomplete(true)
+            ).addStringOption(
+                opt => opt
+                    .setName("filter-user-ids")
+                    .setDescription("Delete only messages from these users. Mentions or Ids separated with ` ` (space)")
             ).addUserOption(
                 opt => opt
                     .setName("filter-user")

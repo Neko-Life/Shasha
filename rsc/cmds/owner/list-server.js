@@ -1,6 +1,6 @@
 'use strict';
 
-const { MessageEmbed } = require("discord.js");
+const { MessageEmbed, User } = require("discord.js");
 const { Command } = require("../../classes/Command");
 const { prevNextButton } = require("../../functions");
 
@@ -12,7 +12,7 @@ module.exports = class ListServerCmd extends Command {
         });
     }
     async run(inter, mutual) {
-        const guilds = (mutual ? this.client.findMutualGuilds(mutual) : this.client.guilds.cache).map(r => r);
+        const guilds = (mutual instanceof User ? this.client.findMutualGuilds(mutual) : this.client.guilds.cache).map(r => r);
         guilds.sort((a, b) => b.me.joinedTimestamp - a.me.joinedTimestamp);
         const pages = [];
         const button = prevNextButton(true);

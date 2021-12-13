@@ -6,7 +6,7 @@ const { Command } = require("../../classes/Command");
 const { CommandSettingsHelper } = require("../../classes/CommandSettingsHelper");
 const { loadDb } = require("../../database");
 const { logDev } = require("../../debug");
-const { getColor, findRoles, replyError } = require("../../functions");
+const { getColor, findRoles, replyError, isInteractionInvoker } = require("../../functions");
 const ButtonHandler = require("../../messageInteraction/button");
 const { intervalToStrings, createInterval, parseDuration } = require("../../util/Duration");
 
@@ -59,6 +59,8 @@ const moderationSelectmenu = new MessageActionRow()
             ])
     );
 
+const closeButton = new MessageButton().setCustomId(`settings/command/close`).setLabel("Done").setStyle("SUCCESS");
+const closeRow = new MessageActionRow().addComponents(closeButton);
 
 const moderationMutePageButtons = new MessageActionRow()
     .addComponents([
@@ -131,7 +133,7 @@ module.exports = class SettingsCmd extends Command {
             .setTitle("All in One Settings")
             .setDescription("With this interface you can configure how i should behave in the server. Feel free to explore and experiment.");
 
-        pages.homePage = { embeds: [homeEmb], components: [mainSelectMenu] };
+        pages.homePage = { embeds: [homeEmb], components: [mainSelectMenu, closeRow] };
 
         const moderationEmb = new MessageEmbed(baseEmb)
             .setTitle("Moderation Settings")
@@ -139,7 +141,7 @@ module.exports = class SettingsCmd extends Command {
             .addField("Ban", "Set up timed ban as default ban behavior and default purge message on ban");
 
         const moderationMutePage = async (inter) => {
-            await inter.deferUpdate();
+            if (inter && !(inter.deferred || inter.replied)) await inter.deferUpdate();
             const get = await inter.guild.db.getOne("muteSettings", "Object");
             /**
              * @type {{muteRole:string, duration:number}}
@@ -170,7 +172,7 @@ module.exports = class SettingsCmd extends Command {
         }
 
         const moderationBanPage = async (inter) => {
-            await inter.deferUpdate();
+            if (inter && !(inter.deferred || inter.replied)) await inter.deferUpdate();
             const get = await inter.guild.db.getOne("banSettings", "Object");
             /**
              * @type {{duration:number, purge:number}}
@@ -206,7 +208,7 @@ module.exports = class SettingsCmd extends Command {
             .addField("Message Preview", "Enable or disable preview when member sent a link to a message");
 
         const miscMessagePreviewPage = async (inter) => {
-            await inter.deferUpdate();
+            if (inter && !(inter.deferred || inter.replied)) await inter.deferUpdate();
             const get = await inter.guild.db.getOne("messageLinkPreviewSettings", "Object");
             /**
              * @type {{state: boolean}}
@@ -233,6 +235,11 @@ module.exports = class SettingsCmd extends Command {
         let curCommandPage = 0;
 
         pages.commandPage = async (inter, args = []) => {
+            if (inter && !isInteractionInvoker(inter)) {
+                const ret = await inter.reply({ content: "Watchu wanna do? hmm <:SuiseiThinkLife:772716901834686475>", fetchReply: true });
+                delMes(ret, null, 5000);
+                return;
+            }
             if (!args.length) {
                 const baseCommandEmb = new MessageEmbed(baseEmb)
                     .setTitle("Command")
@@ -250,7 +257,8 @@ module.exports = class SettingsCmd extends Command {
                             if (!useFetch[nI]) break;
                             const v = useFetch[nI];
                             if (!this.guild.commandPermissions?.[v.id]) {
-                                if (inter && !waitMes && !(inter.replied || inter.deferred)) waitMes = await inter.reply({ content: "Fetching permissions settings. Please wait...", fetchReply: true });
+                                if (!waitMes && inter && !(inter.replied || inter.deferred))
+                                    waitMes = await inter.reply({ content: "Fetching permissions settings. Please wait...", fetchReply: true });
                                 if (!this.guild.commandPermissions)
                                     this.guild.commandPermissions = {};
                                 this.guild.commandPermissions[v.id] = await v.permissions.fetch({ guild: this.guild }).catch(logDev) || [];
@@ -312,7 +320,7 @@ module.exports = class SettingsCmd extends Command {
                         emb.addField(`${k.type}:\`${k.name}\``, desc.trim());
                     } else emb.addField(`${k.type}:\`${k.name}\``, k.description);
                 }
-                const lastRowButtons = [new MessageButton().setCustomId(`settings/command/close`).setLabel("Done").setStyle("SUCCESS"),];
+                const lastRowButtons = [closeButton,];
                 if (emb.fields.length) {
                     lastRowButtons.push(
                         new MessageButton().setCustomId(`settings/command/subCommand/${cmd.name}`).setLabel("Sub-Command Settings").setStyle("PRIMARY")
@@ -488,7 +496,7 @@ module.exports = class SettingsCmd extends Command {
                         else m.deleted ? null : m.delete();
                         blockSet = false;
                         if (SETTING_MESSAGE && SETTING_MESSAGE.deleted) return;
-                        return SETTING_MESSAGE.edit(await moderationMutePage());
+                        return SETTING_MESSAGE.edit(await moderationMutePage(inter));
                     }
 
                 } else if (args[0] === "duration") {
@@ -530,7 +538,7 @@ module.exports = class SettingsCmd extends Command {
                     else m.deleted ? null : m.delete();
                     blockSet = false;
                     if (SETTING_MESSAGE && SETTING_MESSAGE.deleted) return;
-                    return SETTING_MESSAGE.edit(await p());
+                    return SETTING_MESSAGE.edit(await p(inter));
 
                 } else if (args[0] === "purge") {
                     const m = await inter.reply({ content: "Provide oldest message's age in days to include as number. From 1 up to 7:", fetchReply: true });
@@ -559,18 +567,17 @@ module.exports = class SettingsCmd extends Command {
                     else m.deleted ? null : m.delete();
                     blockSet = false;
                     if (SETTING_MESSAGE && SETTING_MESSAGE.deleted) return;
-                    return SETTING_MESSAGE.edit(await p());
+                    return SETTING_MESSAGE.edit(await p(inter));
 
                 } else if (args[0] === "messagePreview") {
                     SETTING_MESSAGE.guild.messageLinkPreviewSettings = { state: true };
                     await THE_GUILD.db.set("messageLinkPreviewSettings", "Object", { value: { state: true } });
                     blockSet = false;
                     if (SETTING_MESSAGE && SETTING_MESSAGE.deleted) return;
-                    return SETTING_MESSAGE.edit(await miscMessagePreviewPage());
+                    return SETTING_MESSAGE.edit(await miscMessagePreviewPage(inter));
                 }
             },
             remove: async (inter, args) => {
-                inter.deferUpdate();
                 if (blockRem) return;
                 blockRem = true;
                 if (args[0] === "muteRole") {
@@ -579,7 +586,7 @@ module.exports = class SettingsCmd extends Command {
                     await THE_GUILD.db.set("muteSettings", "Object", { value: { muteRole: null, duration: set.duration } });
                     blockRem = false;
                     if (SETTING_MESSAGE && SETTING_MESSAGE.deleted) return;
-                    return SETTING_MESSAGE.edit(await moderationMutePage());
+                    return SETTING_MESSAGE.edit(await moderationMutePage(inter));
                 } else if (args[0] === "duration") {
 
                     let p;
@@ -597,7 +604,7 @@ module.exports = class SettingsCmd extends Command {
 
                     blockRem = false;
                     if (SETTING_MESSAGE && SETTING_MESSAGE.deleted) return;
-                    return SETTING_MESSAGE.edit(await p());
+                    return SETTING_MESSAGE.edit(await p(inter));
                 } else if (args[0] === "purge") {
 
                     let p;
@@ -610,14 +617,14 @@ module.exports = class SettingsCmd extends Command {
 
                     blockRem = false;
                     if (SETTING_MESSAGE && SETTING_MESSAGE.deleted) return;
-                    return SETTING_MESSAGE.edit(await p());
+                    return SETTING_MESSAGE.edit(await p(inter));
 
                 } else if (args[0] === "messagePreview") {
                     SETTING_MESSAGE.guild.messageLinkPreviewSettings = { state: false };
                     await THE_GUILD.db.set("messageLinkPreviewSettings", "Object", { value: { state: false } });
                     blockRem = false;
                     if (SETTING_MESSAGE && SETTING_MESSAGE.deleted) return;
-                    return SETTING_MESSAGE.edit(await miscMessagePreviewPage());
+                    return SETTING_MESSAGE.edit(await miscMessagePreviewPage(inter));
                 }
             },
             command: async (inter, args) => {
@@ -634,7 +641,7 @@ module.exports = class SettingsCmd extends Command {
                     const update = await CommandSettingsHelper[args[0]](inter, args.slice(1));
                     blockCom = false;
                     if (SETTING_MESSAGE && SETTING_MESSAGE.deleted) return;
-                    if (update) return SETTING_MESSAGE.edit(await pages.commandPage());
+                    if (update) return SETTING_MESSAGE.edit(await pages.commandPage(inter));
                 } catch (e) {
                     logDev(e);
                     const mes = replyError(e);

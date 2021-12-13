@@ -98,6 +98,7 @@ function tickTag(user) {
  * @returns {string} Cleaned str
  */
 function adCheck(str) {
+    str = str.replace(/\[(?=((?:.|\n)+?)\][\s\n]*\(\s*[^\n\s]+\s*\))|\](?=[\s\n]*\(\s*[^\n\s]+\s*\))/g, "");
     if (str?.length > 8) {
         if (/(?:https?:\/\/)?(?:www\.|canary\.|ptb\.)?discord(?:app)?\.(?:gg|com)\/(?!channels|attachments)(?:\w{2,17}(?!\w)(?= *))/.test(str)) str = str
             .replace(/(?:https?:\/\/)?(?:www\.|canary\.|ptb\.)?discord(?:app)?\.(?:gg|com)\/(?!channels|attachments)(?:\w{2,17}(?!\w)(?= *))/g,
@@ -197,7 +198,7 @@ function emphasizePerms(str) { return ePerms.includes(str) ? "'" + str + "'" : s
 function allowMention({ member, content }) {
     const allowedMentions = {};
     if (member && !member.permissions.has("MENTION_EVERYONE")) {
-        if (content?.match(/<@\!?[^&]\d{18,20}>/g)?.length > 1)
+        if (content?.match(/<@\!?[^&]\d{17,20}>/g)?.length > 1)
             allowedMentions.parse = [];
         else allowedMentions.parse = ["users"];
     } else allowedMentions.parse = ["everyone", "roles", "users"];
@@ -245,7 +246,7 @@ function findRoles(guild, query, reFlags) {
     if (typeof query !== "string") throw new TypeError("query must be a string!");
     query = cleanMentionID(query);
     if (!query) return;
-    if (/^\d{18,20}$/.test(query)) {
+    if (/^\d{17,20}$/.test(query)) {
         return guild.roles.resolve(query);
     } else {
         const re = createRegExp(query, reFlags);
@@ -265,7 +266,7 @@ function findChannels(guild, query, reFlags, force = false) {
     if (typeof query !== "string") throw new TypeError("query must be a string!");
     query = cleanMentionID(query);
     if (!query) return;
-    if (/^\d{18,20}$/.test(query)) {
+    if (/^\d{17,20}$/.test(query)) {
         const ch = guild.channels.resolve(query);
         if (!ch && force) return guild.client.channels.resolve(query);
         return ch;
@@ -293,7 +294,7 @@ function findMembers(guild, query, reFlags) {
     if (typeof query !== "string") throw new TypeError("query must be a string!");
     query = cleanMentionID(query);
     if (!query) return;
-    if (/^\d{18,20}$/.test(query)) return guild.members.resolve(query);
+    if (/^\d{17,20}$/.test(query)) return guild.members.resolve(query);
     else {
         const re = createRegExp(query, reFlags);
         return guild.members.cache.filter(r =>
@@ -381,10 +382,16 @@ function prevNextButton(homeButton) {
     return ret;
 }
 
+/**
+ * 
+ * @param {typeof Error | {message: string}} e 
+ * @param {object} vars 
+ * @returns 
+ */
 function replyError(e, vars) {
     let reply = replaceVars(REPLY_ERROR[e.message] || e.message, vars);
     if (!REPLY_ERROR[e.message])
-        process.emit("error", e);
+        emitShaError(e);
     return reply;
 }
 
@@ -396,6 +403,9 @@ function replyHigherThanMod(inter, action, { higherThanClient, higherThanModerat
     } else return false;
 }
 
+function emitShaError(e) {
+    process.emit("error", e);
+}
 /** @param {import("./classes/ShaClient")} client */
 // async function reRegisterAll(client) {
 //     for (const [k, v] of client.guilds.cache) {
@@ -443,6 +453,7 @@ module.exports = {
     prevNextButton,
     replyError,
     replyHigherThanMod,
+    emitShaError,
     // reRegisterAll,
 
     // ---------------- FNS IMPORTS ----------------

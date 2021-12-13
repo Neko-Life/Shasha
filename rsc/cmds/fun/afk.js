@@ -144,7 +144,7 @@ module.exports = class AFKCmd extends Command {
     static removeAfk(member) {
         const gd = loadDb(member, "member/" + member.guild.id + "/" + member.id);
         member.afk = {};
-        gd.db.set("afkState", "Object", { value: member.afk });
+        gd.db.delete("afkState", "Object");
         return member;
     }
 }

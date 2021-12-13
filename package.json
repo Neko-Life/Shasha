@@ -27,6 +27,7 @@
     "node": "^17.0.1",
     "require-all": "^3.0.0",
     "translate-google": "^1.5.0",
+    "tzdata": "^1.0.29",
     "urban-dictionary": "^3.0.2",
     "utf-8-validate": "^5.0.4",
     "zlib-sync": "^0.1.7"

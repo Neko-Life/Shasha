@@ -271,7 +271,7 @@ module.exports = class ShaClient extends Client {
         if (typeof query !== "string") throw new TypeError("query must be a string!");
         query = cleanMentionID(query);
         if (!query) return;
-        if (/^\d{18,20}$/.test(query))
+        if (/^\d{17,20}$/.test(query))
             return this.guilds.resolve(query);
         else if (force) {
             const re = createRegExp(query, reFlags, exact);
@@ -294,7 +294,7 @@ module.exports = class ShaClient extends Client {
         if (typeof query !== "string") throw new TypeError("query must be a string!");
         query = cleanMentionID(query);
         if (!query) return;
-        if (/^\d{18,20}$/.test(query)) {
+        if (/^\d{17,20}$/.test(query)) {
             let u = this.users.resolve(query);
             if (!u) u = await this.users.fetch(query).catch(logDev);
             return u;
@@ -306,7 +306,7 @@ module.exports = class ShaClient extends Client {
     }
 
     emoteReplace(content) {
-        const E = content?.match(/:[\w-_]{1,32}:(?!\d{18,20}>)/g);
+        const E = content?.match(/:[\w-_]{1,32}:(?!\d{17,20}>)/g);
         if (!E || !E.length) return content;
         const tE = [];
         for (const eN of E) {
@@ -375,7 +375,7 @@ module.exports = class ShaClient extends Client {
                 error.push("Expected string. Got " + typeof id + " of " + r);
                 continue;
             };
-            if (!/^\d{18,20}$/.test(r)) {
+            if (!/^\d{17,20}$/.test(r)) {
                 error.push("Invalid id: " + r);
                 continue;
             };

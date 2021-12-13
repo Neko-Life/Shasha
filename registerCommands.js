@@ -8,14 +8,16 @@ const { parentPort } = require("worker_threads");
 const configFile = require("./config.json");
 const fetch = requireAll({ dirname: join(__dirname, "registerCmds") });
 
-const dev = true;
+let args = process.argv.filter(r => !r.startsWith(__dirname));;
+const dev = args[0] === "-d";
+
+if (args[0] === "-d")
+    args = args.slice(1);
 
 const appId = dev ? configFile.devAppId : configFile.appId;
 const token = dev ? configFile.devToken : configFile.token;
 
 const rest = new REST({ version: "9" }).setToken(token);
-
-const args = process.argv.slice(2);
 
 const commandCategories = [];
 let parMes = "";

@@ -13,7 +13,9 @@ module.exports = class ButtonHandler {
     static handle(interaction) {
         let path = interaction.customId.split("/");
         if (!this[path[0]])
-            return; // interaction.reply("Can't find that command, i think kanna nommed it");
+            if (!path[1])
+                return;
+            else return interaction.reply({ content: "Can't find that command, i think kanna nommed it", ephemeral: true });
         this[path[0]](interaction, path.slice(1));
     }
 
@@ -103,7 +105,6 @@ module.exports = class ButtonHandler {
     static async messageConstructor(inter) {
         if (!isInteractionInvoker(inter))
             return inter.reply({ content: "no UwU", ephemeral: true });
-        inter.deferUpdate();
         const construct = new MessageConstruct(inter);
         return construct.start();
     }

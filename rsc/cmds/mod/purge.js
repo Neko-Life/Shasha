@@ -13,7 +13,8 @@ module.exports = class PurgeCmd extends Command {
             name: "purge",
             userPermissions: ["MANAGE_MESSAGES"],
             clientPermissions: ["MANAGE_MESSAGES"],
-            guildOnly: true
+            guildOnly: true,
+            deleteSavedMessagesAfter: 10000
         });
     }
     async run(inter, {
@@ -71,7 +72,7 @@ module.exports = class PurgeCmd extends Command {
                 const u = toMessage.value.split("/");
                 toMessage.value = u[u.length - 1];
             }
-            if (/^\d{18,20}$/.test(toMessage.value)) {
+            if (/^\d{17,20}$/.test(toMessage.value)) {
                 const compId = parseInt(toMessage.value);
                 useCache = useCache.filter(r => parseInt(r.id, 10) > compId)
             } else return this.saveMessages(inter.reply("Invalid to-message argument. Provide message `Id` or `link` from the channel"));
@@ -134,7 +135,6 @@ module.exports = class PurgeCmd extends Command {
                     ) + "an only purge up to 100 messages. Sorry :c" : ""),
             fetchReply: true
         });
-        ret.deleteAfter = 15000;
         this.saveMessages(ret);
         logDev(deleted);
         return deleted;

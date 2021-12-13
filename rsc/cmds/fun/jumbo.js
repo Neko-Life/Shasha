@@ -18,7 +18,7 @@ module.exports = class JumboCmd extends Command {
     }
 
     run(inter, { emoji }) {
-        let find = this.client.emojis.resolve(emoji.value.match(/\d{18,20}/)?.[0] || emoji.value);
+        let find = this.client.emojis.resolve(emoji.value.match(/\d{17,20}/)?.[0] || emoji.value);
         if (!find) {
             const reF = emoji.value.match(/[a-z0-9-_]{1,32}/i)?.[0];
             if (!reF) return inter.reply("Invalid input. Provide emoji name, Id, or the emoji itself");

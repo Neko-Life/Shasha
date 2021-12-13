@@ -24,9 +24,11 @@ async function handle(inter, args) {
         const send = typeof pages.PAGES[args[0][0]] === "function"
             ? await pages.PAGES[args[0][0]](inter, args[0].slice(1))
             : pages.PAGES[args[0][0]];
-        delete send.components;
-        send.ephemeral = true;
-        return inter.reply(send);
+        if (send) {
+            delete send.components;
+            send.ephemeral = true;
+            return inter.reply(send);
+        }
 
         // Default behavior
         // return replyFalseInvoker(inter, "/info server");

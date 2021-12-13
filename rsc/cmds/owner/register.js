@@ -51,8 +51,9 @@ module.exports = class RegisterCommandsCmd extends Command {
         }
 
         const bf = new Date();
-        const argv = (category.value + " " + (guild || "")).length
-            ? (category.value + " " + (guild || "")).split(" ")
+        const toArgv = (process.dev ? "-d " : "") + (category.value + " " + (guild || ""));
+        const argv = toArgv.length
+            ? toArgv.split(" ")
             : [];
         const child = new Worker(join(__dirname, "../../../registerCommands.js"), {
             argv: argv

@@ -1,6 +1,8 @@
 'use strict';
 
 const { Permissions } = require("discord.js");
+const { DateTime } = require('luxon');
+const { zones } = require('tzdata');
 const { readdirSync } = require("fs");
 const { join } = require("path");
 
@@ -314,9 +316,9 @@ const RANDOM_COLOR = Object.values(COLORS);
 const REPLY_ERROR = {
     // DURATION ERRORS
     "Can't parse string": "Invalid duration! Try `3h` or `5m16s` or `69y`",
-    "Duration less than 10000 ms": "I refuse to abuse the discord API just for less than 10 seconds mute <:deadLife:796323537937367050>",
+    "Duration less than 10000 ms": "Too much work <:deadLife:796323537937367050>",
 
-    // UNKNOWN ERROES
+    // UNKNOWN ERRORS
     "Unknown Ban": "They're not banned. Consider banning them first <:senkoStareLife:853238498223325204>",
     "Unknown Mute": "They're not muted. Consider muting them first <:senkoStareLife:853238498223325204>",
 
@@ -385,6 +387,14 @@ const ELEVATED_PERMISSIONS = [
     "MANAGE_EMOJIS"
 ]
 
+const LUXON_TIMEZONES = [
+    ...new Set(
+        Object.keys(zones).filter(
+            tz => DateTime.local().setZone(tz).isValid
+        )
+    ),
+]
+
 module.exports = {
     ePerms,
     reValidURL,
@@ -410,5 +420,6 @@ module.exports = {
     REPLY_ERROR,
     LETTER_EMOTES,
     ZWS,
-    ELEVATED_PERMISSIONS
+    ELEVATED_PERMISSIONS,
+    LUXON_TIMEZONES
 }

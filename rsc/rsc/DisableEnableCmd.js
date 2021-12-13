@@ -21,6 +21,7 @@ module.exports = class DisableEnableCmd extends Command {
     }
 
     async run(inter, { command, channels, bypassRoles, bypassPermissions, bypassUsers, enable }) {
+        inter.channel.send("This command was marked as deprecated. Use `/admin settings` instead");
         await inter.deferReply();
 
         if (!command)
@@ -171,7 +172,8 @@ module.exports = class DisableEnableCmd extends Command {
         if (data.size) {
             const arr = new Array(...data);
             for (let i = 0; i < arr.length; i++) {
-                const [k, v] = arr[i];
+                let [k, v] = arr[i];
+                v = v.value;
                 let res = "";
                 if (v.channels.length) {
                     const show = v.channels.slice(0, 10);

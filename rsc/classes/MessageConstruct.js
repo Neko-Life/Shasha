@@ -136,11 +136,12 @@ class MessageConstruct {
         this.member = interaction.member;
         this.user = interaction.user;
         this.pages = [];
+        this.interaction = interaction;
     }
 
     async start() {
         await this.preview.edit({ content: "`[EMPTY]`", components: [] });
-        this.message = await this.channel.send(startPage);
+        this.message = await this.interaction.reply({ ...startPage, fetchReply: true });
         return this.message.messageConstruct = this;
     }
 

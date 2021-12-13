@@ -10,7 +10,7 @@ Settings.defaultZone = "utc";
 /**
  * 
  * @param {Interval} interval 
- * @returns {{ "object": DurationObject, strings: string[] }}
+ * @returns {{ "object": DurationObject, strings: string[], ms: number }}
  */
 function intervalToStrings(interval) {
     if (!(interval instanceof Interval)) return;
@@ -31,7 +31,7 @@ function intervalToStrings(interval) {
     if (strings.length > 0) {
         if (strings.length > 1) strings[strings.length - 2] += " and";
     } else strings[0] = "Not even 1 second";
-    return { object, strings };
+    return { object, strings, ms: interval.toDuration().toMillis() };
 };
 
 /**

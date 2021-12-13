@@ -30,13 +30,13 @@ module.exports = async (msg) => {
         }
         if (!msg.guild.messageLinkPreviewSettings.state) return;
     }
-    const link = msg.content.match(/https?:\/\/(?:www\.|canary\.|ptb\.)?discord(?:app)?\.(?:gg|com)\/channels\/(?:\d{18,20}|@me)\/\d{18,20}\/\d{18,20}/);
+    const link = msg.content.match(/https?:\/\/(?:www\.|canary\.|ptb\.)?discord(?:app)?\.(?:gg|com)\/channels\/(?:\d{17,20}|@me)\/\d{17,20}\/\d{17,20}/);
     if (!link?.length || msg.deleted)
         return delOldPrev(msg);
     const toPrev = await getChannelMessage(msg, link[0], null, true);
     if (!toPrev || !(toPrev.content?.length || toPrev.embeds?.length || toPrev.attachments?.size))
         return delOldPrev(msg);
-    const color = getColor(toPrev.author.accentColor, true, this.member?.displayColor);
+    const color = getColor(toPrev.author.accentColor, true, toPrev.member?.displayColor);
     const emb = new MessageEmbed()
         .setAuthor(
             tickTag(toPrev.member?.displayName || toPrev.author).replace(/`/g, ""),
@@ -45,7 +45,7 @@ module.exports = async (msg) => {
         ).setColor(color);
     const alEmb = [emb];
     let content = "";
-    if (toPrev.channel?.nsfw && !msg.channel?.nsfw) {
+    if (msg.guild && toPrev.channel?.nsfw && !msg.channel?.nsfw) {
         emb.setDescription("Can't preview NSFW content in Non-NSFW channel");
     } else {
         const memberAdmin = isAdmin(msg.member || msg.author);
@@ -65,8 +65,13 @@ module.exports = async (msg) => {
         } else emb.setImage(null);
         if (toPrev.embeds?.length) {
             alEmb.push(
-                ...toPrev.embeds.filter(r => r.type === "rich" || (r.type === "video" && (r.description || r.title)))
-                    .map(r => msg.client.finalizeEmbed(r, memberAdmin))
+                ...toPrev.embeds.filter(
+                    r => r.type === "rich"
+                        || (
+                            r.type === "video"
+                            && (r.description || r.title)
+                        )
+                ).map(r => msg.client.finalizeEmbed(r, memberAdmin))
             );
             let images = toPrev.embeds.filter(r => r.type === "image").map(r => r);
             if (!emb.image) {
@@ -77,6 +82,17 @@ module.exports = async (msg) => {
                 alEmb.push(
                     new MessageEmbed()
                         .setImage(a.url)
+                        .setColor(color)
+                );
+            let gifPng = toPrev.embeds.filter(r => r.type === "gifv").map(r => r);
+            if (!emb.image) {
+                emb.setImage(gifPng[0].thumbnail.url);
+                gifPng = gifPng.slice(1);
+            }
+            for (const a of gifPng)
+                alEmb.push(
+                    new MessageEmbed()
+                        .setImage(a.thumbnail.url)
                         .setColor(color)
                 );
         }
