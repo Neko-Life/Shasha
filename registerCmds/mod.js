@@ -148,6 +148,25 @@ module.exports = new SlashCommandBuilder()
             )
     ).addSubcommand(
         sCmd => sCmd
+            .setName("slowmode")
+            .setDescription("Set slowmode duration of a chat")
+            .addStringOption(
+                opt => opt
+                    .setName("duration")
+                    .setDescription("Ex `3s5m` or `0`")
+                    .setRequired(true)
+            ).addChannelOption(
+                opt => opt
+                    .setName("channel")
+                    .setDescription("Set for this channel instead")
+                    .addChannelTypes([0, 5, 10, 12, 11, 6])
+            ).addStringOption(
+                opt => opt
+                    .setName("reason")
+                    .setDescription("Reason")
+            )
+    ).addSubcommand(
+        sCmd => sCmd
             .setName("vc-deafen")
             .setDescription("Deafen users in a VC")
             .addChannelOption(

@@ -8,7 +8,7 @@ const { join } = require("path");
 
 // ---------------- CONSTANTS ----------------
 
-const ePerms = [
+const PERMISSIONS_EMPHASIZE = [
     "KICK_MEMBERS",
     "BAN_MEMBERS",
     "MANAGE_CHANNELS",
@@ -317,6 +317,7 @@ const REPLY_ERROR = {
     // DURATION ERRORS
     "Can't parse string": "Invalid duration! Try `3h` or `5m16s` or `69y`",
     "Duration less than 10000 ms": "Too much work <:deadLife:796323537937367050>",
+    "end before start": "Aww someone wanna get nostalgic, so sweett but sorry i can't remind you at that time, the past had passed just move on already",
 
     // UNKNOWN ERRORS
     "Unknown Ban": "They're not banned. Consider banning them first <:senkoStareLife:853238498223325204>",
@@ -329,7 +330,7 @@ const REPLY_ERROR = {
     "Moderator lack DEAFEN_MEMBERS permission": "You don't have the `DEAFEN_MEMBERS` permission in that voice channel",
     "Moderator lack MUTE_MEMBERS permission": "You don't have the `MUTE_MEMBERS` permission in that voice channel",
 
-    "Permissions override can't be more than 10": "Sorry but permission override can't exceed the total amount of 10, try remove some role/user from bypass",
+    "Permissions override can't be more than 10": "Sorry but permission override for slash commands can't exceed the total amount of 10, try remove some role/user from bypass",
 }
 
 const LETTER_EMOTES = {
@@ -396,7 +397,7 @@ const LUXON_TIMEZONES = [
 ]
 
 module.exports = {
-    ePerms,
+    PERMISSIONS_EMPHASIZE,
     reValidURL,
     reParseQuote,
     NSFW_ENDPOINTS,

@@ -4,21 +4,22 @@ const { Db, Collection } = require("mongodb");
 const { logDev } = require("../debug");
 
 const ENUM_SHADOCS = {
+    doc: 0,
     schedules: 1,
     activeMessageInteractions: 2,
-    document: 3,
-    commandDisabled: 4,
-    bannedGuilds: 5,
-    bannedUsers: 6,
-    infractions: 7,
-    interactions: 8,
-    recentAutocomplete: 9,
-    muted: 10,
-    muteSettings: 11,
-    banned: 12,
-    banSettings: 13,
-    afkState: 14,
-    messageLinkPreviewSettings: 15,
+    commandDisabled: 3,
+    bannedGuilds: 4,
+    bannedUsers: 5,
+    infractions: 6,
+    interactions: 7,
+    recentAutocomplete: 8,
+    muted: 9,
+    muteSettings: 10,
+    banned: 11,
+    banSettings: 12,
+    afkState: 13,
+    messageLinkPreviewSettings: 14,
+    reminder: 15,
     // vcDeafen: 16
 };
 
@@ -38,7 +39,8 @@ const ENUM_SHACOLTYPES = {
     "user/${user.id}": 1,
     "guild/${guild.id}": 2,
     "member/${guild.id}/${member.id}": 3,
-    "channel/${channel.id}": 4
+    "channel/${channel.id}": 4,
+    "reminder": 5,
 }
 
 /**

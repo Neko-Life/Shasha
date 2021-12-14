@@ -246,10 +246,11 @@ class BaseModeration {
                 name: "unban/" + this.guild.id + "/" + user.id,
                 date: opt.end,
                 path: SCHEDULE_MESSAGER_PATH,
+                type: "guild",
                 worker: {
                     workerData: data
                 }
-            });
+            }, "guild");
         }
         return { user, opt };
     }
@@ -279,7 +280,7 @@ class BaseModeration {
             } catch (e) { logDev(e); res.notified = false; };
         }
         if (this.client.scheduler.jobs.find(r => r.name === ("unban/" + this.guild.id + "/" + user.id)))
-            try { await this.client.scheduler.remove("unban/" + this.guild.id + "/" + user.id); }
+            try { await this.client.scheduler.remove("unban/" + this.guild.id + "/" + user.id, "guild"); }
             catch (e) { logDev(e) };
 
         return { user, res };
@@ -345,10 +346,11 @@ class BaseModeration {
                 name: "unmute/" + this.guild.id + "/" + user.id,
                 date: opt.end,
                 path: SCHEDULE_MESSAGER_PATH,
+                type: "guild",
                 worker: {
                     workerData: data
                 }
-            });
+            }, "guild");
         }
         return { user, val };
     }
@@ -389,7 +391,7 @@ class BaseModeration {
         const val = { ...opt, state: false };
         db.set("muted", "Object", { value: val });
         if (this.client.scheduler.jobs.find(r => r.name === ("unmute/" + this.guild.id + "/" + user.id)))
-            try { await this.client.scheduler.remove("unmute/" + this.guild.id + "/" + user.id); }
+            try { await this.client.scheduler.remove("unmute/" + this.guild.id + "/" + user.id, "guild"); }
             catch (e) { logDev(e) };
         return { user, val };
     }
@@ -507,6 +509,7 @@ class BaseModeration {
             if (dur) {
                 end = dur.end;
                 duration = dur.duration;
+                interval = dur.interval;
             } else {
                 end = new Date(invoked.valueOf() + ms);
                 interval = createInterval(invoked, end);

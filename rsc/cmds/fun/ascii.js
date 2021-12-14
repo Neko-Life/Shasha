@@ -45,7 +45,7 @@ module.exports = class ASCIICmd extends Command {
             workerData: data
         });
         child.on("message", (art) => {
-            art = art.replace(/^\s+\n/gm, "");
+            art = art.replace(/\s+(?=\n)|^\n/gm, "");
             if (art.length > 1950) return inter.editReply("Art length too long discord blocked it :<");
             inter.editReply("```\n" + art + "``` " + fN);
         });

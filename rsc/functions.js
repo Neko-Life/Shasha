@@ -4,7 +4,7 @@ const { Collection, Guild, User, Interaction, GuildMember, Invite, Role, GuildCh
 const { escapeRegExp } = require("lodash");
 const { join } = require("path");
 const { Worker } = require("worker_threads");
-const { ePerms, REPLY_ERROR } = require("./constants");
+const { PERMISSIONS_EMPHASIZE, REPLY_ERROR } = require("./constants");
 const { logDev } = require("./debug");
 
 // ---------------- FUNCTIONS ----------------
@@ -189,7 +189,7 @@ function unixToSeconds(val) {
  * @param {import("discord.js").PermissionString} str 
  * @returns {string}
  */
-function emphasizePerms(str) { return ePerms.includes(str) ? "'" + str + "'" : str }
+function emphasizePerms(str) { return PERMISSIONS_EMPHASIZE.includes(str) ? "'" + str + "'" : str }
 
 /**
  * @param {import("./classes/Command").allowMentionParam} param0 

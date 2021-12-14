@@ -1,10 +1,8 @@
 'use strict';
 
-const { MessageEmbed } = require("discord.js");
 const { escapeRegExp } = require("lodash");
 const { Command } = require("../../classes/Command");
 const { logDev } = require("../../debug");
-const { getColor } = require("../../functions");
 const { checkCmd } = require("../../handlers/command");
 
 module.exports = class PurgeCmd extends Command {
@@ -20,6 +18,7 @@ module.exports = class PurgeCmd extends Command {
     async run(inter, {
         amount,
         channel,
+        filterUserIds,
         filterUser,
         filterContent,
         filterRegex,
@@ -79,6 +78,18 @@ module.exports = class PurgeCmd extends Command {
         }
 
         this.filtered = [];
+
+        if (filterUserIds) {
+            const ids = filterUserIds.value.match(/\d{17,20}/g);
+            if (ids?.length) {
+                useCache = useCache.filter(r => ids.some(a => a === r.author?.id));
+                if (!(filterContent || filterRegex || filterUser)) {
+                    this.filtered = useCache.map(r => r);
+                    if (this.noLenRet()) return;
+                }
+            }
+        }
+
         if (filterUser) {
             useCache = useCache.filter(r => r.author?.id === filterUser.user.id);
             if (!(filterContent || filterRegex)) {
@@ -104,7 +115,8 @@ module.exports = class PurgeCmd extends Command {
                     else this.filtered.push(v);
         }
 
-        if (filterUser
+        if (filterUserIds
+            || filterUser
             || filterContent
             || filterRegex
         ) {
