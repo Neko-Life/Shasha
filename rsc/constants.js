@@ -1,6 +1,6 @@
 'use strict';
 
-const { Permissions } = require("discord.js");
+const { Permissions, MessageButton, MessageActionRow } = require("discord.js");
 const { DateTime } = require('luxon');
 const { zones } = require('tzdata');
 const { readdirSync } = require("fs");
@@ -318,6 +318,7 @@ const REPLY_ERROR = {
     "Can't parse string": "Invalid duration! Try `3h` or `5m16s` or `69y`",
     "Duration less than 10000 ms": "Too much work <:deadLife:796323537937367050>",
     "end before start": "Aww someone wanna get nostalgic, so sweett but sorry i can't remind you at that time, the past had passed just move on already",
+    "Invalid time value": "Invalid date! Try `december 12 2069, 18:00:00` or `March 29 2222, 06:15:30 am",
 
     // UNKNOWN ERRORS
     "Unknown Ban": "They're not banned. Consider banning them first <:senkoStareLife:853238498223325204>",
@@ -388,13 +389,17 @@ const ELEVATED_PERMISSIONS = [
     "MANAGE_EMOJIS"
 ]
 
-const LUXON_TIMEZONES = [
-    ...new Set(
-        Object.keys(zones).filter(
-            tz => DateTime.local().setZone(tz).isValid
-        )
-    ),
-]
+const LUXON_TIMEZONES = Object.keys(zones).filter(tz => DateTime.local().setZone(tz).isValid);
+
+const BUTTON_CLOSE = new MessageButton().setCustomId(`settings/command/close`).setLabel("Done").setStyle("SUCCESS");
+
+const ROW_BUTTON_STYLES = new MessageActionRow().addComponents([
+    new MessageButton().setLabel("PRIMARY").setStyle("PRIMARY").setCustomId("PRIMARY"),
+    new MessageButton().setLabel("SECONDARY").setStyle("SECONDARY").setCustomId("SECONDARY"),
+    new MessageButton().setLabel("LINK").setStyle("SECONDARY").setCustomId("LINK"),
+    new MessageButton().setLabel("SUCCESS").setStyle("SUCCESS").setCustomId("SUCCESS"),
+    new MessageButton().setLabel("DANGER").setStyle("DANGER").setCustomId("DANGER"),
+]);
 
 module.exports = {
     PERMISSIONS_EMPHASIZE,
@@ -422,5 +427,7 @@ module.exports = {
     LETTER_EMOTES,
     ZWS,
     ELEVATED_PERMISSIONS,
-    LUXON_TIMEZONES
+    LUXON_TIMEZONES,
+    BUTTON_CLOSE,
+    ROW_BUTTON_STYLES
 }

@@ -4,6 +4,7 @@ const { MessageEmbed, MessageActionRow, MessageButton, MessageSelectMenu, Collec
 const ArgsParser = require("../../classes/ArgsParser");
 const { Command } = require("../../classes/Command");
 const { CommandSettingsHelper } = require("../../classes/CommandSettingsHelper");
+const { BUTTON_CLOSE } = require("../../constants");
 const { loadDb } = require("../../database");
 const { logDev } = require("../../debug");
 const { getColor, findRoles, replyError, isInteractionInvoker } = require("../../functions");
@@ -59,8 +60,7 @@ const moderationSelectmenu = new MessageActionRow()
             ])
     );
 
-const closeButton = new MessageButton().setCustomId(`settings/command/close`).setLabel("Done").setStyle("SUCCESS");
-const closeRow = new MessageActionRow().addComponents(closeButton);
+const closeRow = new MessageActionRow().addComponents(BUTTON_CLOSE);
 
 const moderationMutePageButtons = new MessageActionRow()
     .addComponents([
@@ -217,7 +217,7 @@ module.exports = class SettingsCmd extends Command {
 
             const emb = new MessageEmbed(baseEmb)
                 .setTitle("Message Preview Setting")
-                .setDescription("Enable or disable preview when member sent a message containing link to a message. It's also moderated to prevent abuse.")
+                .setDescription("Enable or disable preview when member sent a message containing link to a message. It's also moderated to prevent abuse")
                 .addField("State", data.state ? "`Enabled`" : "`Disabled`");
 
             const components = [mainSelectMenu, miscSelectMenu, miscMessagePreviewPageButtons];
@@ -320,7 +320,7 @@ module.exports = class SettingsCmd extends Command {
                         emb.addField(`${k.type}:\`${k.name}\``, desc.trim());
                     } else emb.addField(`${k.type}:\`${k.name}\``, k.description);
                 }
-                const lastRowButtons = [closeButton,];
+                const lastRowButtons = [BUTTON_CLOSE,];
                 if (emb.fields.length) {
                     lastRowButtons.push(
                         new MessageButton().setCustomId(`settings/command/subCommand/${cmd.name}`).setLabel("Sub-Command Settings").setStyle("PRIMARY")

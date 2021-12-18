@@ -347,7 +347,7 @@ function copyProps(o, ignores = [], descriptor = { enumerable: true }) {
     for (const k in o)
         if (ignores.includes(k)) continue;
         else no[k] = {
-            value: o[k] || null,
+            value: o[k] ?? null,
             ...descriptor
         };
     Object.defineProperties(R, no);

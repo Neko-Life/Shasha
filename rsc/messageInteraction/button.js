@@ -1,6 +1,7 @@
 'use strict';
 
 const { ButtonInteraction } = require("discord.js");
+const { CommandSettingsHelper } = require("../classes/CommandSettingsHelper");
 const { MessageConstruct } = require("../classes/MessageConstruct");
 const { logDev } = require("../debug");
 const { disableMessageComponents, isInteractionInvoker } = require("../functions");
@@ -88,7 +89,9 @@ module.exports = class ButtonHandler {
         else message = inter.message;
         if (!isInteractionInvoker(inter))
             return inter.reply({ content: "Wha?! eh? ehmmm etto, anata ha dare?", ephemeral: true });
-        if (!message.buttonHandler) {
+        else if (args.join("/") === "command/close")
+            return CommandSettingsHelper.close(inter);
+        else if (!message.buttonHandler) {
             disableMessageComponents(inter.message);
             return inter.reply({ content: "This session's expired", ephemeral: true });
         } else {
@@ -112,7 +115,6 @@ module.exports = class ButtonHandler {
     static async messageConstruct(inter, args) {
         if (!isInteractionInvoker(inter))
             return inter.reply({ content: "DON'T DISTURB the admin pls they tryna make the best server for you here", ephemeral: true });
-        inter.deferUpdate();
-        return inter.message.messageConstruct[args[0]](args.slice(1));
+        return inter.message.messageConstruct[args[0]](inter, args.slice(1));
     }
 }
