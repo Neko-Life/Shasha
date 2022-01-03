@@ -1,161 +1,207 @@
 'use strict';
 
-const { SlashCommandBuilder, SlashCommandStringOption } = require("@discordjs/builders");
+// const { RESTPostAPIApplicationCommandsJSONBody, ApplicationCommandType, ApplicationCommandOptionType } = require("discord-api-types");
 const { ENUM_ACTIVITY_TYPES, PRESENCE_STATUSES } = require("../rsc/constants");
 
-const presenceOpt = new SlashCommandStringOption()
-    .setName("status")
-    .setDescription("Owner only");
-
+const presenceStatusChoices = [];
 for (const k in PRESENCE_STATUSES)
-    presenceOpt.addChoice(k, PRESENCE_STATUSES[k]);
+    presenceStatusChoices.push({ name: k, value: PRESENCE_STATUSES[k] });
 
-const activityTypeOpt = new SlashCommandStringOption()
-    .setName("type")
-    .setDescription("Owner only");
-
+const presenceTypeChoices = [];
 for (const k in ENUM_ACTIVITY_TYPES)
-    activityTypeOpt.addChoice(k, k);
+    presenceTypeChoices.push({ name: k, value: k });
 
-module.exports = new SlashCommandBuilder()
-    .setName("owner")
-    .setDescription("Owner only")
-    .setDefaultPermission(false)
-    .addSubcommand(
-        sCmd => sCmd
-            .setName("eval")
-            .setDescription("Owner only")
-            .addStringOption(
-                opt => opt
-                    .setName("script")
-                    .setDescription("Owner only")
-                    .setAutocomplete(true)
-            ).addStringOption(
-                opt => opt
-                    .setName("split")
-                    .setDescription("Owner only")
-                    .setAutocomplete(true)
-            ).addStringOption(
-                opt => opt
-                    .setName("message")
-                    .setDescription("Owner only")
-                    .setAutocomplete(true)
-            )
-    ).addSubcommand(
-        sCmd => sCmd
-            .setName("register")
-            .setDescription("Owner only")
-            .addStringOption(
-                opt => opt
-                    .setName("category")
-                    .setDescription("Owner only")
-                    .setAutocomplete(true)
-            ).addStringOption(
-                opt => opt
-                    .setName("guild")
-                    .setDescription("Owner only")
-                    .setAutocomplete(true)
-            )
-    ).addSubcommand(
-        sCmd => sCmd
-            .setName("reload")
-            .setDescription("Owner only")
-    ).addSubcommand(
-        sCmd => sCmd
-            .setName("ban")
-            .setDescription("Owner only")
-            .addStringOption(
-                opt => opt
-                    .setName("user")
-                    .setDescription("Owner only")
-                    .setAutocomplete(true)
-            ).addStringOption(
-                opt => opt
-                    .setName("guild")
-                    .setDescription("Owner only")
-                    .setAutocomplete(true)
-            )
-    ).addSubcommand(
-        sCmd => sCmd
-            .setName("unban")
-            .setDescription("Owner only")
-            .addStringOption(
-                opt => opt
-                    .setName("user")
-                    .setDescription("Owner only")
-                    .setAutocomplete(true)
-            ).addStringOption(
-                opt => opt
-                    .setName("guild")
-                    .setDescription("Owner only")
-                    .setAutocomplete(true)
-            )
-    ).addSubcommand(
-        sCmd => sCmd
-            .setName("su")
-            .setDescription("Owner only")
-            .addUserOption(
-                opt => opt
-                    .setName("user")
-                    .setDescription("Owner only")
-            ).addStringOption(
-                opt => opt
-                    .setName("command")
-                    .setDescription("Owner only")
-            ).addStringOption(
-                opt => opt
-                    .setName("args")
-                    .setDescription("Owner only")
-            )
-    ).addSubcommand(
-        sCmd => sCmd
-            .setName("presence")
-            .setDescription("Owner only")
-            .addStringOption(
-                opt => presenceOpt
-            ).addBooleanOption(
-                opt => opt
-                    .setName("afk")
-                    .setDescription("Owner only")
-            ).addStringOption(
-                opt => opt
-                    .setName("title")
-                    .setDescription("Owner only")
-                    .setAutocomplete(true)
-            ).addStringOption(
-                opt => opt
-                    .setName("url")
-                    .setDescription("Owner only")
-            ).addStringOption(
-                opt => activityTypeOpt
-            )
-    ).addSubcommandGroup(
-        sCmd => sCmd
-            .setName("info")
-            .setDescription("Owner only")
-            .addSubcommand(
-                sCmd => sCmd
-                    .setName("server")
-                    .setDescription("Owner only")
-                    .addStringOption(
-                        opt => opt
-                            .setName("identifier")
-                            .setDescription("Owner only")
-                            .setAutocomplete(true)
-                    )
-            )
-    ).addSubcommand(
-        sCmd => sCmd
-            .setName("list-server")
-            .setDescription("Owner only")
-    ).addSubcommand(
-        sCmd => sCmd
-            .setName("find-mutual")
-            .setDescription("Owner Only")
-            .addUserOption(
-                opt => opt
-                    .setName("user")
-                    .setDescription("Owner only")
-                    .setRequired(true)
-            )
-    )
+/* @type {RESTPostAPIApplicationCommandsJSONBody} */
+module.exports = {
+    name: "owner",
+    description: "Owner only",
+    default_permission: false,
+    type: 1,
+    options: [
+        {
+            name: "eval",
+            description: "Eval",
+            type: 1,
+            options: [
+                {
+                    name: "script",
+                    description: "script",
+                    type: 3,
+                    autocomplete: true,
+                },
+                {
+                    name: "split",
+                    description: "split",
+                    type: 3,
+                    autocomplete: true,
+                },
+                {
+                    name: "message",
+                    description: "message",
+                    type: 3,
+                    autocomplete: true,
+                },
+            ],
+        },
+        {
+            name: "register",
+            description: "Register",
+            type: 1,
+            options: [
+                {
+                    name: "category",
+                    description: "Category",
+                    type: 3,
+                    autocomplete: true,
+                },
+                {
+                    name: "guild",
+                    description: "Guild",
+                    type: 3,
+                    autocomplete: true,
+                },
+            ],
+        },
+        {
+            name: "reload",
+            description: "Reload",
+            type: 1,
+        },
+        {
+            name: "ban",
+            description: "Ban",
+            type: 1,
+            options: [
+                {
+                    name: "user",
+                    description: "User",
+                    type: 3,
+                    autocomplete: true,
+                },
+                {
+                    name: "guild",
+                    description: "Guild",
+                    type: 3,
+                    autocomplete: true,
+                },
+            ],
+        },
+        {
+            name: "unban",
+            description: "Unban",
+            type: 1,
+            options: [
+                {
+                    name: "user",
+                    description: "User",
+                    type: 3,
+                    autocomplete: true,
+                },
+                {
+                    name: "guild",
+                    description: "Guild",
+                    type: 3,
+                    autocomplete: true,
+                },
+            ],
+        },
+        {
+            name: "su",
+            description: "SU",
+            type: 1,
+            options: [
+                {
+                    name: "user",
+                    description: "User",
+                    type: 6,
+                },
+                {
+                    name: "command",
+                    description: "Command",
+                    type: 3,
+                    autocomplete: true,
+                },
+                {
+                    name: "args",
+                    description: "Args",
+                    type: 3,
+                    autocomplete: true,
+                }
+            ]
+        },
+        {
+            name: "presence",
+            description: "Presence",
+            type: 1,
+            options: [
+                {
+                    name: "status",
+                    description: "Status",
+                    type: 3,
+                    choices: presenceStatusChoices,
+                },
+                {
+                    name: "afk",
+                    description: "AFK",
+                    type: 5,
+                },
+                {
+                    name: "title",
+                    description: "Title",
+                    autocomplete: true,
+                    type: 3,
+                },
+                {
+                    name: "url",
+                    description: "URL",
+                    autocomplete: true,
+                    type: 3,
+                },
+                {
+                    name: "type",
+                    description: "Type",
+                    type: 3,
+                    choices: presenceTypeChoices,
+                },
+            ],
+        },
+        {
+            name: "info",
+            description: "Info",
+            type: 2,
+            options: [
+                {
+                    name: "server",
+                    description: "Server",
+                    type: 1,
+                    options: [
+                        {
+                            name: "identifier",
+                            description: "Identifier",
+                            type: 3,
+                            autocomplete: true,
+                        },
+                    ],
+                },
+            ],
+        },
+        {
+            name: "list-server",
+            description: "List Server",
+            type: 1,
+        },
+        {
+            name: "find-mutual",
+            description: "Find Mutual",
+            type: 1,
+            options: [
+                {
+                    name: "user",
+                    description: "User",
+                    type: 6,
+                    required: true,
+                },
+            ],
+        },
+    ],
+}

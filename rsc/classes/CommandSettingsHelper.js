@@ -80,7 +80,7 @@ class CommandSettingsHelper {
 
             const emb = new MessageEmbed()
                 .setTitle("SUB_COMMAND:`" + secondPath + "`")
-                .setAuthor("Settings")
+                .setAuthor({ name: "Settings" })
                 .setDescription("**" + (settings?.all ? "Disabled" : "Enabled") + "**"
                     + (settings?.all ? "\nThis command can't be used anywhere in the server" : ""))
                 .setColor(getColor(inter.user.accentColor, true, inter.member?.displayColor))

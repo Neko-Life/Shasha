@@ -155,9 +155,10 @@ function maxStringsLength(arrStr) {
 function isInteractionInvoker(interaction) {
     let inter;
     if (interaction.message.reference?.messageId) {
-        inter = interaction.channel.messages.resolve(interaction.message.reference.messageId).interaction;
+        inter = interaction.channel.messages.resolve(interaction.message.reference.messageId)?.interaction;
     } else inter = interaction.message.interaction;
-    if (inter?.user.id !== interaction.user.id) {
+    if (inter?.user.id === undefined) return;
+    if (inter.user.id !== interaction.user.id) {
         return false;
     } else return true;
 }
@@ -348,7 +349,7 @@ function copyProps(o, ignores = [], descriptor = { enumerable: true }) {
         if (ignores.includes(k)) continue;
         else no[k] = {
             value: o[k] ?? null,
-            ...descriptor
+            ...descriptor,
         };
     Object.defineProperties(R, no);
     return R;
@@ -356,18 +357,20 @@ function copyProps(o, ignores = [], descriptor = { enumerable: true }) {
 
 /**
  * 
- * @param {import("./typins").ShaMessage} message 
+ * @param {import("./typins").ShaMessage} message
+ * @param {boolean} enableInstead
  * @returns 
  */
-async function disableMessageComponents(message) {
+async function disableMessageComponents(message, enableInstead) {
     if (!message) throw new TypeError("message undefined");
     if (!message.editable)
         throw new Error("Can't edit message");
 
-    const R = copyProps(message, ["stickers", "nonce"]);
+    const R = copyProps(message, ["stickers", "nonce"], { enumerable: true, writable: true });
     for (const I of R.components)
         for (const K of I.components)
-            K.setDisabled(true);
+            K.setDisabled(enableInstead ? false : true);
+    if (R.content === "") R.content = null;
     return message.edit(R);
 }
 
@@ -406,7 +409,7 @@ function replyHigherThanMod(inter, action, { higherThanClient, higherThanModerat
 function emitShaError(e) {
     process.emit("error", e);
 }
-/** @param {import("./classes/ShaClient")} client */
+/* @param {import("./classes/ShaClient")} client */
 // async function reRegisterAll(client) {
 //     for (const [k, v] of client.guilds.cache) {
 //         // const worker = new Worker(join(__dirname, "../registerCommands.js"), {

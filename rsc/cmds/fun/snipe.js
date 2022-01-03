@@ -29,12 +29,11 @@ module.exports = class SnipeCmd extends Command {
                 if (!v.deleted) continue;
                 if (!v.content && !v.attachments.size) continue;
                 const emb = new MessageEmbed()
-                    .setAuthor(
-                        v.member?.displayName || v.author.username,
-                        (v.member || v.author).displayAvatarURL({ size: 128, format: "png", dynamic: true }),
-                        v.url
-                    )
-                    .setDescription(this.client.finalizeStr(v.content, isAdmin(v.member)))
+                    .setAuthor({
+                        name: v.member?.displayName || v.author.username,
+                        iconURL: (v.member || v.author).displayAvatarURL({ size: 128, format: "png", dynamic: true }),
+                        url: v.url
+                    }).setDescription(this.client.finalizeStr(v.content, isAdmin(v.member)))
                     .setColor(getColor(v.author.accentColor, true, v.member?.displayColor));
                 if (v.attachments.size)
                     emb.setImage(v.attachments.first().url);

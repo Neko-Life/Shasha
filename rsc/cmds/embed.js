@@ -274,7 +274,7 @@ module.exports.build = class BuildEmbCmd extends Command {
             );
         }
         if (this.authorEmbed.name)
-            this.buildEmbed.setAuthor(this.authorEmbed.name, this.authorEmbed.iconURL, this.authorEmbed.url);
+            this.buildEmbed.setAuthor({ name: this.authorEmbed.name, iconURL: this.authorEmbed.iconURL, url: this.authorEmbed.url });
         if (this.footerEmbed.text || this.footerEmbed.iconURL)
             this.buildEmbed.setFooter(this.footerEmbed.text, this.footerEmbed.iconURL);
         /**
@@ -330,7 +330,7 @@ async function createFields(inter, fields) {
         });
         ret.push(res);
     }
-    inter.editReply("Provide these message Ids to be used in `/embed build fieldDatas` command option,"
+    inter.editReply("Provide these message Ids to be used in `/embed build field-datas` command option,"
         + " separated with ` ` (space) ```js\n"
         + ret.map(r => r.id).join(" ")
         + "```");

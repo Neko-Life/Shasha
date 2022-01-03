@@ -26,15 +26,17 @@ module.exports = class TranslateCmd extends Command {
             return this.noLang();
         }
         let toTranslate = text?.value;
-        if (!toTranslate && message) {
-            const LOW = message.value.toLowerCase();
+        if (!toTranslate) {
             let mes;
-            if (LOW === "l" || LOW === "last")
-                mes = LM;
-            else {
-                const mesF = message.value.split(/ +/);
-                mes = await getChannelMessage(inter, ...mesF);
-            }
+            if (message) {
+                const LOW = message.value.toLowerCase();
+                if (LOW === "l" || LOW === "last")
+                    mes = LM;
+                else {
+                    const mesF = message.value.split(/ +/);
+                    mes = await getChannelMessage(inter, ...mesF);
+                }
+            } else mes = LM;
             if (!mes) throw new Error("Unknown message");
             toTranslate = mes.cleanContent;
         }

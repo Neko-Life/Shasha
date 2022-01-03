@@ -39,16 +39,19 @@ module.exports = async (interaction, query, user, text, msg, noCount, api = "nek
     if (text) text = replaceVars(text, { user });
 
     const emb = new MessageEmbed()
-        .setAuthor((from.displayName || from.username) + text
-            + (INTERACT_NO_INCLUDE_TARGET_NAMES.includes(query)
-                ? ""
-                : (user.displayName || user.username)),
-            (from.user || from).displayAvatarURL({
+        .setAuthor({
+            name: (from.displayName || from.username) + text
+                + (
+                    INTERACT_NO_INCLUDE_TARGET_NAMES.includes(query)
+                        ? ""
+                        : (user.displayName || user.username)
+                ),
+            iconURL: (from.user || from).displayAvatarURL({
                 size: 128,
                 format: "png",
                 dynamic: true
-            }))
-        .setColor(getColor((from.user || from).accentColor, true, from.displayColor));
+            })
+        }).setColor(getColor((from.user || from).accentColor, true, from.displayColor));
 
     if (msg) emb.setDescription(interaction.client.finalizeStr(msg, isAdmin(from)));
 

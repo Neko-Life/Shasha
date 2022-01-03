@@ -1,93 +1,120 @@
 'use strict';
 
-const { SlashCommandBuilder } = require("@discordjs/builders");
+// const { RESTPostAPIApplicationCommandsJSONBody, ApplicationCommandType, ApplicationCommandOptionType } = require("discord-api-types");
 
-module.exports = new SlashCommandBuilder()
-    .setName("fun")
-    .setDescription("Fun commands")
-    .addSubcommand(
-        sCmd => sCmd
-            .setName("say")
-            .setDescription("Say something using me")
-            .addStringOption(
-                opt => opt
-                    .setName("text")
-                    .setDescription("Text to send")
-            ).addStringOption(
-                opt => opt
-                    .setName("message")
-                    .setDescription("Say this message")
-                    .setAutocomplete(true)
-            ).addChannelOption(
-                opt => opt
-                    .setName("channel")
-                    .setDescription("Destination channel")
-                    .addChannelTypes([0, 5, 10, 12, 11, 6])
-            )
-    ).addSubcommand(
-        sCmd => sCmd
-            .setName("8ball")
-            .setDescription("Ask me for certainty")
-            .addStringOption(
-                opt => opt
-                    .setName("question")
-                    .setDescription("Your curiousness")
-                    .setAutocomplete(true)
-            )
-    ).addSubcommand(
-        sCmd => sCmd
-            .setName("jumbo")
-            .setDescription("Make an emoji JUMBO")
-            .addStringOption(
-                opt => opt
-                    .setName("emoji")
-                    .setDescription("Emoji to get JUMBO-ed")
-                    .setRequired(true)
-                    .setAutocomplete(true)
-            )
-    ).addSubcommand(
-        sCmd => sCmd
-            .setName("afk")
-            .setDescription("Lemme tell anyone who are looking for you that you're afk")
-            .addStringOption(
-                opt => opt
-                    .setName("message")
-                    .setDescription("Message you want to tell")
-                    .setAutocomplete(true)
-            )
-    ).addSubcommand(
-        sCmd => sCmd
-            .setName("ascii")
-            .setDescription("Lemme show you the arts of _text_")
-            .addStringOption(
-                opt => opt
-                    .setName("text")
-                    .setDescription("Text to tranform")
-                    .setAutocomplete(true)
-            ).addStringOption(
-                opt => opt
-                    .setName("font")
-                    .setDescription("Font to use")
-                    .setAutocomplete(true)
-            )
-    ).addSubcommand(
-        sCmd => sCmd
-            .setName("snipe")
-            .setDescription("Do some undelete magik")
-            .addChannelOption(
-                opt => opt
-                    .setName("channel")
-                    .setDescription("Snipe this channel")
-                    .addChannelTypes([0, 5, 10, 12, 11, 6])
-            )
-    ).addSubcommand(
-        sCmd => sCmd
-            .setName("big-text")
-            .setDescription("MAKE IT BEEEG")
-            .addStringOption(
-                opt => opt
-                    .setName("text")
-                    .setDescription("TEXT TO MAKE BEEEEEG")
-                    .setRequired(true)
-            )
-    )
+// @type {RESTPostAPIApplicationCommandsJSONBody} */
+module.exports = {
+    name: "fun",
+    description: "Fun Category",
+    type: 1,
+    options: [
+        {
+            name: "say",
+            description: "Say somethin using me",
+            type: 1,
+            options: [
+                {
+                    name: "text",
+                    description: "Text to say",
+                    type: 3,
+                },
+                {
+                    name: "message",
+                    description: "Say this message instead",
+                    type: 3,
+                    autocomplete: true,
+                },
+                {
+                    name: "channel",
+                    description: "Send in this channel",
+                    channel_types: [0, 5, 10, 12, 11, 6],
+                    type: 7
+                },
+            ],
+        },
+        {
+            name: "8ball",
+            description: "Ask me for certainty",
+            type: 1,
+            options: [
+                {
+                    name: "question",
+                    description: "Your curiousity",
+                    type: 3,
+                    autocomplete: true,
+                },
+            ],
+        },
+        {
+            name: "jumbo",
+            description: "Make any emoji JUMBO",
+            type: 1,
+            options: [
+                {
+                    name: "emoji",
+                    description: "Emoji to get JUMBO-ed",
+                    required: true,
+                    autocomplete: true,
+                    type: 3,
+                },
+            ],
+        },
+        {
+            name: "afk",
+            description: "Lemme tell anyone who are looking for you that you're afk",
+            type: 1,
+            options: [
+                {
+                    name: "message",
+                    description: "Leave a message before you gone afk",
+                    type: 3,
+                },
+            ],
+        },
+        {
+            name: "ascii",
+            description: "The arts of _text_",
+            type: 1,
+            options: [
+                {
+                    name: "text",
+                    description: "Text to transform",
+                    type: 3,
+                    autocomplete: true,
+                },
+                {
+                    name: "font",
+                    description: "Font to use",
+                    type: 3,
+                    autocomplete: true,
+                },
+            ],
+        },
+        {
+            name: "snipe",
+            description: "Do some undelete magik",
+            type: 1,
+            options: [
+                {
+                    name: "channel",
+                    description: "Snipe this channel",
+                    type: 7,
+                    channel_types: [0, 5, 10, 12, 11, 6],
+                },
+            ],
+        },
+        {
+            name: "big-text",
+            description: "MAKE IT BEEEEG",
+            type: 1,
+            options: [
+                {
+                    name: "text",
+                    description: "TEXT TO MAKE BEEEEG",
+                    required: true,
+                    type: 3,
+                },
+            ],
+        },
+    ],
+}

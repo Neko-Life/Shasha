@@ -12,6 +12,7 @@ export declare class ShaMessage extends Message {
     public messageLinkPreview: ShaMessage;
     public readonly guild: ShaGuild;
     public messageConstruct: MessageConstruct;
+    public deleted: boolean;
 }
 
 export declare class ShaCommandInteraction extends CommandInteraction {

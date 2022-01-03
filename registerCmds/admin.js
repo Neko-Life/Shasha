@@ -1,64 +1,40 @@
 'use strict';
 
-const { SlashCommandBuilder } = require("@discordjs/builders");
+// const { RESTPostAPIApplicationCommandsJSONBody, ApplicationCommandType, ApplicationCommandOptionType } = require("discord-api-types");
 
-module.exports = new SlashCommandBuilder()
-    .setName("admin")
-    .setDescription("Guild Settings and Administration")
-    .addSubcommand(
-        sCmd => sCmd
-            .setName("message-constructor")
-            .setDescription("Wanna create some custom message? Try it!")
-    ).addSubcommand(
-        sCmd => sCmd
-            .setName("enable")
-            .setDescription("Reset command/category setting for every channel. Default command permissions requirement apply")
-            .addStringOption(
-                opt => opt
-                    .setName("command")
-                    .setDescription("Command/category to reset (configure everything using `/admin disable`)")
-            )
-    ).addSubcommand(
-        sCmd => sCmd
-            .setName("disable")
-            .setDescription("Disable command/category")
-            .addStringOption(
-                opt => opt
-                    .setName("command")
-                    .setDescription("Command/category to disable. Example: `/info server`")
-            ).addStringOption(
-                opt => opt
-                    .setName("channels")
-                    .setDescription("Setting for these channels. Mentions, names or Ids separated with ` ` (space)")
-            ).addStringOption(
-                opt => opt
-                    .setName("bypass-roles")
-                    .setDescription("Roles bypass. Mentions or Ids separated with ` ` (space). `none` to reset")
-            ).addStringOption(
-                opt => opt
-                    .setName("bypass-permissions")
-                    .setDescription("Permissions bypass. Permissions separated with ` ` (space). `none` to reset")
-            ).addStringOption(
-                opt => opt
-                    .setName("bypass-users")
-                    .setDescription("User bypass. Mentions, names or Ids separated with ` ` (space). `none` to reset")
-            )
-    ).addSubcommand(
-        sCmd => sCmd
-            .setName("settings")
-            .setDescription("Configure my settings")
-    ).addSubcommand(
-        sCmd => sCmd
-            .setName("unban")
-            .setDescription("Sometimes somebody deserve a second chance")
-            .addUserOption(
-                opt => opt
-                    .setName("user")
-                    .setDescription("User to give a second chance")
-                    .setRequired(true)
-            ).addStringOption(
-                opt => opt
-                    .setName("reason")
-                    .setDescription("Reason")
-            )
-    )
+/* @type {RESTPostAPIApplicationCommandsJSONBody} */
+module.exports = {
+    name: "admin",
+    description: "Server Settings and Administration",
+    type: 1,
+    options: [
+        {
+            name: "message-constructor",
+            description: "Wanna create some custom message? Button roles? Or just simple rules embed? Try it!",
+            type: 1,
+        },
+        {
+            name: "settings",
+            description: "Configure my settings",
+            type: 1,
+        },
+        {
+            name: "unban",
+            description: "Sometimes somebody deserves a second chance",
+            type: 1,
+            options: [
+                {
+                    name: "user",
+                    description: "User to give a second chance",
+                    required: true,
+                    type: 6,
+                },
+                {
+                    name: "reason",
+                    description: "Reason",
+                    type: 3,
+                },
+            ],
+        },
+    ],
+}

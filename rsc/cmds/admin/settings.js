@@ -124,7 +124,7 @@ module.exports = class SettingsCmd extends Command {
         const THE_GUILD = loadDb(inter.guild, `guild/${inter.guild.id}`);
         const baseEmb = new MessageEmbed()
             .setThumbnail(this.guild.iconURL({ size: 4096, format: "png", dynamic: true }))
-            .setAuthor("Settings")
+            .setAuthor({ name: "Settings" })
             .setColor(getColor(inter.user.accentColor, true, inter.member.displayColor));
 
         const pages = {};
@@ -246,7 +246,7 @@ module.exports = class SettingsCmd extends Command {
                     .setDescription("Edit command permissions");
 
                 const useFetch = cmdsFetch.map(r => r).filter(r => r.name !== "owner");
-                for (let i = 0; i < useFetch.length; i = i + 4) {
+                for (let i = 0; i < useFetch.length; i += 4) {
                     const nU = i + 4;
                     commandPages[commandPages.length] = async (inter) => {
                         const commandEmb = new MessageEmbed(baseCommandEmb);

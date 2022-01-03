@@ -1,28 +1,30 @@
 'use strict';
 
-const { SlashCommandBuilder, SlashCommandStringOption } = require("@discordjs/builders");
+// const { RESTPostAPIApplicationCommandsJSONBody, ApplicationCommandType, ApplicationCommandOptionType } = require("discord-api-types");
 const { INTERACT_ENDPOINTS } = require("../rsc/constants");
 
-const OPT = new SlashCommandStringOption()
-    .setName("interaction")
-    .setDescription("Your interaction")
-    .setRequired(true);
-
-for (const U of INTERACT_ENDPOINTS) {
-    OPT.addChoice(U, U);
+/* @type {RESTPostAPIApplicationCommandsJSONBody} */
+module.exports = {
+    name: "interact",
+    description: "Interact with your friends",
+    type: 1,
+    options: [
+        {
+            name: "interaction",
+            description: "Kind of interaction you wanna do",
+            type: 3,
+            choices: INTERACT_ENDPOINTS.map(r => { return { name: r.name || r, value: r.value || r } }),
+            required: true,
+        },
+        {
+            name: "user",
+            description: "User you wanna interact with",
+            type: 6,
+        },
+        {
+            name: "message",
+            description: "Message you wanna say",
+            type: 3,
+        },
+    ],
 }
-
-module.exports = new SlashCommandBuilder()
-    .setName("interact")
-    .setDescription("Interact with your friends")
-    .addStringOption(
-        opt => OPT
-    ).addUserOption(
-        opt => opt
-            .setName("user")
-            .setDescription("User to interact with")
-    ).addStringOption(
-        opt => opt
-            .setName("message")
-            .setDescription("Message you want to say")
-    );

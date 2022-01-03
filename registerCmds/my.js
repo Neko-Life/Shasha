@@ -1,20 +1,26 @@
 'use strict';
 
-const { SlashCommandBuilder } = require("@discordjs/builders");
-
-module.exports = new SlashCommandBuilder()
-    .setName("my")
-    .setDescription("About me")
-    .addSubcommand(
-        sCmd => sCmd
-            .setName("invite")
-            .setDescription("Give you my invite link ❤️")
-    ).addSubcommand(
-        sCmd => sCmd
-            .setName("support")
-            .setDescription("Get help from the support server")
-    ).addSubcommand(
-        sCmd => sCmd
-            .setName("stats")
-            .setDescription("Show my stats")
-    )
+module.exports = {
+    name: "my",
+    description: "About me",
+    options: [
+        {
+            type: 1,
+            name: "invite",
+            description: "Give you my invite link ❤️",
+            options: []
+        },
+        {
+            type: 1,
+            name: "support",
+            description: "Get help from the support server",
+            options: []
+        },
+        {
+            type: 1,
+            name: "stats",
+            description: "Show my stats",
+            options: []
+        }
+    ]
+}

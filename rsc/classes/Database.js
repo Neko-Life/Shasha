@@ -20,7 +20,7 @@ const ENUM_SHADOCS = {
     afkState: 13,
     messageLinkPreviewSettings: 14,
     reminder: 15,
-    // vcDeafen: 16
+    action: 16,
 };
 
 const ENUM_SHADOCSTYPES = {
@@ -32,7 +32,7 @@ const ENUM_SHADOCSTYPES = {
     "Object[]": 6,
     "Number[]": 7,
     "Boolean[]": 8,
-    "${Id}": 9
+    "${Id}": 9,
 };
 
 const ENUM_SHACOLTYPES = {
@@ -41,6 +41,7 @@ const ENUM_SHACOLTYPES = {
     "member/${guild.id}/${member.id}": 3,
     "channel/${channel.id}": 4,
     "reminder": 5,
+    "message/${message.channelId}/${message.id}": 6,
 }
 
 /**

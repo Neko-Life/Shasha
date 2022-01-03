@@ -80,3 +80,12 @@ module.exports.remind = class RemindCmd extends Command {
         return this.saveMessages(inter.editReply(`Okie! I will remind you about it in ${durationString.strings.join()} at <t:${unixToSeconds(endDate)}:F>! You can manage all your reminder with \`/reminder manage\``));
     }
 }
+
+module.exports.manage = class ManageRemindCmd extends Command {
+    constructor(interaction) {
+        super(interaction, {
+            name: "manage-reminder",
+        });
+    }
+    async run(inter, { action }) { }
+}

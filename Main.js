@@ -1,10 +1,9 @@
 'use strict';
 
 if (process.argv.includes("-d")) process.dev = true;
+process.setMaxListeners(2);
 
 // const { exec } = require("child_process");
-// require("./rsc/mongo");
-// require("./rsc/structures");
 const { Intents, Options } = require("discord.js");
 const configFile = require("./config.json");
 const { ShaBaseDb } = require("./rsc/classes/Database");
@@ -30,6 +29,7 @@ const client = new ShaClient({
         }
     )
 });
+client.setMaxListeners(process.dev ? 2 : 1);
 
 client.dispatch();
 // require("./rsc/tCmd")(client);
@@ -214,17 +214,24 @@ client.dispatch();
 //     m?.channel.stopTyping();
 // });
 
-process.on("uncaughtException", e => {
+process.on("uncaughtException", async (e, a) => {
+    if (!client.EXCEPTION) client.EXCEPTION = {};
+    const errId = new Date().valueOf();
+    client.EXCEPTION[errId] = { e, a };
     logDev(e);
+    logDev(a);
     if (client.errorChannel) {
-        client.errorChannel.send("`[ EXCEPTION ]` ```js\n" + e.stack + "```");
+        client.errorChannel.send(`\`EXCEPTION["${errId}"]\` \`\`\`js\n` + e.stack + "\n\n" + a + "```");
     }
     // errLog(e, null, client);
 });
-process.on("unhandledRejection", e => {
+process.on("unhandledRejection", async (e, a) => {
+    if (!client.REJECTION) client.REJECTION = {};
+    const errId = new Date().valueOf();
+    client.REJECTION[errId] = e;
     logDev(e);
     if (client.errorChannel) {
-        client.errorChannel.send("`[ REJECTION ]` ```js\n" + e.stack + "```");
+        client.errorChannel.send(`\`REJECTION["${errId}"]\` \`\`\`js\n` + e.stack + "```");
     }
     //     errLog(e, null, client);
     //     if (/MongoError: Topology is closed, please connect/.test(e.message)) {

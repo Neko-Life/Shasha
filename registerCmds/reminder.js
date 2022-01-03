@@ -1,33 +1,39 @@
 'use strict';
 
-const { SlashCommandBuilder } = require("@discordjs/builders");
-
-module.exports = new SlashCommandBuilder()
-    .setName("reminder")
-    .setDescription("Reminder for your super tight schedules")
-    .addSubcommand(
-        sCmd => sCmd
-            .setName("remind")
-            .setDescription("I can remind you about your gf birthday")
-            .addStringOption(
-                opt => opt
-                    .setName("about")
-                    .setDescription("`my gf 69th birthday`")
-                    .setRequired(true)
-            ).addStringOption(
-                opt => opt
-                    .setName("at")
-                    .setDescription("Provide somethin like `November 29, 2069 11:04:20 PM` or `in 69m420s`")
-                    .setRequired(true)
-            ).addStringOption(
-                opt => opt
-                    .setName("timezone")
-                    .setDescription("Your gf timezone. Default to Greenland")
-                    .setAutocomplete(true)
-            ).addChannelOption(
-                opt => opt
-                    .setName("channel")
-                    .setDescription("Send your reminder here")
-                    .addChannelTypes([0, 5, 10, 12, 11, 6])
-            )
-    )
+module.exports = {
+    name: "reminder",
+    description: "Reminder for your super tight schedules",
+    options: [
+        {
+            type: 1,
+            name: "remind",
+            description: "I can remind you about your gf birthday",
+            options: [
+                {
+                    type: 3,
+                    name: "about",
+                    description: "`my gf 69th birthday`",
+                    required: true
+                },
+                {
+                    type: 3,
+                    name: "at",
+                    description: "Provide somethin like `November 29, 2069 11:04:20 PM` or `in 69m420s`",
+                    required: true
+                },
+                {
+                    type: 3,
+                    name: "timezone",
+                    description: "Your gf timezone. Default to Greenland",
+                    autocomplete: true,
+                },
+                {
+                    type: 7,
+                    name: "channel",
+                    description: "Send your reminder here",
+                    channel_types: [0, 5, 10, 12, 11, 6],
+                }
+            ]
+        }
+    ]
+}

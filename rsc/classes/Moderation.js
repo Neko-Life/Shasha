@@ -215,7 +215,7 @@ class BaseModeration {
         if (typeof opt.notify !== "boolean") opt.notify = true;
         if (opt.notify) {
             const emb = new MessageEmbed()
-                .setAuthor(this.guild.name, this.guild.iconURL({ size: 128, format: "png", dynamic: true }))
+                .setAuthor({ name: this.guild.name, iconURL: this.guild.iconURL({ size: 128, format: "png", dynamic: true }) })
                 .setColor(getColor((user.user || user).accentColor, true) || getColor(user.displayColor, true))
                 .setDescription(opt.reason)
                 .setTitle("Ban")
@@ -268,7 +268,7 @@ class BaseModeration {
         };
         if (notify) {
             const emb = new MessageEmbed()
-                .setAuthor(this.guild.name, this.guild.iconURL({ size: 128, format: "png", dynamic: true }))
+                .setAuthor({ name: this.guild.name, iconURL: this.guild.iconURL({ size: 128, format: "png", dynamic: true }) })
                 .setColor(getColor((user.user || user).accentColor, true) || getColor(user.displayColor, true))
                 .setDescription(reason)
                 .setTitle("Unban")
@@ -316,7 +316,7 @@ class BaseModeration {
         if (typeof opt.notify !== "boolean") opt.notify = true;
         if (opt.notify) {
             const emb = new MessageEmbed()
-                .setAuthor(this.guild.name, this.guild.iconURL({ size: 128, format: "png", dynamic: true }))
+                .setAuthor({ name: this.guild.name, iconURL: this.guild.iconURL({ size: 128, format: "png", dynamic: true }) })
                 .setColor(getColor((user.user || user).accentColor, true) || getColor(user.displayColor, true))
                 .setDescription(opt.reason)
                 .setTitle("Mute")
@@ -378,7 +378,7 @@ class BaseModeration {
         if (typeof opt.notify !== "boolean") opt.notify = true;
         if ((oldOpt.state && opt.notify) || (!oldOpt.state && oldOpt.notified === false)) {
             const emb = new MessageEmbed()
-                .setAuthor(this.guild.name, this.guild.iconURL({ size: 128, format: "png", dynamic: true }))
+                .setAuthor({ name: this.guild.name, iconURL: this.guild.iconURL({ size: 128, format: "png", dynamic: true }) })
                 .setDescription(opt.reason)
                 .setColor(getColor((user.user || user).accentColor, true) || getColor(user.displayColor, true))
                 .setTitle("Unmute")
@@ -405,7 +405,7 @@ class BaseModeration {
         if (typeof opt.notify !== "boolean") opt.notify = true;
         if (opt.notify) {
             const emb = new MessageEmbed()
-                .setAuthor(this.guild.name, this.guild.iconURL({ size: 128, format: "png", dynamic: true }))
+                .setAuthor({ name: this.guild.name, iconURL: this.guild.iconURL({ size: 128, format: "png", dynamic: true }) })
                 .setColor(getColor(member.user.accentColor, true, member.displayColor))
                 .setDescription(opt.reason)
                 .setTitle("Kick")

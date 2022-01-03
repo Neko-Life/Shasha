@@ -1,6 +1,6 @@
 'use strict';
 
-const { CommandInteraction } = require("discord.js");
+// const { CommandInteraction } = require("discord.js");
 const { Command } = require("../../classes/Command");
 
 module.exports = class SuCmd extends Command {
@@ -12,6 +12,5 @@ module.exports = class SuCmd extends Command {
     }
 
     async run(inter, { user, command, args }) {
-        new CommandInteraction(this.client)
     }
 }

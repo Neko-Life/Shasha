@@ -38,11 +38,11 @@ module.exports = async (msg) => {
         return delOldPrev(msg);
     const color = getColor(toPrev.author.accentColor, true, toPrev.member?.displayColor);
     const emb = new MessageEmbed()
-        .setAuthor(
-            tickTag(toPrev.member?.displayName || toPrev.author).replace(/`/g, ""),
-            (toPrev.member || toPrev.author).displayAvatarURL({ size: 128, format: "png", dynamic: true }),
-            toPrev.url
-        ).setColor(color);
+        .setAuthor({
+            name: tickTag(toPrev.member?.displayName || toPrev.author).replace(/`/g, ""),
+            iconURL: (toPrev.member || toPrev.author).displayAvatarURL({ size: 128, format: "png", dynamic: true }),
+            url: toPrev.url
+        }).setColor(color);
     const alEmb = [emb];
     let content = "";
     if (msg.guild && toPrev.channel?.nsfw && !msg.channel?.nsfw) {

@@ -1,153 +1,85 @@
 'use strict';
 
-const { SlashCommandBuilder } = require("@discordjs/builders");
+// const { RESTPostAPIApplicationCommandsJSONBody, ApplicationCommandType, ApplicationCommandOptionType } = require("discord-api-types");
 const EmbedStringsOptions = require("../rsc/subCmds/EmbedStringsOptions");
 
-module.exports = new SlashCommandBuilder()
-    .setName("embed")
-    .setDescription("Embed maker")
-    .addSubcommand(
-        sCmd => EmbedStringsOptions
-            .setName("build")
-            .setDescription("Build embed")
-    ).addSubcommand(
-        sCmd => sCmd
-            .setName("join")
-            .setDescription("Join all embeds in messages to put in one message. 10 embeds maximum")
-            .addStringOption(
-                opt => opt
-                    .setName("messages")
-                    .setDescription("Message links or Ids separated with ` ` (space)")
-                    .setRequired(true)
-            ).addChannelOption(
-                opt => opt
-                    .setName("channel")
-                    .setDescription("Channel to send in")
-                    .addChannelType(0)
-            ).addStringOption(
-                opt => opt
-                    .setName("content")
-                    .setDescription("Message content")
-            ).addStringOption(
-                opt => opt
-                    .setName("attachments")
-                    .setDescription("Attachments to include. Links separated with ` ` (space)")
-            )
-    ).addSubcommand(
-        sCmd => sCmd
-            .setName("create-field-datas")
-            .setDescription("Create field datas to use in embed build command")
-            .addStringOption(
-                opt => opt
-                    .setName("field-1-name")
-                    .setDescription("Field name")
-            ).addStringOption(
-                opt => opt
-                    .setName("field-1-text")
-                    .setDescription("Field text")
-            ).addStringOption(
-                opt => opt
-                    .setName("field-1-inline")
-                    .addChoice("yes", "1")
-                    .addChoice("no", "0")
-                    .setDescription("Set this field inline")
-            ).addStringOption(
-                opt => opt
-                    .setName("field-2-name")
-                    .setDescription("Field name")
-            ).addStringOption(
-                opt => opt
-                    .setName("field-2-text")
-                    .setDescription("Field text")
-            ).addStringOption(
-                opt => opt
-                    .setName("field-2-inline")
-                    .addChoice("yes", "1")
-                    .addChoice("no", "0")
-                    .setDescription("Set this field inline")
-            ).addStringOption(
-                opt => opt
-                    .setName("field-3-name")
-                    .setDescription("Field name")
-            ).addStringOption(
-                opt => opt
-                    .setName("field-3-text")
-                    .setDescription("Field text")
-            ).addStringOption(
-                opt => opt
-                    .setName("field-3-inline")
-                    .addChoice("yes", "1")
-                    .addChoice("no", "0")
-                    .setDescription("Set this field inline")
-            ).addStringOption(
-                opt => opt
-                    .setName("field-4-name")
-                    .setDescription("Field name")
-            ).addStringOption(
-                opt => opt
-                    .setName("field-4-text")
-                    .setDescription("Field text")
-            ).addStringOption(
-                opt => opt
-                    .setName("field-4-inline")
-                    .addChoice("yes", "1")
-                    .addChoice("no", "0")
-                    .setDescription("Set this field inline")
-            ).addStringOption(
-                opt => opt
-                    .setName("field-5-name")
-                    .setDescription("Field name")
-            ).addStringOption(
-                opt => opt
-                    .setName("field-5-text")
-                    .setDescription("Field text")
-            ).addStringOption(
-                opt => opt
-                    .setName("field-5-inline")
-                    .addChoice("yes", "1")
-                    .addChoice("no", "0")
-                    .setDescription("Set this field inline")
-            ).addStringOption(
-                opt => opt
-                    .setName("field-6-name")
-                    .setDescription("Field name")
-            ).addStringOption(
-                opt => opt
-                    .setName("field-6-text")
-                    .setDescription("Field text")
-            ).addStringOption(
-                opt => opt
-                    .setName("field-6-inline")
-                    .addChoice("yes", "1")
-                    .addChoice("no", "0")
-                    .setDescription("Set this field inline")
-            ).addStringOption(
-                opt => opt
-                    .setName("field-7-name")
-                    .setDescription("Field name")
-            ).addStringOption(
-                opt => opt
-                    .setName("field-7-text")
-                    .setDescription("Field text")
-            ).addStringOption(
-                opt => opt
-                    .setName("field-7-inline")
-                    .addChoice("yes", "1")
-                    .addChoice("no", "0")
-                    .setDescription("Set this field inline")
-            ).addStringOption(
-                opt => opt
-                    .setName("field-8-name")
-                    .setDescription("Field name")
-            ).addStringOption(
-                opt => opt
-                    .setName("field-8-text")
-                    .setDescription("Field text")
-            ).addStringOption(
-                opt => opt
-                    .setName("field-8-inline")
-                    .addChoice("yes", "1")
-                    .addChoice("no", "0")
-                    .setDescription("Set this field inline")
-            )
-    )
+const fieldDatasOptions = [];
+for (let i = 8; i > 0; i--) {
+    fieldDatasOptions.unshift(
+        {
+            name: `field-${i}-name`,
+            description: "Field name",
+            type: 3,
+        },
+        {
+            name: `field-${i}-text`,
+            description: "Field text",
+            type: 3,
+        },
+        {
+            name: `field-${i}-inline`,
+            description: "Set this field inline",
+            type: 3,
+            choices: [
+                {
+                    name: "yes",
+                    value: "1",
+                },
+                {
+                    name: "no",
+                    value: "0",
+                },
+            ],
+        },
+    );
+}
+
+/* @type {RESTPostAPIApplicationCommandsJSONBody} */
+module.exports = {
+    name: "embed",
+    description: "Embed Builder",
+    type: 1,
+    options: [
+        {
+            name: "build",
+            description: "Build your custom embed",
+            type: 1,
+            options: EmbedStringsOptions,
+        },
+        {
+            name: "join",
+            description: "Join all embeds in messages to put in one message. 10 embeds maximum",
+            type: 1,
+            options: [
+                {
+                    name: "messages",
+                    description: "Message links or Ids separated with ` ` (space)",
+                    required: true,
+                    type: 3,
+                },
+                {
+                    name: "channel",
+                    description: "Send to this channel",
+                    channel_types: [0],
+                    type: 3,
+                },
+                {
+                    name: "content",
+                    description: "Message content",
+                    type: 3,
+                },
+                {
+                    name: "attachments",
+                    description: "Attachments to includes. Links separated with ` ` (space)",
+                    type: 3,
+                },
+            ],
+        },
+        {
+            name: "create-field-datas",
+            description: "Create field datas to use in `/embed build` command",
+            type: 1,
+            options: fieldDatasOptions,
+        },
+    ],
+}

@@ -1,6 +1,7 @@
 'use strict';
 
 const { ShaBaseDb } = require("./classes/Database");
+const { logDev } = require("./debug");
 const { database } = require("./mongo");
 
 // ---------------- DATABASES ----------------
@@ -56,7 +57,14 @@ async function addUserExp(user, opt = {}) {
     return user.db.set("exp", "Number", { value: exp });
 }
 
+async function dropDeletedMessageCollection(client, message) {
+    if (message.author && message.author.id !== client.user.id) return;
+    const col = database.collection(`message/${message.channelId}/${message.id}`);
+    logDev(await col.drop().catch(() => { }));
+}
+
 module.exports = {
     loadDb,
-    addUserExp
+    addUserExp,
+    dropDeletedMessageCollection
 }

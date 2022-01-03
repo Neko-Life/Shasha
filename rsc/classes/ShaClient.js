@@ -165,21 +165,21 @@ module.exports = class ShaClient extends Client {
      */
     async loadOwnerGuildCommand(guild) {
         logDev("Enabling owner in guild", guild.name, guild.id);
-        this.application.commands.fetch().then(
-            async r => {
-                const log = await r.find(r => r.name === "owner")
-                    ?.permissions.set({
-                        guild: guild,
-                        permissions: [{
-                            id: "750335181285490760",
-                            type: "USER",
-                            permission: true
-                        }]
-                    });
-                logDev(log);
-                logDev("Enabled owner in guild", guild.name, guild.id);
-            }
-        );
+        const exec = async r => {
+            const log = await r.find(r => r.name === "owner")
+                ?.permissions.set({
+                    guild: guild,
+                    permissions: [{
+                        id: "750335181285490760",
+                        type: "USER",
+                        permission: true
+                    }]
+                });
+            logDev(log);
+            logDev("Enabled owner in guild", guild.name, guild.id);
+        };
+        this.application.commands.fetch().then(exec);
+        guild.commands.fetch().then(exec);
     }
 
     /**

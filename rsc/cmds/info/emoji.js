@@ -35,7 +35,7 @@ module.exports = class InfoEmojiCmd extends Command {
             if (!find) return inter.reply("Can't find that emoji :c");
         }
         const baseEmbed = new MessageEmbed()
-            .setAuthor(find.name, find.url)
+            .setAuthor({ name: find.name, iconURL: find.url })
             .setColor(getColor(this.user.accentColor, true) || getColor(this.member.displayColor, true));
         const emb = new MessageEmbed(baseEmbed)
             .addField("Identifier", `\`${find.name}\`\n(${find.id})`)

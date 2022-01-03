@@ -35,7 +35,7 @@ module.exports = class DefineCmd extends Command {
                 ? v.example.slice(0, 1021) + "..."
                 : v.example;
             const page = new MessageEmbed(baseEmbed)
-                .setAuthor(v.author, av, "https://www.urbandictionary.com/")
+                .setAuthor({ name: v.author, iconURL: av, url: "https://www.urbandictionary.com/" })
                 .setTitle(v.word)
                 .setURL(v.permalink)
                 .setDescription(def)

@@ -1,24 +1,25 @@
 'use strict';
 
-const { SlashCommandBuilder, SlashCommandStringOption } = require("@discordjs/builders");
+// const { RESTPostAPIApplicationCommandsJSONBody, ApplicationCommandType, ApplicationCommandOptionType } = require("discord-api-types");
 const { EXPRESS_ENDPOINTS } = require("../rsc/constants");
 
-const OPT = new SlashCommandStringOption()
-    .setName("expression")
-    .setDescription("Your expression")
-    .setRequired(true);
-
-for (const U of EXPRESS_ENDPOINTS) {
-    OPT.addChoice(U, U);
+// @type {RESTPostAPIApplicationCommandsJSONBody} */
+module.exports = {
+    name: "express",
+    description: "Express yourself",
+    type: 1,
+    options: [
+        {
+            name: "expression",
+            description: "Some feeling you wanna express?",
+            required: true,
+            type: 3,
+            choices: EXPRESS_ENDPOINTS.map(r => { return { name: r.name || r, value: r.value || r } }),
+        },
+        {
+            name: "message",
+            description: "Message you wanna say",
+            type: 3,
+        },
+    ],
 }
-
-module.exports = new SlashCommandBuilder()
-    .setName("express")
-    .setDescription("Express yourself")
-    .addStringOption(
-        opt => OPT
-    ).addStringOption(
-        opt => opt
-            .setName("message")
-            .setDescription("Message you want to say")
-    );

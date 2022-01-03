@@ -5,6 +5,18 @@ const { Command } = require("../classes/Command");
 const { addUserExp, loadDb } = require("../database");
 const { logDev } = require("../debug");
 
+const ENUM_CHECK_COMMAND_NO_REPLY_OPTIONS = {
+    "USER_BANNED": 1,
+    "OWNER_ONLY": 2,
+    "GUILD_BANNED": 3,
+    "GUILD_ONLY": 4,
+    "COMMAND_DISABLED": 5,
+    "NSFW_ONLY": 6,
+    "NO_PERMISSIONS": 7,
+    "NO_USER_PERMISSIONS": 8,
+    "NO_CLIENT_PERMISSIONS": 9,
+}
+
 module.exports = class CommandHandler {
     /**
      * @param {import("../typins").ShaCommandInteraction} interaction 
@@ -184,7 +196,7 @@ module.exports = class CommandHandler {
     }
 
     /**
-     * @typedef {"USER_BANNED"|"OWNER_ONLY"|"GUILD_BANNED"|"GUILD_ONLY"|"COMMAND_DISABLED"|"NSFW_ONLY"|"NO_PERMISSIONS"|"NO_USER_PERMISSIONS"|"NO_CLIENT_PERMISSIONS"} CheckCmdNoReplyOpt
+     * @typedef {keyof ENUM_CHECK_COMMAND_NO_REPLY_OPTIONS} CheckCmdNoReplyOpt
      * 
      * @typedef {object} CheckCmdOpts
      * @property {CheckCmdNoReplyOpt[]} noReply
@@ -289,6 +301,6 @@ module.exports = class CommandHandler {
     static async replyDel(interaction, message, timeout = 15000) {
         const mes = await interaction.reply({ content: message, fetchReply: true });
         setTimeout(() => mes.deleted ? null : mes.delete(), timeout);
-        return mes;
+        return;
     }
 }

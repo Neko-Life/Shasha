@@ -31,12 +31,12 @@ module.exports = async (interaction, query, text = "", msg, noName, api = "nekos
     const auN = (noName ? '' : (member.displayName || member.username)) + text;
 
     if (auN.length)
-        emb.setAuthor(
-            auN,
-            member.displayAvatarURL(
+        emb.setAuthor({
+            name: auN,
+            iconURL: member.displayAvatarURL(
                 { size: 128, format: "png", dynamic: true }
             )
-        );
+        });
 
     if (msg) emb.setDescription(interaction.client.finalizeStr(msg, isAdmin(member, true)));
     return interaction.editReply({ embeds: [emb] });

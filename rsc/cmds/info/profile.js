@@ -45,7 +45,7 @@ module.exports = class ProfileCmd extends Command {
         const userAvatar = user.displayAvatarURL({ size: 4096, format: "png", dynamic: true });
 
         const baseEmbed = new MessageEmbed()
-            .setAuthor(`${user.bot ? "BOT " : ""}${user.tag}`, memberAvatar || userAvatar)
+            .setAuthor({ name: `${user.bot ? "BOT " : ""}${user.tag}`, iconURL: memberAvatar || userAvatar })
             .setColor(getColor(user.accentColor, true) || getColor(member?.displayColor, true));
 
         const generalEmbed = new MessageEmbed(baseEmbed)

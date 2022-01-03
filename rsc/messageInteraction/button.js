@@ -113,7 +113,11 @@ module.exports = class ButtonHandler {
     }
 
     static async messageConstruct(inter, args) {
-        if (!isInteractionInvoker(inter))
+        const check = isInteractionInvoker(inter);
+        if (check === undefined) {
+            disableMessageComponents(inter.message);
+            return inter.reply({ content: "This session's expired", ephemeral: true });
+        } else if (check === false)
             return inter.reply({ content: "DON'T DISTURB the admin pls they tryna make the best server for you here", ephemeral: true });
         return inter.message.messageConstruct[args[0]](inter, args.slice(1));
     }

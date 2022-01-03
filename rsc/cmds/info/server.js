@@ -89,7 +89,7 @@ module.exports = class ServerInfoCmd extends Command {
         const iconURL = server.iconURL({ size: 4096, format: "png", dynamic: true });
 
         const baseEmbed = new MessageEmbed()
-            .setAuthor(server.name, iconURL, moreInfo.invite)
+            .setAuthor({ name: server.name, iconURL, url: moreInfo.invite })
             .setColor(getColor(inter.member?.displayColor));
 
         const selectDatas = {};

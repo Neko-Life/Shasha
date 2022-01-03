@@ -10,13 +10,14 @@ module.exports = async (interaction, query) => {
     const { res } = await apis(query, "lewds");
     if (!res) return interaction.editReply("Oopsie our service is busy, guess you're gonna go dry...");
     const emb = new MessageEmbed()
-        .setAuthor((user.displayName || user.username) + "'s " + query + " 😳",
-            (user.user || user).displayAvatarURL({
+        .setAuthor({
+            name: (user.displayName || user.username) + "'s " + query + " 😳",
+            iconURL: (user.user || user).displayAvatarURL({
                 size: 128,
                 format: "png",
                 dynamic: true
-            }))
-        .setImage(res)
+            })
+        }).setImage(res)
         .setColor(getColor(user.displayColor));
     return interaction.editReply({ embeds: [emb] });
 }
