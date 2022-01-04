@@ -22,22 +22,17 @@ module.exports = class TranslateCmd extends Command {
     async run(inter, { text, langTo, langFrom, message }) {
         const LM = inter.channel.lastMessage;
         await inter.deferReply();
-        if (!text && !message) {
-            return this.noLang();
-        }
-        let toTranslate = text?.value;
+        let toTranslate = text?.value || (!message ? LM?.cleanContent : null);
         if (!toTranslate) {
             let mes;
-            if (message) {
-                const LOW = message.value.toLowerCase();
-                if (LOW === "l" || LOW === "last")
-                    mes = LM;
-                else {
-                    const mesF = message.value.split(/ +/);
-                    mes = await getChannelMessage(inter, ...mesF);
-                }
-            } else mes = LM;
-            if (!mes) throw new Error("Unknown message");
+            const LOW = message.value.toLowerCase();
+            if (LOW === "l" || LOW === "last")
+                mes = LM;
+            else {
+                const mesF = message.value.split(/ +/);
+                mes = await getChannelMessage(inter, ...mesF);
+            }
+            if (!mes) return inter.editReply("Unknown message");
             toTranslate = mes.cleanContent;
         }
         if (!toTranslate) return inter.editReply("Nothing to translate");
