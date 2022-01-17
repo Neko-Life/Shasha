@@ -59,12 +59,15 @@ async function addUserExp(user, opt = {}) {
 
 async function dropDeletedMessageCollection(client, message) {
     if (message.author && message.author.id !== client.user.id) return;
-    const col = database.collection(`message/${message.channelId}/${message.id}`);
-    logDev(await col.drop().catch(() => { }));
+    const colName = `message/${message.channelId}/${message.id}`;
+    const col = database.collection(colName);
+    const del = await col.drop().catch(() => { });
+    logDev(del);
+    logDev((del ? "CLEARED DELETED MESSAGE DB" : "NO DELETED MESSAGE DB TO CLEAR") + ":", colName);
 }
 
 module.exports = {
     loadDb,
     addUserExp,
-    dropDeletedMessageCollection
+    dropDeletedMessageCollection,
 }

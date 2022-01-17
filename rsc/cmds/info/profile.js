@@ -2,6 +2,7 @@
 
 const { MessageEmbed, Role, MessageActionRow, MessageSelectMenu, GuildMember, User } = require("discord.js");
 const { Command } = require("../../classes/Command");
+const { loadDb } = require("../../database");
 const { getColor } = require("../../functions");
 const { intervalToStrings, createInterval } = require("../../util/Duration");
 
@@ -80,6 +81,16 @@ module.exports = class ProfileCmd extends Command {
                         createInterval(member.joinedAt, new Date())
                     ).strings.join(" ")} ago)`)
                 .fields.splice(1, 0, { name: "Nick", value: `\`${member.displayName}\``, inline: true });
+
+            loadDb(member, `member/${member.guild.id}/${member.id}`);
+            const inviter = await member.db.getOne("inviter", "Object");
+            const invites = await member.db.getOne("invites", "Object");
+            const o = invites?.value || {
+                invites: 0,
+                left: 0,
+            };
+            generalEmbed.addField("Invites", `\`Invited \`: \`${o.invites}\`\n\`Left    \`: \`${o.left}\``, true)
+                .addField("Inviter", inviter?.value.inviter ? `<@${inviter.value.inviter}>\n\`${inviter.value.code}\`` : "Unknown", true);
 
             /**
              * @type {Role[]}

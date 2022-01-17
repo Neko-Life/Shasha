@@ -39,7 +39,7 @@ module.exports = class DefineCmd extends Command {
                 .setTitle(v.word)
                 .setURL(v.permalink)
                 .setDescription(def)
-                .setFooter(`👍 ${v.thumbs_up} | 👎 ${v.thumbs_down}`)
+                .setFooter({ text: `👍 ${v.thumbs_up} | 👎 ${v.thumbs_down}` })
                 .setTimestamp(v.written_on);
             if (ex) page.addField("​", ex);
             pages.push({

@@ -56,6 +56,8 @@ module.exports = class CommandHandler {
             if (interaction.deferred || interaction.replied)
                 result = interaction.editReply(send);
             else result = interaction.reply(send);
+            e.interaction = interaction;
+            e.command = cmd;
             process.emit("error", e);
         }
         interaction.commandResults = [];

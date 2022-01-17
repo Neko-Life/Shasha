@@ -203,5 +203,15 @@ module.exports = {
                 },
             ],
         },
+        {
+            name: "reboot",
+            description: "Reboot",
+            type: 1,
+        },
+        {
+            name: "die",
+            description: "Die",
+            type: 1,
+        },
     ],
 }

@@ -3,7 +3,7 @@
 const { ButtonInteraction, MessageActionRow, MessageButton, MessageSelectMenu, MessageEmbed } = require("discord.js");
 const { ROW_BUTTON_STYLES } = require("../constants");
 const { loadDb } = require("../database");
-const { copyProps, replyError, getColor } = require("../functions");
+const { copyProps, replyError, getColor, strYesNo } = require("../functions");
 const { Actions } = require("./Actions");
 
 const messageConstructButtons = [
@@ -340,7 +340,7 @@ class MessageConstruct {
     }
 
     async startPage(inter) {
-        inter.deferUpdate();
+        if (inter) inter.deferUpdate();
         this.message.edit(startPage);
     }
 
@@ -376,49 +376,76 @@ function delNo(msg, timeout = 10000, ...userMsgs) {
 
 async function settingActions(inter, { found, preview, message, collectEdit } = {}) {
     const ActionsClass = new Actions(inter.client);
-    await collectEdit.deferReply();
-    const mesDb = loadDb(message, `message/${message.channelId}/${message.id}`);
+    await collectEdit.deferUpdate();
+    loadDb(message, `message/${message.channelId}/${message.id}`);
     const baseEmb = new MessageEmbed()
         .setTitle(`Actions`)
         .setColor(getColor(inter.user.accentColor, true, inter.member?.displayColor));
 
-    message.getEmbed = async () => {
-        const settings = await mesDb.db.get("action", found().customId);
+    const getEmbed = async () => {
+        const settings = await message.db.getOne("action", found().customId);
         const emb = new MessageEmbed(baseEmb);
-        if (settings?.value) { }
-        if (!emb.description) emb.setDescription("No actions set for this message component yet");
+        const N = () => "`" + (emb.fields.length + 1) + "#`: ";
+        if (settings?.value?.length) {
+            for (const val of settings.value) {
+                if (val.type === "roles") {
+                    const desc = `\`${"Action".padEnd(12, " ")}\`: \`${val.action ? val.action : "give and take"}\`\n`
+                        + `\`${"Synchronize".padEnd(12, " ")}\`: ${strYesNo(val.sync)}\n`
+                        + `\`${"Roles".padEnd(12, " ")}\`: <@&${val.roles.join(">, <@&")}>`;
+                    emb.addField(N() + val.type[0].toUpperCase() + val.type.slice(1), desc);
+                }
+            }
+        }
+        if (!emb.fields?.length) emb.setDescription("No actions set for this message component yet");
         return emb;
     }
 
-    /** @type {import("../typins").ShaMessage} */
-    const settingMessage = await collectEdit.editReply({ embeds: [await message.getEmbed()], components: [settingActionsButtons] });
-    const getOp = await settingMessage.awaitMessageComponent({ filter: (r) => r.user.id === inter.user.id });
-    if (getOp.customId === "add") {
-        getOp.deferUpdate();
-        const descriptors = Object.getOwnPropertyDescriptors(Object.getPrototypeOf(ActionsClass));
-        const keys = Object.keys(descriptors).filter(r => r !== "constructor" && r !== "method" && typeof descriptors[r].value === "function");
-        const selectMenuItems = [];
-        for (let s = 0; s < keys.length; s += 10) {
-            const to = s + 10;
-            const tP = [];
-            for (let i = s; i < to; i++) {
-                if (!keys[i]) break;
-                tP.push({ label: `${keys[i][0].toUpperCase()}${keys[i].slice(1)}`, value: keys[i], description: await ActionsClass.method({ get: "description", target: keys[i] }) });
-            }
-            selectMenuItems.push(tP);
-        };
-        const rows = selectMenuItems.map(
-            r => new MessageActionRow().addComponents(new MessageSelectMenu()
-                .setCustomId("settingActions")
-                .addOptions(r)
-                .setMaxValues(1)
-                .setPlaceholder("Pick action..."))
-        );
-        await settingMessage.edit({ content: "Add an action for this component", components: rows });
-        const pickedAction = await settingMessage.awaitMessageComponent({ filter: (r) => r.user.id === inter.user.id });
-        if (!pickedAction) return;
-        const res = await ActionsClass[pickedAction.values[0]]({ message, interaction: pickedAction, method: { set: "action" } });
-        console;
+    /* @type {import("../typins").ShaMessage} */
+    message.actionStartPage = async (replaceContent) => {
+        return message.edit({ embeds: [await getEmbed()], components: [settingActionsButtons], ...replaceContent });
+    };
+    await message.actionStartPage();
+    message.actionsConstruct = async () => {
+        const getOp = await message.awaitMessageComponent({ filter: (r) => r.user.id === inter.user.id });
+        let res;
+        const configure = async (edit) => {
+            const descriptors = Object.getOwnPropertyDescriptors(Object.getPrototypeOf(ActionsClass));
+            const keys = Object.keys(descriptors).filter(r => r !== "constructor" && typeof descriptors[r].value === "function");
+            const selectMenuItems = [];
+            for (let s = 0; s < keys.length; s += 10) {
+                const to = s + 10;
+                const tP = [];
+                for (let i = s; i < to; i++) {
+                    if (!keys[i]) break;
+                    tP.push({ label: `${keys[i][0].toUpperCase()}${keys[i].slice(1)}`, value: keys[i], description: await ActionsClass[keys[i]]({ method: { get: "description" } }) });
+                }
+                selectMenuItems.push(tP);
+            };
+            const rows = selectMenuItems.map(
+                r => new MessageActionRow().addComponents(new MessageSelectMenu()
+                    .setCustomId("settingActions")
+                    .addOptions(r)
+                    .setMaxValues(1)
+                    .setPlaceholder("Pick action..."))
+            );
+            await message.edit({ content: "Add an action for this component", components: rows });
+            const pickedAction = await message.awaitMessageComponent({ filter: (r) => r.user.id === inter.user.id });
+            if (!pickedAction) return;
+            res = await ActionsClass[pickedAction.values[0]]({ edit, found, message, interaction: pickedAction, method: { set: "action" } });
+        }
+        if (getOp.customId === "add") {
+            getOp.deferUpdate();
+            await configure();
+        } else if (getOp.customId === "edit") {
+            const prompt = await getOp.reply({ content: "Provide action number to edit:", fetchReply: true });
+            const getP = await prompt.channel.awaitMessages({ filter: (r) => r.author.id === inter.user.id && /^\d{1,2}/.test(r.content), max: 1 });
+            if (!getP) return;
+            delNo(null, undefined, getP);
+            const edit = parseInt(getP.content, 10);
+            await configure(edit);
+        }
+        if (res) message.messageConstruct.startPage();
+        else message.actionsConstruct();
     }
-    return;
+    return message.actionsConstruct();
 }

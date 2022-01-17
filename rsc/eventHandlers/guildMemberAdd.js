@@ -6,6 +6,7 @@ const ShaClient = require("../classes/ShaClient");
 const { loadDb } = require("../database");
 const { logDev } = require("../debug");
 const { wait } = require("../functions");
+const inviteTracker = require("../handlers/inviteTracker");
 
 /**
  * @param {ShaClient} client
@@ -41,6 +42,7 @@ async function handle(client, member) {
             }).catch(logDev)
         );
     }
+    inviteTracker(member, "join");
     console;
 }
 

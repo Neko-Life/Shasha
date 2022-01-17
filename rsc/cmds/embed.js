@@ -276,7 +276,7 @@ module.exports.build = class BuildEmbCmd extends Command {
         if (this.authorEmbed.name)
             this.buildEmbed.setAuthor({ name: this.authorEmbed.name, iconURL: this.authorEmbed.iconURL, url: this.authorEmbed.url });
         if (this.footerEmbed.text || this.footerEmbed.iconURL)
-            this.buildEmbed.setFooter(this.footerEmbed.text, this.footerEmbed.iconURL);
+            this.buildEmbed.setFooter({ text: this.footerEmbed.text, iconURL: this.footerEmbed.iconURL });
         /**
          * @type {import("discord.js").MessageOptions}
          */

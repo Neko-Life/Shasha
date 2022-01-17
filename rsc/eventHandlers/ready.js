@@ -27,6 +27,13 @@ async function handle(client) {
     await client.loadScheduler();
     // init(client);
     console.log(client.user.tag + ` logged in ${client.guilds.cache.size} guilds`);
+    const fRC = process.argv.find(r => r.startsWith("-rc="));
+    if (fRC?.length) {
+        console.log("Rebooted at", Date().toString());
+        const id = fRC.match(/\d{17,20}/);
+        const channel = client.channels.resolve(id) || await client.channels.fetch(id).catch(() => { });
+        if (channel) channel.send("Rebooted successfully!");
+    }
 }
 
 module.exports = { handle }

@@ -41,33 +41,44 @@ class Actions {
         this.client = client;
     }
 
-    async method(data) {
-        if (data.get?.length)
-            return this[data.target]({ method: data });
-    }
-
     async roles(data) {
-        if (data.method) {
+        if (data.method?.get) {
             const get = {
                 description: "Give or take server member roles",
             }
-            if (data.method.get)
-                return get[data.method.get];
+            return get[data.method.get];
+        }
+
+        if (data.method?.set) {
             const set = {
                 action: async () => {
                     const inter = data.interaction;
                     inter.deferUpdate();
-                    // const prompt = await inter.message.edit({ content: "Provide role mentions, names or Ids separated with ` ` (space) to give/take when the component clicked" });
-                    // const collect = await prompt.channel.awaitMessages({ filter: (r) => r.content.length && r.author.id === inter.user.id, max: 1 });
-                    // const findRoles = await ArgsParser.roles(inter.guild, collect.content);
-                    // const roles = findRoles.roles.filter(r => !r.managed);
-                    // await data.message.db.set("action", data.found().customId, {value:{type:"roles",roles:roles.map(r=>r.id),sync:true,action:"give"}});
-                    // await prompt.edit({ content: null, embeds: [await data.message.getEmbed()], components: [] });
+                    const prompt = await inter.message.edit({
+                        content: "Provide role mentions, names or Ids separated with ` ` (space) to give/take when the component clicked",
+                        components: [],
+                        embeds: [],
+                    });
+                    const collect = await prompt.channel.awaitMessages({ filter: (r) => r.content.length && r.author.id === inter.user.id, max: 1 });
+                    const findRoles = await ArgsParser.roles(inter.guild, collect.first().content);
+                    const roles = findRoles.roles.filter(r => !r.managed);
+
+                    const obj = { type: "roles", roles: roles.map(r => r.id), sync: true, action: "give" };
+
+                    const getToPush = await data.message.db.getOne("action", data.found().customId);
+                    let newData = getToPush?.value || [];
+                    if (data.edit) {
+                        newData[data.edit - 1] = obj;
+                    } else {
+                        newData.push(obj);
+                    }
+                    newData = newData.filter(r => !!r);
+                    await data.message.db.set("action", data.found().customId, { value: newData });
+                    await data.message.actionStartPage({ content: null });
                     console;
                 }
             }
-            if (data.method.set)
-                return set[data.method.set]();
+            return set[data.method.set]();
         }
         const guild = this.client.guilds.resolve(data.guild);
         if (!guild) throw new TypeError("Unknown guild");
@@ -119,15 +130,15 @@ class Actions {
     }
 
     async unmute(data) {
-        if (data.method) {
+        if (data.method?.get) {
             const get = {
                 description: "Unmute a muted server member",
             }
-            if (data.method.get)
-                return get[data.method.get];
+            return get[data.method.get];
+        }
+        if (data.method?.set) {
             const set = {}
-            if (data.method.set)
-                return set[data.method.set](data);
+            return set[data.method.set](data);
         }
         const guild = this.client.guilds.cache.get(data.guild);
         const target = await this.client.findUsers(data.target, "i");
@@ -142,15 +153,15 @@ class Actions {
     }
 
     async unban(data) {
-        if (data.method) {
+        if (data.method?.get) {
             const get = {
                 description: "Unban a banned user from the server",
             }
-            if (data.method.get)
-                return get[data.method.get];
+            return get[data.method.get];
+        }
+        if (data.method?.set) {
             const set = {}
-            if (data.method.set)
-                return set[data.method.set](data);
+            return set[data.method.set](data);
         }
         const guild = this.client.guilds.cache.get(data.guild);
         const target = await this.client.findUsers(data.target);
@@ -169,15 +180,15 @@ class Actions {
      * @param {RemindActionData} data 
      */
     async remind(data) {
-        if (data.method) {
+        if (data.method?.get) {
             const get = {
                 description: "Send a reminder message",
             }
-            if (data.method.get)
-                return get[data.method.get];
+            return get[data.method.get];
+        }
+        if (data.method?.set) {
             const set = {}
-            if (data.method.set)
-                return set[data.method.set](data);
+            return set[data.method.set](data);
         }
         const about = data.about;
         const user = await this.client.findUsers(data.user);

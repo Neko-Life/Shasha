@@ -21,6 +21,8 @@ const ENUM_SHADOCS = {
     messageLinkPreviewSettings: 14,
     reminder: 15,
     action: 16,
+    invites: 17,
+    inviter: 18,
 };
 
 const ENUM_SHADOCSTYPES = {
@@ -76,13 +78,13 @@ class ShaBaseDb {
         const find = {};
         if (doc !== undefined && query !== undefined) find[doc] = query;
         logDev("get", this.col.collectionName, doc, query, find);
+        if (doc && typeof doc !== "string") throw new TypeError("doc must be a string, got " + typeof doc);
         const cursor = this.col.find(find);
         let i = 0;
         let arr = await cursor.toArray();
-        if (find[doc])
+        if (doc)
             arr = arr.filter(r => r[doc]);
-        const map = new Map(arr.map(r => [r[doc] || i++, r]));
-        return map;
+        return new Map(arr.map(r => [([undefined, null].includes(r[doc]) ? i++ : r[doc]), r]));
     }
 
     /**
@@ -104,9 +106,11 @@ class ShaBaseDb {
      * @param {boolean} push 
      * @returns 
      */
-    async set(doc, query, val = { noData: true }, push) {
+    async set(doc, query, val, push) {
         logDev("set", this.col.collectionName, doc, query, val, push);
-        if (typeof val !== 'object') throw new TypeError("val must be a type of object. Got " + typeof val);
+        if (typeof doc !== "string") throw new TypeError("doc must be a string, got " + typeof doc);
+        if (typeof query !== "string") throw new TypeError("query must be a string, got " + typeof query);
+        if (typeof val !== 'object') throw new TypeError("val must be a type of object, got " + typeof val);
         return this.col.updateOne({ [doc]: query },
             push ? {
                 $push: val,
@@ -126,7 +130,8 @@ class ShaBaseDb {
      */
     async delete(doc, query) {
         logDev("delete", this.col.collectionName, doc, query);
-        if (typeof query !== "string") throw new TypeError("query must be a type of string. Got " + typeof query);
+        if (typeof doc !== "string") throw new TypeError("doc must be a string, got " + typeof doc);
+        if (typeof query !== "string") throw new TypeError("query must be a type of string, got " + typeof query);
         return this.col.deleteOne({ [doc]: query });
     }
 

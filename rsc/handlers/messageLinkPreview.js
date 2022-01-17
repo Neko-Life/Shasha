@@ -1,6 +1,7 @@
 'use strict';
 
 const { MessageEmbed } = require("discord.js");
+const { PATTERN_MESSAGE_LINK } = require("../constants");
 const { loadDb } = require("../database");
 const { getChannelMessage, tickTag, getColor, isAdmin } = require("../functions");
 
@@ -30,11 +31,11 @@ module.exports = async (msg) => {
         }
         if (!msg.guild.messageLinkPreviewSettings.state) return;
     }
-    const link = msg.content.match(/https?:\/\/(?:www\.|canary\.|ptb\.)?discord(?:app)?\.(?:gg|com)\/channels\/(?:\d{17,20}|@me)\/\d{17,20}\/\d{17,20}/);
+    const link = msg.content.match(new RegExp(PATTERN_MESSAGE_LINK));
     if (!link?.length || msg.deleted)
         return delOldPrev(msg);
     const toPrev = await getChannelMessage(msg, link[0], null, true);
-    if (!toPrev || !(toPrev.content?.length || toPrev.embeds?.length || toPrev.attachments?.size))
+    if (!toPrev || !(toPrev.content?.length || toPrev.embeds?.length || toPrev.attachments?.size || toPrev.stickers?.size))
         return delOldPrev(msg);
     const color = getColor(toPrev.author.accentColor, true, toPrev.member?.displayColor);
     const emb = new MessageEmbed()
@@ -42,7 +43,9 @@ module.exports = async (msg) => {
             name: tickTag(toPrev.member?.displayName || toPrev.author).replace(/`/g, ""),
             iconURL: (toPrev.member || toPrev.author).displayAvatarURL({ size: 128, format: "png", dynamic: true }),
             url: toPrev.url
-        }).setColor(color);
+        }).setColor(color)
+        .setTimestamp(toPrev.editedTimestamp || toPrev.createdTimestamp);
+    if (toPrev.editedTimestamp) emb.setFooter({ text: `Edited` });
     const alEmb = [emb];
     let content = "";
     if (msg.guild && toPrev.channel?.nsfw && !msg.channel?.nsfw) {
@@ -51,17 +54,21 @@ module.exports = async (msg) => {
         const memberAdmin = isAdmin(msg.member || msg.author);
         if (toPrev.content?.length) emb.setDescription(msg.client.finalizeStr(toPrev.content, memberAdmin));
         if (toPrev.attachments.size) {
-            let att = toPrev.attachments.filter(r => r.contentType.startsWith("image")).map(r => r);
-            if (!emb.image) {
-                emb.setImage(att[0].url);
-                att = att.slice(1);
+            let im = toPrev.attachments.filter(r => r.contentType.startsWith("image")).map(r => r);
+            if (im?.length) {
+                if (!emb.image?.url) {
+                    emb.setImage(im[0].url);
+                    im = im.slice(1);
+                }
+                for (const a of im)
+                    alEmb.push(
+                        new MessageEmbed()
+                            .setImage(a.url)
+                            .setColor(color)
+                    );
             }
-            for (const a of att)
-                alEmb.push(
-                    new MessageEmbed()
-                        .setImage(a.url)
-                        .setColor(color)
-                );
+            let vids = toPrev.attachments.filter(r => r.contentType.startsWith("video"));
+            if (vids?.size) content = "`[ATTACHMENTS]`\n" + vids.map(r => r.url).join("\n");
         } else emb.setImage(null);
         if (toPrev.embeds?.length) {
             alEmb.push(
@@ -74,33 +81,38 @@ module.exports = async (msg) => {
                 ).map(r => msg.client.finalizeEmbed(r, memberAdmin))
             );
             let images = toPrev.embeds.filter(r => r.type === "image").map(r => r);
-            if (!emb.image) {
-                emb.setImage(images[0].url);
-                images = images.slice(1);
+            if (images?.length) {
+                if (!emb.image?.url) {
+                    emb.setImage(images[0].url);
+                    images = images.slice(1);
+                }
+                for (const a of images)
+                    alEmb.push(
+                        new MessageEmbed()
+                            .setImage(a.url)
+                            .setColor(color)
+                    );
             }
-            for (const a of images)
-                alEmb.push(
-                    new MessageEmbed()
-                        .setImage(a.url)
-                        .setColor(color)
-                );
             let gifPng = toPrev.embeds.filter(r => r.type === "gifv").map(r => r);
-            if (!emb.image) {
-                emb.setImage(gifPng[0].thumbnail.url);
-                gifPng = gifPng.slice(1);
+            if (gifPng?.length) {
+                if (!emb.image?.url) {
+                    emb.setImage(gifPng[0].thumbnail.url);
+                    gifPng = gifPng.slice(1);
+                }
+                for (const a of gifPng)
+                    alEmb.push(
+                        new MessageEmbed()
+                            .setImage(a.thumbnail.url)
+                            .setColor(color)
+                    );
             }
-            for (const a of gifPng)
-                alEmb.push(
-                    new MessageEmbed()
-                        .setImage(a.thumbnail.url)
-                        .setColor(color)
-                );
         }
     }
     const send = { embeds: alEmb.slice(0, 10), allowedMentions: { parse: [] } };
     if (content.length) send.content = content;
     let m;
     if (!msg.messageLinkPreview || msg.messageLinkPreview?.deleted) {
+        if (toPrev.stickers.size) send.stickers = [toPrev.stickers.first().id];
         m = await msg.reply(send);
         msg.messageLinkPreview = m;
     } else m = await msg.messageLinkPreview.edit(send);

@@ -401,6 +401,8 @@ const ROW_BUTTON_STYLES = new MessageActionRow().addComponents([
     new MessageButton().setLabel("DANGER").setStyle("DANGER").setCustomId("DANGER"),
 ]);
 
+const PATTERN_MESSAGE_LINK = "https?:\\/\\/(?:www\\.|canary\\.|ptb\\.)?discord(?:app)?\\.(?:gg|com)\\/channels\\/(?:\\d{17,20}|@me)\\/\\d{17,20}\\/\\d{17,20}";
+
 module.exports = {
     PERMISSIONS_EMPHASIZE,
     reValidURL,
@@ -429,5 +431,6 @@ module.exports = {
     ELEVATED_PERMISSIONS,
     LUXON_TIMEZONES,
     BUTTON_CLOSE,
-    ROW_BUTTON_STYLES
+    ROW_BUTTON_STYLES,
+    PATTERN_MESSAGE_LINK,
 }

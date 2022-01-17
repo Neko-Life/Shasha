@@ -3,6 +3,7 @@ import { AutocompleteCommandArgs, AutocompleteData } from "./classes/Command";
 import { ShaBaseDb } from "./classes/Database";
 import { MessageConstruct } from "./classes/MessageConstruct";
 import ShaClient from "./classes/ShaClient";
+import { InviteTracker } from "./classes/InviteTracker";
 
 export declare class ShaMessage extends Message {
     public readonly client: ShaClient;
@@ -49,6 +50,7 @@ export declare class ShaGuild extends Guild {
 export declare class ShaGuildMember extends GuildMember {
     public readonly client: ShaClient;
     public db: ShaBaseDb;
+    public guild: ShaGuild;
 }
 
 export declare class ShaTextChannel extends BaseGuildTextChannel {

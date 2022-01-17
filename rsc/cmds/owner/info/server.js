@@ -21,6 +21,6 @@ module.exports = class OwnerServerInfoCmd extends Command {
         });
     }
     async run(inter, { identifier }) {
-        return new ServerInfoCmd(inter).run(inter, { identifier });
+        return new ServerInfoCmd(inter).run(inter, { identifier, force: true });
     }
 }

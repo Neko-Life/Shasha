@@ -73,6 +73,7 @@ module.exports = class ShaClient extends Client {
         requireAll({ dirname: join(__dirname, "../rsc") });
         requireAll({ dirname: join(__dirname, "../classes") });
         requireAll({ dirname: join(__dirname, "../util") });
+        requireAll({ dirname: join(__dirname, "../logging"), recursive: true });
         require("../constants");
         Scheduler = require("./Scheduler").Scheduler;
         logDev("Modules unload/load done");
@@ -80,7 +81,16 @@ module.exports = class ShaClient extends Client {
 
     unloadModules() {
         logDev("Unloading modules...");
-        const modulesDirName = ["../classes", "../eventHandlers", "../handlers", "../cmds", "../messageInteraction", "../rsc", "../util"];
+        const modulesDirName = [
+            "../classes",
+            "../eventHandlers",
+            "../handlers",
+            "../cmds",
+            "../messageInteraction",
+            "../rsc",
+            "../util",
+            "../logging",
+        ];
         const modulesName = ["../functions.js", "../constants.js"];
         const modulesDirPath = modulesDirName.map(r => join(__dirname, r));
         modulesDirPath.push(...modulesName.map(r => join(__dirname, r)));

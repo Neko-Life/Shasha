@@ -19,7 +19,8 @@ const client = new ShaClient({
         Intents.FLAGS.GUILD_MEMBERS,
         Intents.FLAGS.GUILD_PRESENCES,
         Intents.FLAGS.GUILD_VOICE_STATES,
-        Intents.FLAGS.DIRECT_MESSAGES
+        Intents.FLAGS.DIRECT_MESSAGES,
+        Intents.FLAGS.GUILD_INVITES,
     ],
     dashboard: dashboard,
     db: new ShaBaseDb(database, "main"),
@@ -216,8 +217,9 @@ client.dispatch();
 
 process.on("uncaughtException", async (e, a) => {
     if (!client.EXCEPTION) client.EXCEPTION = {};
-    const errId = new Date().valueOf();
-    client.EXCEPTION[errId] = { e, a };
+    const t = new Date();
+    const errId = t.valueOf();
+    client.EXCEPTION[errId] = { e, a, t: new Date() };
     logDev(e);
     logDev(a);
     if (client.errorChannel) {
@@ -227,8 +229,9 @@ process.on("uncaughtException", async (e, a) => {
 });
 process.on("unhandledRejection", async (e, a) => {
     if (!client.REJECTION) client.REJECTION = {};
-    const errId = new Date().valueOf();
-    client.REJECTION[errId] = e;
+    const t = new Date();
+    const errId = t.valueOf();
+    client.REJECTION[errId] = { e, t };
     logDev(e);
     if (client.errorChannel) {
         client.errorChannel.send(`\`REJECTION["${errId}"]\` \`\`\`js\n` + e.stack + "```");

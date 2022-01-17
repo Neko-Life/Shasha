@@ -237,22 +237,19 @@ module.exports.Command = class ShaBaseCommand {
         logDev(udb);
         const dbPath = this.commandPath.join("/");
         if (!this.user.autocomplete) this.user.autocomplete = {};
-        const get = this.user.autocomplete[dbPath]
-            ? null
-            : new Array(...(await udb.db.get("recentAutocomplete", dbPath)));
         /**
          * @type {AutocompleteCommandArgs}
          */
-        const fullVal = this.user.autocomplete[dbPath] || get[0]?.[1].value;
+        const get = this.user.autocomplete[dbPath]
+            || (await udb.db.getOne("recentAutocomplete", dbPath))?.value;
         const val = this.autocomplete.showRecent && !focus.value
-            ? fullVal?.[focus.name]
+            ? get?.[focus.name]
             : null;
         if (val?.length) {
             logDev(val);
             logDev(res);
             res.splice(0, 0, ...val);
-            if (!this.user.autocomplete[dbPath]) this.user.autocomplete[dbPath] = {};
-            this.user.autocomplete[dbPath][focus.name] = val;
+            if (!this.user.autocomplete[dbPath]) this.user.autocomplete[dbPath] = { ...get };
         }
         if (focus.value && !res.length)
             res.push({ name: focus.value, value: focus.value });
@@ -260,7 +257,7 @@ module.exports.Command = class ShaBaseCommand {
         this.user.lastAutocomplete = {
             autocomplete: this.autocomplete,
             commandPath: dbPath,
-            db: fullVal
+            db: get,
         }
         const toRes = [];
         for (const v of res.filter(r => r.value.length <= 100).slice(0, 25)) {

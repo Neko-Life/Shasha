@@ -120,7 +120,7 @@ function isAdmin(member, bypassOwner) {
     if (member instanceof User)
         return "USER";
     try {
-        return member.permissions.serialize().ADMINISTRATOR;
+        return member.permissions.has("ADMINISTRATOR");
     } catch (e) {
         logDev(e);
         return;
@@ -190,7 +190,10 @@ function unixToSeconds(val) {
  * @param {import("discord.js").PermissionString} str 
  * @returns {string}
  */
-function emphasizePerms(str) { return PERMISSIONS_EMPHASIZE.includes(str) ? "'" + str + "'" : str }
+function emphasizePerms(str) {
+    const format = str[0] + str.slice(1).replace(/\_/g, " ").toLowerCase();
+    return PERMISSIONS_EMPHASIZE.includes(str) ? "'" + format + "'" : format;
+}
 
 /**
  * @param {import("./classes/Command").allowMentionParam} param0 
@@ -209,9 +212,17 @@ function allowMention({ member, content }) {
 /**
  * Create/get invite from the rules channel of a community guild
  * @param {Guild} guild
+ * @param {boolean} force
+ * @param {import("discord.js").CreateInviteOptions}
  * @returns {Promise<Invite>}
  */
-async function getCommunityInvite(guild) {
+async function getCommunityInvite(guild, force, opt) {
+    if (force) {
+        const available = guild.channels.cache.filter(r => r.type !== "GUILD_CATEGORY" && r.permissionsFor(guild.me).has("CREATE_INSTANT_INVITE"));
+        const channel = available.first();
+        if (!channel) return;
+        return channel.createInvite(opt).catch(logDev);
+    }
     return guild.features.includes("COMMUNITY") && guild.rulesChannel
         ? (
             guild.me.permissionsIn(guild.rulesChannel).has("MANAGE_CHANNELS")
@@ -222,7 +233,7 @@ async function getCommunityInvite(guild) {
                 : null
         ) || (
             guild.me.permissionsIn(guild.rulesChannel).has("CREATE_INSTANT_INVITE")
-                ? (await guild.invites.create(guild.rulesChannel).catch(logDev))
+                ? (await guild.invites.create(guild.rulesChannel, opt).catch(logDev))
                 : null
         ) : null
 }

@@ -11,7 +11,7 @@ const fetch = requireAll({ dirname: join(__dirname, "registerCmds") });
 let args = process.argv.filter(r => !r.startsWith(__dirname));;
 const dev = args[0] === "-d";
 
-if (args[0] === "-d")
+if (dev)
     args = args.slice(1);
 
 const appId = dev ? configFile.devAppId : configFile.appId;
@@ -39,6 +39,7 @@ if (args[0] && args[0] !== "null") {
 }
 
 async function register() {
+    if (!commandCategories?.length) throw new TypeError("No command was gonna be registered");
     const guild = args[args.length - 1] === "home"
         ? configFile.home
         : !/\D/.test(args[args.length - 1])

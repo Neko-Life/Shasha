@@ -90,7 +90,7 @@ module.exports = class AFKCmd extends Command {
      */
     async unAfk(msg) {
         if (msg.author?.bot) return;
-        if (!msg.guild) return;
+        if (!msg.member) return;
         if (msg.commandPath?.[1] === "afk") return;
         await AFKCmd.loadAfk(msg.member);
         if (!msg.member.afk?.state) return;

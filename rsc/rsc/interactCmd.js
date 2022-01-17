@@ -82,7 +82,7 @@ module.exports = async (interaction, query, user, text, msg, noCount, api = "nek
 
         if (!countText) countText = numStr + "th";
 
-        emb.setFooter(`${countText} ${query} from ${from.displayName || from.username}`);
+        emb.setFooter({ text: `${countText} ${query} from ${from.displayName || from.username}` });
     }
 
     emb.setImage(res);

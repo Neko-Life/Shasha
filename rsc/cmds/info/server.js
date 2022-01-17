@@ -32,7 +32,7 @@ module.exports = class ServerInfoCmd extends Command {
      * @param {*} param1 
      * @returns 
      */
-    async run(inter, { identifier }) {
+    async run(inter, { identifier, force }) {
         if (!inter.guild && !identifier) {
             const ret = inter.reply("What server to show info about?");
             ret.deleteAfter = 10000;
@@ -76,7 +76,7 @@ module.exports = class ServerInfoCmd extends Command {
                 }
                 return ret;
             })(),
-            invite: (await getCommunityInvite(server))?.url
+            invite: (await getCommunityInvite(server, force))?.url
         }
         for (const C of server.channels.cache.map(r => r)) {
             if (moreInfo.channelTypesCount[C.type] === undefined)
@@ -151,10 +151,10 @@ module.exports = class ServerInfoCmd extends Command {
                         : ""
                 ), true)
             .addField("Member Count",
-                `\`${"User".padEnd(15, " ")}\`: \`${moreInfo.userCount}\`\n`
-                + `\`${"Bot".padEnd(15, " ")}\`: \`${moreInfo.botCount}\`\n`
-                + `\`${"Total".padEnd(15, " ")}\`: \`${server.memberCount}\`\n`
-                + `\`${"Maximum Member".padEnd(15, " ")}\`: \`${server.maximumMembers}\``, true)
+                `\`${"User".padEnd(11, " ")}\`: \`${moreInfo.userCount}\`\n`
+                + `\`${"Bot".padEnd(11, " ")}\`: \`${moreInfo.botCount}\`\n`
+                + `\`${"Total".padEnd(11, " ")}\`: \`${server.memberCount}\`\n`
+                + `\`${"Max Member".padEnd(11, " ")}\`: \`${server.maximumMembers}\``, true)
             .addField("Members Client",
                 `\`${"PC".padEnd(7, " ")}\`: \`${server.members.cache.filter(r => r.presence?.clientStatus.desktop).size}\`\n`
                 + `\`${"WEB".padEnd(7, " ")}\`: \`${server.members.cache.filter(r => r.presence?.clientStatus.web).size}\`\n`

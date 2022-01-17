@@ -18,7 +18,7 @@ function timestampAt(client) {
  * @returns {import("discord.js").MessageOptions}
  */
 function makeJSONMessage(object) {
-    console.log(typeof object, object);
+    logDev(typeof object, object);
     return { content: '```js\n' + JSON.stringify(object, (k, v) => v || undefined, 2) + '```', split: { maxLength: 2000, char: ",", append: ',```', prepend: '```js\n' } };
 }
 
@@ -26,6 +26,7 @@ function logDev(...debug) {
     if (!process.dev) return;
     if (debug.some(r => r instanceof Error)) console.error(...debug);
     else console.debug(...debug);
+    console.log(">", Date().slice(0, -34));
 }
 
 module.exports = {
