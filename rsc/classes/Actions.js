@@ -1,8 +1,8 @@
 'use strict';
 
-const { MessageEmbed } = require("discord.js");
+const { MessageEmbed, MessageActionRow, MessageButton } = require("discord.js");
 const { logDev } = require("../debug");
-const { isAdmin, allowMention, getColor } = require("../functions");
+const { isAdmin, allowMention, getColor, wait } = require("../functions");
 const ArgsParser = require("./ArgsParser");
 const { Moderation } = require("./Moderation");
 
@@ -52,20 +52,63 @@ class Actions {
         if (data.method?.set) {
             const set = {
                 action: async () => {
+                    /** @type {import("../typins").ShaCommandInteraction} */
                     const inter = data.interaction;
                     inter.deferUpdate();
                     const prompt = await inter.message.edit({
-                        content: "Provide role mentions, names or Ids separated with ` ` (space) to give/take when the component clicked",
+                        content: "Provide role mentions, names or Ids separated with `,` (coma) to give/take when the component is clicked:",
                         components: [],
                         embeds: [],
                     });
                     const collect = await prompt.channel.awaitMessages({ filter: (r) => r.content.length && r.author.id === inter.user.id, max: 1 });
-                    const findRoles = await ArgsParser.roles(inter.guild, collect.first().content);
-                    const roles = findRoles.roles.filter(r => !r.managed);
+                    const getC = collect.first();
+                    if (!getC) return;
+                    if (getC.channel.permissionsFor(getC.guild.me).has("MANAGE_MESSAGES")) getC.delete().catch(logDev);
+                    const findRoles = await ArgsParser.roles(inter.guild, getC.content, /,+/);
+                    const myHighestR = getC.guild.me.roles.highest;
+                    const roles = findRoles.roles?.filter(r => !r.managed && r.position < myHighestR);
+                    if (!roles?.length) {
+                        prompt.edit("No manageable role found, try again");
+                        await wait(10000);
+                        return;
+                    }
 
-                    const obj = { type: "roles", roles: roles.map(r => r.id), sync: true, action: "give" };
+                    const obj = { type: "roles", roles: roles.map(r => r.id), };
+                    const pluralR = obj.roles.length > 1;
+                    await prompt.edit({
+                        content: `Found manageable role${pluralR ? "s" : ""}: <@&${obj.roles.join(">, <@&")}>\n`
+                            + `What action specifically to perform with ${pluralR ? "these roles" : "this role"}?`,
+                        allowedMentions: { parse: [] },
+                        components: [
+                            new MessageActionRow().addComponents([
+                                new MessageButton().setCustomId("l").setStyle("PRIMARY").setLabel("Give and Take"),
+                                new MessageButton().setCustomId("give").setStyle("PRIMARY").setLabel("Give Only"),
+                                new MessageButton().setCustomId("take").setStyle("PRIMARY").setLabel("Take Only"),
+                            ]),
+                        ],
+                    });
+                    const getAction = await prompt.awaitMessageComponent({ filter: (r) => r.user.id === inter.user.id });
+                    if (!getAction) return;
+                    getAction.deferUpdate();
+                    if (getAction.customId !== "l") obj.action = getAction.customId;
 
-                    const getToPush = await data.message.db.getOne("action", data.found().customId);
+                    if (pluralR) {
+                        await prompt.edit({
+                            content: "Do you want the roles to sync? Syncing will make a group of roles always be together when given/taken",
+                            components: [
+                                new MessageActionRow().addComponents([
+                                    new MessageButton().setCustomId("y").setStyle("PRIMARY").setLabel("Yes"),
+                                    new MessageButton().setCustomId("n").setStyle("PRIMARY").setLabel("No"),
+                                ]),
+                            ],
+                        });
+                        const getS = await prompt.awaitMessageComponent({ filter: (r) => r.user.id === inter.user.id });
+                        if (!getS) return;
+                        getS.deferUpdate();
+                        obj.sync = getS.customId === "n" ? false : true;
+                    }
+
+                    const getToPush = await data.preview.db.getOne("action", data.found().customId);
                     let newData = getToPush?.value || [];
                     if (data.edit) {
                         newData[data.edit - 1] = obj;
@@ -73,20 +116,21 @@ class Actions {
                         newData.push(obj);
                     }
                     newData = newData.filter(r => !!r);
-                    await data.message.db.set("action", data.found().customId, { value: newData });
+                    await data.preview.db.set("action", data.found().customId, { value: newData });
                     await data.message.actionStartPage({ content: null });
                     console;
                 }
             }
             return set[data.method.set]();
         }
+
         const guild = this.client.guilds.resolve(data.guild);
         if (!guild) throw new TypeError("Unknown guild");
         const roles = guild.roles.cache.filter(r => data.roles.some(i => i === r.id) && !r.managed && r.position < guild.me.roles.highest.position);
         if (!roles?.size) throw new TypeError("No available role");
         const member = guild.members.resolve(data.target);
         if (!member) throw new TypeError("Unknown member");
-        if (data.interaction) await data.interaction.deferReply(data.noEphemeralReply ? undefined : { ephemeral: true });
+        if (data.interaction) await data.interaction.deferReply(data.noEphemeral ? undefined : { ephemeral: true });
         const given = [];
         const taken = [];
         const toGive = roles.filter(r => !member.roles.cache.some(i => i.id === r.id)).map(([k, v]) => v);
@@ -137,7 +181,9 @@ class Actions {
             return get[data.method.get];
         }
         if (data.method?.set) {
-            const set = {}
+            const set = {
+                unmute: async () => { }
+            }
             return set[data.method.set](data);
         }
         const guild = this.client.guilds.cache.get(data.guild);
@@ -160,7 +206,9 @@ class Actions {
             return get[data.method.get];
         }
         if (data.method?.set) {
-            const set = {}
+            const set = {
+                unban: async () => { }
+            }
             return set[data.method.set](data);
         }
         const guild = this.client.guilds.cache.get(data.guild);
@@ -187,7 +235,9 @@ class Actions {
             return get[data.method.get];
         }
         if (data.method?.set) {
-            const set = {}
+            const set = {
+                remind: async () => { }
+            }
             return set[data.method.set](data);
         }
         const about = data.about;

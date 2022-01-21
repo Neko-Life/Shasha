@@ -49,6 +49,10 @@ module.exports = class ShaClient extends Client {
          * @type {import("./Scheduler").Scheduler}
          */
         this.scheduler = null;
+        /**
+         * @type { { [k:string]: boolean | string } }
+         */
+        this.fetchingInvites = {};
     }
 
     dispatch() {

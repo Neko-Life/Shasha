@@ -14,15 +14,15 @@ const { NEKOSLIFE_INTERACT_ENDPOINTS, INTERACT_NO_INCLUDE_TARGET_NAMES } = requi
  * @param {string} text - Text between author name and target name [" kisses ", " spanked "]
  * @param {string} msg - Invoker message
  * @param {boolean} noCount - Doesn't count the interaction if true
- * @param {import("./apis").ShaAPIs} api - API to use, default "nekosbest"
+ * @param {import("./apis").ShaAPIs} api - API to use, default "nekos.best"
  * @returns 
  */
-module.exports = async (interaction, query, user, text, msg, noCount, api = "nekosbest") => {
+module.exports = async (interaction, query, user, text, msg, noCount, api = "nekos.best") => {
     await interaction.deferReply();
     const q = query.query || query;
     if (query.name) query = query.name;
     if (NEKOSLIFE_INTERACT_ENDPOINTS.includes(query))
-        api = ["nekosbest", "nekoslife.sfw"][Math.floor(Math.random() * 2)];
+        api = ["nekos.best", "nekos.life.sfw"][Math.floor(Math.random() * 2)];
     const { res, APIError } = await apis(q, api);
 
     if (APIError) return interaction.editReply(APIError);
@@ -54,6 +54,7 @@ module.exports = async (interaction, query, user, text, msg, noCount, api = "nek
         }).setColor(getColor((from.user || from).accentColor, true, from.displayColor));
 
     if (msg) emb.setDescription(interaction.client.finalizeStr(msg, isAdmin(from)));
+    let foText = "";
 
     if (!noCount) {
         const ud = loadDb(from.user || from, "user/" + from.id);
@@ -82,10 +83,12 @@ module.exports = async (interaction, query, user, text, msg, noCount, api = "nek
 
         if (!countText) countText = numStr + "th";
 
-        emb.setFooter({ text: `${countText} ${query} from ${from.displayName || from.username}` });
+        foText += `${countText} ${query} from ${from.displayName || from.username}`;
     }
 
     emb.setImage(res);
+    foText += (foText.length ? " | " : "") + `Powered by ${api}`;
+    emb.setFooter({ text: foText });
 
     return interaction.editReply({ content: `<@${user.id}>`, embeds: [emb] });
 }

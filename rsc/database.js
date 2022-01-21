@@ -61,7 +61,7 @@ async function dropDeletedMessageCollection(client, message) {
     if (message.author && message.author.id !== client.user.id) return;
     const colName = `message/${message.channelId}/${message.id}`;
     const col = database.collection(colName);
-    const del = await col.drop().catch(() => { });
+    const del = await col.drop().catch(logDev);
     logDev(del);
     logDev((del ? "CLEARED DELETED MESSAGE DB" : "NO DELETED MESSAGE DB TO CLEAR") + ":", colName);
 }

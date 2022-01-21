@@ -6,7 +6,7 @@ const lewds = require("./lewds");
 const nekoslife = require("./nekoslife");
 
 /**
- * @typedef {"lewds" | "nekosbest" | "nekoslife.sfw" | "nekoslife.nsfw"} ShaAPIs
+ * @typedef {"lewds.api" | "nekos.best" | "nekos.life.sfw" | "nekos.life.nsfw"} ShaAPIs
  * 
  * @param {string} query 
  * @param {ShaAPIs} api
@@ -24,20 +24,20 @@ module.exports = async (query, api, raw, text) => {
         APIError = mes;
     }
 
-    if (api === "nekosbest") {
+    if (api === "nekos.best") {
         const url = await fetchNeko(query);
         if (raw) res = url;
         else res = url.url;
         makeErrMes("Can't fetch image from nekos.best");
-    } else if (api === "lewds") {
+    } else if (api === "lewds.api") {
         res = await lewds.nsfw(query);
         makeErrMes("Oops sorry no room left, can't " + query + " today 😔😔😔");
-    } else if (api === "nekoslife.sfw") {
+    } else if (api === "nekos.life.sfw") {
         const url = await nekoslife.sfw[query]({ text });
         if (raw) res = url;
         else res = url.url;
         makeErrMes("Can't fetch sfw from nekos.life");
-    } else if (api === "nekoslife.nsfw") {
+    } else if (api === "nekos.life.nsfw") {
         const url = await nekoslife.nsfw[query]({ text });
         if (raw) res = url;
         else res = url.url;

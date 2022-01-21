@@ -420,6 +420,31 @@ function replyHigherThanMod(inter, action, { higherThanClient, higherThanModerat
 function emitShaError(e) {
     process.emit("error", e);
 }
+
+async function cacheGuildInvites(guild, force) {
+    if (guild.client.fetchingInvites[guild.id]) return guild.invites.cache;
+    if (!force && guild.invites.cache.size) return guild.invites.cache;
+    if (!guild.me.permissions.has("ADMINISTRATOR") && !guild.me.permissions.has("MANAGE_GUILD")) return;
+    guild.client.fetchingInvites[guild.id] = true;
+    let get;
+    new Promise(
+        (r, j) => setTimeout(
+            () => {
+                if (get !== undefined) r();
+                else {
+                    guild.client.fetchingInvites[guild.id] = "[ERROR] " + new Date().valueOf();
+                    setTimeout(() => delete guild.client.fetchingInvites[guild.id], 24 * 60 * 60 * 1000)
+                    j(new Error(`Can't fetch invites, possible stuck: \`${guild.name}\` (${guild.id})`));
+                }
+            },
+            10000
+        )
+    );
+    get = await guild.invites.fetch();
+    if (get) delete guild.client.fetchingInvites[guild.id];
+    return get;
+}
+
 /* @param {import("./classes/ShaClient")} client */
 // async function reRegisterAll(client) {
 //     for (const [k, v] of client.guilds.cache) {
@@ -469,6 +494,7 @@ module.exports = {
     replyHigherThanMod,
     emitShaError,
     // reRegisterAll,
+    cacheGuildInvites,
 
     // ---------------- FNS IMPORTS ----------------
     // Functions too big to be put here so imported and has its own file instead

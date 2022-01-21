@@ -105,7 +105,7 @@ module.exports = class ArgsParser {
             let f = await fn(guild, str, findReFlags);
             if (f instanceof Collection) f = f.first();
             if (!f) unknown.push(str);
-            else found.push(f);
+            else if (!found.find(r => r?.id === f.id)) found.push(f);
         }
         return { found, unknown };
     }

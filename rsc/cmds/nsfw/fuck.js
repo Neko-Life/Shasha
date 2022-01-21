@@ -13,6 +13,6 @@ module.exports = class FuckCmd extends Command {
         });
     }
     async run(inter, { partner, message }) {
-        return interactCmd(inter, NSFW_INTERACT.find(r => r.name === this.name), partner, " fucks ", message?.value, false, "lewds");
+        return interactCmd(inter, NSFW_INTERACT.find(r => r.name === this.name), partner, " fucks ", message?.value, false, "lewds.api");
     }
 }

@@ -3,7 +3,7 @@
 const { MessageEmbed } = require("discord.js");
 const { PATTERN_MESSAGE_LINK } = require("../constants");
 const { loadDb } = require("../database");
-const { getChannelMessage, tickTag, getColor, isAdmin } = require("../functions");
+const { getChannelMessage, tickTag, getColor, isAdmin, emitShaError } = require("../functions");
 
 async function delOldPrev(msg) {
     if (msg.messageLinkPreview)
@@ -108,13 +108,24 @@ module.exports = async (msg) => {
             }
         }
     }
-    const send = { embeds: alEmb.slice(0, 10), allowedMentions: { parse: [] } };
-    if (content.length) send.content = content;
+    const send = { embeds: alEmb.slice(0, 10), allowedMentions: { parse: [] }, content: content || null };
     let m;
+    const sticker = toPrev.stickers.first();
     if (!msg.messageLinkPreview || msg.messageLinkPreview?.deleted) {
-        if (toPrev.stickers.size) send.stickers = [toPrev.stickers.first().id];
-        m = await msg.reply(send);
+        if (sticker) send.stickers = [sticker.id];
+        try {
+            m = await msg.reply(send);
+        } catch (e) {
+            if (/Cannot use this sticker/.test(e.message)) {
+                delete send.stickers;
+                send.embeds[0].setThumbnail(sticker.url);
+                m = await msg.reply(send);
+            } else emitShaError(e);
+        }
         msg.messageLinkPreview = m;
-    } else m = await msg.messageLinkPreview.edit(send);
+    } else {
+        if (sticker) send.embeds[0].setThumbnail(sticker.url);
+        m = await msg.messageLinkPreview.edit(send);
+    }
     return m;
 }

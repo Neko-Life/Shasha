@@ -15,10 +15,10 @@ const apis = require("./apis");
  * @param {import("./apis").ShaAPIs} api
  * @returns 
  */
-module.exports = async (interaction, query, text = "", msg, noName, api = "nekosbest") => {
+module.exports = async (interaction, query, text = "", msg, noName, api = "nekos.best") => {
     await interaction.deferReply();
     if (NEKOSLIFE_INTERACT_ENDPOINTS.includes(query))
-        api = ["nekosbest", "nekoslife.sfw"][Math.floor(Math.random() * 2)];
+        api = ["nekos.best", "nekos.life.sfw"][Math.floor(Math.random() * 2)];
 
     const { res, APIError } = await apis(query, api);
 
@@ -27,7 +27,8 @@ module.exports = async (interaction, query, text = "", msg, noName, api = "nekos
     const member = interaction.member || interaction.user;
     const emb = new MessageEmbed()
         .setImage(res)
-        .setColor(getColor(member.displayColor));
+        .setColor(getColor(member.displayColor))
+        .setFooter({ text: `Powered by ${api}` });
     const auN = (noName ? '' : (member.displayName || member.username)) + text;
 
     if (auN.length)

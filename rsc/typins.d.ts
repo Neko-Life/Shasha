@@ -3,7 +3,6 @@ import { AutocompleteCommandArgs, AutocompleteData } from "./classes/Command";
 import { ShaBaseDb } from "./classes/Database";
 import { MessageConstruct } from "./classes/MessageConstruct";
 import ShaClient from "./classes/ShaClient";
-import { InviteTracker } from "./classes/InviteTracker";
 
 export declare class ShaMessage extends Message {
     public readonly client: ShaClient;

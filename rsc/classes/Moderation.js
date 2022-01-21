@@ -820,7 +820,7 @@ class Moderation extends BaseModeration {
         const higherThanClient = [];
         const higherThanModerator = [];
         for (const a of this.target.users) {
-            const m = await this.guild.members.fetch({ user: a }).catch(() => { });
+            const m = await this.guild.members.fetch({ user: a }).catch(logDev);
             if (m) {
                 if (this.higherThanClient.some(r => r.id === m.id)) {
                     higherThanClient.push(m);

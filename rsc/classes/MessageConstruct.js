@@ -28,7 +28,7 @@ const messageConstructButtons = [
         ])
 ];
 
-const startPage = { content: "Add some components to your message", components: messageConstructButtons };
+const startPage = { content: "Add some components to your message", components: messageConstructButtons, embeds: [] };
 
 const settingActionsButtons = new MessageActionRow()
     .addComponents([
@@ -126,7 +126,7 @@ class EditConstruct {
                 message.edit({ content: `Edit button **${got.content}**`, components });
                 return start();
             } else if (collectEdit.customId === "emote") {
-                const prompt = await collectEdit.reply({ content: "Set emoji:", fetchReply: true });
+                const prompt = await collectEdit.reply({ content: "Provide emoji:", fetchReply: true });
                 const collect = await prompt.channel.awaitMessages({ filter: (r) => r.author.id === inter.user.id, max: 1 });
                 const got = collect.first();
 
@@ -377,19 +377,21 @@ function delNo(msg, timeout = 10000, ...userMsgs) {
 async function settingActions(inter, { found, preview, message, collectEdit } = {}) {
     const ActionsClass = new Actions(inter.client);
     await collectEdit.deferUpdate();
-    loadDb(message, `message/${message.channelId}/${message.id}`);
+    loadDb(preview, `message/${preview.channelId}/${preview.id}`);
     const baseEmb = new MessageEmbed()
         .setTitle(`Actions`)
         .setColor(getColor(inter.user.accentColor, true, inter.member?.displayColor));
 
     const getEmbed = async () => {
-        const settings = await message.db.getOne("action", found().customId);
+        const settings = await preview.db.getOne("action", found().customId);
         const emb = new MessageEmbed(baseEmb);
         const N = () => "`" + (emb.fields.length + 1) + "#`: ";
         if (settings?.value?.length) {
             for (const val of settings.value) {
                 if (val.type === "roles") {
-                    const desc = `\`${"Action".padEnd(12, " ")}\`: \`${val.action ? val.action : "give and take"}\`\n`
+                    const desc = `\`${"Action".padEnd(12, " ")}\`: \`${val.action
+                        ? val.action[0].toUpperCase() + val.action.slice(1)
+                        : "Give and Take"}\`\n`
                         + `\`${"Synchronize".padEnd(12, " ")}\`: ${strYesNo(val.sync)}\n`
                         + `\`${"Roles".padEnd(12, " ")}\`: <@&${val.roles.join(">, <@&")}>`;
                     emb.addField(N() + val.type[0].toUpperCase() + val.type.slice(1), desc);
@@ -408,7 +410,14 @@ async function settingActions(inter, { found, preview, message, collectEdit } = 
     message.actionsConstruct = async () => {
         const getOp = await message.awaitMessageComponent({ filter: (r) => r.user.id === inter.user.id });
         let res;
-        const configure = async (edit) => {
+        const configure = async ({ edit, remove } = {}) => {
+            if (remove) {
+                const settings = await preview.db.getOne("action", found().customId);
+                settings.value.splice(remove - 1, 1);
+                preview.db.set("action", found().customId, { value: settings.value });
+                message.actionStartPage({ content: null });
+                return;
+            }
             const descriptors = Object.getOwnPropertyDescriptors(Object.getPrototypeOf(ActionsClass));
             const keys = Object.keys(descriptors).filter(r => r !== "constructor" && typeof descriptors[r].value === "function");
             const selectMenuItems = [];
@@ -417,7 +426,15 @@ async function settingActions(inter, { found, preview, message, collectEdit } = 
                 const tP = [];
                 for (let i = s; i < to; i++) {
                     if (!keys[i]) break;
-                    tP.push({ label: `${keys[i][0].toUpperCase()}${keys[i].slice(1)}`, value: keys[i], description: await ActionsClass[keys[i]]({ method: { get: "description" } }) });
+                    tP.push({
+                        label: `${keys[i][0].toUpperCase()}${keys[i].slice(1)}`,
+                        value: keys[i],
+                        description: await ActionsClass[keys[i]]({
+                            method: {
+                                get: "description"
+                            }
+                        })
+                    });
                 }
                 selectMenuItems.push(tP);
             };
@@ -428,21 +445,53 @@ async function settingActions(inter, { found, preview, message, collectEdit } = 
                     .setMaxValues(1)
                     .setPlaceholder("Pick action..."))
             );
-            await message.edit({ content: "Add an action for this component", components: rows });
+            await message.edit({ content: "Pick an action for this component", components: rows });
             const pickedAction = await message.awaitMessageComponent({ filter: (r) => r.user.id === inter.user.id });
             if (!pickedAction) return;
-            res = await ActionsClass[pickedAction.values[0]]({ edit, found, message, interaction: pickedAction, method: { set: "action" } });
+            res = await ActionsClass[pickedAction.values[0]]({ edit, found, message, preview, interaction: pickedAction, method: { set: "action" } });
         }
         if (getOp.customId === "add") {
             getOp.deferUpdate();
             await configure();
         } else if (getOp.customId === "edit") {
-            const prompt = await getOp.reply({ content: "Provide action number to edit:", fetchReply: true });
-            const getP = await prompt.channel.awaitMessages({ filter: (r) => r.author.id === inter.user.id && /^\d{1,2}/.test(r.content), max: 1 });
-            if (!getP) return;
-            delNo(null, undefined, getP);
-            const edit = parseInt(getP.content, 10);
-            await configure(edit);
+            if (message.embeds[0].fields.length) {
+                const prompt = await getOp.reply({ content: "Provide action number to edit:", fetchReply: true });
+                const getP = await prompt.channel.awaitMessages({ filter: (r) => r.author.id === inter.user.id && /^\d{1,2}/.test(r.content), max: 1 });
+                const getC = getP.first();
+                if (!getC) return;
+                const edit = parseInt(getC.content, 10);
+                if (edit > 0) {
+                    delNo(prompt, 0, getC);
+                    await configure({ edit });
+                } else {
+                    prompt.edit({ content: "Invalid action number provided! Try again" });
+                    delNo(prompt, undefined, getC);
+                }
+            } else {
+                const no = await getOp.reply({ content: "No action to edit! Add some action first", fetchReply: true });
+                delNo(no);
+            }
+        } else if (getOp.customId === "remove") {
+            if (message.embeds[0].fields.length) {
+                const prompt = await getOp.reply({ content: "Provide action number to remove:", fetchReply: true });
+                const getP = await prompt.channel.awaitMessages({ filter: (r) => r.author.id === inter.user.id && /^\d{1,2}/.test(r.content), max: 1 });
+                const getC = getP.first();
+                if (!getC) return;
+                const remove = parseInt(getC.content, 10);
+                if (remove > 0 && remove <= message.embeds[0].fields.length) {
+                    delNo(prompt, 0, getC);
+                    await configure({ remove });
+                } else {
+                    prompt.edit({ content: "Invalid action number provided! Try again" });
+                    delNo(prompt, undefined, getC);
+                }
+            } else {
+                const no = await getOp.reply({ content: "No action to remove! Add some action first", fetchReply: true });
+                delNo(no);
+            }
+        } else if (getOp.customId === "done") {
+            getOp.deferUpdate();
+            res = true;
         }
         if (res) message.messageConstruct.startPage();
         else message.actionsConstruct();
