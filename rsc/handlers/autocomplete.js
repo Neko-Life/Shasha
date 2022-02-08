@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 const { AutocompleteInteraction } = require("discord.js");
 const CommandHandler = require("./command");

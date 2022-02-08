@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 const { MessageEmbed, Role, MessageActionRow, MessageSelectMenu, GuildMember, User } = require("discord.js");
 const { Command } = require("../../classes/Command");

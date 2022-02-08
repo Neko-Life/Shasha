@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 const { Guild, GuildChannel, Role, Collection, User, GuildMember } = require("discord.js");
 const { escapeRegExp } = require("lodash");

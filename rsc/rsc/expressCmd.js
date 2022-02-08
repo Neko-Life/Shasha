@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 const { MessageEmbed, CommandInteraction } = require("discord.js");
 const { NEKOSLIFE_INTERACT_ENDPOINTS } = require("../constants");

@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 const { intervalToStrings } = require("../util/Duration");
 const { DateTime, Interval, Settings } = require("luxon");

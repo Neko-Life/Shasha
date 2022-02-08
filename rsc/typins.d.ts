@@ -13,6 +13,7 @@ export declare class ShaMessage extends Message {
     public readonly guild: ShaGuild;
     public messageConstruct: MessageConstruct;
     public deleted: boolean;
+    public db: ShaBaseDb;
 }
 
 export declare class ShaCommandInteraction extends CommandInteraction {

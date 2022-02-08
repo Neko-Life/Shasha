@@ -1,11 +1,10 @@
-'use strict';
+"use strict";
 
 const Bree = require("bree");
 const { Guild } = require("discord.js");
 // const cabin = require("cabin");
 const { loadDb } = require("../database");
 const { logDev } = require("../debug");
-const { Actions } = require("./Actions");
 const { ShaBaseDb } = require("./Database");
 const ShaClient = require("./ShaClient");
 
@@ -62,10 +61,6 @@ class Scheduler {
          */
         this.jobs = jobs;
         /**
-         * @type {Actions}
-         */
-        this.actions = new Actions(client);
-        /**
          * @type {Bree}
          */
         this.scheduler = this.init(jobs);
@@ -100,7 +95,7 @@ class Scheduler {
 
     handleMessage(message) {
         const data = JSON.parse(message);
-        this.actions[data.action](data);
+        this.client.triggerActions[data.action](data);
     }
 
     /**

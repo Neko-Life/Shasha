@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 const { Collection } = require("discord.js");
 const { dropDeletedMessageCollection } = require("../database");

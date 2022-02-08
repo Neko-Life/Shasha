@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 const { ButtonInteraction, Collection, MessageEmbed, MessageButton, MessageActionRow } = require("discord.js");
 const ArgsParser = require("./ArgsParser");

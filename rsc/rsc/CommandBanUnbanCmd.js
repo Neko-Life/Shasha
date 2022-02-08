@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 const { Collection, MessageEmbed } = require("discord.js");
 const { Command } = require("../classes/Command");

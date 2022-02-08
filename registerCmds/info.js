@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 // const { RESTPostAPIApplicationCommandsJSONBody, ApplicationCommandType, ApplicationCommandOptionType } = require("discord-api-types");
 
@@ -51,7 +51,7 @@ module.exports = {
             type: 1,
             options: [
                 {
-                    name: "channnel",
+                    name: "channel",
                     description: "Channel to view the info",
                     type: 7,
                 },

@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 const { SelectMenuInteraction } = require("discord.js");
 

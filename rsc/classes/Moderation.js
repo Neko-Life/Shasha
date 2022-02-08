@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 const ShaClient = require("./ShaClient");
 const { GuildResolvable, GuildMemberResolvable, GuildMember, Guild, User, MessageEmbed, Channel, VoiceChannel } = require("discord.js");

@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 const { logDev } = require("../debug");
 const { wait } = require("../functions");

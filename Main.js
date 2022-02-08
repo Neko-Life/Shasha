@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 if (process.argv.includes("-d")) process.dev = true;
 process.setMaxListeners(2);
@@ -26,7 +26,7 @@ const client = new ShaClient({
     db: new ShaBaseDb(database, "main"),
     makeCache: Options.cacheWithLimits(
         {
-            MessageManager: 1010
+            MessageManager: 4050
         }
     )
 });

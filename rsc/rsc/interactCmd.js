@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 const { MessageEmbed, CommandInteraction, GuildMember, User } = require("discord.js");
 const { isAdmin, getColor, replaceVars } = require("../functions");

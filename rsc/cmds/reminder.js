@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 const { DateTime } = require("luxon");
 const { Command } = require("../classes/Command");

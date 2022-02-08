@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 const {
     PermissionString,
@@ -131,7 +131,7 @@ module.exports.Command = class ShaBaseCommand {
                         if (messages[i] instanceof Promise)
                             messages[i] = await messages[i];
                         if (!messages[i]) return;
-                        if (messages[i].deletable && messages[i].deleted === false)
+                        if (messages[i].deletable && [false, undefined].includes(messages[i].deleted))
                             messages[i].delete();
                     }, messages[i].deleteAfter ?? this.deleteSavedMessagesAfter);
             }

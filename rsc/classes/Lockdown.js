@@ -1,4 +1,4 @@
-// 'use strict';
+// "use strict";
 
 // const { Channel } = require("discord.js");
 

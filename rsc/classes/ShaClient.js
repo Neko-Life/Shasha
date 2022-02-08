@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 const { ChildProcess } = require("child_process");
 const { Client, User, Guild, Collection, MessageEmbed } = require("discord.js");
@@ -9,6 +9,8 @@ const { adCheck, cleanMentionID, createRegExp } = require("../functions");
 const { escapeRegExp } = require("lodash");
 const { logDev } = require("../debug");
 const { Events } = require("discord.js/src/util/Constants");
+const { Actions } = require("./Actions");
+
 /**
  * @type {typeof import("./Scheduler").Scheduler}
  */
@@ -42,6 +44,10 @@ module.exports = class ShaClient extends Client {
          * @type {ShaBaseDb}
          */
         this.db = options.db || null;
+        /**
+         * @type {Actions}
+         */
+        this.triggerActions = new Actions(this);
         this.bannedGuilds = null;
         this.bannedUsers = null;
 
@@ -79,6 +85,7 @@ module.exports = class ShaClient extends Client {
         requireAll({ dirname: join(__dirname, "../util") });
         requireAll({ dirname: join(__dirname, "../logging"), recursive: true });
         require("../constants");
+        require("../../config.json");
         Scheduler = require("./Scheduler").Scheduler;
         logDev("Modules unload/load done");
     }
@@ -95,7 +102,11 @@ module.exports = class ShaClient extends Client {
             "../util",
             "../logging",
         ];
-        const modulesName = ["../functions.js", "../constants.js"];
+        const modulesName = [
+            "../functions.js",
+            "../constants.js",
+            "../../config.json",
+        ];
         const modulesDirPath = modulesDirName.map(r => join(__dirname, r));
         modulesDirPath.push(...modulesName.map(r => join(__dirname, r)));
         Scheduler = null;
@@ -322,7 +333,7 @@ module.exports = class ShaClient extends Client {
     }
 
     emoteReplace(content) {
-        const E = content?.match(/:[\w-_]{1,32}:(?!\d{17,20}>)/g);
+        const E = content?.match(/:[\w-_]{2,32}:(?!\d{17,20}>)/g);
         if (!E || !E.length) return content;
         const tE = [];
         for (const eN of E) {

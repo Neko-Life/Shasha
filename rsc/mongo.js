@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 const { mongoServer } = require("../config.json");
 const { MongoClient } = require("mongodb");

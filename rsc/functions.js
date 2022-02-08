@@ -1,10 +1,11 @@
-'use strict';
+"use strict";
 
 const { Collection, Guild, User, Interaction, GuildMember, Invite, Role, GuildChannel, MessageActionRow, MessageButton } = require("discord.js");
 const { escapeRegExp } = require("lodash");
 const { join } = require("path");
 const { Worker } = require("worker_threads");
 const { PERMISSIONS_EMPHASIZE, REPLY_ERROR } = require("./constants");
+const { loadDb } = require("./database");
 const { logDev } = require("./debug");
 
 // ---------------- FUNCTIONS ----------------
@@ -100,8 +101,8 @@ function tickTag(user) {
 function adCheck(str) {
     str = str.replace(/\[(?=((?:.|\n)+?)\][\s\n]*\(\s*[^\n\s]+\s*\))|\](?=[\s\n]*\(\s*[^\n\s]+\s*\))/g, "");
     if (str?.length > 8) {
-        if (/(?:https?:\/\/)?(?:www\.|canary\.|ptb\.)?discord(?:app)?\.(?:gg|com)\/(?!channels|attachments)(?:\w{2,17}(?!\w)(?= *))/.test(str)) str = str
-            .replace(/(?:https?:\/\/)?(?:www\.|canary\.|ptb\.)?discord(?:app)?\.(?:gg|com)\/(?!channels|attachments)(?:\w{2,17}(?!\w)(?= *))/g,
+        if (/(?:https?:\/\/)?(?<!cdn\.|media\.)(?:www\.|canary\.|ptb\.)?discord(?:app)?\.(?:gg|com)\/(?!channels|attachments)(?:\w{2,}(?!\w)(?= *))/.test(str)) str = str
+            .replace(/(?:https?:\/\/)?(?<!cdn\.|media\.)(?:www\.|canary\.|ptb\.)?discord(?:app)?\.(?:gg|com)\/(?!channels|attachments)(?:\w{2,}(?!\w)(?= *))/g,
                 '`[BAD_LINK]`');
     }
     return str;
@@ -223,6 +224,9 @@ async function getCommunityInvite(guild, force, opt) {
         if (!channel) return;
         return channel.createInvite(opt).catch(logDev);
     }
+    loadDb(guild, `guild/${guild.id}`);
+    const get = await guild.db.getOne("serverInfoInvite", "Object");
+    if (!get?.value.state) return;
     return guild.features.includes("COMMUNITY") && guild.rulesChannel
         ? (
             guild.me.permissionsIn(guild.rulesChannel).has("MANAGE_CHANNELS")
@@ -418,7 +422,7 @@ function replyHigherThanMod(inter, action, { higherThanClient, higherThanModerat
 }
 
 function emitShaError(e) {
-    process.emit("error", e);
+    process.emit("uncaughtException", e);
 }
 
 async function cacheGuildInvites(guild, force) {

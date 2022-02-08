@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 // const { RESTPostAPIApplicationCommandsJSONBody, ApplicationCommandType, ApplicationCommandOptionType } = require("discord-api-types");
 const { ENUM_ACTIVITY_TYPES, PRESENCE_STATUSES } = require("../rsc/constants");

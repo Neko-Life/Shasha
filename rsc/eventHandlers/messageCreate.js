@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 // const { BaseDBManager } = require("../classes/Structures");
 const AFKCmd = require("../cmds/fun/afk");

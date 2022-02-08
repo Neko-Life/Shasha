@@ -1,12 +1,14 @@
-'use strict';
+"use strict";
 
 const { Command } = require("../../classes/Command");
-const { join } = require("path");
-const { Worker } = require("worker_threads");
-const { ASCII_FONTS } = require("../../constants");
+const art = require("figlet");
+const { replyError } = require("../../functions");
+let { ASCII_FONTS } = require("../../constants");
 
 module.exports = class ASCIICmd extends Command {
     constructor(interaction) {
+        if (ASCII_FONTS === undefined)
+            ASCII_FONTS = require("../../constants").ASCII_FONTS;
         const cmd = {};
         for (const k of ASCII_FONTS)
             cmd[k] = k;
@@ -33,28 +35,12 @@ module.exports = class ASCIICmd extends Command {
         }
         if (!fonts.includes(font.value))
             return inter.editReply("That font got uninstalled!! Go to my support server and kill the devs!");
-        if (!text)
-            text = { value: "No text?" };
-        const data = {
-            text: text.value,
-            method: "font",
-            font: font.value,
-            dev: process.dev
-        }
-        const child = new Worker(join(__dirname, "../../workers/ascii.js"), {
-            workerData: data
+        return art(text?.value || "NoTeXt?", font.value, (e, r) => {
+            if (e) {
+                return inter.editReply("Somethin's at fault. I wish i can blame you :<\n" + replyError(e));
+            }
+            if (r.length > 1950) return inter.editReply("Art length too long discord blocked it :<");
+            return inter.editReply(fN + " ```\n" + (r + "\n").replace(/\s+(?=\n)|^\n/gm, "") + "```");
         });
-        child.on("message", (art) => {
-            art = art.replace(/\s+(?=\n)|^\n/gm, "");
-            if (art.length > 1950) return inter.editReply("Art length too long discord blocked it :<");
-            inter.editReply("```\n" + art + "``` " + fN);
-        });
-        child.on("error", err);
-        child.on("messageerror", err);
-
-        function err(...e) {
-            inter.editReply("Somethin's at fault. I wish i can blame you :<");
-            process.emit("error", ...e);
-        }
     }
 }

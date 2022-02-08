@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 const { parentPort, workerData } = require("worker_threads");
 const { logDev } = require("../debug");

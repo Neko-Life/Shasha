@@ -1,11 +1,18 @@
-'use strict';
+"use strict";
 
 const { MessageEmbed, MessageActionRow, MessageButton } = require("discord.js");
 const { logDev } = require("../debug");
 const { isAdmin, allowMention, getColor, wait } = require("../functions");
 const ArgsParser = require("./ArgsParser");
-const { Moderation } = require("./Moderation");
+/** @type {typeof import("./Moderation").Moderation} */
+let Moderation;
 
+if (!Moderation) {
+    setTimeout(() => {
+        Moderation = require("./Moderation").Moderation;
+        logDev(Moderation);
+    }, 500);
+}
 const ENUM_ACTION_TARGET_TYPES = {
     "user": 1,
     "channel": 2,
@@ -66,11 +73,11 @@ class Actions {
                     if (getC.channel.permissionsFor(getC.guild.me).has("MANAGE_MESSAGES")) getC.delete().catch(logDev);
                     const findRoles = await ArgsParser.roles(inter.guild, getC.content, /,+/);
                     const myHighestR = getC.guild.me.roles.highest;
-                    const roles = findRoles.roles?.filter(r => !r.managed && r.position < myHighestR);
+                    const roles = findRoles.roles?.filter(r => !r.managed && r.position < myHighestR.position && r.id !== getC.guild.id);
                     if (!roles?.length) {
                         prompt.edit("No manageable role found, try again");
-                        await wait(10000);
-                        return;
+                        await wait(5000);
+                        return "actionStartPage";
                     }
 
                     const obj = { type: "roles", roles: roles.map(r => r.id), };
@@ -92,7 +99,7 @@ class Actions {
                     getAction.deferUpdate();
                     if (getAction.customId !== "l") obj.action = getAction.customId;
 
-                    if (pluralR) {
+                    if (!obj.action && pluralR) {
                         await prompt.edit({
                             content: "Do you want the roles to sync? Syncing will make a group of roles always be together when given/taken",
                             components: [
@@ -105,20 +112,22 @@ class Actions {
                         const getS = await prompt.awaitMessageComponent({ filter: (r) => r.user.id === inter.user.id });
                         if (!getS) return;
                         getS.deferUpdate();
-                        obj.sync = getS.customId === "n" ? false : true;
+                        if (getS.customId === "y") obj.sync = true;
                     }
 
                     const getToPush = await data.preview.db.getOne("action", data.found().customId);
-                    let newData = getToPush?.value || [];
+                    let newData = {
+                        actions: getToPush?.value.actions || [],
+                        settings: getToPush?.value.settings || {},
+                    };
                     if (data.edit) {
-                        newData[data.edit - 1] = obj;
+                        newData.actions[data.edit - 1] = obj;
                     } else {
-                        newData.push(obj);
+                        newData.actions.push(obj);
                     }
-                    newData = newData.filter(r => !!r);
+                    newData.actions = newData.actions.filter(r => !!r);
                     await data.preview.db.set("action", data.found().customId, { value: newData });
                     await data.message.actionStartPage({ content: null });
-                    console;
                 }
             }
             return set[data.method.set]();
@@ -130,16 +139,22 @@ class Actions {
         if (!roles?.size) throw new TypeError("No available role");
         const member = guild.members.resolve(data.target);
         if (!member) throw new TypeError("Unknown member");
-        if (data.interaction) await data.interaction.deferReply(data.noEphemeral ? undefined : { ephemeral: true });
+        const interReplied = data.interaction.deferred || data.interaction.replied;
+        if (data.interaction && !interReplied) await data.interaction.deferReply(data.noEphemeral ? undefined : { ephemeral: true });
         const given = [];
         const taken = [];
-        const toGive = roles.filter(r => !member.roles.cache.some(i => i.id === r.id)).map(([k, v]) => v);
-        const toTake = member.roles.cache.filter(r => roles.some(i => i.id === r.id)).map(([k, v]) => v);
+        const toGive = roles.filter(r => !member.roles.cache.some(i => i.id === r.id)).map(r => r);
+        const toTake = member.roles.cache.filter(r => roles.some(i => i.id === r.id)).map(r => r);
+        const mRP = guild.me.permissions.has("MANAGE_ROLES");
         const giveRoles = async () => {
-            given.push(...(await member.roles.add(toGive)));
+            if (!mRP) return;
+            const g = await member.roles.add(toGive);
+            given.push(...g.roles.cache.filter(r => toGive.some(t => t.id === r.id)).map(r => r));
         }
         const takeRoles = async () => {
-            taken.push(...(await member.roles.remove(toTake)));
+            if (!mRP) return;
+            const g = await member.roles.remove(toTake);
+            taken.push(...toTake.filter(r => !g.roles.cache.some(t => t.id === r.id)));
         }
         if (!data.action) {
             if (data.sync) {
@@ -155,22 +170,36 @@ class Actions {
             await takeRoles();
         }
         if (data.interaction) {
-            const emb = new MessageEmbed()
-                .setAuthor({ name: guild.name, iconURL: guild.iconURL({ size: 128, format: "png", dynamic: true }) })
+            const emb = interReplied ? data.interaction.embeds.roles : new MessageEmbed()
+                .setFooter({ text: guild.name, iconURL: guild.iconURL({ size: 128, format: "png", dynamic: true }) })
                 .setColor(getColor(member.user.accentColor, true, member.displayColor))
                 .setTitle("Role");
+
             let desc = "";
-            if (taken.length) {
-                desc += "**Taken:**\n";
-                desc += "> <@&" + taken.map(r => r.id).join(">\n> <@&") + ">\n\n";
+            if (mRP && roles.size) {
+                if (taken.length) {
+                    desc += "**Taken:**\n";
+                    desc += "> <@&" + taken.map(r => r.id).join(">\n> <@&") + ">\n\n";
+                }
+                if (given.length) {
+                    desc += "**Given:**\n";
+                    desc += "> <@&" + given.map(r => r.id).join(">\n> <@&") + ">\n\n";
+                }
+                desc ||= (
+                    data.action === "give"
+                        ? `You already have the roles: <@&${roles.map(r => r.id).join(">, <@&")}>\n\n`
+                        : `You already missing the roles: <@&${roles.map(r => r.id).join(">, <@&")}>\n\n`
+                );
+            } else {
+                desc = "I don't have the required `MANAGE_ROLES` permission or the will be given/taken roles are in higher position than me for me to manage them :<\n\n";
             }
-            if (given.length) {
-                desc += "**Given:**\n";
-                desc += "> <@&" + given.map(r => r.id).join(">\n> <@&") + ">\n\n";
-            }
-            desc.length ? emb.setDescription(desc) : emb.setDescription("I don't have the required `MANAGE_ROLES` permission or the will be given/taken roles are in higher position than me for me to manage them :<");
-            data.interaction.editReply({ embeds: [emb] });
+            emb.setDescription(interReplied ? emb.description + desc : desc);
+            if (!data.interaction.embeds) data.interaction.embeds = {};
+            data.interaction.embeds.roles = emb;
+            const embeds = Object.keys(data.interaction.embeds).map(r => data.interaction.embeds[r]);
+            data.interaction.editReply({ embeds });
         }
+        return true;
     }
 
     async unmute(data) {
@@ -193,7 +222,7 @@ class Actions {
                 guild: guild, targets: target, moderator: guild.me
             });
             // try {
-            await mod.unmute({ invoked: new Date(), reason: "Punishment expired" });
+            return mod.unmute({ invoked: new Date(), reason: "Punishment expired" });
             // } catch (e) { logDev(e) };
         }
     }

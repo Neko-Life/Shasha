@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 const { MessageSelectMenu, MessageActionRow, MessageEmbed, Guild } = require("discord.js");
 const { Interval } = require("luxon");

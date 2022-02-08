@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 const { fetchNeko } = require("nekos-best.js");
 const { logDev } = require("../debug");
@@ -30,8 +30,10 @@ module.exports = async (query, api, raw, text) => {
         else res = url.url;
         makeErrMes("Can't fetch image from nekos.best");
     } else if (api === "lewds.api") {
-        res = await lewds.nsfw(query);
-        makeErrMes("Oops sorry no room left, can't " + query + " today 😔😔😔");
+        const get = await lewds.nsfw(query);
+        res = get.result || get;
+        if (get.error !== "False")
+            makeErrMes("Oops sorry no room left, can't " + query + " today 😔😔😔");
     } else if (api === "nekos.life.sfw") {
         const url = await nekoslife.sfw[query]({ text });
         if (raw) res = url;

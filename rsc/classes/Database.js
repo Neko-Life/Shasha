@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 const { Db, Collection } = require("mongodb");
 const { logDev } = require("../debug");
@@ -23,6 +23,7 @@ const ENUM_SHADOCS = {
     action: 16,
     invites: 17,
     inviter: 18,
+    serverInfoInvite: 19,
 };
 
 const ENUM_SHADOCSTYPES = {

@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 const { escapeRegExp } = require("lodash");
 const { Command } = require("../../classes/Command");
@@ -32,7 +32,7 @@ module.exports = class PurgeCmd extends Command {
             return this.saveMessages(inter.reply("0 message purged wow tysm the chat already clean <33"));
 
         /**
-         * @type {import("discord.js").TextBasedChannels}
+         * @type {import("discord.js").TextChannel}
          */
         let inChannel;
         if (channel) {
@@ -45,8 +45,10 @@ module.exports = class PurgeCmd extends Command {
             inChannel = channel.channel;
         } else inChannel = this.channel;
 
+        if (inChannel.messages.cache.size < 100) await inChannel.messages.fetch({ limit: 100 });
+
         let useCache = inChannel.messages.cache.filter(
-            r => r.deleted === false && (includePinned?.value === "1" ? true : r.pinned === false));
+            r => [false, undefined].includes(r.deleted) && (includePinned?.value === "1" ? true : r.pinned === false));
 
         if (webhookOnly) {
             if (webhookOnly.value === "1")

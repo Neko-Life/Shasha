@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 const configFile = require("../../config.json");
 const ShaClient = require("../classes/ShaClient");

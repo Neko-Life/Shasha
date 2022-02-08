@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 const { Settings, Interval, DurationObject } = require("luxon");
 const DURATION_REGEXP = /[\-]?\d+(?![^ymwdhs])[ymwdhs]?o?/gi;
@@ -56,25 +56,25 @@ function parseDuration(base, string) {
         const val = parseInt(value.match(/[\-]?\d+/)[0], 10);
         if (!val) continue;
         else if (value.endsWith("h") || value.endsWith("ho")) {
-            DURATION.hour = DURATION.hour + val;
+            DURATION.hour += val;
             changed = true;
         } else if (value.endsWith("y")) {
-            DURATION.year = DURATION.year + val;
+            DURATION.year += val;
             changed = true;
         } else if (value.endsWith("mo")) {
-            DURATION.month = DURATION.month + val;
+            DURATION.month += val;
             changed = true;
         } else if (value.endsWith("w")) {
-            DURATION.day = DURATION.day + 7 * val;
+            DURATION.day += 7 * val;
             changed = true;
         } else if (value.endsWith("d")) {
-            DURATION.day = DURATION.day + val;
-            changed = true;
-        } else if (value.endsWith("m") || !/[^\d\-\+]/.test(value)) {
-            DURATION.minute = DURATION.minute + val;
+            DURATION.day += val;
             changed = true;
         } else if (value.endsWith("s")) {
-            DURATION.second = DURATION.second + val;
+            DURATION.second += val;
+            changed = true;
+        } else if (value.endsWith("m") || !/[^\d\-\+]/.test(value)) {
+            DURATION.minute += val;
             changed = true;
         }
     }

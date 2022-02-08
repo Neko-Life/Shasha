@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 const { MessageActionRow, MessageButton } = require("discord.js");
 const { Command } = require("../../classes/Command");
@@ -21,7 +21,7 @@ module.exports = class MessageConstructorCmd extends Command {
         super(interaction, {
             name: "message-constructor",
             userPermissions: ["ADMINISTRATOR"],
-            clientPermissions: ["VIEW_CHANNEL", "SEND_MESSAGES", "EMBED_LINKS"],
+            clientPermissions: ["VIEW_CHANNEL", "SEND_MESSAGES", "EMBED_LINKS", "READ_MESSAGE_HISTORY"],
             guildOnly: true
         });
     }

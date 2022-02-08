@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 const { ButtonInteraction } = require("discord.js");
 const { CommandSettingsHelper } = require("../classes/CommandSettingsHelper");
@@ -109,7 +109,7 @@ module.exports = class ButtonHandler {
         if (!isInteractionInvoker(inter))
             return inter.reply({ content: "no UwU", ephemeral: true });
         const construct = new MessageConstruct(inter);
-        return construct.start();
+        return construct.start(inter.customId.endsWith("edit"));
     }
 
     static async messageConstruct(inter, args) {

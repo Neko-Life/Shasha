@@ -1,9 +1,9 @@
-'use strict';
+"use strict";
 
 const { ButtonInteraction, MessageActionRow, MessageButton, MessageSelectMenu, MessageEmbed } = require("discord.js");
 const { ROW_BUTTON_STYLES } = require("../constants");
 const { loadDb } = require("../database");
-const { copyProps, replyError, getColor, strYesNo } = require("../functions");
+const { copyProps, replyError, getColor, strYesNo, getChannelMessage } = require("../functions");
 const { Actions } = require("./Actions");
 
 const messageConstructButtons = [
@@ -45,7 +45,7 @@ class AddConstruct {
      * @param {import("../typins").ShaMessage} message 
      */
     static async button(inter, preview, message, args) {
-        const id = new Date().valueOf().toString();
+        const id = "action:" + new Date().valueOf().toString();
         const button = new MessageButton()
             .setCustomId(id)
             .setLabel("New Button")
@@ -80,14 +80,14 @@ class EditConstruct {
      * @property {number} row
      * @property {number} index
      * @property {import("discord.js").MessageComponentInteraction} promptComponent
+     * @property {import("../typins").ShaCommandInteraction} inter
+     * @property {import("../typins").ShaMessage} preview 
+     * @property {import("../typins").ShaMessage} message 
      * 
-     * @param {import("../typins").ShaCommandInteraction} inter
-     * @param {import("../typins").ShaMessage} preview 
-     * @param {import("../typins").ShaMessage} message 
-     * @param {ParamObjectData} param3 
+     * @param {ParamObjectData} param1 
      * @returns 
      */
-    static async BUTTON(inter, preview, message, { row, index, promptComponent }) {
+    static async BUTTON({ inter, preview, message, row, index, promptComponent, started }) {
         const found = () => preview.components[row].components[index];
         const components = [
             new MessageActionRow()
@@ -103,6 +103,7 @@ class EditConstruct {
                 ),
         ]
         message.edit({ content: `Edit button **${found().label}**`, components });
+        if (started) return;
         const start = async () => {
             const collectEdit = await promptComponent.message.awaitMessageComponent({
                 filter: (r) =>
@@ -158,7 +159,7 @@ class EditConstruct {
                 const linkStyled = newMes.components[row].components[index].style === "LINK";
                 newMes.components[row].components[index].setStyle(collect.customId);
                 if (collect.customId === "LINK") {
-                    const oldCustomId = newMes.components[row].components[index].customId || new Date().valueOf().toString();
+                    const oldCustomId = newMes.components[row].components[index].customId || ("action:" + new Date().valueOf().toString());
                     delete newMes.components[row].components[index].customId;
                     prompt.edit({ content: "An URL is required for this style, provide URL:", components: [] });
                     const collectLink = await prompt.channel.awaitMessages({ max: 1, filter: (r) => r.author.id === inter.user.id });
@@ -188,7 +189,7 @@ class EditConstruct {
                 } else {
                     if (!newMes.components[row].components[index].customId) {
                         delete newMes.components[row].components[index].url;
-                        newMes.components[row].components[index].setCustomId(new Date().valueOf().toString());
+                        newMes.components[row].components[index].setCustomId("action:" + new Date().valueOf().toString());
                     }
                     delNo(prompt, 0);
                     preview.edit(newMes);
@@ -200,7 +201,7 @@ class EditConstruct {
                     delNo(ret);
                     return start();
                 }
-                await settingActions(inter, { found, preview, message, collectEdit });
+                await settingActions(inter, { found, preview, message, collectEdit }, { inter, preview, message, row, index, promptComponent });
                 return start();
             }
         }
@@ -279,10 +280,25 @@ class MessageConstruct {
         this.interaction = interaction;
     }
 
-    async start() {
-        await this.preview.edit({ content: "`[EMPTY]`", components: [] });
-        this.message = await this.interaction.reply({ ...startPage, fetchReply: true });
-        this.message.interaction = this.interaction;
+    async start(edit) {
+        if (edit) {
+            this.interaction.deferUpdate();
+            this.message = this.interaction.message;
+            await this.message.edit({ content: "Provide message link of the message to edit:", components: [] });
+            const get = await this.channel.awaitMessages({ filter: (r) => r.content.length && r.author.id === this.interaction.user.id, max: 1, });
+            const getM = get?.first();
+            if (!getM) return;
+            if (this.channel.permissionsFor(this.client.user).has("MANAGE_MESSAGES")) getM.delete();
+            const getMsg = await getChannelMessage(this.interaction, getM.content, null, this.interaction.client.isOwner(this.interaction.user));
+            if (!getMsg) return this.message.edit("Unknown message");
+            if (getMsg.author?.id !== this.client.user.id) return this.message.edit("I can only edit my own message bruh >:(");
+            this.preview = getMsg;
+            await this.message.edit(startPage);
+        } else {
+            await this.preview.edit({ content: "`[EMPTY]`", components: [] });
+            this.message = await this.interaction.reply({ ...startPage, fetchReply: true });
+            this.message.interaction = this.interaction;
+        }
         return this.message.messageConstruct = this;
     }
 
@@ -331,7 +347,7 @@ class MessageConstruct {
     async edit(inter, args) {
         const { row, index, promptComponent, found } = await this.getComponent(inter, "edit");
         if (!found) return;
-        EditConstruct[found.type](inter, this.preview, this.message, { row, index, promptComponent });
+        EditConstruct[found.type]({ inter, preview: this.preview, message: this.message, row, index, promptComponent });
     }
 
     async remove(inter, args) {
@@ -374,7 +390,7 @@ function delNo(msg, timeout = 10000, ...userMsgs) {
     return msg;
 }
 
-async function settingActions(inter, { found, preview, message, collectEdit } = {}) {
+async function settingActions(inter, { found, preview, message, collectEdit } = {}, startData) {
     const ActionsClass = new Actions(inter.client);
     await collectEdit.deferUpdate();
     loadDb(preview, `message/${preview.channelId}/${preview.id}`);
@@ -386,8 +402,8 @@ async function settingActions(inter, { found, preview, message, collectEdit } = 
         const settings = await preview.db.getOne("action", found().customId);
         const emb = new MessageEmbed(baseEmb);
         const N = () => "`" + (emb.fields.length + 1) + "#`: ";
-        if (settings?.value?.length) {
-            for (const val of settings.value) {
+        if (settings?.value.actions.length) {
+            for (const val of settings.value.actions) {
                 if (val.type === "roles") {
                     const desc = `\`${"Action".padEnd(12, " ")}\`: \`${val.action
                         ? val.action[0].toUpperCase() + val.action.slice(1)
@@ -402,18 +418,17 @@ async function settingActions(inter, { found, preview, message, collectEdit } = 
         return emb;
     }
 
-    /* @type {import("../typins").ShaMessage} */
     message.actionStartPage = async (replaceContent) => {
         return message.edit({ embeds: [await getEmbed()], components: [settingActionsButtons], ...replaceContent });
     };
     await message.actionStartPage();
-    message.actionsConstruct = async () => {
+    message.actionsConstruct = async ({ started = true } = {}) => {
         const getOp = await message.awaitMessageComponent({ filter: (r) => r.user.id === inter.user.id });
         let res;
         const configure = async ({ edit, remove } = {}) => {
             if (remove) {
                 const settings = await preview.db.getOne("action", found().customId);
-                settings.value.splice(remove - 1, 1);
+                settings.value.actions.splice(remove - 1, 1);
                 preview.db.set("action", found().customId, { value: settings.value });
                 message.actionStartPage({ content: null });
                 return;
@@ -451,9 +466,11 @@ async function settingActions(inter, { found, preview, message, collectEdit } = 
             res = await ActionsClass[pickedAction.values[0]]({ edit, found, message, preview, interaction: pickedAction, method: { set: "action" } });
         }
         if (getOp.customId === "add") {
+            started = false;
             getOp.deferUpdate();
             await configure();
         } else if (getOp.customId === "edit") {
+            started = false;
             if (message.embeds[0].fields.length) {
                 const prompt = await getOp.reply({ content: "Provide action number to edit:", fetchReply: true });
                 const getP = await prompt.channel.awaitMessages({ filter: (r) => r.author.id === inter.user.id && /^\d{1,2}/.test(r.content), max: 1 });
@@ -472,6 +489,7 @@ async function settingActions(inter, { found, preview, message, collectEdit } = 
                 delNo(no);
             }
         } else if (getOp.customId === "remove") {
+            started = false;
             if (message.embeds[0].fields.length) {
                 const prompt = await getOp.reply({ content: "Provide action number to remove:", fetchReply: true });
                 const getP = await prompt.channel.awaitMessages({ filter: (r) => r.author.id === inter.user.id && /^\d{1,2}/.test(r.content), max: 1 });
@@ -493,8 +511,13 @@ async function settingActions(inter, { found, preview, message, collectEdit } = 
             getOp.deferUpdate();
             res = true;
         }
-        if (res) message.messageConstruct.startPage();
-        else message.actionsConstruct();
+        if (res) {
+            if (res === "actionStartPage") {
+                await message.actionStartPage({ content: null });
+                message.actionsConstruct({ started });
+            } else if (startData) EditConstruct[found().type]({ ...startData, started });
+            else message.messageConstruct.startPage();
+        } else message.actionsConstruct({ started });
     }
     return message.actionsConstruct();
 }

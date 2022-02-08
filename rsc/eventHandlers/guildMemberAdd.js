@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 const { GuildMember } = require("discord.js");
 const { Moderation } = require("../classes/Moderation");

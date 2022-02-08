@@ -1,10 +1,11 @@
-'use strict';
+"use strict";
 
 const { Permissions, MessageButton, MessageActionRow } = require("discord.js");
 const { DateTime } = require('luxon');
 const { zones } = require('tzdata');
 const { readdirSync } = require("fs");
 const { join } = require("path");
+const art = require("figlet");
 
 // ---------------- CONSTANTS ----------------
 
@@ -225,8 +226,17 @@ const INTERACT_NO_INCLUDE_TARGET_NAMES = ["baka"];
 
 const PERMISSION_NAMES = Object.keys(Permissions.FLAGS);
 
-const asciiFontsFiles = readdirSync(join(__dirname, "../node_modules/ascii-art-font/Fonts/"));
-const ASCII_FONTS = asciiFontsFiles.map(r => r.replace(/\.flf$/gi, ''));
+// const asciiFontsFiles = readdirSync(join(__dirname, "../node_modules/ascii-art-font/Fonts/"));
+// const ASCII_FONTS = asciiFontsFiles.map(r => r.replace(/\.flf$/gi, ''));
+let ASCII_FONTS;
+if (ASCII_FONTS === undefined)
+    art.fonts((e, l) => {
+        if (e) {
+            module.exports.ASCII_FONTS = ASCII_FONTS = [];
+            return process.emit("uncaughtException", e);
+        }
+        module.exports.ASCII_FONTS = ASCII_FONTS = l;
+    });
 const ASCII_IGNORE_HASH = [
     "Banner",
     "Banner3",
@@ -332,6 +342,9 @@ const REPLY_ERROR = {
     "Moderator lack MUTE_MEMBERS permission": "You don't have the `MUTE_MEMBERS` permission in that voice channel",
 
     "Permissions override can't be more than 10": "Sorry but permission override for slash commands can't exceed the total amount of 10, try remove some role/user from bypass",
+
+    // MANAGER ERRORS
+    "Invalid Asset": "**Invalid Asset**: This can mean you can never set this up, some requirement aren't met, it's at maximum capacity or some properties exceeding allowed limitation",
 }
 
 const LETTER_EMOTES = {
@@ -402,6 +415,7 @@ const ROW_BUTTON_STYLES = new MessageActionRow().addComponents([
 ]);
 
 const PATTERN_MESSAGE_LINK = "https?:\\/\\/(?:www\\.|canary\\.|ptb\\.)?discord(?:app)?\\.(?:gg|com)\\/channels\\/(?:\\d{17,20}|@me)\\/\\d{17,20}\\/\\d{17,20}";
+const PATTERN_CUSTOM_EMOTE = "<a?:[\\w-_]{2,32}:\\d{17,20}>";
 
 module.exports = {
     PERMISSIONS_EMPHASIZE,
@@ -433,4 +447,5 @@ module.exports = {
     BUTTON_CLOSE,
     ROW_BUTTON_STYLES,
     PATTERN_MESSAGE_LINK,
+    PATTERN_CUSTOM_EMOTE,
 }

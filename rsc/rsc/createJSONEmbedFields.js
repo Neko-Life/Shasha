@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 // Valid argument looks like "field[index][props]" in camelCase - field1Name
 module.exports = async (fields) => {

@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 // const { RESTPostAPIApplicationCommandsJSONBody, ApplicationCommandType, ApplicationCommandOptionType } = require("discord-api-types");
 
@@ -35,6 +35,11 @@ module.exports = {
                     type: 3,
                 },
             ],
+        },
+        {
+            name: "steal",
+            description: "Steal stuff to add to your server",
+            type: 1,
         },
     ],
 }

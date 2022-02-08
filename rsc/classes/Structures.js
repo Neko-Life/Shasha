@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 const { Structures, Guild, GuildMember, BanOptions, Role, User, Message, Interaction } = require("discord.js");
 const { MongoClient, Db, Collection } = require("mongodb");

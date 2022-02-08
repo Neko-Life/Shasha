@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 const { MessageEmbed } = require("discord.js");
 const { PATTERN_MESSAGE_LINK } = require("../constants");

@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 const { MessageEmbed, MessageActionRow, MessageButton, MessageSelectMenu, Collection } = require("discord.js");
 const ArgsParser = require("../../classes/ArgsParser");
@@ -89,15 +89,26 @@ const miscSelectMenu = new MessageActionRow()
                 {
                     label: "Message Preview",
                     description: "Enable or disable message link preview",
-                    value: "miscMessagePreviewPage"
-                }
+                    value: "miscMessagePreviewPage",
+                },
+                {
+                    label: "Public Server Link",
+                    description: "Show invite link of this server when someone viewing server profile",
+                    value: "miscServerInviteInfoPage",
+                },
             ])
     );
 
 const miscMessagePreviewPageButtons = new MessageActionRow()
     .addComponents([
-        new MessageButton().setCustomId("settings/set/messagePreview").setStyle("PRIMARY").setLabel("Enable"),
-        new MessageButton().setCustomId("settings/remove/messagePreview").setStyle("SECONDARY").setLabel("Disable")
+        new MessageButton().setCustomId("settings/set/BOOL/messageLinkPreviewSettings").setStyle("PRIMARY").setLabel("Enable"),
+        new MessageButton().setCustomId("settings/remove/BOOL/messageLinkPreviewSettings").setStyle("SECONDARY").setLabel("Disable")
+    ]);
+
+const miscServerInviteInfoPageButtons = new MessageActionRow()
+    .addComponents([
+        new MessageButton().setCustomId("settings/set/BOOL/serverInfoInvite").setStyle("PRIMARY").setLabel("Enable"),
+        new MessageButton().setCustomId("settings/remove/BOOL/serverInfoInvite").setStyle("SECONDARY").setLabel("Disable")
     ]);
 
 const commandPagesPageButtons = new MessageActionRow()
@@ -141,7 +152,7 @@ module.exports = class SettingsCmd extends Command {
             .addField("Ban", "Set up timed ban as default ban behavior and default purge message on ban");
 
         const moderationMutePage = async (inter) => {
-            if (inter && !(inter.deferred || inter.replied)) await inter.deferUpdate();
+            if (await noCanDo(inter)) return;
             const get = await inter.guild.db.getOne("muteSettings", "Object");
             /**
              * @type {{muteRole:string, duration:number}}
@@ -172,7 +183,7 @@ module.exports = class SettingsCmd extends Command {
         }
 
         const moderationBanPage = async (inter) => {
-            if (inter && !(inter.deferred || inter.replied)) await inter.deferUpdate();
+            if (await noCanDo(inter)) return;
             const get = await inter.guild.db.getOne("banSettings", "Object");
             /**
              * @type {{duration:number, purge:number}}
@@ -199,16 +210,20 @@ module.exports = class SettingsCmd extends Command {
             return { embeds: [emb], components };
         }
 
-        pages.moderationPage = { embeds: [moderationEmb], components: [mainSelectMenu, moderationSelectmenu] };
+        pages.moderationPage = async (inter) => {
+            if (await noCanDo(inter)) return;
+            return { embeds: [moderationEmb], components: [mainSelectMenu, moderationSelectmenu] };
+        }
         pages.moderationMutePage = moderationMutePage;
         pages.moderationBanPage = moderationBanPage;
 
         const miscEmb = new MessageEmbed(baseEmb)
             .setTitle("Miscellaneous")
-            .addField("Message Preview", "Enable or disable preview when member sent a link to a message");
+            .addField("Message Preview", "Enable or disable preview when member sent a link to a message")
+            .addField("Public Server Link", "Show invite link of this server when someone viewing server profile");
 
         const miscMessagePreviewPage = async (inter) => {
-            if (inter && !(inter.deferred || inter.replied)) await inter.deferUpdate();
+            if (await noCanDo(inter)) return;
             const get = await inter.guild.db.getOne("messageLinkPreviewSettings", "Object");
             /**
              * @type {{state: boolean}}
@@ -224,8 +239,34 @@ module.exports = class SettingsCmd extends Command {
             return { embeds: [emb], components };
         };
 
-        pages.miscPage = { embeds: [miscEmb], components: [mainSelectMenu, miscSelectMenu] };
+        pages.miscPage = async (inter) => {
+            if (await noCanDo(inter)) return;
+            return { embeds: [miscEmb], components: [mainSelectMenu, miscSelectMenu] };
+        }
         pages.miscMessagePreviewPage = miscMessagePreviewPage;
+
+        const miscServerInviteInfoPage = async (inter) => {
+            if (await noCanDo(inter)) return;
+            const get = await inter.guild.db.getOne("serverInfoInvite", "Object");
+            /**
+             * @type {{state: boolean}}
+             */
+            const data = get?.value || { state: false };
+
+            const emb = new MessageEmbed(baseEmb)
+                .setTitle("Public Server Link")
+                .setDescription(
+                    "Only works if the server is a community server "
+                    + "and I have the `CREATE_INSTANT_INVITE` permission in the rules channel, "
+                    + "an invite link will be generated in server's rules channel to be put "
+                    + "in `More Info` page of the `/info server` command"
+                ).addField("State", data.state ? "`Enabled`" : "`Disabled`");
+
+            const components = [mainSelectMenu, miscSelectMenu, miscServerInviteInfoPageButtons];
+            return { embeds: [emb], components };
+        };
+
+        pages.miscServerInviteInfoPage = miscServerInviteInfoPage;
 
         const cmdsFetch = this.client.application.commands.cache.size
             ? this.client.application.commands.cache
@@ -235,11 +276,7 @@ module.exports = class SettingsCmd extends Command {
         let curCommandPage = 0;
 
         pages.commandPage = async (inter, args = []) => {
-            if (inter && !isInteractionInvoker(inter)) {
-                const ret = await inter.reply({ content: "Watchu wanna do? hmm <:SuiseiThinkLife:772716901834686475>", fetchReply: true });
-                delMes(ret, null, 5000);
-                return;
-            }
+            if (await noCanDo(inter)) return;
             if (!args.length) {
                 const baseCommandEmb = new MessageEmbed(baseEmb)
                     .setTitle("Command")
@@ -298,7 +335,7 @@ module.exports = class SettingsCmd extends Command {
                                     .setPlaceholder("Settings category/command...")
                                     .addOptions(commandSelectMenuOpts)
                             );
-                        if (waitMes && waitMes.deleted === false)
+                        if (waitMes && [false, undefined].includes(waitMes.deleted))
                             waitMes.delete();
                         return { embeds: [commandEmb], components: [mainSelectMenu, row, commandPagesPageButtons] };
                     }
@@ -569,12 +606,22 @@ module.exports = class SettingsCmd extends Command {
                     if (SETTING_MESSAGE && SETTING_MESSAGE.deleted) return;
                     return SETTING_MESSAGE.edit(await p(inter));
 
-                } else if (args[0] === "messagePreview") {
-                    SETTING_MESSAGE.guild.messageLinkPreviewSettings = { state: true };
-                    await THE_GUILD.db.set("messageLinkPreviewSettings", "Object", { value: { state: true } });
+                } else if (args[0] === "BOOL") {
+                    if (!args[1]) throw new TypeError("args[1] is falsy");
+                    SETTING_MESSAGE.guild[args[1]] = { state: true };
+                    await THE_GUILD.db.set(args[1], "Object", { value: { state: true } });
                     blockSet = false;
                     if (SETTING_MESSAGE && SETTING_MESSAGE.deleted) return;
-                    return SETTING_MESSAGE.edit(await miscMessagePreviewPage(inter));
+                    let p;
+                    switch (args[1]) {
+                        case "messageLinkPreviewSettings":
+                            p = miscMessagePreviewPage;
+                            break;
+                        case "serverInfoInvite":
+                            p = miscServerInviteInfoPage;
+                            break;
+                    }
+                    return SETTING_MESSAGE.edit(await p(inter));
                 }
             },
             remove: async (inter, args) => {
@@ -619,12 +666,22 @@ module.exports = class SettingsCmd extends Command {
                     if (SETTING_MESSAGE && SETTING_MESSAGE.deleted) return;
                     return SETTING_MESSAGE.edit(await p(inter));
 
-                } else if (args[0] === "messagePreview") {
-                    SETTING_MESSAGE.guild.messageLinkPreviewSettings = { state: false };
-                    await THE_GUILD.db.set("messageLinkPreviewSettings", "Object", { value: { state: false } });
+                } else if (args[0] === "BOOL") {
+                    if (!args[1]) throw new TypeError("args[1] is falsy");
+                    SETTING_MESSAGE.guild[args[1]] = { state: false };
+                    await THE_GUILD.db.set(args[1], "Object", { value: { state: false } });
                     blockRem = false;
                     if (SETTING_MESSAGE && SETTING_MESSAGE.deleted) return;
-                    return SETTING_MESSAGE.edit(await miscMessagePreviewPage(inter));
+                    let p;
+                    switch (args[1]) {
+                        case "messageLinkPreviewSettings":
+                            p = miscMessagePreviewPage;
+                            break;
+                        case "serverInfoInvite":
+                            p = miscServerInviteInfoPage;
+                            break;
+                    }
+                    return SETTING_MESSAGE.edit(await p(inter));
                 }
             },
             command: async (inter, args) => {
@@ -666,4 +723,13 @@ function delMes(m, setMsg, dur = 5000) {
             else m.deleted ? null : m.delete();
         }, dur
     )
+}
+
+async function noCanDo(inter) {
+    if (!inter) return;
+    if (!isInteractionInvoker(inter)) {
+        const ret = await inter.reply({ content: `Watchu wanna do <@${inter.user.id}>? hmmmm <:SuiseiThinkLife:772716901834686475>`, fetchReply: true });
+        delMes(ret, null, 15000);
+        return true;
+    } else if (!(inter.deferred || inter.replied)) inter.deferUpdate();
 }

@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 const { REST } = require("@discordjs/rest");
 const { Routes } = require("discord-api-types/v9");

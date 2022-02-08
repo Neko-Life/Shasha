@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 const { Command } = require("../../classes/Command");
 const { getChannelMessage, allowMention } = require("../../functions");

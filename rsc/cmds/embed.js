@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 const { BaseGuildTextChannel, Message, CommandInteraction, Util } = require("discord.js");
 const { MessageEmbed } = require("discord.js");
@@ -7,6 +7,7 @@ const { getChannelMessage, allowMention, getColor } = require("../functions");
 const { reValidURL } = require("../constants");
 const createJSONEmbedFields = require("../rsc/createJSONEmbedFields");
 const { logDev } = require("../debug");
+const { sanitizeUrl } = require("@braintree/sanitize-url");
 const sortProchedure = [
     'json',
     'editField',
@@ -123,10 +124,10 @@ module.exports.build = class BuildEmbCmd extends Command {
                 this.authorEmbed.name = this.client.finalizeStr(value, this.isAdmin(true));
             },
             authorIcon: ({ value }) => {
-                this.authorEmbed.iconURL = value;
+                this.authorEmbed.iconURL = sanitizeUrl(value);
             },
             authorUrl: ({ value }) => {
-                this.authorEmbed.url = value;
+                this.authorEmbed.url = sanitizeUrl(value);
             },
             image: ({ value }) => {
                 this.buildEmbed.setImage(value);
@@ -141,22 +142,22 @@ module.exports.build = class BuildEmbCmd extends Command {
                 this.footerEmbed.text = this.client.finalizeStr(value, this.isAdmin(true));
             },
             footerIcon: ({ value }) => {
-                this.footerEmbed.iconURL = value;
+                this.footerEmbed.iconURL = sanitizeUrl(value);
             },
             content: ({ value }) => {
                 if (value === "EMPTY") return this.contentEmbed = "";
                 this.contentEmbed = this.client.finalizeStr(value, this.isAdmin(true));
             },
             url: ({ value }) => {
-                this.buildEmbed.setURL(value);
+                this.buildEmbed.setURL(sanitizeUrl(value));
             },
             attachments: ({ value }) => {
                 if (!this.filesEmbed) this.filesEmbed = [];
                 const links = value.trim().split(/ +/);
-                if (links.includes("copy")) this.filesEmbed.push(...this.sourceMessage.attachments.map(r => r.url));
+                if (links.includes("copy")) this.filesEmbed.push(...this.sourceMessage.attachments.map(r => sanitizeUrl(r.url)));
                 for (const L of links) {
                     if (L === "copy") continue;
-                    if (reValidURL.test(L)) this.filesEmbed.push(L);
+                    if (reValidURL.test(L)) this.filesEmbed.push(sanitizeUrl(L));
                     else {
                         this.resultMsg += `**${L}** isn't a valid URL\n`;
                         this.error = true;
@@ -396,7 +397,7 @@ module.exports.join = class EmbedJoinCmd extends Command {
                 if (F === "copy") {
                     const att = [];
                     for (const M of msgs) {
-                        const f = M.attachments.map(r => r.url);
+                        const f = M.attachments.map(r => sanitizeUrl(r.url));
                         if (!f.length) continue;
                         att.push(...f);
                     }
@@ -404,7 +405,7 @@ module.exports.join = class EmbedJoinCmd extends Command {
                     continue;
                 }
                 if (!F) continue;
-                if (reValidURL.test(F)) toSend.push(F);
+                if (reValidURL.test(F)) toSend.push(sanitizeUrl(F));
                 else resultMsg += `**${F}** isn't a valid URL\n`;
             }
             if (toSend.length) send.files = toSend;
