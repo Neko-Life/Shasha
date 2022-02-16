@@ -5,7 +5,7 @@ const { Command } = require("../../classes/Command");
 const { Moderation } = require("../../classes/Moderation");
 const { loadDb } = require("../../database");
 const { logDev } = require("../../debug");
-const { getColor, unixToSeconds, tickTag, replyError, replyHigherThanMod } = require("../../functions");
+const { getColor, unixToSeconds, tickTag, replyError, replyHigherThanMod, timedPunishmentModEmbed } = require("../../functions");
 
 module.exports = class MuteCmd extends Command {
     constructor(interaction) {
@@ -49,20 +49,15 @@ module.exports = class MuteCmd extends Command {
             if (replyHigherThanMod(inter, "mute", res))
                 return;
         const ex = res.muted[0];
-        const emb = new MessageEmbed()
-            .setTitle("Mute")
-            .setColor(getColor(this.user.accentColor, true, this.member.displayColor))
-            .setThumbnail(ex.user.displayAvatarURL({ size: 4096, format: "png", dynamic: true }))
-            .addField("User", tickTag(ex.user.user || ex.user)
-                + `\n<@${ex.user.id}>`
-                + `\n(${ex.user.id})`)
-            .addField("At", "<t:" + unixToSeconds(invoked) + ":F>", true)
-            .setDescription(ex.val.reason);
-        if (end)
-            emb.addField("Until", "<t:" + unixToSeconds(end) + ":F>", true)
-                .addField("For", "`" + durFor + "`");
-        else emb.addField("Until", "`Never`", true)
-            .addField("For", "`Ever`");
+        const emb = timedPunishmentModEmbed("Mute",
+            this.member,
+            res.muted.map(r => r.user),
+            {
+                reason: res.muted[0].val.reason,
+                invoked,
+                end,
+                durationStr: durFor,
+            });
         return inter.editReply({ embeds: [emb] });
     }
 }

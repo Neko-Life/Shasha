@@ -24,6 +24,7 @@ const ENUM_SHADOCS = {
     invites: 17,
     inviter: 18,
     serverInfoInvite: 19,
+    timeoutSettings: 20,
 };
 
 const ENUM_SHADOCSTYPES = {
@@ -36,6 +37,7 @@ const ENUM_SHADOCSTYPES = {
     "Number[]": 7,
     "Boolean[]": 8,
     "${Id}": 9,
+    "${Name}": 10,
 };
 
 const ENUM_SHACOLTYPES = {

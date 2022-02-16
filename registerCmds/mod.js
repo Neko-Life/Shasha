@@ -357,6 +357,29 @@ module.exports = {
                     description: "Reason",
                 }
             ]
+        },
+        {
+            type: 1,
+            name: "timeout",
+            description: "Timeout kids",
+            options: [
+                {
+                    type: 6,
+                    name: "kid",
+                    description: "Timeout this kid",
+                    required: true,
+                },
+                {
+                    type: 3,
+                    name: "duration",
+                    description: "Ex `15d30h2m67s`",
+                },
+                {
+                    type: 3,
+                    name: "reason",
+                    description: "Reason",
+                }
+            ]
         }
     ]
 }

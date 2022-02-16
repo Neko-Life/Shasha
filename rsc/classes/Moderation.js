@@ -13,7 +13,8 @@ const ENUM_ACTIONS = {
     ban: 1,
     mute: 2,
     kick: 3,
-    strike: 4
+    strike: 4,
+    timeout: 5,
 };
 
 /**
@@ -160,6 +161,10 @@ class BaseModeration {
          * @type {object[]}
          */
         this.infractions = null;
+        /**
+         * @type {MessageEmbed}
+         */
+        this.defaultEmbed = new MessageEmbed().setAuthor({ name: guild.name, iconURL: guild.iconURL({ size: 128, format: "png", dynamic: true }) });
     }
 
     static loadModeration(guild) {
@@ -214,9 +219,8 @@ class BaseModeration {
         if (!opt.reason) opt.reason = "No reason provided";
         if (typeof opt.notify !== "boolean") opt.notify = true;
         if (opt.notify) {
-            const emb = new MessageEmbed()
-                .setAuthor({ name: this.guild.name, iconURL: this.guild.iconURL({ size: 128, format: "png", dynamic: true }) })
-                .setColor(getColor((user.user || user).accentColor, true) || getColor(user.displayColor, true))
+            const emb = new MessageEmbed(this.defaultEmbed)
+                .setColor(getColor((user.user || user).accentColor, true, user.displayColor))
                 .setDescription(opt.reason)
                 .setTitle("Ban")
                 .addField("At", "<t:" + unixToSeconds(opt.invoked) + ":F>", true);
@@ -267,9 +271,8 @@ class BaseModeration {
             invoked: invoked
         };
         if (notify) {
-            const emb = new MessageEmbed()
-                .setAuthor({ name: this.guild.name, iconURL: this.guild.iconURL({ size: 128, format: "png", dynamic: true }) })
-                .setColor(getColor((user.user || user).accentColor, true) || getColor(user.displayColor, true))
+            const emb = new MessageEmbed(this.defaultEmbed)
+                .setColor(getColor((user.user || user).accentColor, true, user.displayColor))
                 .setDescription(reason)
                 .setTitle("Unban")
                 .addField("At", "<t:" + unixToSeconds(invoked) + ":F>", true);
@@ -315,9 +318,8 @@ class BaseModeration {
 
         if (typeof opt.notify !== "boolean") opt.notify = true;
         if (opt.notify) {
-            const emb = new MessageEmbed()
-                .setAuthor({ name: this.guild.name, iconURL: this.guild.iconURL({ size: 128, format: "png", dynamic: true }) })
-                .setColor(getColor((user.user || user).accentColor, true) || getColor(user.displayColor, true))
+            const emb = new MessageEmbed(this.defaultEmbed)
+                .setColor(getColor((user.user || user).accentColor, true, user.displayColor))
                 .setDescription(opt.reason)
                 .setTitle("Mute")
                 .addField("At", "<t:" + unixToSeconds(opt.invoked) + ":F>", true);
@@ -356,6 +358,36 @@ class BaseModeration {
     }
 
     /**
+     * 
+     * @param {import("../typins").ShaGuildMember} member 
+     * @param {DefaultExecModOpts} opt 
+     */
+    async _execTimeout(member, opt) {
+        if (!opt.reason) opt.reason = "No reason provided";
+        const interval = createInterval(opt.invoked, opt.end);
+        const duration = intervalToStrings(interval);
+        await member.timeout(duration.ms > 2332800841 ? 2332800841 : duration.ms, opt.reason);
+        if (typeof opt.notify !== "boolean") opt.notify = true;
+        if (opt.notify) {
+            const emb = new MessageEmbed(this.defaultEmbed)
+                .setColor(getColor(member.user.accentColor, true, member.displayColor))
+                .setDescription(opt.reason)
+                .setTitle("Timeout")
+                .addField("At", "<t:" + unixToSeconds(opt.invoked) + ":F>", true);
+            if (opt.end) {
+                emb.addField("Until", "<t:" + unixToSeconds(opt.end) + ":F>", true)
+                    .addField("For", "`" + duration.strings.join(" ") + "`");
+            } else emb.addField("Until", "`Never`", true)
+                .addField("For", "`Ever`");
+            try {
+                if (await member.send({ embeds: [emb] }))
+                    opt.notified = true;
+            } catch (e) { logDev(e); opt.notified = false; };
+        }
+        return { member, opt };
+    }
+
+    /**
      *
      * @param {GuildMember | User} user
      * @param {DefaultExecModOpts} opt
@@ -377,10 +409,9 @@ class BaseModeration {
         }
         if (typeof opt.notify !== "boolean") opt.notify = true;
         if ((oldOpt.state && opt.notify) || (!oldOpt.state && oldOpt.notified === false)) {
-            const emb = new MessageEmbed()
-                .setAuthor({ name: this.guild.name, iconURL: this.guild.iconURL({ size: 128, format: "png", dynamic: true }) })
+            const emb = new MessageEmbed(this.defaultEmbed)
                 .setDescription(opt.reason)
-                .setColor(getColor((user.user || user).accentColor, true) || getColor(user.displayColor, true))
+                .setColor(getColor((user.user || user).accentColor, true, user.displayColor))
                 .setTitle("Unmute")
                 .addField("At", "<t:" + unixToSeconds(opt.invoked) + ":F>");
             try {
@@ -404,8 +435,7 @@ class BaseModeration {
         if (!opt.reason) opt.reason = "No reason provided";
         if (typeof opt.notify !== "boolean") opt.notify = true;
         if (opt.notify) {
-            const emb = new MessageEmbed()
-                .setAuthor({ name: this.guild.name, iconURL: this.guild.iconURL({ size: 128, format: "png", dynamic: true }) })
+            const emb = new MessageEmbed(this.defaultEmbed)
                 .setColor(getColor(member.user.accentColor, true, member.displayColor))
                 .setDescription(opt.reason)
                 .setTitle("Kick")
@@ -567,7 +597,7 @@ class Moderation extends BaseModeration {
         /**
          * @type {number}
          */
-        this.moderatorPosition = client.isOwner(moderator) ? 9999 : moderator.roles.highest.position;
+        this.moderatorPosition = client.isOwner(moderator) ? Infinity : moderator.roles.highest.position;
         /**
          * @type {boolean}
          */
@@ -592,6 +622,10 @@ class Moderation extends BaseModeration {
          * @type {boolean}
          */
         this.moderatorVCMutePerm = client.isOwner(moderator) || this.channel?.permissionsFor(moderator).has("MUTE_MEMBERS");
+        /**
+         * @type {boolean}
+         */
+        this.moderatorModerateMembersPerm = client.isOwner(moderator) || moderator.permissions.has("MODERATE_MEMBERS");
         /**
          * @type {number}
          */
@@ -620,6 +654,10 @@ class Moderation extends BaseModeration {
          * @type {boolean}
          */
         this.clientVCMutePerm = this.channel?.permissionsFor(this.me).has("MUTE_MEMBERS");
+        /**
+         * @type {boolean}
+         */
+        this.clientModerateMembersPerm = this.me.permissions.has("MODERATE_MEMBERS");
 
         /**
          * @type {GuildMember[]}
@@ -834,6 +872,32 @@ class Moderation extends BaseModeration {
             unmuted.push(await this._execUnmute(m || a, opt));
         }
         return { unmuted, higherThanClient, higherThanModerator };
+    }
+
+    /**
+     * @param {DefaultExecModOpts} opt
+     */
+    async timeout(opt) {
+        if (!this.moderatorModerateMembersPerm)
+            throw new Error("Moderator lack MODERATE_MEMBERS permission");
+        if (!this.clientModerateMembersPerm)
+            throw new Error("Client lack MODERATE_MEMBERS permission");
+        const timedOut = [];
+        const higherThanClient = [];
+        const higherThanModerator = [];
+        for (const a of this.target.members) {
+            // const m = await this.guild.members.fetch({ user: a }).catch(logDev);
+            if (this.higherThanClient.some(r => r.id === a.id)) {
+                higherThanClient.push(a);
+                continue;
+            }
+            if (this.higherThanModerator.some(r => r.id === a.id)) {
+                higherThanModerator.push(a);
+                continue;
+            }
+            timedOut.push(await this._execTimeout(a, opt));
+        }
+        return { timedOut, higherThanClient, higherThanModerator };
     }
 
     /**

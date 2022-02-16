@@ -18,7 +18,7 @@ module.exports = class BanCmd extends Command {
     }
 
     async run(inter, { user, duration, purge, reason }) {
-        if (!user) return inter.reply("beep boopError can'tput at _rest 404gf not::found");
+        if (!user) return inter.reply("beep bo~~op**E~~rr**or _can'_tp__ut a__t _rest 404gf `not:`:found");
         const invoked = new Date();
         await inter.deferReply();
         const gd = loadDb(this.guild, "guild/" + this.guild.id);

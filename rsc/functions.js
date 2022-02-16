@@ -1,12 +1,16 @@
 "use strict";
 
-const { Collection, Guild, User, Interaction, GuildMember, Invite, Role, GuildChannel, MessageActionRow, MessageButton } = require("discord.js");
+const { Collection, Guild, User, Interaction, GuildMember, Invite, Role, GuildChannel, MessageActionRow, MessageButton, MessageEmbed } = require("discord.js");
 const { escapeRegExp } = require("lodash");
 const { join } = require("path");
 const { Worker } = require("worker_threads");
 const { PERMISSIONS_EMPHASIZE, REPLY_ERROR } = require("./constants");
 const { loadDb } = require("./database");
 const { logDev } = require("./debug");
+
+// ---------------- FUNCTIONS IMPORTS ----------------
+
+const getColor = require("./util/getColor");
 
 // ---------------- FUNCTIONS ----------------
 
@@ -461,9 +465,23 @@ async function cacheGuildInvites(guild, force) {
 //     }
 // }
 
-// ---------------- FNS IMPORTS ----------------
-
-const getColor = require("./util/getColor");
+function timedPunishmentModEmbed(title, moderator, targets, { reason, invoked, end, durationStr }) {
+    const emb = new MessageEmbed()
+        .setTitle(title)
+        .setThumbnail(targets[0].displayAvatarURL({ size: 4096, format: "png", dynamic: true }))
+        .setColor(getColor((moderator.user || moderator).accentColor, true, moderator.displayColor))
+        .addField("User" + (targets.length > 1 ? "s" : ""), targets.map(ex => tickTag(ex.user.user || ex.user)
+            + `\n<@${ex.user.id}>`
+            + `\n(${ex.user.id})`).join("\n"))
+        .addField("At", "<t:" + unixToSeconds(invoked) + ":F>", true)
+        .setDescription(reason);
+    if (end)
+        emb.addField("Until", "<t:" + unixToSeconds(end) + ":F>", true)
+            .addField("For", "`" + durationStr + "`");
+    else emb.addField("Until", "`Never`", true)
+        .addField("For", "`Ever`");
+    return emb;
+}
 
 module.exports = {
     // ---------------- FUNCTIONS ---------------- 
@@ -499,6 +517,7 @@ module.exports = {
     emitShaError,
     // reRegisterAll,
     cacheGuildInvites,
+    timedPunishmentModEmbed,
 
     // ---------------- FNS IMPORTS ----------------
     // Functions too big to be put here so imported and has its own file instead
