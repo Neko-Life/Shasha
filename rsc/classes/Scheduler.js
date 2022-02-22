@@ -64,13 +64,13 @@ class Scheduler {
          * @type {Bree}
          */
         this.scheduler = this.init(jobs);
+        this.starts();
         const b = new Date().valueOf();
         for (const k of jobs)
             if (k.date.valueOf() < b) {
                 k.date = new Date(b + 10000);
                 this.add(k);
             }
-        this.starts();
         logDev("Scheduler online. Loaded " + jobs.length + " schedules from " + client.guilds.cache.size + " guilds and reminder database");
     }
 
