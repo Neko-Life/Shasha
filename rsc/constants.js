@@ -229,15 +229,15 @@ const PERMISSION_NAMES = Object.keys(Permissions.FLAGS);
 
 // const asciiFontsFiles = readdirSync(join(__dirname, "../node_modules/ascii-art-font/Fonts/"));
 // const ASCII_FONTS = asciiFontsFiles.map(r => r.replace(/\.flf$/gi, ''));
-// let ASCII_FONTS;
-// if (ASCII_FONTS === undefined)
-//     art.fonts((e, l) => {
-//         if (e) {
-//             module.exports.ASCII_FONTS = ASCII_FONTS = [];
-//             return process.emit("uncaughtException", e);
-//         }
-//         module.exports.ASCII_FONTS = ASCII_FONTS = l;
-//     });
+let ASCII_FONTS;
+if (ASCII_FONTS === undefined)
+    art.fonts((e, l) => {
+        if (e) {
+            module.exports.ASCII_FONTS = ASCII_FONTS = [];
+            return process.emit("uncaughtException", e);
+        }
+        module.exports.ASCII_FONTS = ASCII_FONTS = l;
+    });
 // const ASCII_IGNORE_HASH = [
 //     "Banner",
 //     "Banner3",
@@ -435,7 +435,7 @@ module.exports = {
     NEKOSLIFE_NSFW_ENDPOINTS,
     INTERACT_NO_INCLUDE_TARGET_NAMES,
     PERMISSION_NAMES,
-    // ASCII_FONTS,
+    ASCII_FONTS,
     // ASCII_IGNORE_HASH,
     SCHEDULE_MESSAGER_PATH,
     COLORS,
