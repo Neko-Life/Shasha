@@ -101,18 +101,20 @@ module.exports = class PurgeCmd extends Command {
         }
 
         if (filterContent) {
-            const re = new RegExp(escapeRegExp(filterContent.value), "i");
+            const nOT = filterContent.value[0] === "!";
+            const re = new RegExp(escapeRegExp(nOT ? filterContent.value.slice(1) : filterContent.value), "i");
             for (const [k, v] of useCache)
-                if (re.test(v.content) || re.test(v.cleanContent))
+                if (nOT ? !re.test(v.content) : re.test(v.content))
                     if (this.filtered.find(r => r.id === v.id)) continue;
                     else this.filtered.push(v);
         }
 
         if (filterRegex) {
             const source = filterRegex.value.split("/");
-            const re = new RegExp(source[1], source[3] || "");
+            const nOT = source[0] === "!";
+            const re = new RegExp(source[1], source[2] || "");
             for (const [k, v] of useCache)
-                if (re.test(v.content) || re.test(v.cleanContent))
+                if (nOT ? !re.test(v.content) : re.test(v.content))
                     if (this.filtered.find(r => r.id === v.id)) continue;
                     else this.filtered.push(v);
         }

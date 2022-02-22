@@ -254,7 +254,7 @@ class BaseModeration {
                 worker: {
                     workerData: data
                 }
-            }, "guild");
+            });
         }
         return { user, opt };
     }
@@ -282,9 +282,8 @@ class BaseModeration {
                     res.notified = true;
             } catch (e) { logDev(e); res.notified = false; };
         }
-        if (this.client.scheduler.jobs.find(r => r.name === ("unban/" + this.guild.id + "/" + user.id)))
-            try { await this.client.scheduler.remove("unban/" + this.guild.id + "/" + user.id, "guild"); }
-            catch (e) { logDev(e) };
+        try { await this.client.scheduler.remove("unban/" + this.guild.id + "/" + user.id); }
+        catch (e) { logDev(e) };
 
         return { user, res };
     }
@@ -352,7 +351,7 @@ class BaseModeration {
                 worker: {
                     workerData: data
                 }
-            }, "guild");
+            });
         }
         return { user, val };
     }
@@ -419,11 +418,12 @@ class BaseModeration {
                     opt.notified = true;
             } catch (e) { logDev(e); opt.notified = false; };
         }
+
         const val = { ...opt, state: false };
         db.set("muted", "Object", { value: val });
-        if (this.client.scheduler.jobs.find(r => r.name === ("unmute/" + this.guild.id + "/" + user.id)))
-            try { await this.client.scheduler.remove("unmute/" + this.guild.id + "/" + user.id, "guild"); }
-            catch (e) { logDev(e) };
+        try { await this.client.scheduler.remove("unmute/" + this.guild.id + "/" + user.id); }
+        catch (e) { logDev(e) };
+
         return { user, val };
     }
 
@@ -525,16 +525,17 @@ class BaseModeration {
      * @param {Date} invoked - Invoked at
      * @param {string} durationArg - 425y98w98s87h989mo
      * @param {number} defaultDuration - Fallback
+     * @param {number} [minMs=10000] - Default 10 seconds
      * @returns 
      */
-    static defaultParseDuration(invoked, durationArg, defaultDuration) {
+    static defaultParseDuration(invoked, durationArg, defaultDuration, minMs = 10000) {
         let end, duration, ms, dur, interval;
         if (durationArg) {
             dur = parseDuration(invoked, durationArg);
             ms = dur.interval?.toDuration().toMillis() || 0;
         } else ms = defaultDuration;
-        if (ms < 10000) {
-            throw new RangeError("Duration less than 10000 ms");
+        if (ms < minMs) {
+            throw new RangeError("Duration less than minimum ms");
         } else {
             if (dur) {
                 end = dur.end;

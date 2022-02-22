@@ -483,6 +483,13 @@ function timedPunishmentModEmbed(title, moderator, targets, { reason, invoked, e
     return emb;
 }
 
+function createRegExpFromStr(str, escape) {
+    const source = str.split("/");
+    const nOT = source[0] === "!";
+    const re = new RegExp(escape ? escapeRegExp(source[1]) : source[1], source[2] || "");
+    return { regexp: re, nOT };
+}
+
 module.exports = {
     // ---------------- FUNCTIONS ---------------- 
     // Essentials for bot functionality
@@ -518,6 +525,7 @@ module.exports = {
     // reRegisterAll,
     cacheGuildInvites,
     timedPunishmentModEmbed,
+    createRegExpFromStr,
 
     // ---------------- FNS IMPORTS ----------------
     // Functions too big to be put here so imported and has its own file instead

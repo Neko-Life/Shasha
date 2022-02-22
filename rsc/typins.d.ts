@@ -1,4 +1,4 @@
-import { ApplicationCommandPermissions, BaseGuildTextChannel, Collection, CommandInteraction, CommandInteractionOption, Guild, GuildMember, Message, User } from "discord.js";
+import { ApplicationCommandPermissions, BaseGuildTextChannel, Collection, CommandInteraction, CommandInteractionOption, Guild, GuildChannel, GuildMember, Message, User } from "discord.js";
 import { AutocompleteCommandArgs, AutocompleteData } from "./classes/Command";
 import { ShaBaseDb } from "./classes/Database";
 import { MessageConstruct } from "./classes/MessageConstruct";
@@ -55,4 +55,10 @@ export declare class ShaGuildMember extends GuildMember {
 
 export declare class ShaTextChannel extends BaseGuildTextChannel {
     public deletedMessages: Collection<string, ShaMessage>;
+}
+
+export declare class ShaGuildChannel extends GuildChannel {
+    public readonly client: ShaClient;
+    public db: ShaBaseDb;
+    public guild: ShaGuild;
 }

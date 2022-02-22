@@ -1,7 +1,7 @@
 "use strict";
 
 const { ChildProcess } = require("child_process");
-const { Client, User, Guild, Collection, MessageEmbed } = require("discord.js");
+const { Client, User, Guild, MessageEmbed } = require("discord.js");
 const { join } = require("path");
 const requireAll = require("require-all");
 const { ShaBaseDb } = require("./Database");
@@ -47,7 +47,7 @@ module.exports = class ShaClient extends Client {
         /**
          * @type {Actions}
          */
-        this.triggerActions = new Actions(this);
+        this.triggerActions = null;
         this.bannedGuilds = null;
         this.bannedUsers = null;
 
@@ -59,6 +59,10 @@ module.exports = class ShaClient extends Client {
          * @type { { [k:string]: boolean | string } }
          */
         this.fetchingInvites = {};
+        /**
+         * @type {import("../typins").ShaTextChannel}
+         */
+        this.errorChannel = null;
     }
 
     dispatch() {
@@ -87,6 +91,7 @@ module.exports = class ShaClient extends Client {
         require("../constants");
         require("../../config.json");
         Scheduler = require("./Scheduler").Scheduler;
+        this.triggerActions = new Actions(this);
         logDev("Modules unload/load done");
     }
 
@@ -292,7 +297,7 @@ module.exports = class ShaClient extends Client {
      * @param {string} reFlags - RegExp flags (force)
      * @param {boolean} force
      * @param {boolean} exact
-     * @returns {Collection<string, Guild> | Guild}
+     * @returns {import("discord.js").Collection<string, Guild> | Guild}
      */
     findGuilds(query, reFlags, force = false, exact = false) {
         if (typeof query !== "string") throw new TypeError("query must be a string!");
@@ -315,7 +320,7 @@ module.exports = class ShaClient extends Client {
     /**
      * @param {string} query 
      * @param {string} reFlags 
-     * @returns {Collection<string, User> | Promise<User>}
+     * @returns {import("discord.js").Collection<string, User> | Promise<User>}
      */
     async findUsers(query, reFlags) {
         if (typeof query !== "string") throw new TypeError("query must be a string!");
@@ -467,7 +472,7 @@ module.exports = class ShaClient extends Client {
     /**
      * 
      * @param {import("discord.js").GuildMemberResolvable} user 
-     * @returns {Collection<string, Guild>}
+     * @returns {import("discord.js").Collection<string, Guild>}
      */
     findMutualGuilds(user) {
         return this.guilds.cache.filter(r => r.members.resolve(user));

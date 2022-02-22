@@ -25,6 +25,8 @@ const ENUM_SHADOCS = {
     inviter: 18,
     serverInfoInvite: 19,
     timeoutSettings: 20,
+    lockdown: 21,
+    lockdownSettings: 22,
 };
 
 const ENUM_SHADOCSTYPES = {

@@ -4,6 +4,7 @@ const { MessageEmbed, MessageActionRow, MessageButton } = require("discord.js");
 const { logDev } = require("../debug");
 const { isAdmin, allowMention, getColor, wait } = require("../functions");
 const ArgsParser = require("./ArgsParser");
+const { Lockdown } = require("./Lockdown");
 /** @type {typeof import("./Moderation").Moderation} */
 let Moderation;
 
@@ -289,6 +290,14 @@ class Actions {
             const cont = this.client.finalizeStr(`Reminder for <@${user.id}>: ${about}`, isAdmin(member));
             return channel.send({ content: cont, allowedMentions: allowMention({ member: member, content: cont }) });
         } else return sendUser();
+    }
+
+    async unlock(data) {
+        const guild = this.client.guilds.resolve(data.guild);
+        const channel = guild.channels.resolve(data.target);
+        new Lockdown([channel], guild.members.resolve(this.client.user), {
+            reason: "Duration expired",
+        }).unlock();
     }
 }
 

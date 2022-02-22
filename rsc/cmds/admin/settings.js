@@ -276,7 +276,7 @@ module.exports = class SettingsCmd extends Command {
         let curCommandPage = 0;
 
         pages.commandPage = async (inter, args = []) => {
-            if (await noCanDo(inter)) return;
+            if (await noCanDo(inter, true)) return;
             if (!args.length) {
                 const baseCommandEmb = new MessageEmbed(baseEmb)
                     .setTitle("Command")
@@ -725,11 +725,11 @@ function delMes(m, setMsg, dur = 5000) {
     )
 }
 
-async function noCanDo(inter) {
+async function noCanDo(inter, noDefer) {
     if (!inter) return;
     if (!isInteractionInvoker(inter)) {
         const ret = await inter.reply({ content: `Watchu wanna do <@${inter.user.id}>? hmmmm <:SuiseiThinkLife:772716901834686475>`, fetchReply: true });
         delMes(ret, null, 15000);
         return true;
-    } else if (!(inter.deferred || inter.replied)) inter.deferUpdate();
+    } else if (!noDefer && !(inter.deferred || inter.replied)) inter.deferUpdate();
 }

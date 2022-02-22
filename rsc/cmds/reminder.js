@@ -48,7 +48,7 @@ module.exports.remind = class RemindCmd extends Command {
         if (interval.invalidReason === "end before start")
             return inter.reply("Aww someone wanna get nostalgic uwu so sweett but sorry i can't remind you at that time, the past has passed just move on already");
         if ((durationString.ms || 0) < 10000)
-            return inter.reply(replyError({ message: "Duration less than 10000 ms" }));
+            return inter.reply(replyError({ message: "Duration less than minimum ms" }));
 
         if (!(endDate instanceof Date))
             throw new TypeError("endDate isn't Date: " + typeof endDate + " " + endDate.prototype?.name);

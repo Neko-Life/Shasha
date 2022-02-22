@@ -3,7 +3,7 @@
 const { Permissions, MessageButton, MessageActionRow } = require("discord.js");
 const { DateTime } = require('luxon');
 const { zones } = require('tzdata');
-const { readdirSync } = require("fs");
+// const { readdirSync } = require("fs");
 const { join } = require("path");
 const art = require("figlet");
 
@@ -25,7 +25,8 @@ const PERMISSIONS_EMPHASIZE = [
     "MANAGE_ROLES",
     "MANAGE_WEBHOOKS",
     "MANAGE_EMOJIS_AND_STICKERS",
-    "MANAGE_THREADS"
+    "MANAGE_THREADS",
+    "MODERATE_MEMBERS",
 ];
 
 const reValidURL = /^https?:\/\/[^\s\n]+\.[^\s\n][^\s\n]/;
@@ -228,35 +229,35 @@ const PERMISSION_NAMES = Object.keys(Permissions.FLAGS);
 
 // const asciiFontsFiles = readdirSync(join(__dirname, "../node_modules/ascii-art-font/Fonts/"));
 // const ASCII_FONTS = asciiFontsFiles.map(r => r.replace(/\.flf$/gi, ''));
-let ASCII_FONTS;
-if (ASCII_FONTS === undefined)
-    art.fonts((e, l) => {
-        if (e) {
-            module.exports.ASCII_FONTS = ASCII_FONTS = [];
-            return process.emit("uncaughtException", e);
-        }
-        module.exports.ASCII_FONTS = ASCII_FONTS = l;
-    });
-const ASCII_IGNORE_HASH = [
-    "Banner",
-    "Banner3",
-    "Banner3-D",
-    "Banner4",
-    "Bright",
-    "Caligraphy2",
-    "3x5",
-    "Alligator",
-    "Alligator2",
-    "alligator3",
-    "DANC4",
-    "Efti Chess",
-    "Efti Wall",
-    "Gradient",
-    "Katakana",
-    "Moscow",
-    "Old Banner",
-    "Slide"
-];
+// let ASCII_FONTS;
+// if (ASCII_FONTS === undefined)
+//     art.fonts((e, l) => {
+//         if (e) {
+//             module.exports.ASCII_FONTS = ASCII_FONTS = [];
+//             return process.emit("uncaughtException", e);
+//         }
+//         module.exports.ASCII_FONTS = ASCII_FONTS = l;
+//     });
+// const ASCII_IGNORE_HASH = [
+//     "Banner",
+//     "Banner3",
+//     "Banner3-D",
+//     "Banner4",
+//     "Bright",
+//     "Caligraphy2",
+//     "3x5",
+//     "Alligator",
+//     "Alligator2",
+//     "alligator3",
+//     "DANC4",
+//     "Efti Chess",
+//     "Efti Wall",
+//     "Gradient",
+//     "Katakana",
+//     "Moscow",
+//     "Old Banner",
+//     "Slide"
+// ];
 
 const SCHEDULE_MESSAGER_PATH = join(__dirname, "./workers/schedule.js");
 
@@ -326,9 +327,9 @@ const RANDOM_COLOR = Object.values(COLORS);
 const REPLY_ERROR = {
     // DURATION ERRORS
     "Can't parse string": "Invalid duration! Try `3h` or `5m16s` or `69y`",
-    "Duration less than 10000 ms": "Too much work <:deadLife:796323537937367050>",
+    "Duration less than minimum ms": "Too much work <:deadLife:796323537937367050> give longer duration",
     "end before start": "Aww someone wanna get nostalgic, so sweett but sorry i can't remind you at that time, the past had passed just move on already",
-    "Invalid time value": "Invalid date! Try `december 12 2069, 18:00:00` or `March 29 2222, 06:15:30 am",
+    "Invalid time value": "Invalid date! Try `december 12 2069, 18:00:00` or `March 29 2222, 06:15:30 am`",
 
     // UNKNOWN ERRORS
     "Unknown Ban": "They're not banned. Consider banning them first <:senkoStareLife:853238498223325204>",
@@ -434,8 +435,8 @@ module.exports = {
     NEKOSLIFE_NSFW_ENDPOINTS,
     INTERACT_NO_INCLUDE_TARGET_NAMES,
     PERMISSION_NAMES,
-    ASCII_FONTS,
-    ASCII_IGNORE_HASH,
+    // ASCII_FONTS,
+    // ASCII_IGNORE_HASH,
     SCHEDULE_MESSAGER_PATH,
     COLORS,
     RANDOM_COLOR,
