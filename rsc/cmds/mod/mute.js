@@ -48,7 +48,6 @@ module.exports = class MuteCmd extends Command {
         if (!res.muted.length)
             if (replyHigherThanMod(inter, "mute", res))
                 return;
-        const ex = res.muted[0];
         const emb = timedPunishmentModEmbed("Mute",
             this.member,
             res.muted.map(r => r.user),

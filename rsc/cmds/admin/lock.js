@@ -89,7 +89,7 @@ module.exports = class LockCmd extends Command {
             emb.addField("Reason", reason.value);
         emb.addField("At", "<t:" + unixToSeconds(invoked) + ":F>", true)
             .addField("Until", parseD ? "<t:" + unixToSeconds(end) + ":F>" : "`Never`", true)
-            .addField("For", parseD ? parseD.duration.strings.join(" ") : "`Ever`");
+            .addField("For", parseD ? "`" + parseD.duration.strings.join(" ") + "`" : "`Ever`");
 
         return inter.editReply({ embeds: [emb] });
     }

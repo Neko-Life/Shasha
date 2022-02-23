@@ -465,7 +465,7 @@ async function cacheGuildInvites(guild, force) {
 //     }
 // }
 
-function timedPunishmentModEmbed(title, moderator, targets, { reason, invoked, end, durationStr }) {
+function timedPunishmentModEmbed(title, moderator, targets, { reason, invoked, end = null, durationStr } = {}) {
     const emb = new MessageEmbed()
         .setTitle(title)
         .setThumbnail(targets[0].displayAvatarURL({ size: 4096, format: "png", dynamic: true }))

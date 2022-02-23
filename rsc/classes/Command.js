@@ -1,12 +1,5 @@
 "use strict";
 
-const {
-    PermissionString,
-    TextBasedChannels,
-    AutocompleteInteraction,
-    GuildCacheMessage,
-    Cached
-} = require("discord.js");
 const configFile = require("../../config.json");
 const { loadDb } = require("../database");
 const { escapeRegExp } = require("lodash");
@@ -32,8 +25,8 @@ const { logDev } = require("../debug");
  * @property {boolean} nsfwOnly
  * @property {boolean} guarded
  * @property {AutocompleteData} autocomplete
- * @property {PermissionString[]} userPermissions
- * @property {PermissionString[]} clientPermissions
+ * @property {import("discord.js").PermissionString[]} userPermissions
+ * @property {import("discord.js").PermissionString[]} clientPermissions
  * @property {number} deleteSavedMessagesAfter - ms
  *
  * @typedef {object} allowMentionParam
@@ -41,7 +34,7 @@ const { logDev } = require("../debug");
  * @property {string} content - String containing mentions
  *
  * @typedef {object} CmdDisableOpt
- * @property {{users: string[], roles: string[], permissions: PermissionString[]}} bypass - Ids to bypass
+ * @property {{users: string[], roles: string[], permissions: import("discord.js").PermissionString[]}} bypass - Ids to bypass
  * @property {boolean} all - Wether to set for all channels (ignores channels option)
  * @property {string[]} channels - Channel Ids to bypass
  * @property {boolean} remove - Delete the data in db
@@ -77,7 +70,7 @@ module.exports.Command = class ShaBaseCommand {
              */
             this.guild = interaction.guild;
             /**
-             * @type {TextBasedChannels}
+             * @type {import("discord.js").TextBasedChannels}
              */
             this.channel = interaction.channel;
             /**
@@ -100,7 +93,7 @@ module.exports.Command = class ShaBaseCommand {
         this.clientPermissions = data.clientPermissions || [];
 
         /**
-         * @type {Promise<import("../typins").ShaMessage>[] | Promise<GuildCacheMessage<Cached>>[] | import("../typins").ShaMessage[] | GuildCacheMessage<Cached>[]}
+         * @type {Promise<import("../typins").ShaMessage>[] | Promise<import("discord.js").GuildCacheMessage<import("discord.js").Cached>>[] | import("../typins").ShaMessage[] | import("discord.js").GuildCacheMessage<import("discord.js").Cached>[]}
          */
         this._savedMessages = [];
         if (data.savedMessages)
@@ -112,15 +105,15 @@ module.exports.Command = class ShaBaseCommand {
     }
 
     /**
-     * @type {Promise<import("../typins").ShaMessage>[] | Promise<GuildCacheMessage<Cached>>[] | import("../typins").ShaMessage[] | GuildCacheMessage<Cached>[]}
+     * @type {Promise<import("../typins").ShaMessage>[] | Promise<import("discord.js").GuildCacheMessage<import("discord.js").Cached>>[] | import("../typins").ShaMessage[] | import("discord.js").GuildCacheMessage<import("discord.js").Cached>[]}
      */
     get savedMessages() {
         return this._savedMessages;
     }
 
     /**
-     * @param {Promise<import("../typins").ShaMessage>[] | Promise<GuildCacheMessage<Cached>>[] | import("../typins").ShaMessage[] | GuildCacheMessage<Cached>[]} messages
-     * @return {Promise<import("../typins").ShaMessage>[] | Promise<GuildCacheMessage<Cached>>[] | import("../typins").ShaMessage[] | GuildCacheMessage<Cached>[]}
+     * @param {Promise<import("../typins").ShaMessage>[] | Promise<import("discord.js").GuildCacheMessage<import("discord.js").Cached>>[] | import("../typins").ShaMessage[] | import("discord.js").GuildCacheMessage<import("discord.js").Cached>[]} messages
+     * @return {Promise<import("../typins").ShaMessage>[] | Promise<import("discord.js").GuildCacheMessage<import("discord.js").Cached>>[] | import("../typins").ShaMessage[] | import("discord.js").GuildCacheMessage<import("discord.js").Cached>[]}
      */
     saveMessages(...messages) {
         for (let i = 0; i < messages.length; i++) {
@@ -165,7 +158,7 @@ module.exports.Command = class ShaBaseCommand {
     }
 
     /**
-     * @param {AutocompleteInteraction} inter 
+     * @param {import("discord.js").AutocompleteInteraction} inter 
      * @param {import("discord.js").ApplicationCommandOptionChoice} focus
      */
     async handleAutocomplete(inter, focus) {
@@ -321,7 +314,7 @@ module.exports.Command = class ShaBaseCommand {
     /**
      * Parse `message` string arg
      * @param {string} arg 
-     * @param {TextBasedChannels} oldChannel 
+     * @param {import("discord.js").TextBasedChannels} oldChannel 
      * @returns {Promise<import("../typins").ShaMessage>}
      */
     async messageArg(arg, oldChannel) {

@@ -13,7 +13,7 @@ class CommandSettingsHelper {
 
     static async enable(inter, args) {
         if (args[0] === "category") {
-            inter.deferUpdate();
+            if (!(inter.replied || inter.deferred)) inter.deferUpdate();
             return this.categoryEveryonePermissionsUpdate(inter, args[1], true);
         } else {
             const res = await inter.reply({ content: "This feature is still in development and isn't ready yet. We're sorry for the incovenience", fetchReply: true });
@@ -28,7 +28,7 @@ class CommandSettingsHelper {
      */
     static async disable(inter, args) {
         if (args[0] === "category") {
-            inter.deferUpdate();
+            if (!(inter.replied || inter.deferred)) inter.deferUpdate();
             return this.categoryEveryonePermissionsUpdate(inter, args[1], false);
         } else {
             const res = await inter.reply({ content: "This feature is still in development and isn't ready yet. We're sorry for the incovenience", fetchReply: true });
@@ -211,7 +211,7 @@ class CommandSettingsHelper {
 
     static async remove(inter, args) {
         if (args[0] === "bypass") {
-            inter.deferUpdate();
+            if (!(inter.replied || inter.deferred)) inter.deferUpdate();
             const res = await inter.client.application.commands.permissions.set({
                 command: args[1], // cmd.id,
                 guild: inter.guild.id,

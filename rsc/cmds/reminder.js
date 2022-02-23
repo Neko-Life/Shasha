@@ -77,15 +77,15 @@ module.exports.remind = class RemindCmd extends Command {
             },
         }
         logDev(await this.client.scheduler.add(job));
-        return this.saveMessages(inter.editReply(`Okie! I will remind you about it in ${durationString.strings.join()} at <t:${unixToSeconds(endDate)}:F>! You can manage all your reminder with \`/reminder manage\``));
+        return this.saveMessages(inter.editReply(`Okie! I will remind you about it in ${durationString.strings.join()} at <t:${unixToSeconds(endDate)}:F>! You can view all your reminder with \`/reminder list\``));
     }
 }
 
-module.exports.manage = class ManageRemindCmd extends Command {
+module.exports.list = class ListReminderCmd extends Command {
     constructor(interaction) {
         super(interaction, {
-            name: "manage-reminder",
+            name: "list-reminder",
         });
     }
-    async run(inter, { action }) { }
+    async run(inter) { }
 }

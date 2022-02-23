@@ -5,7 +5,7 @@ const { Command } = require("../../classes/Command");
 const { Moderation } = require("../../classes/Moderation");
 const { loadDb } = require("../../database");
 const { logDev } = require("../../debug");
-const { getColor, unixToSeconds, tickTag, replyError, replyHigherThanMod } = require("../../functions");
+const { getColor, unixToSeconds, tickTag, replyError, replyHigherThanMod, timedPunishmentModEmbed } = require("../../functions");
 
 module.exports = class BanCmd extends Command {
     constructor(interaction) {
@@ -50,20 +50,25 @@ module.exports = class BanCmd extends Command {
             if (replyHigherThanMod(inter, "ban", res))
                 return;
         const ex = res.banned[0];
-        const emb = new MessageEmbed()
-            .setTitle("Ban")
-            .setColor(getColor(this.user.accentColor, true, this.member.displayColor))
-            .setThumbnail(ex.user.displayAvatarURL({ size: 4096, format: "png", dynamic: true }))
-            .addField("User", tickTag(ex.user.user || ex.user)
-                + `\n<@${ex.user.id}>`
-                + `\n(${ex.user.id})`)
-            .addField("At", "<t:" + unixToSeconds(invoked) + ":F>", true)
-            .setDescription(ex.opt.reason);
-        if (end)
-            emb.addField("Until", "<t:" + unixToSeconds(end) + ":F>", true)
-                .addField("For", "`" + durFor + "`");
-        else emb.addField("Until", "`Never`", true)
-            .addField("For", "`Ever`");
+        const emb = timedPunishmentModEmbed("Ban", this.member, res.banned.map(r => r.user), {
+            reason: ex.opt.reason,
+            durationStr: durFor,
+            end,
+            invoked,
+        }); // new MessageEmbed()
+        //     .setTitle("Ban")
+        //     .setColor(getColor(this.user.accentColor, true, this.member.displayColor))
+        //     .setThumbnail(ex.user.displayAvatarURL({ size: 4096, format: "png", dynamic: true }))
+        //     .addField("User", tickTag(ex.user.user || ex.user)
+        //         + `\n<@${ex.user.id}>`
+        //         + `\n(${ex.user.id})`)
+        //     .addField("At", "<t:" + unixToSeconds(invoked) + ":F>", true)
+        //     .setDescription(ex.opt.reason);
+        // if (end)
+        //     emb.addField("Until", "<t:" + unixToSeconds(end) + ":F>", true)
+        //         .addField("For", "`" + durFor + "`");
+        // else emb.addField("Until", "`Never`", true)
+        //     .addField("For", "`Ever`");
         if (ex.opt.days)
             emb.addField("Purged", "`Up to " + ex.opt.days + ` day${ex.opt.days > 1 ? "s" : ""} old messages from now\``)
         return inter.editReply({ embeds: [emb] });

@@ -51,9 +51,10 @@ class AddConstruct {
             .setLabel("New Button")
             .setStyle("SECONDARY");
         let success;
-        const newMes = copyProps(preview, ["stickers", "nonce"]);
+        const newMes = copyProps(preview, ["stickers", "nonce"], { enumerable: true, configurable: true, writable: true });
         if (newMes.components[4]?.components.length === 5) success = false;
         else for (let i = 0; i < newMes.components.length + 1; i++) {
+            if (newMes.components[i]?.components[0].type === "SELECT_MENU") continue;
             if (!newMes.components[i]) newMes.components[i] = new MessageActionRow();
             if (newMes.components[i].components.length < 5) {
                 newMes.components[i].addComponents(button);
@@ -66,6 +67,7 @@ class AddConstruct {
             return delNo(no);
         } else if (success === true) {
             inter.deferUpdate();
+            if (!newMes.content) newMes.content = null;
             return preview.edit(newMes);
         } else {
             const no = await inter.reply({ content: "Something went wrong. Contact support pls :(", fetchReply: true });

@@ -27,6 +27,7 @@ const PERMISSIONS_EMPHASIZE = [
     "MANAGE_EMOJIS_AND_STICKERS",
     "MANAGE_THREADS",
     "MODERATE_MEMBERS",
+    "MANAGE_EVENTS",
 ];
 
 const reValidURL = /^https?:\/\/[^\s\n]+\.[^\s\n][^\s\n]/;
