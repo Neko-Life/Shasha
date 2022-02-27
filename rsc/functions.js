@@ -2,8 +2,8 @@
 
 const { Collection, Guild, User, Interaction, GuildMember, Invite, Role, GuildChannel, MessageActionRow, MessageButton, MessageEmbed } = require("discord.js");
 const { escapeRegExp } = require("lodash");
-const { join } = require("path");
-const { Worker } = require("worker_threads");
+// const { join } = require("path");
+// const { Worker } = require("worker_threads");
 const { PERMISSIONS_EMPHASIZE, REPLY_ERROR } = require("./constants");
 const { loadDb } = require("./database");
 const { logDev } = require("./debug");
@@ -393,6 +393,11 @@ async function disableMessageComponents(message, enableInstead) {
     return message.edit(R);
 }
 
+/**
+ * 
+ * @param {boolean} homeButton - Whether to put Home button in the middle
+ * @returns {MessageActionRow}
+ */
 function prevNextButton(homeButton) {
     const ret = new MessageActionRow()
         .addComponents(
@@ -406,13 +411,13 @@ function prevNextButton(homeButton) {
 
 /**
  * 
- * @param {typeof Error | {message: string}} e 
+ * @param {Error | {message: string}} e 
  * @param {object} vars 
  * @returns 
  */
 function replyError(e, vars) {
     let reply = replaceVars(REPLY_ERROR[e.message] || e.message, vars);
-    if (!REPLY_ERROR[e.message])
+    if (!REPLY_ERROR[e.message] && (e instanceof Error))
         emitShaError(e);
     return reply;
 }
@@ -490,6 +495,22 @@ function createRegExpFromStr(str, escape) {
     return { regexp: re, nOT };
 }
 
+/**
+ * Purge client and member message after duration
+ * @param {import("../../typins").ShaMessage} m 
+ * @param {import("../../typins").ShaMessage} setMsg 
+ * @param {number} [dur=5000] 
+ */
+function delMes(m, setMsg, dur = 5000) {
+    setTimeout(
+        () => {
+            if (setMsg && m.guild.me.permissionsIn(m.channel).has("MANAGE_MESSAGES"))
+                m.channel.bulkDelete([m, setMsg]).catch(logDev);
+            else m.deleted ? null : m.delete();
+        }, dur
+    )
+}
+
 module.exports = {
     // ---------------- FUNCTIONS ---------------- 
     // Essentials for bot functionality
@@ -526,6 +547,7 @@ module.exports = {
     cacheGuildInvites,
     timedPunishmentModEmbed,
     createRegExpFromStr,
+    delMes,
 
     // ---------------- FNS IMPORTS ----------------
     // Functions too big to be put here so imported and has its own file instead

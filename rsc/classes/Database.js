@@ -88,8 +88,8 @@ class ShaBaseDb {
         let i = 0;
         let arr = await cursor.toArray();
         if (doc)
-            arr = arr.filter(r => r[doc]);
-        return new Map(arr.map(r => [([undefined, null].includes(r[doc]) ? i++ : r[doc]), r]));
+            arr = arr.filter(r => r[doc] !== undefined);
+        return new Map(arr.map(r => [([undefined].includes(r[doc]) ? i++ : r[doc]), r]));
     }
 
     /**

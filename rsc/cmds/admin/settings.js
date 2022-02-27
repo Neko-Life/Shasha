@@ -7,7 +7,7 @@ const { CommandSettingsHelper } = require("../../classes/CommandSettingsHelper")
 const { BUTTON_CLOSE } = require("../../constants");
 const { loadDb } = require("../../database");
 const { logDev } = require("../../debug");
-const { getColor, findRoles, replyError, isInteractionInvoker, emitShaError } = require("../../functions");
+const { getColor, findRoles, replyError, isInteractionInvoker, emitShaError, delMes } = require("../../functions");
 const ButtonHandler = require("../../messageInteraction/button");
 const { intervalToStrings, createInterval, parseDuration } = require("../../util/Duration");
 
@@ -902,16 +902,6 @@ module.exports = class SettingsCmd extends Command {
 }
 
 // ------------------------------------------------ HELPER FUNCTION ------------------------------------------------
-
-function delMes(m, setMsg, dur = 5000) {
-    setTimeout(
-        () => {
-            if (setMsg && m.guild.me.permissionsIn(m.channel).has("MANAGE_MESSAGES"))
-                m.channel.bulkDelete([m, setMsg]).catch(logDev);
-            else m.deleted ? null : m.delete();
-        }, dur
-    )
-}
 
 async function noCanDo(inter, noDefer) {
     if (!inter) return;

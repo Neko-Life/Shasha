@@ -70,7 +70,7 @@ module.exports.Command = class ShaBaseCommand {
              */
             this.guild = interaction.guild;
             /**
-             * @type {import("discord.js").TextBasedChannels}
+             * @type {import("discord.js").CacheTypeReducer<import("discord.js").Cached, import("discord.js").GuildTextBasedChannel | null, import("discord.js").GuildTextBasedChannel | null, import("discord.js").GuildTextBasedChannel | null, import("discord.js").TextBasedChannel | null>}
              */
             this.channel = interaction.channel;
             /**
@@ -349,7 +349,17 @@ module.exports.Command = class ShaBaseCommand {
         const gd = loadDb(this.guild, "guild/" + this.guild.id);
         const get = await gd.db.getOne("commandDisabled", this.commandPath.join("/"));
         const setting = get?.value;
-        if (!setting) return this.#disabled = false;
+        if (!setting) {
+            if (!this.guild.commandPermissions)
+                this.guild.commandPermissions = {};
+            if (!this.guild.commandPermissions[this.interaction.commandId]) {
+                this.guild.commandPermissions[this.interaction.commandId] = await this.interaction.command.permissions.fetch({ guild: this.guild }).catch(logDev) || [];
+            }
+            const userPerm = this.guild.commandPermissions[this.interaction.commandId].find(r => r.id === this.member.id);
+            const userRoles = this.guild.commandPermissions[this.interaction.commandId].filter(r => r.id !== this.guild.id && this.member.roles.resolve(r.id));
+            if (userPerm?.permission || userRoles.some(r => r?.permission)) this.bypass = true;
+            return this.#disabled = false;
+        }
 
         const bypassIds = [];
         this.bypass = false;
@@ -363,7 +373,7 @@ module.exports.Command = class ShaBaseCommand {
                     ret = true;
             } else {
                 if (r === this.user.id) ret = true;
-                if (this.member.roles.cache.get(r))
+                else if (this.member.roles.cache.get(r))
                     ret = true;
             }
             return ret;

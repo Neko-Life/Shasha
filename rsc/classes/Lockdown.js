@@ -29,11 +29,12 @@ class Lockdown {
      */
     constructor(targets, moderator, { force = false, ignores = {}, noTextOnly = false, end = null, reason = "No reason provided" } = {}) {
         /** @type {import("../typins").ShaGuildChannel[]} */
-        this.targets = targets.map(r => moderator.guild.channels.resolve(r));
-        if (!this.targets?.length) throw new RangeError("No target channel found");
+        this.targets = targets.map(r => moderator.guild.channels.resolve(r)).filter(r => r && !r.executingLockdown);
+        if (!this.targets?.length) throw new RangeError("No target channel found or they're already executing");
         if (!noTextOnly)
             if (this.targets.some(r => !r.isText?.()))
                 throw new TypeError("Some channel aren't text channel");
+        for (const C of this.targets) C.executingLockdown = true;
         this.client = moderator.client;
         this.guild = moderator.guild;
         this.ignores = {
@@ -52,6 +53,7 @@ class Lockdown {
         for (const C of this.targets) {
             loadDb(C, `channel/${C.id}`);
             if (await C.db.getOne("lockdown", "Object[]")) {
+                delete C.executingLockdown;
                 already.push(C);
                 continue;
             }
@@ -84,6 +86,7 @@ class Lockdown {
                     success.push(edited);
                 else failed.push(v);
             }
+            delete C.executingLockdown;
             if (!success.length) continue;
             const dbV = success.map(r => {
                 return {
@@ -129,6 +132,7 @@ class Lockdown {
             const getDb = await C.db.getOne("lockdown", "Object[]");
             const settings = getDb?.value;
             if (!settings?.length) {
+                delete C.executingLockdown;
                 already.push(C);
                 continue;
             }
@@ -142,6 +146,7 @@ class Lockdown {
                     success.push(edited);
                 else failed.push(V);
             }
+            delete C.executingLockdown;
             if (!success.length) continue;
             await C.db.delete("lockdown", "Object[]");
             if (C.name.startsWith("🔒"))

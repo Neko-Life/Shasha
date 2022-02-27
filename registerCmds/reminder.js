@@ -30,10 +30,22 @@ module.exports = {
                 {
                     type: 7,
                     name: "channel",
-                    description: "Send your reminder here",
+                    description: "I will ping you here",
                     channel_types: [0, 5, 10, 12, 11, 6],
                 }
             ]
-        }
-    ]
+        },
+        {
+            type: 1,
+            name: "manage",
+            description: "List and remove your cancelled appointment",
+            options: [
+                {
+                    type: 6,
+                    name: "user",
+                    description: "View this Business Man's tight schedule",
+                },
+            ],
+        },
+    ],
 }

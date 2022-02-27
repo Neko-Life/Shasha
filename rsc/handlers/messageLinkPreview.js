@@ -3,7 +3,7 @@
 const { MessageEmbed } = require("discord.js");
 const { PATTERN_MESSAGE_LINK } = require("../constants");
 const { loadDb } = require("../database");
-const { getChannelMessage, tickTag, getColor, isAdmin, emitShaError } = require("../functions");
+const { getChannelMessage, tickTag, getColor, isAdmin, emitShaError, wait } = require("../functions");
 
 async function delOldPrev(msg) {
     if (msg.messageLinkPreview)
@@ -31,6 +31,7 @@ module.exports = async (msg) => {
         }
         if (!msg.guild.messageLinkPreviewSettings.state) return;
     }
+    await wait(500);
     const link = msg.content.match(new RegExp(PATTERN_MESSAGE_LINK));
     if (!link?.length || msg.deleted)
         return delOldPrev(msg);
@@ -40,7 +41,7 @@ module.exports = async (msg) => {
     const color = getColor(toPrev.author.accentColor, true, toPrev.member?.displayColor);
     const emb = new MessageEmbed()
         .setAuthor({
-            name: tickTag(toPrev.member?.displayName || toPrev.author).replace(/`/g, ""),
+            name: tickTag(toPrev.member || toPrev.author),
             iconURL: (toPrev.member || toPrev.author).displayAvatarURL({ size: 128, format: "png", dynamic: true }),
             url: toPrev.url
         }).setColor(color)

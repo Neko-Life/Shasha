@@ -10,6 +10,10 @@ const { emitShaError } = require("../functions");
  * @param {ShaClient} client 
  */
 async function handle(client) {
+    client.application.commands.fetch().catch((e) => {
+        emitShaError(e);
+        console.error("Can't fetch application commands");
+    });
     if (configFile.errLogChannel)
         client.errorChannel = await client.channels.fetch(configFile.errLogChannel)
             .catch((e) => {

@@ -44,7 +44,7 @@ export declare class ShaGuild extends Guild {
     public readonly client: ShaClient;
     public messageLinkPreviewSettings: { state: boolean };
     public db: ShaBaseDb;
-    public commandPermissions: ApplicationCommandPermissions[];
+    public commandPermissions: { [commandId: string]: ApplicationCommandPermissions[] };
 }
 
 export declare class ShaGuildMember extends GuildMember {

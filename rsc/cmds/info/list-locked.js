@@ -28,7 +28,7 @@ module.exports = class ListLockedCmd extends Command {
             : "No locked channel in this server. Yayyy!";
         const emb = new MessageEmbed()
             .setColor(getColor(this.user.accentColor, true, this.member.displayColor))
-            .setTitle("Locked Channels")
+            .setTitle("Locked Channel")
             .setDescription(desc.slice(0, 4000));
         return inter.editReply({ embeds: [emb] });
     }

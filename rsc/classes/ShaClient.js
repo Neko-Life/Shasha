@@ -253,7 +253,7 @@ module.exports = class ShaClient extends Client {
     /**
      * 
      * @param {string} id
-     * @param {{TIMEOUT:number|boolean, CURRENT_PAGE:string|number, PAGES:{}|[]}} data
+     * @param {{TIMEOUT:number|boolean, CURRENT_PAGE:string|number, PAGES:{[k:string]:import("discord.js").MessagePayload}|import("discord.js").MessagePayload[]}} data
      * @returns 
      */
     async createMessageInteraction(id, data) {

@@ -29,11 +29,12 @@ module.exports = class TimeoutCmd extends Command {
         const settings = get?.value || {};
         let parse;
         try {
-            parse = Moderation.defaultParseDuration(invoked, duration.value, settings.duration);
+            parse = Moderation.defaultParseDuration(invoked, duration?.value, settings.duration);
         } catch (e) {
-            return inter.editReply(replyError(e));
+            if (e.message !== "Invalid time value")
+                return inter.editReply(replyError(e));
         }
-        if (!parse?.ms) return inter.editReply("How long? You don't want me to timeout them for 273735 years right?");
+        if (!parse?.ms) return inter.editReply("How long? You don't want me to time them out for 273735 years right?");
         const mod = new Moderation(this.client, {
             guild: this.guild, moderator: this.member, targets: kid.user,
         });

@@ -14,6 +14,7 @@ module.exports = class StealCmd extends Command {
             clientPermissions: ["MANAGE_EMOJIS_AND_STICKERS", "EMBED_LINKS", "READ_MESSAGE_HISTORY", "MANAGE_GUILD", "VIEW_CHANNEL"],
             userPermissions: ["MANAGE_EMOJIS_AND_STICKERS", "MANAGE_GUILD"],
             deleteSavedMessagesAfter: 10000,
+            guildOnly: true,
         });
     }
     /** @param {import("../../typins").ShaCommandInteraction} inter */
