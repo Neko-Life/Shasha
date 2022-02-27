@@ -193,7 +193,8 @@ module.exports.manage = class ManageReminderCmd extends Command {
             if (retNoReminder(msg)) return;
             createEmbeds();
             createPages();
-            const curPage = this.client.activeMessageInteractions.get(msg.id).CURRENT_PAGE;
+            let curPage = this.client.activeMessageInteractions.get(msg.id).CURRENT_PAGE;
+            if (!pages[curPage]) curPage = pages.length - 1;
             await createMessageInteraction(msg.id, curPage);
             msg.edit(pages[curPage]);
             return true;
