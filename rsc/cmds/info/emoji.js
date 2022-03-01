@@ -8,7 +8,7 @@ const { intervalToStrings, createInterval } = require("../../util/Duration");
 module.exports = class InfoEmojiCmd extends Command {
     constructor(interaction) {
         super(interaction, {
-            name: "infoemoji",
+            name: "info-emoji",
             description: "Show emoji info",
             autocomplete: {
                 matchName: false,

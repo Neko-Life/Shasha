@@ -3,7 +3,7 @@
 const { MessageEmbed, StageChannel } = require("discord.js");
 const { Interval } = require("luxon");
 const { Command } = require("../../classes/Command");
-const { fetchAllMembers, strYesNo, maxStringsLength } = require("../../functions");
+const { fetchAllMembers, strYesNo, maxStringsLength, addS } = require("../../functions");
 const { getColor } = require("../../functions");
 const { intervalToStrings, createInterval } = require("../../util/Duration");
 
@@ -185,7 +185,7 @@ module.exports = class ChannelInfoCmd extends Command {
         const viewableCount = channel.members.size;
         if (viewableCount) emb.addField(/VOICE/.test(channel.type) ?
             "Active Member" : "Viewable by",
-            `\`${viewableCount}\` member${viewableCount > 1 ? "s" : ""}`, true)
+            `\`${viewableCount}\` member${addS(viewableCount)}`, true)
         return inter.editReply({ embeds: [emb] });
     }
 }

@@ -7,7 +7,7 @@ const { CommandSettingsHelper } = require("../../classes/CommandSettingsHelper")
 const { BUTTON_CLOSE } = require("../../constants");
 const { loadDb } = require("../../database");
 const { logDev } = require("../../debug");
-const { getColor, findRoles, replyError, isInteractionInvoker, emitShaError, delMes } = require("../../functions");
+const { getColor, findRoles, replyError, isInteractionInvoker, emitShaError, delMes, addS } = require("../../functions");
 const ButtonHandler = require("../../messageInteraction/button");
 const { intervalToStrings, createInterval, parseDuration } = require("../../util/Duration");
 
@@ -232,7 +232,7 @@ module.exports = class SettingsCmd extends Command {
                 .setTitle("Ban Settings")
                 .setDescription("Configure timed ban and purge on ban")
                 .addField("Duration", dataDurationEmbedField(date, data.duration))
-                .addField("Purge", (data.purge ? "`Up to " + data.purge + ` day${data.purge > 1 ? "s" : ""} old messages\`` : "`No`"));
+                .addField("Purge", (data.purge ? "`Up to " + data.purge + ` day${addS(data.purge)} old messages\`` : "`No`"));
 
             const components = [mainSelectMenu, moderationSelectmenu, moderationBanPageButtons];
             return { embeds: [emb], components };

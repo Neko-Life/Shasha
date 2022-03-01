@@ -11,7 +11,7 @@ module.exports = class OwnerServerInfoCmd extends Command {
         for (const [k, v] of interaction.client?.guilds.cache || [])
             toCommands.identifier[k] = { name: v.name, value: v.id };
         super(interaction, {
-            name: "ownerserverinfo",
+            name: "owner-server-info",
             ownerOnly: true,
             autocomplete: {
                 matchKey: true,

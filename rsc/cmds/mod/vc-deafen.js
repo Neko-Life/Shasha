@@ -2,12 +2,12 @@
 
 const { Command } = require("../../classes/Command");
 const { Moderation } = require("../../classes/Moderation");
-const { replyHigherThanMod, replyError } = require("../../functions");
+const { replyHigherThanMod, replyError, addS } = require("../../functions");
 
 module.exports = class DeafenCmd extends Command {
     constructor(interaction) {
         super(interaction, {
-            name: "vcdeafen",
+            name: "vc-deafen",
             userPermissions: ["DEAFEN_MEMBERS"],
             clientPermissions: ["DEAFEN_MEMBERS"],
             guildOnly: true,
@@ -43,7 +43,7 @@ module.exports = class DeafenCmd extends Command {
                     return;
                 else return this.saveMessages(inter.editReply("No one to deafen, might as well deafen yourself"));
             }
-            return this.saveMessages(inter.editReply(`Deafened \`${res.deafened.length}\` user${res.deafened.length > 1 ? "s" : ""}`));
+            return this.saveMessages(inter.editReply(`Deafened \`${res.deafened.length}\` user${addS(res.deafened)}`));
         } catch (e) {
             return this.saveMessages(inter.editReply(replyError(e)));
         }

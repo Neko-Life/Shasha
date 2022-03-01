@@ -357,6 +357,39 @@ module.exports = {
                     description: "Reason",
                 }
             ]
+        }, {
+            type: 1,
+            name: "vc-move",
+            description: "Move users from a VC to another VC",
+            options: [
+                {
+                    type: 7,
+                    name: "destination",
+                    description: "Move to this VC",
+                    channel_types: [
+                        2, 13
+                    ],
+                    required: true,
+                },
+                {
+                    type: 7,
+                    name: "channel",
+                    description: "Move all user from this VC",
+                    channel_types: [
+                        2
+                    ]
+                },
+                {
+                    type: 6,
+                    name: "user",
+                    description: "Move this specific user",
+                },
+                {
+                    type: 3,
+                    name: "reason",
+                    description: "Reason",
+                }
+            ]
         },
         {
             type: 1,

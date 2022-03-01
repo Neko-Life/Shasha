@@ -6,7 +6,7 @@ const { LETTER_EMOTES, ZWS } = require("../../constants");
 module.exports = class BigTextCmd extends Command {
     constructor(interaction) {
         super(interaction, {
-            name: "bigtext",
+            name: "big-text",
         });
     }
     run(inter, { text }) {

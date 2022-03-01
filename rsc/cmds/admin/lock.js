@@ -7,7 +7,7 @@ const { Lockdown } = require("../../classes/Lockdown");
 const { Moderation } = require("../../classes/Moderation");
 const { loadDb } = require("../../database");
 const { logDev } = require("../../debug");
-const { replyError, getColor, unixToSeconds } = require("../../functions");
+const { replyError, getColor, unixToSeconds, addS } = require("../../functions");
 const { createInterval, intervalToStrings } = require("../../util/Duration");
 
 module.exports = class LockCmd extends Command {
@@ -25,7 +25,7 @@ module.exports = class LockCmd extends Command {
         await inter.reply("Targeting, please wait...");
         const targets = await getTargets(inter, this.guild, this.channel, channels, category);
         if (!targets) return;
-        await inter.editReply(`Locking ${targets.length} channels... This message will be edited when done...`)
+        await inter.editReply(`Locking ${targets.length} channel${addS(targets)}... This message will be edited when done...`)
         const iRoles = ignoreRoles?.value ? await ArgsParser.roles(this.guild, ignoreRoles.value) : null;
         const iPerms = ignorePermissions?.value ? ArgsParser.permissions(ignorePermissions.value) : null;
 
@@ -84,7 +84,7 @@ module.exports = class LockCmd extends Command {
             .setColor(getColor(this.user.accentColor, true, this.member.displayColor))
             .setTitle("Lock")
             .setDescription(desc.slice(0, 4000))
-            .setFooter({ text: `Took ${intervalToStrings(createInterval(invoked, new Date())).strings.join(" ")} to execute ${done.length} channels` });
+            .setFooter({ text: `Took ${intervalToStrings(createInterval(invoked, new Date())).strings.join(" ")} to execute ${done.length} channel${addS(done)}` });
         if (reason)
             emb.addField("Reason", reason.value);
         emb.addField("At", "<t:" + unixToSeconds(invoked) + ":F>", true)

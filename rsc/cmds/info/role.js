@@ -2,7 +2,7 @@
 
 const { MessageEmbed } = require("discord.js");
 const { Command } = require("../../classes/Command");
-const { fetchAllMembers, emphasizePerms } = require("../../functions");
+const { fetchAllMembers, emphasizePerms, addS } = require("../../functions");
 const { getColor } = require("../../functions");
 const { intervalToStrings, createInterval } = require("../../util/Duration");
 
@@ -56,7 +56,7 @@ module.exports = class RoleInfoCmd extends Command {
             .addField("Member with this role", "Found `"
                 + members.size
                 + "` member"
-                + (members.size > 1 ? "s" : ""), true)
+                + (addS(members.size)), true)
             .addField("Position", "`" + position + "`", true)
             .addField("Color", "`" + hexColor + "`\n`" + color + "`", true)
             .addField("Permissions", "```js\n" + (perms.join(", ")) + "```")

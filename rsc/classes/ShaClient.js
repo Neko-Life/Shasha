@@ -182,8 +182,8 @@ module.exports = class ShaClient extends Client {
 
     async loadScheduler() {
         logDev("Initializing scheduler...");
-        const guildSchedules = await Scheduler.loadSchedules(this, "guild");
-        const reminderSchedules = await Scheduler.loadSchedules(this, "reminder");
+        const guildSchedules = await Scheduler.getSchedules(this, "guild");
+        const reminderSchedules = await Scheduler.getSchedules(this, "reminder");
         const schedules = [...guildSchedules, ...reminderSchedules];
         this.scheduler = new Scheduler(this, schedules);
         logDev("Scheduler initialized");

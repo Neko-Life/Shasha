@@ -1,7 +1,7 @@
 "use strict";
 
 const ShaClient = require("./ShaClient");
-const { GuildResolvable, GuildMemberResolvable, GuildMember, Guild, User, MessageEmbed, Channel, VoiceChannel } = require("discord.js");
+const { GuildResolvable, GuildMemberResolvable, GuildMember, Guild, User, MessageEmbed, Channel, VoiceBasedChannel, StageChannel, VoiceChannel } = require("discord.js");
 const { loadDb } = require("../database");
 const { logDev } = require("../debug");
 const { getColor, unixToSeconds, isAdmin } = require("../functions");
@@ -23,6 +23,7 @@ const ENUM_ACTIONS = {
  * @property {User[] | User | GuildMember[] | GuildMember} targets
  * @property {GuildMemberResolvable} moderator
  * @property {Channel} channel
+ * @property {VoiceBasedChannel} [VCTarget=null]
  * 
  * @typedef {object} InfractionConstructor
  * @property {string[]|User[]} offender
@@ -395,7 +396,11 @@ class BaseModeration {
         const db = new ShaBaseDb(database, "member/" + this.guild.id + "/" + user.id);
         const get = await db.getOne("muted", "Object");
         const oldOpt = get?.value || {};
-        if (!oldOpt.state && !oldOpt.takenRoles?.length) throw new Error("This user isn't muted");
+        if (!oldOpt.state && !oldOpt.takenRoles?.length) {
+            try { await this.client.scheduler.remove("unmute/" + this.guild.id + "/" + user.id); }
+            catch (e) { logDev(e) };
+            throw new Error("This user isn't muted");
+        }
         if (!opt.reason) opt.reason = "No reason provided";
         if (user instanceof GuildMember) {
             if (oldOpt.takenRoles?.length)
@@ -521,6 +526,23 @@ class BaseModeration {
     }
 
     /**
+     *
+     * @param {import("../typins").ShaGuildMember} member
+     * @param {VoiceBasedChannel} VCTarget
+     * @param {DefaultExecModOpts & ExtendExecVCOpts} opt
+     */
+    async _execVCMove(member, VCTarget, opt) {
+        if (!member.voice.channel) return;
+        if (!member.voice.channel.permissionsFor(opt.moderator).has("MOVE_MEMBERS"))
+            throw new Error("Moderator lack MOVE_MEMBERS permission");
+        if (!member.voice.channel.permissionsFor(member.guild.me).has("MOVE_MEMBERS"))
+            throw new Error("Client lack MOVE_MEMBERS permission");
+        if (!opt.reason) opt.reason = "No reason provided";
+        await member.voice.setChannel(VCTarget, opt.reason);
+        return { member, VCTarget, opt };
+    }
+
+    /**
      * 
      * @param {Date} invoked - Invoked at
      * @param {string} durationArg - 425y98w98s87h989mo
@@ -556,11 +578,14 @@ class Moderation extends BaseModeration {
      * @param {ShaClient} client
      * @param {ModerationOpt} param0
      */
-    constructor(client, { guild, targets, moderator, channel }) {
+    constructor(client, { guild, targets, moderator, channel, VCTarget }) {
         super(client, guild, channel);
 
         if (!(moderator instanceof GuildMember))
             throw new TypeError("moderator isn't GuildMember");
+
+        if (VCTarget && !(VCTarget instanceof StageChannel) && !(VCTarget instanceof VoiceChannel))
+            throw new TypeError("VCTarget isn't VoiceBasedChannel");
 
         const targetUs = [];
         const targetMs = [];
@@ -594,6 +619,11 @@ class Moderation extends BaseModeration {
          * @type {GuildMember}
          */
         this.moderator = moderator;
+
+        /**
+         * @type {VoiceBasedChannel}
+         */
+        this.VCTarget = VCTarget || null;
 
         /**
          * @type {number}
@@ -995,6 +1025,32 @@ class Moderation extends BaseModeration {
             else unmuted.push(res);
         }
         return { unmuted, higherThanClient, higherThanModerator, noVoice };
+    }
+
+    /**
+     * 
+     * @param {DefaultExecModOpts & ExtendExecVCOpts} opt 
+     * @returns 
+     */
+    async vcMove(opt) {
+        if (!this.VCTarget) throw new Error("No VCTarget specified");
+        if (!opt.moderator) opt.moderator = this.moderator;
+        const moved = [];
+        const higherThanClient = [];
+        const higherThanModerator = [];
+        const noVoice = [];
+        for (const a of this.target.members) {
+            if (a.voice.channelId === this.VCTarget.id) continue;
+            if (!opt.force && a.id === opt.moderator.id) continue;
+            if (this.higherThanModerator.some(r => r.id === a.id)) {
+                higherThanModerator.push(a);
+                continue;
+            }
+            const res = await this._execVCMove(a, this.VCTarget, opt);
+            if (!res) noVoice.push(a);
+            else moved.push(res);
+        }
+        return { moved, higherThanClient, higherThanModerator, noVoice };
     }
 }
 

@@ -2,7 +2,7 @@
 
 module.exports = {
     name: "my",
-    description: "About me",
+    description: "Me and my settings for you <3",
     options: [
         {
             type: 1,

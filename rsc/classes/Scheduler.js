@@ -65,12 +65,7 @@ class Scheduler {
          */
         this.scheduler = this.init(jobs);
         this.starts();
-        const b = new Date().valueOf();
-        for (const k of jobs)
-            if (k.date.valueOf() < b) {
-                k.date = new Date(b + 10000);
-                this.add(k);
-            }
+        this.refreshJobs();
         logDev("Scheduler online. Loaded " + jobs.length + " schedules from " + client.guilds.cache.size + " guilds and reminder database");
     }
 
@@ -93,6 +88,15 @@ class Scheduler {
         });
     }
 
+    refreshJobs() {
+        const b = new Date().valueOf();
+        for (const k of this.jobs)
+            if (k.date.valueOf() < b) {
+                k.date = new Date(b + 10000);
+                this.add(k);
+            }
+    }
+
     handleMessage(message) {
         const data = JSON.parse(message);
         this.client.triggerActions[data.action](data);
@@ -105,8 +109,8 @@ class Scheduler {
      * @param {*} instance
      * @returns {Promise<SchedulerJob[]>}
      */
-    static async loadSchedules(client, type, instance) {
-        logDev("Loading schedules", type, instance?.name);
+    static async getSchedules(client, type, instance) {
+        logDev("Fetching schedules", type, instance?.name);
         const schedules = [];
         if (type === "guild") {
             if (!instance) {

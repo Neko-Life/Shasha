@@ -7,7 +7,7 @@ const { NSFW_ENDPOINTS } = require("../../constants");
 module.exports = class NsfwImageCmd extends Command {
     constructor(interaction) {
         super(interaction, {
-            name: "nsfwimage",
+            name: "nsfw-image",
             nsfwOnly: true
         });
     }

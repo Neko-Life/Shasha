@@ -16,7 +16,7 @@ module.exports = class CommandUnbanCmd extends Command {
                 toCommands.guild[k] = interaction.client.guilds.cache.get(k)?.name || k;
         }
         super(interaction, {
-            name: "commandunban",
+            name: "command-unban",
             ownerOnly: true,
             autocomplete: {
                 matchKey: true,

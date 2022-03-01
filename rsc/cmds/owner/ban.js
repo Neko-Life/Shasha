@@ -16,7 +16,7 @@ module.exports = class CommandBanCmd extends Command {
                 toCommands.user[k] = { name: v.tag, value: v.id };
         }
         super(interaction, {
-            name: "commandban",
+            name: "command-ban",
             ownerOnly: true,
             autocomplete: {
                 matchKey: true,

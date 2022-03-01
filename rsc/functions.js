@@ -470,15 +470,36 @@ async function cacheGuildInvites(guild, force) {
 //     }
 // }
 
+/**
+ * @typedef {object} TimedPunishmentModEmbedParam3
+ * @property {string} reason - Reason
+ * @property {Date} invoked - Invoked date
+ * @property {Date} [end=null] - End date
+ * @property {string} durationStr - Joined duration strings
+ */
+
+/**
+ * 
+ * @param {string} title - Embed title
+ * @param {GuildMember | User} moderator 
+ * @param {GuildMember[] | User[]} targets 
+ * @param {TimedPunishmentModEmbedParam3} param3 
+ * @returns 
+ */
 function timedPunishmentModEmbed(title, moderator, targets, { reason, invoked, end = null, durationStr } = {}) {
     const emb = new MessageEmbed()
         .setTitle(title)
         .setThumbnail(targets[0].displayAvatarURL({ size: 4096, format: "png", dynamic: true }))
         .setColor(getColor((moderator.user || moderator).accentColor, true, moderator.displayColor))
-        .addField("User" + (targets.length > 1 ? "s" : ""), targets.map(ex => tickTag(ex.user.user || ex.user)
-            + `\n<@${ex.user.id}>`
-            + `\n(${ex.user.id})`).join("\n"))
-        .addField("At", "<t:" + unixToSeconds(invoked) + ":F>", true)
+        .addField(
+            "User" + addS(targets),
+            targets.map(ex => {
+                const u = ex.user || ex;
+                return tickTag(u)
+                    + `\n<@${u.id}>`
+                    + `\n(${u.id})`
+            }).join("\n")
+        ).addField("At", "<t:" + unixToSeconds(invoked) + ":F>", true)
         .setDescription(reason);
     if (end)
         emb.addField("Until", "<t:" + unixToSeconds(end) + ":F>", true)
@@ -509,6 +530,18 @@ function delMes(m, setMsg, dur = 5000) {
             else m.deleted ? null : m.delete();
         }, dur
     )
+}
+
+/**
+ * Check for array's length property and return a letter "s" if array length is more than 1
+ * @param {Array | number} arr 
+ * @returns 
+ */
+function addS(arr) {
+    let n = arr?.length;
+    if (typeof n !== "number") n = arr;
+    if (typeof n !== "number") return NaN;
+    return n > 1 ? "s" : "";
 }
 
 module.exports = {
@@ -548,6 +581,7 @@ module.exports = {
     timedPunishmentModEmbed,
     createRegExpFromStr,
     delMes,
+    addS,
 
     // ---------------- FNS IMPORTS ----------------
     // Functions too big to be put here so imported and has its own file instead

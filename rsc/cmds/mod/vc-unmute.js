@@ -2,12 +2,12 @@
 
 const { Command } = require("../../classes/Command");
 const { Moderation } = require("../../classes/Moderation");
-const { replyHigherThanMod } = require("../../functions");
+const { replyHigherThanMod, addS } = require("../../functions");
 
 module.exports = class VCUnmuteCmd extends Command {
     constructor(interaction) {
         super(interaction, {
-            name: "vcunmute",
+            name: "vc-unmute",
             userPermissions: ["MUTE_MEMBERS"],
             clientPermissions: ["MUTE_MEMBERS"],
             guildOnly: true,
@@ -38,7 +38,7 @@ module.exports = class VCUnmuteCmd extends Command {
                     return;
                 else return this.saveMessages(inter.editReply("no one to unmute"));
             }
-            return this.saveMessages(inter.editReply(`Unmuted \`${res.unmuted.length}\` user${res.unmuted.length > 1 ? "s" : ""}`));
+            return this.saveMessages(inter.editReply(`Unmuted \`${res.unmuted.length}\` user${addS(res.unmuted)}`));
         } catch (e) {
             return this.saveMessages(inter.editReply(replyError(e)));
         }

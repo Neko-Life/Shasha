@@ -2,12 +2,12 @@
 
 const { Command } = require("../../classes/Command");
 const { Moderation } = require("../../classes/Moderation");
-const { replyHigherThanMod } = require("../../functions");
+const { replyHigherThanMod, addS } = require("../../functions");
 
 module.exports = class VCMuteCmd extends Command {
     constructor(interaction) {
         super(interaction, {
-            name: "vcmute",
+            name: "vc-mute",
             userPermissions: ["MUTE_MEMBERS"],
             clientPermissions: ["MUTE_MEMBERS"],
             guildOnly: true,
@@ -43,7 +43,7 @@ module.exports = class VCMuteCmd extends Command {
                     return;
                 else return this.saveMessages(inter.editReply("No one to mute, might as well mute yourself"));
             }
-            return this.saveMessages(inter.editReply(`Muted \`${res.muted.length}\` user${res.muted.length > 1 ? "s" : ""}`));
+            return this.saveMessages(inter.editReply(`Muted \`${res.muted.length}\` user${addS(res.muted)}`));
         } catch (e) {
             return this.saveMessages(inter.editReply(replyError(e)));
         }

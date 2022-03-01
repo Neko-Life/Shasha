@@ -7,7 +7,7 @@ const { prevNextButton } = require("../../functions");
 module.exports = class ListServerCmd extends Command {
     constructor(interaction) {
         super(interaction, {
-            name: "listserver",
+            name: "list-server",
             ownerOnly: true
         });
     }

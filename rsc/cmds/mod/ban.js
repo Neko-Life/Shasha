@@ -5,7 +5,7 @@ const { Command } = require("../../classes/Command");
 const { Moderation } = require("../../classes/Moderation");
 const { loadDb } = require("../../database");
 const { logDev } = require("../../debug");
-const { getColor, unixToSeconds, tickTag, replyError, replyHigherThanMod, timedPunishmentModEmbed } = require("../../functions");
+const { getColor, unixToSeconds, tickTag, replyError, replyHigherThanMod, timedPunishmentModEmbed, addS } = require("../../functions");
 
 module.exports = class BanCmd extends Command {
     constructor(interaction) {
@@ -70,7 +70,7 @@ module.exports = class BanCmd extends Command {
         // else emb.addField("Until", "`Never`", true)
         //     .addField("For", "`Ever`");
         if (ex.opt.days)
-            emb.addField("Purged", "`Up to " + ex.opt.days + ` day${ex.opt.days > 1 ? "s" : ""} old messages from now\``)
+            emb.addField("Purged", "`Up to " + ex.opt.days + ` day${addS(ex.opt.days)} old messages from now\``)
         return inter.editReply({ embeds: [emb] });
     }
 }

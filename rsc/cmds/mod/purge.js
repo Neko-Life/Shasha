@@ -3,6 +3,7 @@
 const { escapeRegExp } = require("lodash");
 const { Command } = require("../../classes/Command");
 const { logDev } = require("../../debug");
+const { addS } = require("../../functions");
 const { checkCmd } = require("../../handlers/command");
 
 module.exports = class PurgeCmd extends Command {
@@ -142,7 +143,7 @@ module.exports = class PurgeCmd extends Command {
 
         const ret = await inter.reply({
             content: "Purged `" + deleted.size + "` message"
-                + (deleted.size > 1 ? "s" : "")
+                + (addS(deleted.size))
                 + (del > 100
                     ? (
                         this.filtered.length > 100
