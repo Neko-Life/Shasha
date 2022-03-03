@@ -474,7 +474,7 @@ module.exports = class SettingsCmd extends Command {
 
                             } else if (args[0] === "bypass") {
 
-                                args = args.slice(1);
+                                args.shift();
 
                                 if (args[0] === "roles") {
 
@@ -878,7 +878,7 @@ module.exports = class SettingsCmd extends Command {
                 blockCom = true;
 
                 try {
-                    const update = await CommandSettingsHelper[args[0]](inter, args.slice(1));
+                    const update = await CommandSettingsHelper[args.shift()](inter, args);
                     blockCom = false;
 
                     if (SETTING_MESSAGE && SETTING_MESSAGE.deleted) return;

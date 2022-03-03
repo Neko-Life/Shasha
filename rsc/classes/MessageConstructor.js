@@ -5,42 +5,12 @@ const { ROW_BUTTON_STYLES } = require("../constants");
 const { loadDb } = require("../database");
 const { copyProps, replyError, getColor, strYesNo, getChannelMessage } = require("../functions");
 const { Actions } = require("./Actions");
-
-const messageConstructButtons = [
-    new MessageActionRow()
-        .addComponents([
-            new MessageButton().setCustomId("messageConstruct/add/button").setLabel("Add Button").setStyle("PRIMARY"),
-            new MessageButton().setCustomId("messageConstruct/add/selectMenu").setLabel("Add Select Menu").setStyle("PRIMARY"),
-            new MessageButton().setCustomId("messageConstruct/add/embed").setLabel("Add Embed").setStyle("PRIMARY"),
-            new MessageButton().setCustomId("messageConstruct/set/content").setLabel("Set Text Content").setStyle("PRIMARY"),
-        ]),
-    new MessageActionRow()
-        .addComponents([
-            new MessageButton().setCustomId("messageConstruct/edit").setLabel("Edit Component").setStyle("PRIMARY"),
-            new MessageButton().setCustomId("messageConstruct/edit/embed").setLabel("Edit Embed").setStyle("PRIMARY"),
-        ]),
-    new MessageActionRow()
-        .addComponents([
-            new MessageButton().setCustomId("messageConstruct/remove").setLabel("Remove Component").setStyle("DANGER"),
-            new MessageButton().setCustomId("messageConstruct/remove/embed").setLabel("Remove Embed").setStyle("DANGER"),
-            new MessageButton().setCustomId("messageConstruct/remove/content").setLabel("Remove Text Content").setStyle("DANGER"),
-            new MessageButton().setCustomId("messageConstruct/close").setLabel("Done").setStyle("SUCCESS"),
-        ])
-];
-
-const startPage = { content: "Add some components to your message", components: messageConstructButtons, embeds: [] };
-
-const settingActionsButtons = new MessageActionRow()
-    .addComponents([
-        new MessageButton().setCustomId("add").setStyle("PRIMARY").setLabel("Add"),
-        new MessageButton().setCustomId("edit").setStyle("PRIMARY").setLabel("Edit"),
-        new MessageButton().setCustomId("remove").setStyle("DANGER").setLabel("Remove"),
-        new MessageButton().setCustomId("done").setStyle("SUCCESS").setLabel("Done"),
-    ]);
+const { EmbedConstructor } = require("./EmbedConstructor");
 
 class AddConstruct {
+
     /**
-     * 
+     * @param {import("../typins").ShaButtonInteraction} inter
      * @param {import("../typins").ShaMessage} preview 
      * @param {import("../typins").ShaMessage} message 
      */
@@ -74,7 +44,39 @@ class AddConstruct {
             return delNo(no);
         }
     }
+
+    /**
+     * @param {import("../typins").ShaButtonInteraction} inter
+     * @param {import("../typins").ShaMessage} preview 
+     * @param {import("../typins").ShaMessage} message 
+     */
+    static async embed(inter, preview, message, args) {
+        if (preview.embeds.length > 9) {
+            const no = await inter.reply({ content: "Maximum amount of embed per message reached! Try remove some first", fetchReply: true });
+            return delNo(no, 15000);
+        }
+        const construct = new EmbedConstructor(inter);
+        const emb = await construct.start(true);
+        const newMes = copyProps(preview, ["stickers", "nonce"]);
+        newMes.embeds.push(emb);
+        message.messageConstruct.startPage();
+        return preview.edit(newMes);
+    }
 }
+
+const editButtonComponents = [
+    new MessageActionRow()
+        .addComponents([
+            new MessageButton().setLabel("Set Label").setStyle("PRIMARY").setCustomId(`label`),
+            new MessageButton().setLabel("Set Emoji").setStyle("PRIMARY").setCustomId(`emote`),
+            new MessageButton().setLabel("Set Style").setStyle("PRIMARY").setCustomId(`style`),
+            new MessageButton().setLabel("Actions").setStyle("PRIMARY").setCustomId(`actions`),
+        ]),
+    new MessageActionRow()
+        .addComponents(
+            new MessageButton().setLabel("Done").setStyle("SUCCESS").setCustomId(`messageConstruct/startPage`),
+        ),
+];
 
 class EditConstruct {
     /**
@@ -91,20 +93,7 @@ class EditConstruct {
      */
     static async BUTTON({ inter, preview, message, row, index, promptComponent, started }) {
         const found = () => preview.components[row].components[index];
-        const components = [
-            new MessageActionRow()
-                .addComponents([
-                    new MessageButton().setLabel("Set Label").setStyle("PRIMARY").setCustomId(`label`),
-                    new MessageButton().setLabel("Set Emoji").setStyle("PRIMARY").setCustomId(`emote`),
-                    new MessageButton().setLabel("Set Style").setStyle("PRIMARY").setCustomId(`style`),
-                    new MessageButton().setLabel("Actions").setStyle("PRIMARY").setCustomId(`actions`),
-                ]),
-            new MessageActionRow()
-                .addComponents(
-                    new MessageButton().setLabel("Done").setStyle("SUCCESS").setCustomId(`messageConstruct/startPage`),
-                ),
-        ]
-        message.edit({ content: `Edit button **${found().label}**`, components });
+        message.edit({ content: `Edit button **${found().label}**`, editButtonComponents });
         if (started) return;
         const start = async () => {
             const collectEdit = await promptComponent.message.awaitMessageComponent({
@@ -126,7 +115,7 @@ class EditConstruct {
                 const newMes = copyProps(preview, ["stickers", "nonce"]);
                 newMes.components[row].components[index].setLabel(got.content);
                 preview.edit(newMes);
-                message.edit({ content: `Edit button **${got.content}**`, components });
+                message.edit({ content: `Edit button **${got.content}**`, editButtonComponents });
                 return start();
             } else if (collectEdit.customId === "emote") {
                 const prompt = await collectEdit.reply({ content: "Provide emoji:", fetchReply: true });
@@ -265,13 +254,38 @@ class EditConstruct {
     }
 }
 
-class MessageConstruct {
+const messageConstructButtons = [
+    new MessageActionRow()
+        .addComponents([
+            new MessageButton().setCustomId("messageConstruct/add/button").setLabel("Add Button").setStyle("PRIMARY"),
+            new MessageButton().setCustomId("messageConstruct/add/selectMenu").setLabel("Add Select Menu").setStyle("PRIMARY"),
+            new MessageButton().setCustomId("messageConstruct/add/embed").setLabel("Add Embed").setStyle("PRIMARY"),
+            new MessageButton().setCustomId("messageConstruct/set/content").setLabel("Set Text Content").setStyle("PRIMARY"),
+        ]),
+    new MessageActionRow()
+        .addComponents([
+            new MessageButton().setCustomId("messageConstruct/edit").setLabel("Edit Component").setStyle("PRIMARY"),
+            new MessageButton().setCustomId("messageConstruct/edit/embed").setLabel("Edit Embed").setStyle("PRIMARY"),
+        ]),
+    new MessageActionRow()
+        .addComponents([
+            new MessageButton().setCustomId("messageConstruct/remove").setLabel("Remove Component").setStyle("DANGER"),
+            new MessageButton().setCustomId("messageConstruct/remove/embed").setLabel("Remove Embed").setStyle("DANGER"),
+            new MessageButton().setCustomId("messageConstruct/remove/content").setLabel("Remove Text Content").setStyle("DANGER"),
+            new MessageButton().setCustomId("messageConstruct/close").setLabel("Done").setStyle("SUCCESS"),
+        ])
+];
+
+const startPage = { content: "Add some components to your message", components: messageConstructButtons, embeds: [] };
+
+class MessageConstructor {
     /**
      * 
      * @param {ButtonInteraction} interaction 
      */
     constructor(interaction) {
         this.client = interaction.client;
+        this.interaction = interaction;
         this.message = null;
         this.preview = interaction.message;
         this.guild = interaction.guild || null;
@@ -279,7 +293,6 @@ class MessageConstruct {
         this.member = interaction.member;
         this.user = interaction.user;
         this.pages = [];
-        this.interaction = interaction;
     }
 
     async start(edit) {
@@ -295,6 +308,13 @@ class MessageConstruct {
             if (!getMsg) return this.message.edit("Unknown message");
             if (getMsg.author?.id !== this.client.user.id) return this.message.edit("I can only edit my own message bruh >:(");
             this.preview = getMsg;
+            if (this.preview.content === "")
+                Object.defineProperty(this.preview, "content", {
+                    value: null,
+                    enumerable: true,
+                    configurable: true,
+                    writable: true,
+                });
             await this.message.edit(startPage);
         } else {
             await this.preview.edit({ content: "`[EMPTY]`", components: [] });
@@ -343,7 +363,7 @@ class MessageConstruct {
     }
 
     async add(inter, args) {
-        AddConstruct[args[0]](inter, this.preview, this.message, args.slice(1));
+        AddConstruct[args.shift()](inter, this.preview, this.message, args);
     }
 
     async edit(inter, args) {
@@ -354,7 +374,7 @@ class MessageConstruct {
 
     async remove(inter, args) {
         const { row, index, promptComponent } = await this.getComponent(inter, "remove");
-        RemoveConstruct[args[0]](inter, this.preview, this.message, args.slice(1));
+        RemoveConstruct[args.shift()](inter, this.preview, this.message, args);
     }
 
     async startPage(inter) {
@@ -373,7 +393,7 @@ class MessageConstruct {
     }
 }
 
-module.exports = { MessageConstruct }
+module.exports = { MessageConstructor };
 
 function delNo(msg, timeout = 10000, ...userMsgs) {
     setTimeout(
@@ -391,6 +411,14 @@ function delNo(msg, timeout = 10000, ...userMsgs) {
     );
     return msg;
 }
+
+const settingActionsButtons = new MessageActionRow()
+    .addComponents([
+        new MessageButton().setCustomId("add").setStyle("PRIMARY").setLabel("Add"),
+        new MessageButton().setCustomId("edit").setStyle("PRIMARY").setLabel("Edit"),
+        new MessageButton().setCustomId("remove").setStyle("DANGER").setLabel("Remove"),
+        new MessageButton().setCustomId("done").setStyle("SUCCESS").setLabel("Done"),
+    ]);
 
 async function settingActions(inter, { found, preview, message, collectEdit } = {}, startData) {
     const ActionsClass = new Actions(inter.client);

@@ -544,6 +544,13 @@ function addS(arr) {
     return n > 1 ? "s" : "";
 }
 
+async function delUsMes(usMes, dur = 0) {
+    setTimeout(() => {
+        if (!usMes.channel.permissionsFor(usMes.client.user).has("MANAGE_MESSAGE")) return;
+        usMes.deleted ? null : usMes.delete();
+    }, dur);
+}
+
 module.exports = {
     // ---------------- FUNCTIONS ---------------- 
     // Essentials for bot functionality
@@ -582,6 +589,7 @@ module.exports = {
     createRegExpFromStr,
     delMes,
     addS,
+    delUsMes,
 
     // ---------------- FNS IMPORTS ----------------
     // Functions too big to be put here so imported and has its own file instead

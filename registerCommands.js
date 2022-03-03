@@ -12,7 +12,7 @@ let args = process.argv.filter(r => !r.startsWith(__dirname));;
 const dev = args[0] === "-d";
 
 if (dev)
-    args = args.slice(1);
+    args.shift();
 
 const appId = dev ? configFile.devAppId : configFile.appId;
 const token = dev ? configFile.devToken : configFile.token;

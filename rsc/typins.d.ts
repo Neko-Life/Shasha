@@ -1,7 +1,8 @@
-import { ApplicationCommandPermissions, BaseGuildTextChannel, Collection, CommandInteraction, CommandInteractionOption, Guild, GuildChannel, GuildMember, Message, User } from "discord.js";
+import { ApplicationCommandPermissions, BaseGuildTextChannel, ButtonInteraction, Collection, CommandInteraction, CommandInteractionOption, Guild, GuildChannel, GuildMember, Message, User } from "discord.js";
 import { AutocompleteCommandArgs, AutocompleteData } from "./classes/Command";
 import { ShaBaseDb } from "./classes/Database";
-import { MessageConstruct } from "./classes/MessageConstruct";
+import { EmbedConstructor } from "./classes/EmbedConstructor";
+import { MessageConstructor } from "./classes/MessageConstructor";
 import ShaClient from "./classes/ShaClient";
 
 export declare class ShaMessage extends Message {
@@ -11,7 +12,8 @@ export declare class ShaMessage extends Message {
     public readonly channel: ShaTextChannel;
     public messageLinkPreview: ShaMessage;
     public readonly guild: ShaGuild;
-    public messageConstruct: MessageConstruct;
+    public messageConstruct: MessageConstructor;
+    public embedConstruct: EmbedConstructor;
     public deleted: boolean;
     public db: ShaBaseDb;
 }
@@ -22,6 +24,7 @@ export declare class ShaCommandInteraction extends CommandInteraction {
     public commandResults: Array<Promise<ShaMessage | unknown> | ShaMessage | unknown>;
     public commandPath: Array<string>;
     public user: ShaUser;
+    public member: ShaGuildMember;
     public message: ShaMessage;
     public args: { [k: string]: CommandInteractionOption };
     public guild: ShaGuild;
@@ -61,4 +64,11 @@ export declare class ShaGuildChannel extends GuildChannel {
     public readonly client: ShaClient;
     public db: ShaBaseDb;
     public guild: ShaGuild;
+}
+
+export declare class ShaButtonInteraction extends ButtonInteraction {
+    public readonly client: ShaClient;
+    public user: ShaUser;
+    public member: ShaGuildMember;
+    public message: ShaMessage;
 }

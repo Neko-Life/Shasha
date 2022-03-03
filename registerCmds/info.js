@@ -89,7 +89,7 @@ module.exports = {
             ],
         },
         {
-            name: "list-locked",
+            name: "locked",
             description: "List locked channel in the server",
             type: 1,
         }

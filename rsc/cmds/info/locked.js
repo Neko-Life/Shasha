@@ -5,13 +5,13 @@ const { Command } = require("../../classes/Command");
 const { loadDb } = require("../../database");
 const { getColor } = require("../../functions");
 
-module.exports = class ListLockedCmd extends Command {
+module.exports = class LockedCmd extends Command {
     constructor(interaction) {
         super(interaction, {
-            name: "list-locked",
+            name: "locked",
             description: "List all locked channel in the server",
             guildOnly: true,
-        })
+        });
     }
 
     async run(inter) {

@@ -2,7 +2,7 @@
 
 const { ButtonInteraction } = require("discord.js");
 const { CommandSettingsHelper } = require("../classes/CommandSettingsHelper");
-const { MessageConstruct } = require("../classes/MessageConstruct");
+const { MessageConstructor } = require("../classes/MessageConstructor");
 const { logDev } = require("../debug");
 const { disableMessageComponents, isInteractionInvoker } = require("../functions");
 
@@ -95,7 +95,7 @@ module.exports = class ButtonHandler {
             disableMessageComponents(inter.message);
             return inter.reply({ content: "This session's expired", ephemeral: true });
         } else {
-            message.buttonHandler[args[0]](inter, args.slice(1));
+            message.buttonHandler[args.shift()](inter, args);
         }
     }
 
@@ -108,17 +108,27 @@ module.exports = class ButtonHandler {
     static async messageConstructor(inter) {
         if (!isInteractionInvoker(inter))
             return inter.reply({ content: "no UwU", ephemeral: true });
-        const construct = new MessageConstruct(inter);
+        const construct = new MessageConstructor(inter);
         return construct.start(inter.customId.endsWith("edit"));
     }
 
-    static async messageConstruct(inter, args) {
+    static async constructCheck(inter) {
         const check = isInteractionInvoker(inter);
         if (check === undefined) {
             disableMessageComponents(inter.message);
             return inter.reply({ content: "This session's expired", ephemeral: true });
         } else if (check === false)
             return inter.reply({ content: "DON'T DISTURB the admin pls they tryna make the best server for you here", ephemeral: true });
-        return inter.message.messageConstruct[args[0]](inter, args.slice(1));
+        return check;
+    }
+
+    static async messageConstruct(inter, args) {
+        if (await ButtonHandler.constructCheck(inter) !== true) return;
+        return inter.message.messageConstruct[args.shift()](inter, args);
+    }
+
+    static async embedConstruct(inter, args) {
+        if (await ButtonHandler.constructCheck(inter) !== true) return;
+        return inter.message.embedConstruct[args.shift()](inter, args);
     }
 }
