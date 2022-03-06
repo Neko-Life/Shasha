@@ -1,8 +1,10 @@
 "use strict";
 
 const { MessageEmbed, MessageActionRow, MessageButton, ButtonInteraction } = require("discord.js");
-const { wait, replyError, getColor, delUsMes, delMes } = require("../functions");
+const { wait, replyError, getColor, delUsMes, delMes, getChannelMessage, yesPrompt } = require("../functions");
 const { sanitizeUrl } = require("@braintree/sanitize-url");
+const { DateTime } = require("luxon");
+const { LUXON_TIMEZONES } = require("../constants");
 
 const C_PAYLOAD = {
     title: {
@@ -105,7 +107,6 @@ const startPage = {
             new MessageButton().setStyle("PRIMARY").setCustomId("embedConstruct/handle/desc").setLabel("Description"),
             new MessageButton().setStyle("PRIMARY").setCustomId("embedConstruct/handle/author").setLabel("Author"),
             new MessageButton().setStyle("PRIMARY").setCustomId("embedConstruct/handle/image").setLabel("Image"),
-            new MessageButton().setStyle("PRIMARY").setCustomId("embedConstruct/handle/thumb").setLabel("Thumbnail"),
         ]),
         new MessageActionRow().addComponents([
             new MessageButton().setStyle("PRIMARY").setCustomId("embedConstruct/handle/color").setLabel("Color"),
@@ -136,6 +137,8 @@ class EmbedConstructor {
         this.returnEmbed = null;
         /** @type {boolean} */
         this.done = null;
+        /** @type {boolean} */
+        this.blockButton = null;
     }
 
     async start(returnEmbed) {
@@ -152,29 +155,95 @@ class EmbedConstructor {
     }
 
     async updatePreview() {
+        this.embed = this.client.finalizeEmbed(this.embed, true);
         return this.preview.edit({ embeds: [this.embed] });
     }
 
     async startPage(inter) {
         if (inter instanceof ButtonInteraction && !(inter.deferred || inter.replied))
             inter.deferUpdate();
+        if (this.blockButton) return;
         return this.message.edit(startPage);
     }
 
     async json(inter, args) {
-        const prompt = inter.reply({ content: "", fetchReply: true });
-        const get = await inter.channel.awaitMessages({ filter: (r) => r.author.id === inter.user.id && r.content?.length });
-        const repMes = get?.first();
-        if (!repMes) return;
-    }
-    async copy(inter, args) {
-        const prompt = inter.reply({ content: "", fetchReply: true });
-        const get = await inter.channel.awaitMessages({ filter: (r) => r.author.id === inter.user.id && r.content?.length });
-        const repMes = get?.first();
-        if (!repMes) return;
+        if (this.blockButton) return inter.deferUpdate();
+        this.blockButton = true;
+        const arg1 = args[1];
+        const retOri = {};
+
+        let prompt = await inter.reply({ content: "Provide JSON embed to use:", fetchReply: true });
+        let usMes;
+        try {
+            const get = await inter.channel.awaitMessages({ max: 1, filter: (r) => r.author.id === inter.user.id && r.content?.length });
+            const repMes = get?.first();
+            if (!repMes) return;
+            usMes = repMes;
+
+            const json = JSON.parse(repMes.content);
+            this.embed = new MessageEmbed(json);
+
+            this.startPage(inter);
+            await this.updatePreview();
+        } catch (e) {
+            prompt = await this.handleEmbedConfError(e, inter, retOri);
+        }
+        if (prompt)
+            delMes(prompt, usMes, 0);
+        this.blockButton = false;
     }
 
-    async fin() {
+    async copy(inter, args) {
+        if (this.blockButton) return inter.deferUpdate();
+        this.blockButton = true;
+        const arg1 = args[1];
+        const retOri = {};
+
+        let prompt = await inter.reply({ content: "Provide message link containing the embed to copy:", fetchReply: true });
+        let usMes;
+        try {
+            const get = await inter.channel.awaitMessages({ max: 1, filter: (r) => r.author.id === inter.user.id && r.content?.length });
+            const repMes = get?.first();
+            if (!repMes) return;
+            usMes = repMes;
+
+            const tarMes = await getChannelMessage(inter, repMes.content);
+            if (!tarMes) {
+                await prompt.edit("Message unfound, go find some new message");
+                await wait(5000);
+            } else if (!tarMes.embeds?.length) {
+                await prompt.edit("There's no embed in that message >:(");
+                await wait(5000);
+            }
+            if (tarMes?.embeds.length > 1) {
+                delUsMes(usMes, 0);
+                await prompt.edit("Seems like this message has a few embed, provide embed position number to copy:");
+                const getR = await inter.channel.awaitMessages({ max: 1, filter: (r) => r.author.id === inter.user.id && r.content.length && !/\D/.test(r.content) });
+                const theR = getR?.first();
+                if (!theR) return;
+                usMes = theR;
+
+                const theN = parseInt(theR.content);
+                if (theN < 1 || theN > tarMes.embeds.length) {
+                    await prompt.edit("No embed in that position. Try again");
+                    await wait(5000);
+                } else {
+                    this.embed = tarMes.embeds[theN - 1];
+                }
+            } else this.embed = tarMes.embeds[0];
+
+            this.startPage(inter);
+            await this.updatePreview();
+        } catch (e) {
+            prompt = await this.handleEmbedConfError(e, inter, retOri);
+        }
+        if (prompt)
+            delMes(prompt, usMes, 0);
+        this.blockButton = false;
+    }
+
+    async fin(inter) {
+        if (this.blockButton) return inter.deferUpdate();
         if (this.returnEmbed)
             this.done = true;
         this.message.delete();
@@ -182,12 +251,13 @@ class EmbedConstructor {
 
     async handle(inter, args) {
         inter.deferUpdate();
+        if (this.blockButton) return;
         await inter.message.edit(C_PAYLOAD[args[0]]);
     }
 
     async set(inter, args) {
-        if (this.blockSet) return inter.deferUpdate();
-        this.blockSet = true;
+        if (this.blockButton) return inter.deferUpdate();
+        this.blockButton = true;
         const arg1 = args[1];
         const retOri = {};
         let prompt, usMes;
@@ -199,7 +269,7 @@ class EmbedConstructor {
                 if (!pMes) return;
                 usMes = pMes;
 
-                retOri.setTitle = this.embed.title;
+                retOri.setTitle = [this.embed.title];
                 this.embed.setTitle(pMes.content);
             } else if (arg1 === "url") {
                 prompt = await inter.reply({ content: "URL to use:", fetchReply: true });
@@ -208,7 +278,7 @@ class EmbedConstructor {
                 if (!pMes) return;
                 usMes = pMes;
 
-                retOri.setURL = this.embed.url;
+                retOri.setURL = [this.embed.url];
                 this.embed.setURL(sanitizeUrl(pMes.content));
             } else if (arg1 === "desc") {
                 prompt = await inter.reply({ content: "Provide description:", fetchReply: true });
@@ -217,7 +287,7 @@ class EmbedConstructor {
                 if (!pMes) return;
                 usMes = pMes;
 
-                retOri.setDescription = this.embed.description;
+                retOri.setDescription = [this.embed.description];
                 this.embed.setDescription(pMes.content);
             } else if (arg1 === "authorName") {
                 prompt = await inter.reply({ content: "Set author name as:", fetchReply: true });
@@ -256,7 +326,7 @@ class EmbedConstructor {
                 if (!pMes) return;
                 usMes = pMes;
 
-                retOri.setImage = this.embed.image;
+                retOri.image = { ...(this.embed.image || {}) };
                 this.embed.setImage(sanitizeUrl(pMes.content));
             } else if (arg1 === "thumb") {
                 prompt = await inter.reply({ content: "Provide thumbnail link:", fetchReply: true });
@@ -265,7 +335,7 @@ class EmbedConstructor {
                 if (!pMes) return;
                 usMes = pMes;
 
-                retOri.setThumbnail = this.embed.thumbnail;
+                retOri.thumbnail = this.embed.thumbnail;
                 this.embed.setThumbnail(sanitizeUrl(pMes.content));
             } else if (arg1 === "color") {
                 prompt = await inter.reply({ content: "Set color:", fetchReply: true });
@@ -274,45 +344,65 @@ class EmbedConstructor {
                 if (!pMes) return;
                 usMes = pMes;
 
-                retOri.setColor = this.embed.color;
+                retOri.setColor = [this.embed.color];
                 this.embed.setColor(getColor(pMes.content, true));
             } else if (arg1 === "field") {
-                prompt = await inter.reply({ content: "Field name:", fetchReply: true });
-                const getM = await inter.channel.awaitMessages({ max: 1, filter: (r) => r.author.id === inter.user.id && r.content.length });
-                const pMes = getM?.first();
-                if (!pMes) return;
-                delUsMes(pMes, 0);
+                if (this.embed.fields.length > 24) {
+                    prompt = await ((inter.deferred || inter.replied) ? inter.editReply : inter.reply).apply(inter, [{ content: "Maximum amount of field reached! Remove or edit some field instead", fetchReply: true }]);
+                    await wait(5000);
+                } else {
+                    prompt = await ((inter.deferred || inter.replied) ? inter.editReply : inter.reply).apply(inter, [{ content: "Field name:", fetchReply: true }]);
+                    const getM = await inter.channel.awaitMessages({ max: 1, filter: (r) => r.author.id === inter.user.id && r.content.length });
+                    const pMes = getM?.first();
+                    if (!pMes) return;
+                    delUsMes(pMes, 0);
 
-                const data = {
-                    name: pMes.content,
-                    value: null,
-                    inline: false,
-                };
+                    const data = {
+                        name: pMes.content,
+                        value: null,
+                        inline: false,
+                    };
 
-                await prompt.edit("Description:");
-                const getD = await inter.channel.awaitMessages({ max: 1, filter: (r) => r.author.id === inter.user.id && r.content.length });
-                const dMes = getD?.first();
-                if (!dMes) return;
-                delUsMes(dMes, 0);
+                    await prompt.edit("Description:");
+                    const getD = await inter.channel.awaitMessages({ max: 1, filter: (r) => r.author.id === inter.user.id && r.content.length });
+                    const dMes = getD?.first();
+                    if (!dMes) return;
+                    delUsMes(dMes, 0);
 
-                data.value = dMes.content;
+                    data.value = dMes.content;
 
-                await prompt.edit("Do you want this field to be inline?");
-                const getI = await inter.channel.awaitMessages({ max: 1, filter: (r) => r.author.id === inter.user.id && r.content.length });
-                const iMes = getI?.first();
-                if (!iMes) return;
-                usMes = iMes;
+                    await prompt.edit("Do you want this field to be inline?");
+                    const getI = await inter.channel.awaitMessages({ max: 1, filter: (r) => r.author.id === inter.user.id && r.content.length });
+                    const iMes = getI?.first();
+                    if (!iMes) return;
+                    usMes = iMes;
 
-                data.inline = iMes.content === "yes";
+                    data.inline = yesPrompt(iMes.content);
 
-                this.embed.addField(data.name, data.value, data.inline);
-                retOri.spliceFields = [this.embed.fields.length - 1 /* findIndex(r => r.name === data.name && r.value === data.value && r.inline === data.inline) */, 1];
+                    retOri.spliceFields = [() => this.embed.fields.findIndex(r => r.name === data.name && r.value === data.value && r.inline === data.inline), 1];
+                    if (args[2] === "edit")
+                        return this.embed.spliceFields(args[3], 1, data);
+                    else this.embed.addField(data.name, data.value, data.inline);
+                }
             } else if (arg1 === "fieldEd") {
+                if (!this.embed.fields.length) {
+                    prompt = await inter.reply({ content: "No field to edit, add some first", fetchReply: true });
+                    await wait(5000);
+                } else {
+                    prompt = await inter.reply({ content: "Provide field position number to edit:", fetchReply: true });
+                    const getM = await inter.channel.awaitMessages({ max: 1, filter: (r) => r.author.id === inter.user.id && r.content.length && !/\D/.test(r.content) });
+                    const pMes = getM?.first();
+                    if (!pMes) return;
 
-
-
-
-
+                    const num = parseInt(pMes.content, 10);
+                    if (num < 1 || num > this.embed.fields.length) {
+                        await prompt.edit("No field in that position! Try again");
+                        await wait(5000);
+                    } else {
+                        this.blockButton = false;
+                        await this.set(inter, ["field", "field", "edit", num - 1]);
+                    }
+                }
             } else if (arg1 === "footerText") {
                 prompt = await inter.reply({ content: "Set footer text:", fetchReply: true });
                 const getM = await inter.channel.awaitMessages({ max: 1, filter: (r) => r.author.id === inter.user.id && r.content.length });
@@ -338,45 +428,66 @@ class EmbedConstructor {
                 const getM = await inter.channel.awaitMessages({ max: 1, filter: (r) => r.author.id === inter.user.id && r.content.length });
                 const pMes = getM?.first();
                 if (!pMes) return;
-                usMes = pMes;
 
-                retOri.setTimestamp = this.embed.timestamp;
-                this.embed.setTimestamp(pMes.content);
+                retOri.timestamp = this.embed.timestamp;
+                let ts;
+                if (!/\D/.test(pMes.content)) {
+                    ts = DateTime.fromMillis(parseInt(pMes.content));
+                } else {
+                    ts = DateTime.fromFormat(pMes.content, `DDD ${/(?:am|pm)$/i.test(pMes.content) ? "tt" : "TT"}`);
+                }
+                if (!ts.isValid) {
+                    await prompt.edit(replyError({ message: "Invalid time value" }));
+                    await wait(10000);
+                } else {
+                    delUsMes(pMes, 0);
+                    await prompt.edit("Set the timezone (<Continent/City> format, find your city** [here](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)**) of the timestamp:");
+                    const getT = await inter.channel.awaitMessages({ max: 1, filter: (r) => r.author.id === inter.user.id && r.content.length });
+                    const tMes = getT?.first();
+                    if (!tMes) return;
+                    usMes = tMes;
+
+                    let tz = LUXON_TIMEZONES.find(r => r.toLowerCase() === tMes.content.toLowerCase());
+                    if (!tz) {
+                        if (ts.setZone(tMes.content).isValid) tz = tMes.content;
+                        else {
+                            await prompt.edit("No Continent/City with that name in timezone database, falling back to UTC");
+                            tz = "utc";
+                            await wait(5000);
+                        }
+                    }
+                    ts = ts.setZone(tz).toJSDate();
+                    this.embed.setTimestamp(ts);
+                }
             }
+
             this.message.edit(C_PAYLOAD[args[0]]);
             await this.updatePreview();
         } catch (e) {
-            for (const k in retOri) {
-                if (k === "spliceFields")
-                    this.embed[k](...retOri[k]);
-                else if (typeof this.embed[k] === "function") this.embed[k](retOri[k]);
-                else this.embed[k] = retOri[k];
-            }
-            const errMes = replyError(e);
-            if (!(inter.replied || inter.deferred))
-                inter.reply(errMes);
-            else inter.editReply(errMes);
-            await wait(10000);
+            prompt = await this.handleEmbedConfError(e, inter, retOri);
         }
         if (prompt)
             delMes(prompt, usMes, 0);
-        this.blockSet = false;
+        this.blockButton = false;
     }
 
     async remove(inter, args) {
-        if (this.blockRem) return inter.deferUpdate();
-        this.blockRem = true;
+        if (this.blockButton) return inter.deferUpdate();
+        this.blockButton = true;
         const arg1 = args[1];
         const retOri = {};
         let prompt;
         try {
             if (arg1 === "title") {
+                retOri.title = this.embed.title;
                 this.embed.title = null;
             } else if (arg1 === "url") {
                 this.embed.url = null;
             } else if (arg1 === "desc") {
+                retOri = this.embed.url;
                 this.embed.description = null;
             } else if (arg1 === "authorName") {
+                retOri.author = { ...(this.embed.author || {}) };
                 this.embed.author.name = null;
             } else if (arg1 === "authorIcon") {
                 this.embed.author.iconURL = null;
@@ -389,8 +500,25 @@ class EmbedConstructor {
             } else if (arg1 === "color") {
                 this.embed.color = null;
             } else if (arg1 === "field") {
-                prompt = await inter.reply();
+                if (!this.embed.fields?.length) {
+                    prompt = await inter.reply({ content: "No field to remove, add some first", fetchReply: true });
+                    await wait(5000);
+                } else {
+                    prompt = await inter.reply({ content: "Provide field position number to remove:", fetchReply: true });
+                    const getM = await inter.channel.awaitMessages({ max: 1, filter: (r) => r.author.id === inter.user.id && r.content.length && !/\D/.test(r.content) });
+                    const pMes = getM?.first();
+                    if (!pMes) return;
+
+                    const num = parseInt(pMes.content, 10);
+                    if (num < 1 || num > this.embed.fields.length) {
+                        await prompt.edit("No field in that position! Try again");
+                        await wait(5000);
+                    } else {
+                        this.embed.spliceFields(num - 1, 1);
+                    }
+                }
             } else if (arg1 === "footerText") {
+                retOri.footer = { ...(this.embed.footer || {}) };
                 this.embed.footer.text = null;
             } else if (arg1 === "footerIcon") {
                 this.embed.footer.iconURL = null;
@@ -400,20 +528,30 @@ class EmbedConstructor {
             this.message.edit(C_PAYLOAD[args[0]]);
             await this.updatePreview();
         } catch (e) {
-            for (const k in retOri) {
-                this.embed[k](retOri[k]);
-            }
-            const errMes = replyError(e);
-            if (!(inter.replied || inter.deferred))
-                inter.reply(errMes);
-            else inter.editReply(errMes);
-            await wait(10000);
+            prompt = await this.handleEmbedConfError(e, inter, retOri);
         }
         if (!(inter.replied || inter.deferred))
             inter.deferUpdate();
         if (prompt)
             prompt.deleted ? null : prompt.delete();
-        this.blockRem = false;
+        this.blockButton = false;
+    }
+
+    async handleEmbedConfError(e, inter, retOri) {
+        const errMes = replyError(e);
+        let ret;
+        if (!(inter.replied || inter.deferred))
+            ret = await inter.reply({ ...errMes, fetchReply: true });
+        else ret = await inter.editReply(errMes);
+        for (const k in retOri) {
+            if (k === "spliceFields")
+                this.embed[k](retOri[k][0](), retOri[k][1]);
+            else if (typeof this.embed[k] === "function")
+                this.embed[k](...retOri[k]);
+            else this.embed[k] = retOri[k];
+        }
+        await wait(5000);
+        return ret;
     }
 }
 

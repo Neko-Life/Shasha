@@ -10,6 +10,7 @@ const { escapeRegExp } = require("lodash");
 const { logDev } = require("../debug");
 const { Events } = require("discord.js/src/util/Constants");
 const { Actions } = require("./Actions");
+const { sanitizeUrl } = require("@braintree/sanitize-url");
 
 /**
  * @type {typeof import("./Scheduler").Scheduler}
@@ -247,6 +248,12 @@ module.exports = class ShaClient extends Client {
             delete newEmb.author?.url;
             delete newEmb.url;
         }
+        if (embed.url) newEmb.url = sanitizeUrl(embed.url);
+        if (embed.author?.url) newEmb.author.url = sanitizeUrl(embed.author.url);
+        if (embed.image?.url) newEmb.image.url = sanitizeUrl(embed.image.url);
+        if (embed.image?.proxyURL) newEmb.image.proxyURL = sanitizeUrl(embed.image.proxyURL);
+        if (embed.thumbnail?.url) newEmb.thumbnail.url = sanitizeUrl(embed.thumbnail.url);
+        if (embed.thumbnail?.proxyURL) newEmb.thumbnail.proxyURL = sanitizeUrl(embed.thumbnail.proxyURL);
         return newEmb;
     }
 

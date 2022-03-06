@@ -29,7 +29,7 @@ function parseComa(str) {
  * @param {import("./typins").ShaMessage | Interaction} msg - Message object (msg)
  * @param {string} MainID - Message ID | Channel_[mention|ID] | Message link
  * @param {string} SecondID - Message ID
- * @param {boolean} bypass - Bypass to use all client visible channels
+ * @param {boolean} [bypass=undefined] - Bypass to use all client visible channels
  * @returns {Promise<import("./typins").ShaMessage>} Message object | undefined
  */
 async function getChannelMessage(msg, MainID, SecondID, bypass) {
@@ -413,13 +413,15 @@ function prevNextButton(homeButton) {
  * 
  * @param {Error | {message: string}} e 
  * @param {object} vars 
+ * @param {import("discord.js").MessageMentionOptions} [allowedMentions = { parse: [] }]
+ * @param {boolean} noAdCheck
  * @returns 
  */
-function replyError(e, vars) {
+function replyError(e, vars, allowedMentions = { parse: [] }, noAdCheck) {
     let reply = replaceVars(REPLY_ERROR[e.message] || e.message, vars);
     if (!REPLY_ERROR[e.message] && (e instanceof Error))
         emitShaError(e);
-    return reply;
+    return { content: noAdCheck ? reply : adCheck(reply), allowedMentions };
 }
 
 function replyHigherThanMod(inter, action, { higherThanClient, higherThanModerator }) {
@@ -546,9 +548,13 @@ function addS(arr) {
 
 async function delUsMes(usMes, dur = 0) {
     setTimeout(() => {
-        if (!usMes.channel.permissionsFor(usMes.client.user).has("MANAGE_MESSAGE")) return;
+        if (!usMes.channel.permissionsFor(usMes.client.user).has("MANAGE_MESSAGES")) return;
         usMes.deleted ? null : usMes.delete();
     }, dur);
+}
+
+function yesPrompt(str) {
+    return ["y", "ye", "yes"].includes(str.toLowerCase());
 }
 
 module.exports = {
@@ -590,6 +596,7 @@ module.exports = {
     delMes,
     addS,
     delUsMes,
+    yesPrompt,
 
     // ---------------- FNS IMPORTS ----------------
     // Functions too big to be put here so imported and has its own file instead
