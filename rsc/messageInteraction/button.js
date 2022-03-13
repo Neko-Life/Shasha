@@ -2,6 +2,7 @@
 
 const { ButtonInteraction } = require("discord.js");
 const { CommandSettingsHelper } = require("../classes/CommandSettingsHelper");
+const { EmbedConstructor } = require("../classes/EmbedConstructor");
 const { MessageConstructor } = require("../classes/MessageConstructor");
 const { logDev } = require("../debug");
 const { disableMessageComponents, isInteractionInvoker } = require("../functions");
@@ -129,6 +130,9 @@ module.exports = class ButtonHandler {
 
     static async embedConstruct(inter, args) {
         if (await ButtonHandler.constructCheck(inter) !== true) return;
+        if (args[0] === "start") {
+            return new EmbedConstructor(inter).start(args[1] === "return", args[args.length - 1] === "edit");
+        }
         return inter.message.embedConstruct[args.shift()](inter, args);
     }
 }

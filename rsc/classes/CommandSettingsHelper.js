@@ -172,7 +172,7 @@ class CommandSettingsHelper {
             sName = "users";
             rType = "ROLE";
         }
-        const prompt = await inter.reply({ content: `Provide ${sName.slice(-1)}'s names, mentions or Ids to bypass separated with \` \` (space):`, fetchReply: true });
+        const prompt = await inter.reply({ content: `Provide ${sName.slice(0, -1)}'s names, mentions or Ids to bypass separated with \` \` (space):`, fetchReply: true });
         const collect = await prompt.channel.awaitMessages({ max: 1, filter: (m) => m.author.id === inter.user.id && m.content?.length });
         const got = collect.first();
         const parsed = await ArgsParser[sName](inter.guild, got.content);

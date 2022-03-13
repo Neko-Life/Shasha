@@ -1,7 +1,7 @@
 "use strict";
 
 const { MessageEmbed, MessageActionRow, MessageButton, ButtonInteraction } = require("discord.js");
-const { wait, replyError, getColor, delUsMes, delMes, getChannelMessage, yesPrompt } = require("../functions");
+const { wait, replyError, getColor, delUsMes, delMes, getChannelMessage, yesPrompt, copyProps } = require("../functions");
 const { sanitizeUrl } = require("@braintree/sanitize-url");
 const { DateTime } = require("luxon");
 const { LUXON_TIMEZONES } = require("../constants");
@@ -67,6 +67,7 @@ const C_PAYLOAD = {
         components: [
             new MessageActionRow().addComponents([
                 new MessageButton().setStyle("PRIMARY").setCustomId("embedConstruct/set/field/field").setLabel("Add"),
+                new MessageButton().setStyle("PRIMARY").setCustomId("embedConstruct/set/field/field/slip").setLabel("Slip"),
                 new MessageButton().setStyle("PRIMARY").setCustomId("embedConstruct/set/field/fieldEd").setLabel("Edit"),
                 new MessageButton().setStyle("DANGER").setCustomId("embedConstruct/remove/field/field").setLabel("Remove"),
             ])
@@ -141,12 +142,53 @@ class EmbedConstructor {
         this.blockButton = null;
     }
 
-    async start(returnEmbed) {
-        this.embed = new MessageEmbed().setDescription("`[EMPTY]`");
-        this.preview.edit({ content: null, embeds: [this.embed], components: [] });
-        this.message = await this.interaction.reply({ ...startPage, fetchReply: true });
+    async start(returnEmbed, edit) {
+        if (edit) {
+            this.interaction.deferUpdate();
+            this.message = this.interaction.message;
+            await this.message.edit({ content: "Provide message link which contain embed to edit:", components: [] });
+            const getM = await this.message.channel.awaitMessages({ max: 1, filter: (r) => r.author.id === this.interaction.user.id && r.content?.length })
+            const gMes = getM?.first();
+            if (!gMes) return;
+            delUsMes(gMes, 0);
+
+            this.preview = await getChannelMessage(this.interaction, gMes.content);
+            if (!this.preview) {
+                return this.message.edit("Unknown message, is it in the galaxy or somethin?");
+            } else if (this.preview.author.id !== this.client.user.id) {
+                return this.message.edit("I can't edit embed that's not mine :<");
+            } else if (!this.preview.embeds?.length) {
+                return this.message.edit("That message has no embed in it smh");
+            }
+            if (this.preview.embeds?.length > 1) {
+                await this.message.edit("Seems like this message has a few embed, provide embed position number to edit:");
+
+                const getR = await this.message.channel.awaitMessages({ max: 1, filter: (r) => r.author.id === this.interaction.user.id && r.content?.length && !/\D/.test(r.content) });
+                const rMes = getR?.first();
+                if (!rMes) return;
+                delUsMes(rMes, 0);
+
+                const num = parseInt(rMes.content, 10);
+                if (num < 0 || num > this.preview.embeds.length) {
+                    return this.message.edit("There's no embed in that position. Try again");
+                }
+                this.editIndex = num - 1;
+            } else {
+                this.editIndex = 0;
+            }
+            this.embed = this.preview.embeds[this.editIndex];
+            this.startPage();
+        } else {
+            this.embed = new MessageEmbed().setDescription("`[EMPTY]`");
+            this.preview.edit({ content: null, embeds: [this.embed], components: [] });
+            this.message = await this.interaction.reply({ ...startPage, fetchReply: true });
+            this.editIndex = 0;
+        }
+
+        this.channel = this.interaction.channel;
         this.message.interaction = this.interaction;
         this.message.embedConstruct = this;
+
         if (returnEmbed !== true) return this;
         this.returnEmbed = true;
         this.done = false;
@@ -156,7 +198,10 @@ class EmbedConstructor {
 
     async updatePreview() {
         this.embed = this.client.finalizeEmbed(this.embed, true);
-        return this.preview.edit({ embeds: [this.embed] });
+        const newMes = copyProps(this.preview, ["stickers", "nonce"], { writable: true, enumerable: true, configurable: true });
+        if (newMes.content === "") newMes.content = null;
+        newMes.embeds[this.editIndex] = this.embed;
+        return this.preview.edit(newMes);
     }
 
     async startPage(inter) {
@@ -382,7 +427,18 @@ class EmbedConstructor {
                     retOri.spliceFields = [() => this.embed.fields.findIndex(r => r.name === data.name && r.value === data.value && r.inline === data.inline), 1];
                     if (args[2] === "edit")
                         return this.embed.spliceFields(args[3], 1, data);
-                    else this.embed.addField(data.name, data.value, data.inline);
+                    else if (args[2] === "slip") {
+                        delUsMes(iMes, 0);
+                        await prompt.edit("Provide position number to slip this field into the embed:");
+                        const getU = await inter.channel.awaitMessages({ max: 1, filter: (r) => r.author.id === inter.user.id && r.content.length && !/\D/.test(r.content) });
+                        const uMes = getU?.first();
+                        if (!uMes) return;
+                        usMes = uMes;
+
+                        const num = parseInt(uMes.content, 10);
+                        this.embed.fields.splice(num - 1, 0, data);
+                        this.embed.fields = this.embed.fields.filter(r => r);
+                    } else this.embed.addField(data.name, data.value, data.inline);
                 }
             } else if (arg1 === "fieldEd") {
                 if (!this.embed.fields.length) {
@@ -476,7 +532,7 @@ class EmbedConstructor {
         this.blockButton = true;
         const arg1 = args[1];
         const retOri = {};
-        let prompt;
+        let prompt, usMes;
         try {
             if (arg1 === "title") {
                 retOri.title = this.embed.title;
@@ -484,7 +540,7 @@ class EmbedConstructor {
             } else if (arg1 === "url") {
                 this.embed.url = null;
             } else if (arg1 === "desc") {
-                retOri = this.embed.url;
+                retOri.description = this.embed.description;
                 this.embed.description = null;
             } else if (arg1 === "authorName") {
                 retOri.author = { ...(this.embed.author || {}) };
@@ -508,6 +564,7 @@ class EmbedConstructor {
                     const getM = await inter.channel.awaitMessages({ max: 1, filter: (r) => r.author.id === inter.user.id && r.content.length && !/\D/.test(r.content) });
                     const pMes = getM?.first();
                     if (!pMes) return;
+                    usMes = pMes;
 
                     const num = parseInt(pMes.content, 10);
                     if (num < 1 || num > this.embed.fields.length) {
@@ -533,7 +590,7 @@ class EmbedConstructor {
         if (!(inter.replied || inter.deferred))
             inter.deferUpdate();
         if (prompt)
-            prompt.deleted ? null : prompt.delete();
+            delMes(prompt, usMes, 0);
         this.blockButton = false;
     }
 

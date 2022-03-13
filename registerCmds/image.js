@@ -10,5 +10,10 @@ module.exports = {
             description: "NYANYAYAYAYAYAAA",
             type: 1,
         },
+        {
+            name: "kitsune",
+            description: "RAAWWRRRRRRRRRRR",
+            type: 1,
+        },
     ],
 }

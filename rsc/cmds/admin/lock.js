@@ -80,18 +80,22 @@ module.exports = class LockCmd extends Command {
             desc += iPerms.perms.join(", ") + "```";
         }
 
+        let ePerms = 0;
+        for (const K of executed.executed)
+            ePerms += K.targetOverwrites.size;
+
         const emb = new MessageEmbed()
             .setColor(getColor(this.user.accentColor, true, this.member.displayColor))
             .setTitle("Lock")
             .setDescription(desc.slice(0, 4000))
-            .setFooter({ text: `Took ${intervalToStrings(createInterval(invoked, new Date())).strings.join(" ")} to execute ${done.length} channel${addS(done)}` });
+            .setFooter({ text: `Took ${intervalToStrings(createInterval(invoked, new Date())).strings.join(" ")} to execute ${done.length} channel${addS(done)} and ${ePerms} overwrite${addS(ePerms)}` });
         if (reason)
             emb.addField("Reason", reason.value);
         emb.addField("At", "<t:" + unixToSeconds(invoked) + ":F>", true)
             .addField("Until", parseD ? "<t:" + unixToSeconds(end) + ":F>" : "`Never`", true)
             .addField("For", parseD ? "`" + parseD.duration.strings.join(" ") + "`" : "`Ever`");
 
-        return inter.editReply({ embeds: [emb] });
+        return inter.editReply({ content: null, embeds: [emb] });
     }
 }
 

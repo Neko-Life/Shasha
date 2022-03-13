@@ -1,9 +1,12 @@
 "use strict";
 
-const { fetchNeko } = require("nekos-best.js");
+let nekosBest = require("./nekos-best.js");
 const { logDev } = require("../debug");
 const lewds = require("./lewds");
 const nekoslife = require("./nekoslife");
+const { join } = require("path");
+const { mkdirSync, readdirSync, createWriteStream } = require("fs");
+const { default: axios } = require("axios");
 
 /**
  * @typedef {"lewds.api" | "nekos.best" | "nekos.life.sfw" | "nekos.life.nsfw"} ShaAPIs
@@ -25,10 +28,14 @@ module.exports = async (query, api, raw, text) => {
     }
 
     if (api === "nekos.best") {
-        const url = await fetchNeko(query);
+        if (nekosBest === null)
+            nekosBest = require("./nekos-best.js");
+        const url = await nekosBest.fetchRandom(query);
+        // if (url.source_url) url.source_url = decodeURIComponent(url.source_url);
         if (raw) res = url;
-        else res = url.url;
+        else res = url.results[0].url;
         makeErrMes("Can't fetch image from nekos.best");
+        save(join(__dirname, "../../nekosBest"), url.results[0].url, url.data);
     } else if (api === "lewds.api") {
         const get = await lewds.nsfw(query);
         res = get.result || get;
@@ -47,4 +54,17 @@ module.exports = async (query, api, raw, text) => {
     }
 
     return { res, APIError };
+}
+
+async function save(path, url) {
+    if (!path || !url) return;
+    let listF;
+    const splitted = url.split("/");
+    const dir = path + "/" + splitted[splitted.length - 3] + splitted[splitted.length - 2];
+    try { listF = readdirSync(dir); } catch { mkdirSync(dir, { recursive: true }); }
+    const name = splitted[splitted.length - 1];
+    if (listF?.includes(name)) return;
+    const data = await axios.get(url, { headers: { "User-Agent": "nekos-best.js / 5.0.0" }, responseType: "stream" });
+    if (!data.data) return;
+    data.data.pipe(createWriteStream(dir + "/" + name));
 }

@@ -1,5 +1,6 @@
 "use strict";
 
+const { sanitizeUrl } = require("@braintree/sanitize-url");
 const { ButtonInteraction, MessageActionRow, MessageButton, MessageSelectMenu, MessageEmbed } = require("discord.js");
 const { ROW_BUTTON_STYLES } = require("../constants");
 const { loadDb } = require("../database");
@@ -93,7 +94,7 @@ class EditConstruct {
      */
     static async BUTTON({ inter, preview, message, row, index, promptComponent, started }) {
         const found = () => preview.components[row].components[index];
-        message.edit({ content: `Edit button **${found().label}**`, editButtonComponents });
+        message.edit({ content: `Edit button **${found().label}**`, components: editButtonComponents });
         if (started) return;
         const start = async () => {
             const collectEdit = await promptComponent.message.awaitMessageComponent({
@@ -115,7 +116,7 @@ class EditConstruct {
                 const newMes = copyProps(preview, ["stickers", "nonce"]);
                 newMes.components[row].components[index].setLabel(got.content);
                 preview.edit(newMes);
-                message.edit({ content: `Edit button **${got.content}**`, editButtonComponents });
+                message.edit({ content: `Edit button **${got.content}**`, components: editButtonComponents });
                 return start();
             } else if (collectEdit.customId === "emote") {
                 const prompt = await collectEdit.reply({ content: "Provide emoji:", fetchReply: true });
@@ -156,7 +157,7 @@ class EditConstruct {
                     const collectLink = await prompt.channel.awaitMessages({ max: 1, filter: (r) => r.author.id === inter.user.id });
                     const gotLink = collectLink.first();
                     try {
-                        newMes.components[row].components[index].setURL(gotLink.content);
+                        newMes.components[row].components[index].setURL(sanitizeUrl(gotLink.content));
                         await preview.edit(newMes);
                     } catch (e) {
                         if (/Scheme must be one of/.test(e.message)) {

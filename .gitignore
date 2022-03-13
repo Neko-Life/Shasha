@@ -3,6 +3,7 @@ package-lock.json
 *.sqlite3
 dashboard/
 .vscode
+nekosBest/
 
 pnpm-lock.yaml
 config-live.json

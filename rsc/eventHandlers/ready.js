@@ -16,6 +16,7 @@ async function handle(client) {
     });
     if (configFile.errLogChannel)
         client.errorChannel = await client.channels.fetch(configFile.errLogChannel)
+            .then(r => { r.send("I'm online"); return r; })
             .catch((e) => {
                 emitShaError(e);
                 console.error("Can't fetch error log channel", configFile.errLogChannel);

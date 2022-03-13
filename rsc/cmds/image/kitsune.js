@@ -6,11 +6,11 @@ const expressCmd = require("../../rsc/expressCmd");
 module.exports = class NekoCmd extends Command {
     constructor(interaction) {
         super(interaction, {
-            name: "neko"
+            name: "kitsune"
         });
     }
 
     async run(inter) {
-        return expressCmd(inter, "neko", " nyaa~");
+        return expressCmd(inter, "kitsune", " rawrr~");
     }
 }

@@ -46,15 +46,19 @@ module.exports = class UnlockCmd extends Command {
             desc += "<#" + alr.join(">, <#") + ">";
         }
 
+        let ePerms = 0;
+        for (const K of executed.executed)
+            ePerms += K.settings.length;
+
         const emb = new MessageEmbed()
             .setColor(getColor(this.user.accentColor, true, this.member.displayColor))
             .setTitle("Unlock")
             .setDescription(desc.slice(0, 4000))
-            .setFooter({ text: `Took ${intervalToStrings(createInterval(invoked, new Date())).strings.join(" ")} to execute ${done.length} channel${addS(done)}` });
+            .setFooter({ text: `Took ${intervalToStrings(createInterval(invoked, new Date())).strings.join(" ")} to execute ${done.length} channel${addS(done)} and ${ePerms} overwrite${addS(ePerms)}` });
         if (reason)
             emb.addField("Reason", reason.value);
         emb.addField("At", "<t:" + unixToSeconds(invoked) + ":F>", true);
 
-        return inter.editReply({ embeds: [emb] });
+        return inter.editReply({ content: null, embeds: [emb] });
     }
 }

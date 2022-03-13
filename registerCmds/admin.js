@@ -12,6 +12,10 @@ module.exports = {
             name: "message-constructor",
             description: "Wanna create some custom message? Button roles? Or just simple rules embed? Try it!",
             type: 1,
+        }, {
+            name: "embed-constructor",
+            description: "Interactive Embed Constructor",
+            type: 1,
         },
         {
             name: "settings",
