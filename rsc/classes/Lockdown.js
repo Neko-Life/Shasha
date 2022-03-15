@@ -75,7 +75,15 @@ class Lockdown {
             const success = [];
             const failed = [];
             const oldP = {};
-            for (const [k, v] of targetOverwrites) {
+            if (!C.permissionOverwrites.cache.get(C.guildId)) {
+                const created = await C.permissionOverwrites.create(C.guildId,
+                    { SEND_MESSAGES: false },
+                    { reason: this.reason }).catch(e => { logDev(e); emitShaError(e) });
+                oldP[C.guildId] = 0;
+                const g = created?.permissionOverwrites.cache.get(C.guildId);
+                if (g)
+                    success.push(g);
+            } else for (const [k, v] of targetOverwrites) {
                 const alS = v.allow?.has("SEND_MESSAGES");
                 const oP = [!alS, alS];
                 oldP[v.id] = oP.indexOf(true);
@@ -101,7 +109,7 @@ class Lockdown {
                 failed,
                 targetOverwrites,
             });
-            C.setName("🔒" + C.name).catch(e => { logDev(e); emitShaError(e) });
+            // C.setName("🔒" + C.name).catch(e => { logDev(e); emitShaError(e) });
             if (this.end) {
                 const data = {
                     action: "unlock",
@@ -149,8 +157,8 @@ class Lockdown {
             delete C.executingLockdown;
             if (!success.length) continue;
             await C.db.delete("lockdown", "Object[]");
-            if (C.name.startsWith("🔒"))
-                C.setName(C.name.slice(2)).catch(e => { logDev(e); emitShaError(e) });
+            // if (C.name.startsWith("🔒"))
+            //     C.setName(C.name.slice(2)).catch(e => { logDev(e); emitShaError(e) });
             executed.push({
                 channel: C,
                 success,

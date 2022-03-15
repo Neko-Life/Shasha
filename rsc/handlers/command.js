@@ -38,6 +38,7 @@ module.exports = class CommandHandler {
                 + interaction.commandPath.join(" ")
                 + "` not found, maybe got hacked or somethin");
 
+        interaction.shaCommand = cmd;
         let result, dST, dSE;
         try {
             dST = new Date();
@@ -206,6 +207,10 @@ module.exports = class CommandHandler {
      * @property {GuildChannel} overrideUserPermissionsToChannel
      * @property {GuildChannel} overridePermissionsToChannel
      * 
+     */
+
+    /**
+     * Return command if passed, or undefined if not passed
      * @param {CommandInteraction} interaction 
      * @param {Command} cmd 
      * @param {CheckCmdOpts} param2

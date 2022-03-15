@@ -8,6 +8,7 @@ const { Moderation } = require("../../classes/Moderation");
 const { loadDb } = require("../../database");
 const { logDev } = require("../../debug");
 const { replyError, getColor, unixToSeconds, addS } = require("../../functions");
+const CommandHandler = require("../../handlers/command");
 const { createInterval, intervalToStrings } = require("../../util/Duration");
 
 module.exports = class LockCmd extends Command {
@@ -16,7 +17,7 @@ module.exports = class LockCmd extends Command {
             name: "lock",
             guildOnly: true,
             userPermissions: ["ADMINISTRATOR"],
-            clientPermissions: ["ADMINISTRATOR"],
+            clientPermissions: ["MANAGE_CHANNELS", "MANAGE_ROLES"],
         });
     }
 
@@ -113,15 +114,21 @@ async function getTargets(inter, guild, defaultChannel, channels, category, all)
     let targets;
     const noTargetRet = () => {
         if (targets?.length) return;
-        inter.editReply("No text channel to target :/");
+        inter.editReply("No text channel to target or i don't have the permissions to execute the channel :/");
         return true;
     }
+    const filter = async (r) => r.isText?.() && !r.isThread?.() && await CommandHandler.checkCmd(inter, inter.shaCommand, {
+        noReply: ["NO_PERMISSIONS"],
+    });
     if (channels) {
         const parse = await ArgsParser.channels(guild, all ? channels.value.replace("all", " " + guild.channels.cache.map(r => r.id).join(" ") + " ") : channels.value);
-        targets = parse.channels.filter(r => r.isText?.() && !r.isThread?.());
+        const res = await Promise.all(parse.channels.map(filter));
+        targets = parse.channels.filter((r, i) => res[i]);
         if (noTargetRet()) return;
     } else if (category) {
-        targets = category.channel.children.filter(r => r.isText?.() && !r.isThread?.()).map(r => r);
+        const children = category.channel.children.map(r => r);
+        const res = await Promise.all(children.map(filter));
+        targets = children.filter((r, i) => res[i]);
         if (noTargetRet()) return;
     } else targets = [defaultChannel];
     return targets;

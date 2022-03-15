@@ -14,7 +14,7 @@ module.exports = class UnlockCmd extends Command {
             name: "unlock",
             guildOnly: true,
             userPermissions: ["ADMINISTRATOR"],
-            clientPermissions: ["ADMINISTRATOR"],
+            clientPermissions: ["MANAGE_CHANNELS", "MANAGE_ROLES"],
         });
     }
 
