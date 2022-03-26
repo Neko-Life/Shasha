@@ -41,7 +41,7 @@ module.exports = async (msg) => {
     const color = getColor(toPrev.author.accentColor, true, toPrev.member?.displayColor);
     const emb = new MessageEmbed()
         .setAuthor({
-            name: tickTag(toPrev.member || toPrev.author),
+            name: tickTag(toPrev.member || toPrev.author, true),
             iconURL: (toPrev.member || toPrev.author).displayAvatarURL({ size: 128, format: "png", dynamic: true }),
             url: toPrev.url
         }).setColor(color)

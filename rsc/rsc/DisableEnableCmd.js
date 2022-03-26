@@ -9,7 +9,7 @@ const ArgsParser = require("../classes/ArgsParser");
 module.exports = class DisableEnableCmd extends Command {
     constructor(interaction) {
         super(interaction, {
-            name: "disableenable",
+            name: "disable-enable",
             guildOnly: true,
             userPermissions: ["ADMINISTRATOR"],
             guarded: true

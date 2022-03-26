@@ -8,7 +8,7 @@ const { tickPadEnd, maxStringsLength, getColor } = require("../functions");
 module.exports = class CommandBanUnbanCmd extends Command {
     constructor(interaction) {
         super(interaction, {
-            name: "commandbanunban",
+            name: "command-ban-unban",
             ownerOnly: true
         });
     }

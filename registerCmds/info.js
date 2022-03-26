@@ -92,6 +92,20 @@ module.exports = {
             name: "locked",
             description: "List locked channel in the server",
             type: 1,
-        }
+        },
+        {
+            name: "invite",
+            description: "About an invite",
+            type: 1,
+            options: [
+                {
+                    name: "invite",
+                    description: "Invite code or link to check about",
+                    type: 3,
+                    required: true,
+                    autocomplete: true,
+                },
+            ],
+        },
     ],
 }

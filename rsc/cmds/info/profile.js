@@ -3,7 +3,7 @@
 const { MessageEmbed, Role, MessageActionRow, MessageSelectMenu, GuildMember, User } = require("discord.js");
 const { Command } = require("../../classes/Command");
 const { loadDb } = require("../../database");
-const { getColor } = require("../../functions");
+const { getColor, tickTag } = require("../../functions");
 const { intervalToStrings, createInterval } = require("../../util/Duration");
 
 module.exports = class ProfileCmd extends Command {
@@ -46,7 +46,7 @@ module.exports = class ProfileCmd extends Command {
         const userAvatar = user.displayAvatarURL({ size: 4096, format: "png", dynamic: true });
 
         const baseEmbed = new MessageEmbed()
-            .setAuthor({ name: `${user.bot ? "BOT " : ""}${user.tag}`, iconURL: memberAvatar || userAvatar })
+            .setAuthor({ name: tickTag(user, true), iconURL: memberAvatar || userAvatar })
             .setColor(getColor(user.accentColor, true) || getColor(member?.displayColor, true));
 
         const generalEmbed = new MessageEmbed(baseEmbed)

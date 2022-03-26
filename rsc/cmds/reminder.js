@@ -134,7 +134,7 @@ module.exports.manage = class ManageReminderCmd extends Command {
         if (retNoReminder(inter)) return;
 
         const baseEmb = new MessageEmbed()
-            .setAuthor({ name: tickTag(member || user), iconURL: (member || user).displayAvatarURL({ format: "png", size: 4096, dynamic: true }) })
+            .setAuthor({ name: tickTag(member || user, true), iconURL: (member || user).displayAvatarURL({ format: "png", size: 4096, dynamic: true }) })
             .setTitle("Reminder")
             .setColor(getColor(user.accentColor, true, member?.displayColor));
 

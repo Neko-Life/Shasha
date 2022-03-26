@@ -90,11 +90,13 @@ function createRegExp(pattern, flags, exact) {
  * Was originally for user tick tag and bot. Use for anything that has user property
  * Can be used for string as well
  * @param {User | GuildMember | string} user
+ * @param {boolean} noTick
  * @returns {string} Ticked string
  */
-function tickTag(user) {
+function tickTag(user, noTick) {
+    noTick = noTick === true;
     if (user.user) user = user.user;
-    return `${user.bot ? "`BOT` " : ""}\`${user.tag || user}\``;
+    return `${user.bot ? `${noTick ? "" : "`"}BOT${noTick ? "" : "`"} ` : ""}${noTick ? "" : "`"}${user.tag || user}${noTick ? "" : "`"}`;
 }
 
 /**
@@ -395,7 +397,7 @@ async function disableMessageComponents(message, enableInstead) {
 
 /**
  * 
- * @param {boolean} homeButton - Whether to put Home button in the middle
+ * @param {boolean} homeButton - Whether to create a Home button in the middle
  * @returns {MessageActionRow}
  */
 function prevNextButton(homeButton) {
@@ -436,6 +438,12 @@ function emitShaError(e) {
     process.emit("uncaughtException", e);
 }
 
+/**
+ * Fetch uncached guild invites
+ * @param {import("./typins").ShaGuild} guild - The guild to check and fetch from
+ * @param {boolean} [force] - Force fetch
+ * @returns 
+ */
 async function cacheGuildInvites(guild, force) {
     if (guild.client.fetchingInvites[guild.id]) return guild.invites.cache;
     if (!force && guild.invites.cache.size) return guild.invites.cache;
@@ -481,7 +489,7 @@ async function cacheGuildInvites(guild, force) {
  */
 
 /**
- * 
+ * Create default timed punishment embed
  * @param {string} title - Embed title
  * @param {GuildMember | User} moderator 
  * @param {GuildMember[] | User[]} targets 
@@ -511,6 +519,12 @@ function timedPunishmentModEmbed(title, moderator, targets, { reason, invoked, e
     return emb;
 }
 
+/**
+ * Create regexp from regexp string complete with flag e.g. "/jafgkdbg/i"
+ * @param {string} str - Source str
+ * @param {boolean} escape - Wether to escape the source str
+ * @returns 
+ */
 function createRegExpFromStr(str, escape) {
     const source = str.split("/");
     const nOT = source[0] === "!";
@@ -520,8 +534,8 @@ function createRegExpFromStr(str, escape) {
 
 /**
  * Purge client and member message after duration
- * @param {import("../../typins").ShaMessage} m 
- * @param {import("../../typins").ShaMessage} setMsg 
+ * @param {import("../../typins").ShaMessage} m - Client message
+ * @param {import("../../typins").ShaMessage} setMsg - User message
  * @param {number} [dur=5000] 
  */
 function delMes(m, setMsg, dur = 5000) {
@@ -546,15 +560,37 @@ function addS(arr) {
     return n > 1 ? "s" : "";
 }
 
+/**
+ * Try to delete user message in duration
+ * @param {import("./typins").ShaMessage} usMes 
+ * @param {number} [dur=0]
+ */
 async function delUsMes(usMes, dur = 0) {
     setTimeout(() => {
-        if (!usMes.channel.permissionsFor(usMes.client.user).has("MANAGE_MESSAGES")) return;
+        if (!usMes.channel.permissionsFor?.(usMes.client.user).has("MANAGE_MESSAGES")) return;
         usMes.deleted ? null : usMes.delete();
     }, dur);
 }
 
+/**
+ * Return true if "y"
+ * @param {"yes"|"no"} str 
+ * @returns {boolean}
+ */
 function yesPrompt(str) {
     return ["y", "ye", "yes"].includes(str.toLowerCase());
+}
+
+/**
+ * Create default info embed with color and author
+ * @param {import("./typins").ShaUser|import("./typins").ShaGuildMember} memberOrUser 
+ * @param {MessageEmbed} [srcEmbed] - Source embed if any
+ * @returns {MessageEmbed} Default info embed
+ */
+function infoEmbed(memberOrUser, srcEmbed) {
+    return new MessageEmbed(srcEmbed)
+        .setAuthor({ name: tickTag(memberOrUser, true), iconURL: memberOrUser.displayAvatarURL({ format: "png", size: 128, dynamic: true }) })
+        .setColor(getColor(memberOrUser.accentColor, true, memberOrUser.displayColor));
 }
 
 module.exports = {
@@ -597,6 +633,7 @@ module.exports = {
     addS,
     delUsMes,
     yesPrompt,
+    infoEmbed,
 
     // ---------------- FNS IMPORTS ----------------
     // Functions too big to be put here so imported and has its own file instead

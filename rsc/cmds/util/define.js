@@ -3,7 +3,7 @@
 const { Command } = require("../../classes/Command");
 const ud = require("urban-dictionary");
 const { MessageEmbed, Message } = require("discord.js");
-const { getColor, prevNextButton } = require("../../functions");
+const { getColor, prevNextButton, tickTag } = require("../../functions");
 const { logDev } = require("../../debug");
 const ascii = "[```\n    _|_  _  _    _|. __|_. _  _  _  _\n|_|| |_)(_|| |  (_||(_ | |(_)| |(_|| \\/\n                                     /```](https://www.urbandictionary.com/)";
 const thumb = "https://upload.wikimedia.org/wikipedia/commons/thumb/8/82/UD_logo-01.svg/512px-UD_logo-01.svg.png";
@@ -35,7 +35,7 @@ module.exports = class DefineCmd extends Command {
                 ? v.example.slice(0, 1021) + "..."
                 : v.example;
             const page = new MessageEmbed(baseEmbed)
-                .setAuthor({ name: v.author, iconURL: av, url: "https://www.urbandictionary.com/" })
+                .setAuthor({ name: tickTag(v.author, true), iconURL: av, url: "https://www.urbandictionary.com/" })
                 .setTitle(v.word)
                 .setURL(v.permalink)
                 .setDescription(def)
