@@ -36,6 +36,8 @@ module.exports = class EvalCmd extends Command {
 
         if (!script) return inter.editReply({ content: "No script OwO", ephemeral: true });
         let mes, bf, af;
+        const tyghguikhiu = this.client.token;
+        this.client.token = "UwU ur so warm";
         try {
             bf = new Date();
             const res = await eval(script);
@@ -45,6 +47,7 @@ module.exports = class EvalCmd extends Command {
             logDev(e);
             mes = e.stack;
         }
+        this.client.token = tyghguikhiu;
         let send;
         if (mes.length) {
             let re;
