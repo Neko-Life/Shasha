@@ -230,6 +230,7 @@ class Scheduler {
         try {
             this.scheduler.add(job);
         } catch (e) { logDev(e) };
+        if (this.jobs.findIndex(r => r.name === job.name) < 0) this.jobs.push(job);
         this.starts(job.name);
         logDev("[ SCHEDULER added ]", job);
     }

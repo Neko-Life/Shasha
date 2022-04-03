@@ -282,7 +282,7 @@ module.exports.build = class BuildEmbCmd extends Command {
          * @type {import("discord.js").MessageOptions}
          */
         const send = {
-            allowedMentions: allowMention(inter.member, this.contentEmbed || "")
+            allowedMentions: allowMention({ member: inter.member, content: this.contentEmbed || "" })
         };
         if (this.buildEmbed) {
             if (this.sourceMessage && this.editExist) {

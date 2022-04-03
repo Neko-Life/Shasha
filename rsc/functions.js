@@ -209,9 +209,10 @@ function emphasizePerms(str) {
 function allowMention({ member, content }) {
     const allowedMentions = {};
     if (member && !member.permissions.has("MENTION_EVERYONE")) {
-        if (content?.match(/<@\!?[^&]\d{17,20}>/g)?.length > 1)
+        if (content?.match(/<@\!?[^&]\d{17,20}>/g)?.length > 1) {
             allowedMentions.parse = [];
-        else allowedMentions.parse = ["users"];
+            allowedMentions.users = [member.id];
+        } else allowedMentions.parse = ["users"];
     } else allowedMentions.parse = ["everyone", "roles", "users"];
     return allowedMentions;
 }
