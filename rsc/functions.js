@@ -342,10 +342,11 @@ function tickPadEnd(str, pad = 0) {
  * @returns {string} str
  */
 function replaceVars(str, vars = {}) {
-    const toEval = str.match(/(?<!\\)(?<=\$\{).+(?=\})/g);
+    const varsN = Object.keys(vars);
+    if (!varsN.length) return str;
+    const toEval = str.match(new RegExp(`(?<!\\\\)(?<=\\$\\{)(?:${varsN.join("|")})(?:\\.[a-zA-Z0-9]+)*(?=\\})`, "g"));
     if (toEval?.length) {
         const rep = [];
-        const varsN = Object.keys(vars);
         for (const k of toEval) {
             const data = { match: k };
             data.value = eval("const {" + varsN.join() + "} = vars;" + k);
