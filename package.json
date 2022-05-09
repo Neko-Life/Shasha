@@ -6,7 +6,7 @@
     "reg": "node registerCommands.js"
   },
   "dependencies": {
-    "@braintree/sanitize-url": "^5.0.2",
+    "@braintree/sanitize-url": "^6.0.0",
     "@discordjs/builders": "^0.8.2",
     "@discordjs/rest": "^0.1.0-canary.0",
     "ahnidev": "^1.0.4",
