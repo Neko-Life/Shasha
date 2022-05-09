@@ -1,24 +1,18 @@
 {
   "appId": "",
   "devAppId": "",
-  "invite": "https://discord.com/oauth2/authorize?client_id=788006279837909032&scope=bot&permissions=8",
+  "invite": "https://discord.com/api/oauth2/authorize?client_id=843298069515730944&permissions=1531051502839&scope=bot%20applications.commands",
   "token": "",
   "devToken": "",
   "lewdsAPIkey": "",
-  "mongoServer": "",
-  "globalCommandPrefix": "s.",
-  "globalRegexCommandPrefix": [
-    "^s\\.\\s?",
-    "i"
-  ],
+  "mongoServer": "mongodb://127.0.0.1:27017",
   "chatChannel": "837178237322919966",
-  "guildLog": "840154722434154496",
+  "guildLog": "952495471484633148",
   "shardChannel": "851361670533218324",
-  "home": "772073587792281600",
+  "home": "823176176641376296",
   "ranLogger": "848567827179110401",
-  "errLogChannel": "885801429586034689",
+  "errLogChannel": "952495446213939220",
   "owners": [
-    "750335181285490760",
-    "820696421912412191"
+    "750335181285490760"
   ]
 }
