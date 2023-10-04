@@ -243,3 +243,38 @@ module.exports.manage = class ManageReminderCmd extends Command {
         return msg;
     }
 }
+
+/**
+ * Parse time with format
+ * 
+ * @param {string} at 
+ * @param {string} timezone 
+ * 
+ * @returns {{endDate: Date, interval: luxon.Interval, durationString:{
+ *   object: luxon.DurationObject,
+ *   strings: string[],
+ *   ms: number,
+ * }}}
+ */
+function parseTime(at, timezone) {
+    const startDate = new Date();
+    const durArg = at.slice(2).trim();
+    let endDate, interval, durationString;
+    if (/^\d/.test(durArg)) {
+        const parsed = Moderation.defaultParseDuration(startDate, durArg);
+        endDate = parsed.end;
+        interval = parsed.interval;
+        durationString = parsed.duration;
+    } else {
+        endDate = DateTime.fromFormat(at, `DDD ${/(?:am|pm)$/i.test(at) ? "tt" : "TT"}`).setZone(timezone).toJSDate();
+        interval = createInterval(startDate, endDate);
+        durationString = intervalToStrings(interval);
+    }
+    if (interval.invalidReason) throw new RangeError(interval.invalidReason);
+    if ((durationString.ms || 0) < 10000)
+        throw new RangeError("Duration less than minimum ms");
+
+    if (!(endDate instanceof Date))
+        throw new TypeError("endDate isn't Date: " + typeof endDate + " " + endDate.prototype?.name);
+    return { endDate, interval, durationString };
+}
